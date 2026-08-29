@@ -2,7 +2,7 @@
 
 Priorisierung: **MUST > SHOULD > COULD > LATER**.
 
-## MUST – Aktuelles Fundament
+## MUST – Fundament — DONE
 - [x] Eigenes Repository / eigene Infrastruktur
 - [x] Cloudflare STAGING über workers.dev
 - [x] Supabase STAGING getrennt von SeasonCrew
@@ -11,12 +11,12 @@ Priorisierung: **MUST > SHOULD > COULD > LATER**.
 - [x] Activity-History
 - [x] RLS als Default
 - [x] alle ausgeführten DB-Migrationen im Repository spiegeln
-- [ ] Auth-Flow für zwei getrennte Benutzerkonten – technisch vorbereitet; echter zweiter Browser-Login noch nicht angelegt/getestet
+- [x] Auth-Flow für zwei getrennte Benutzerkonten
 - [x] Geschäftsführerrolle bootstrappen
 - [x] Server-/RLS-Test für unberechtigten Zugriff
 - [x] Session-/Logout-/Fehlerzustände
 
-## MUST – CRM MVP
+## MUST – CRM MVP — DONE
 - [x] Contact
 - [x] strukturierte ContactAddress
 - [x] Organization
@@ -27,21 +27,43 @@ Priorisierung: **MUST > SHOULD > COULD > LATER**.
 - [x] Aktivitätsfeed
 - [x] Kommentare/@Mentions
 - [x] Benachrichtigungs-Inbox für Mentions
-- [x] Archivieren/Wiederherstellen mit separater Permission
+- [x] Archivieren/Wiederherstellen mit separaten Permissions
 - [x] Duplikatwarnung: E-Mail / Mobil / Name + Anschrift
 - [x] feldgenaue History
 - [x] Optimistic Locking
-- [x] globale Suche inkl. Kontakte, Anschriften, Organisationen und Aufgaben
+- [x] globale Suche
 - [x] atomare Kontaktanlage inkl. optionaler Primäradresse
+- [x] globale Systemhistorie
+- [x] aktueller CRM-UI-Stand in Cloudflare sichtbar
+- [x] Browser-Smoke-Test der CRM-Bereiche
+- [x] echter zweiter Browser-Login
+- [x] Zwei-Benutzer-Test Zuweisung + @Mention + Notification
 
-## MUST – Abschluss-Akzeptanz Modul 01
-- [x] RLS-/Permission-Smoke-Tests unter realem `authenticated` Geschäftsführer-Kontext
-- [x] Audit-/Concurrency-/Archiv-/Suche-/Collaboration-Smoke-Tests mit Rollback
-- [x] Security Advisor nach DDL-Änderungen geprüft
-- [x] Performance-Advisor: FK-Index- und RLS-InitPlan-Warnungen behoben
-- [ ] aktueller kompletter UI-Stand erfolgreich durch Cloudflare gebaut
-- [ ] Browser-Smoke-Test der neuen CRM-Bereiche: Suche, Aufgaben, Organisationen, Archiv, Firma & Adresse, Aktivität & Team
-- [ ] echter Zwei-Benutzer-Akzeptanztest für Zuweisung + @Mention + Notification
+## MUST – Immobilien MVP — IN ARBEIT
+- [x] Property mit `ZM-YYYY-####`
+- [x] PropertyAddress intern/öffentlich getrennt
+- [x] Objektstatusmaschine mit erlaubten Übergängen
+- [x] property.read / write / publish / assign / archive serverseitig durchsetzbar
+- [x] PropertyOwner inkl. Mehrfacheigentum und Prozentprüfung
+- [x] PropertyFeature flexibel
+- [x] PropertyEnergyData
+- [x] automatische Vermarktungscheckliste
+- [x] Objekt-History und Concurrent Editing
+- [x] globale Suche findet Immobilien
+- [x] Aufgaben können an Immobilien hängen
+- [x] Document + append-only DocumentVersion
+- [x] SHA-256 / MIME / Dateigröße / Originalname / Änderungsgrund
+- [x] private Supabase Storage Buckets mit RLS
+- [x] private Medienbibliothek
+- [x] UI Objektliste / Neuanlage / Objektakte
+- [x] UI Eigentümer / Ausstattung / Energie / Checkliste
+- [x] UI Dokumente / Versionen / Signed Download
+- [x] UI Medien
+- [ ] Cloudflare-Build des aktuellen Immobilienstands bestätigen
+- [ ] Browser-Smoke-Test Immobilie anlegen und bearbeiten
+- [ ] Browser-Smoke-Test Dokumentupload + neue Version + Download
+- [ ] Browser-Smoke-Test Medienupload
+- [ ] Modul-02-DoD abschließen
 
 ## SHOULD – Zusammenarbeit
 - [ ] Soft Presence
