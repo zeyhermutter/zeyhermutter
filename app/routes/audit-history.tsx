@@ -1,6 +1,6 @@
 import { data, Form, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/audit-history";
-import { requireActiveUser } from "~/lib/auth.server";
+import { requirePermission } from "~/lib/auth.server";
 
 const PAGE_SIZE = 50;
 
@@ -23,7 +23,7 @@ function valueLabel(value: unknown) {
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const { supabase, responseHeaders, profile } = await requireActiveUser(request, context.cloudflare.env);
+  const { supabase, responseHeaders, profile } = await requirePermission(request, context.cloudflare.env, "audit.read");
   const url = new URL(request.url);
   const entityType = (url.searchParams.get("entity") ?? "").trim();
   const action = (url.searchParams.get("action") ?? "").trim();
@@ -48,17 +48,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   if (error) throw new Response("Systemhistorie konnte nicht geladen werden.", { status: 500 });
 
   const total = count ?? 0;
-  return data(
-    {
-      events: events ?? [],
-      total,
-      page,
-      pageCount: Math.max(1, Math.ceil(total / PAGE_SIZE)),
-      filters: { entityType, action, actor, reference },
-      profile,
-    },
-    { headers: responseHeaders() },
-  );
+  return data({ events: events ?? [], total, page, pageCount: Math.max(1, Math.ceil(total / PAGE_SIZE)), filters: { entityType, action, actor, reference }, profile }, { headers: responseHeaders() });
 }
 
 function pageHref(page: number, filters: { entityType: string; action: string; actor: string; reference: string }) {
@@ -101,20 +91,13 @@ export default function AuditHistory() {
                 <div className="history-head"><strong>{event.entity_type} · {event.entity_reference ?? event.entity_id ?? "—"} · {event.action}</strong><small>{formatDate(event.occurred_at)}</small></div>
                 <p>{event.actor_display_name_snapshot ?? "System"} · Quelle {event.source}</p>
                 {event.description ? <div className="history-change"><small>{event.description}</small></div> : null}
-                {Object.entries(changes).slice(0, 12).map(([field, change]) => (
-                  <div className="history-change" key={field}><span>{field}</span><small>{valueLabel(change?.old)} → {valueLabel(change?.new)}</small></div>
-                ))}
+                {Object.entries(changes).slice(0, 12).map(([field, change]) => <div className="history-change" key={field}><span>{field}</span><small>{valueLabel(change?.old)} → {valueLabel(change?.new)}</small></div>)}
               </article>
             );
           })}
           {events.length === 0 ? <p className="empty-state">Keine Ereignisse für diese Filter.</p> : null}
         </div>
-        {pageCount > 1 ? (
-          <div className="pagination">
-            {page > 1 ? <Link className="secondary-button link-button" to={pageHref(page - 1, filters)}>← Zurück</Link> : <span />}
-            {page < pageCount ? <Link className="secondary-button link-button" to={pageHref(page + 1, filters)}>Weiter →</Link> : null}
-          </div>
-        ) : null}
+        {pageCount > 1 ? <div className="pagination">{page > 1 ? <Link className="secondary-button link-button" to={pageHref(page - 1, filters)}>← Zurück</Link> : <span />}{page < pageCount ? <Link className="secondary-button link-button" to={pageHref(page + 1, filters)}>Weiter →</Link> : null}</div> : null}
       </section>
     </main>
   );
