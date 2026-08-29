@@ -95,3 +95,22 @@ Die globale CRM-Suche läuft serverseitig in PostgreSQL als `SECURITY INVOKER` u
 **Status:** Accepted
 
 RLS bleibt die Daten-Sicherheitsgrenze. Zusätzlich verwenden sensible serverseitige Routen einen expliziten Permission-Guard und liefern bei fehlender Permission HTTP 403. Beispiel: globale Systemhistorie benötigt `audit.read`.
+
+## ADR-018 – Immobilienstatus als serverseitige State Machine
+**Status:** Accepted
+
+Der Objektworkflow wird nicht nur in der UI abgebildet. PostgreSQL validiert erlaubte Statusübergänge. Ungültige Sprünge werden abgewiesen. Archivierte Objekte können nur in den unmittelbar vorherigen Status zurückkehren.
+
+Zusätzliche fachliche Rechte werden direkt in PostgreSQL geprüft: `property.publish` für den Start der Vermarktung, `property.archive` für Archiv/Restore und `property.assign` für Zuständigkeitswechsel.
+
+## ADR-019 – Private Storage by Default
+**Status:** Accepted
+
+Objektdokumente und Medien liegen zunächst ausschließlich in privaten Supabase-Storage-Buckets. Downloads erfolgen authentifiziert bzw. über kurzlebige Signed URLs. Eine Markierung `public_approved` allein veröffentlicht niemals eine Datei.
+
+Eine spätere öffentliche Website erhält eine separate, kontrollierte Publikationsschicht. Vertrauliche Dokumente werden niemals automatisch öffentlich.
+
+## ADR-020 – Dokumentversionen sind append-only
+**Status:** Accepted
+
+Neue Dateistände erzeugen immer eine neue `DocumentVersion` mit eigener Storage-Adresse, fortlaufender Versionsnummer, SHA-256, MIME-Type, Größe, Originaldateiname, Benutzer und Änderungsgrund. Upsert/Überschreiben bestehender Dokumentdateien ist nicht Teil des Workflows.
