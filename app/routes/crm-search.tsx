@@ -35,6 +35,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 function target(result: { entity_type: string; entity_id: string }) {
   if (result.entity_type === "CONTACT") return `/crm/contacts/${result.entity_id}`;
   if (result.entity_type === "ORGANIZATION") return `/crm/organizations/${result.entity_id}`;
+  if (result.entity_type === "PROPERTY") return `/properties/${result.entity_id}`;
   return "/crm/tasks";
 }
 
@@ -44,20 +45,20 @@ export default function CrmSearch() {
   return (
     <main className="editor-shell">
       <header className="editor-header">
-        <div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">Modul 01 · CRM</p><h1 className="editor-title">Globale Suche</h1></div>
+        <div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">ZeyherMutterOS</p><h1 className="editor-title">Globale Suche</h1></div>
         <div className="header-user"><span className="badge">STAGING</span><small>{profile.display_name}</small></div>
       </header>
 
       <section className="data-card">
         <Form method="get" className="search-bar">
-          <input name="q" defaultValue={q} placeholder="Name, Kontaktnummer, Firma, E-Mail, Telefon, Ort oder Aufgabe …" minLength={2} autoFocus />
+          <input name="q" defaultValue={q} placeholder="Kontakt, Firma, Immobilie, Objektnummer, Adresse oder Aufgabe …" minLength={2} autoFocus />
           <label className="checkbox-row"><input type="checkbox" name="archived" value="1" defaultChecked={includeArchived} /><span>Archiv einbeziehen</span></label>
           <button className="primary-button" type="submit">Suchen</button>
         </Form>
       </section>
 
       <section className="data-card">
-        <div className="card-head"><div><p className="eyebrow">Ergebnisse</p><h2>{q.length >= 2 ? `${results.length} Treffer` : "Suchbegriff eingeben"}</h2></div><Link className="subtle-link" to="/crm/archive">Archiv verwalten</Link></div>
+        <div className="card-head"><div><p className="eyebrow">Ergebnisse</p><h2>{q.length >= 2 ? `${results.length} Treffer` : "Suchbegriff eingeben"}</h2></div><Link className="subtle-link" to="/properties">Immobilien</Link></div>
         {q.length >= 2 && results.length === 0 ? <p className="empty-state">Keine Treffer gefunden.</p> : null}
         <div className="data-list">
           {results.map((result) => (
