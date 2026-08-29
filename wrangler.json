@@ -10,6 +10,7 @@
   "upload_source_maps": true,
   "vars": {
     "APP_ENV": "staging",
-    "SUPABASE_URL": "https://zqhcxudpfwsfuokencvy.supabase.co"
+    "SUPABASE_URL": "https://zqhcxudpfwsfuokencvy.supabase.co",
+    "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_9KqTRvRzAYxDAPWAzMDRTA_9QhasRgx"
   }
 }
