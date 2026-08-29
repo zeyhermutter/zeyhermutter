@@ -12,6 +12,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     { count: organizationCount, error: organizationError },
     { count: taskCount, error: taskCountError },
     { count: unreadCount, error: notificationError },
+    { count: propertyCount, error: propertyError },
   ] = await Promise.all([
     supabase.from("contacts").select("id, contact_number, first_name, last_name, email, mobile, status, updated_at").is("archived_at", null).order("updated_at", { ascending: false }).limit(25),
     supabase.from("tasks").select("id, task_number, title, status, priority, due_at, contact_id").is("archived_at", null).in("status", ["OPEN", "IN_PROGRESS"]).order("due_at", { ascending: true }).limit(10),
@@ -19,13 +20,14 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     supabase.from("organizations").select("id", { count: "exact", head: true }).is("archived_at", null),
     supabase.from("tasks").select("id", { count: "exact", head: true }).is("archived_at", null).in("status", ["OPEN", "IN_PROGRESS"]),
     supabase.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null),
+    supabase.from("properties").select("id", { count: "exact", head: true }).neq("status", "ARCHIVED"),
   ]);
 
-  if (contactError || taskError || contactCountError || organizationError || taskCountError || notificationError) {
+  if (contactError || taskError || contactCountError || organizationError || taskCountError || notificationError || propertyError) {
     throw new Response("CRM-Daten konnten nicht geladen werden.", { status: 500 });
   }
 
-  return data({ profile, contacts: contacts ?? [], tasks: tasks ?? [], contactCount: contactCount ?? 0, organizationCount: organizationCount ?? 0, taskCount: taskCount ?? 0, unreadCount: unreadCount ?? 0 }, { headers: responseHeaders() });
+  return data({ profile, contacts: contacts ?? [], tasks: tasks ?? [], contactCount: contactCount ?? 0, organizationCount: organizationCount ?? 0, taskCount: taskCount ?? 0, unreadCount: unreadCount ?? 0, propertyCount: propertyCount ?? 0 }, { headers: responseHeaders() });
 }
 
 function formatDate(value: string | null) {
@@ -34,7 +36,7 @@ function formatDate(value: string | null) {
 }
 
 export default function CrmDashboard() {
-  const { profile, contacts, tasks, contactCount, organizationCount, taskCount, unreadCount } = useLoaderData<typeof loader>();
+  const { profile, contacts, tasks, contactCount, organizationCount, taskCount, unreadCount, propertyCount } = useLoaderData<typeof loader>();
 
   return (
     <main className="app-shell">
@@ -48,8 +50,8 @@ export default function CrmDashboard() {
           <Link className="nav-item" to="/crm/organizations">Organisationen</Link>
           <Link className="nav-item" to="/crm/history">Systemhistorie</Link>
           <Link className="nav-item" to="/crm/archive">Archiv</Link>
+          <Link className="nav-item" to="/properties">Immobilien</Link>
           <span className="nav-item muted">Leads</span>
-          <span className="nav-item muted">Immobilien</span>
           <span className="nav-item muted">Besichtigungen</span>
           <span className="nav-item muted">Provisionen</span>
         </nav>
@@ -59,7 +61,7 @@ export default function CrmDashboard() {
       <section className="app-content">
         <header className="app-header">
           <div><p className="eyebrow">Phase 1 · CRM</p><h1 className="app-title">Guten Tag, {profile.display_name}.</h1></div>
-          <div className="header-actions"><Link className="secondary-button link-button" to="/crm/notifications">Inbox{unreadCount > 0 ? ` · ${unreadCount}` : ""}</Link><Link className="secondary-button link-button" to="/crm/search">Suchen</Link><Link className="primary-button link-button" to="/crm/contacts/new">+ Kontakt</Link><span className="badge">STAGING</span></div>
+          <div className="header-actions"><Link className="secondary-button link-button" to="/properties">Immobilien · {propertyCount}</Link><Link className="secondary-button link-button" to="/crm/notifications">Inbox{unreadCount > 0 ? ` · ${unreadCount}` : ""}</Link><Link className="secondary-button link-button" to="/crm/search">Suchen</Link><Link className="primary-button link-button" to="/crm/contacts/new">+ Kontakt</Link><span className="badge">STAGING</span></div>
         </header>
 
         <div className="metric-grid">
