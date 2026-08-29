@@ -11,6 +11,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     { count: contactCount, error: contactCountError },
     { count: organizationCount, error: organizationError },
     { count: taskCount, error: taskCountError },
+    { count: unreadCount, error: notificationError },
   ] = await Promise.all([
     supabase
       .from("contacts")
@@ -28,9 +29,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     supabase.from("contacts").select("id", { count: "exact", head: true }).is("archived_at", null),
     supabase.from("organizations").select("id", { count: "exact", head: true }).is("archived_at", null),
     supabase.from("tasks").select("id", { count: "exact", head: true }).is("archived_at", null).in("status", ["OPEN", "IN_PROGRESS"]),
+    supabase.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null),
   ]);
 
-  if (contactError || taskError || contactCountError || organizationError || taskCountError) {
+  if (contactError || taskError || contactCountError || organizationError || taskCountError || notificationError) {
     throw new Response("CRM-Daten konnten nicht geladen werden.", { status: 500 });
   }
 
@@ -42,6 +44,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       contactCount: contactCount ?? 0,
       organizationCount: organizationCount ?? 0,
       taskCount: taskCount ?? 0,
+      unreadCount: unreadCount ?? 0,
     },
     { headers: responseHeaders() },
   );
@@ -53,7 +56,7 @@ function formatDate(value: string | null) {
 }
 
 export default function CrmDashboard() {
-  const { profile, contacts, tasks, contactCount, organizationCount, taskCount } = useLoaderData<typeof loader>();
+  const { profile, contacts, tasks, contactCount, organizationCount, taskCount, unreadCount } = useLoaderData<typeof loader>();
 
   return (
     <main className="app-shell">
@@ -63,6 +66,7 @@ export default function CrmDashboard() {
           <Link className="nav-item active" to="/crm">CRM</Link>
           <Link className="nav-item" to="/crm/search">Suche</Link>
           <Link className="nav-item" to="/crm/tasks">Aufgaben</Link>
+          <Link className="nav-item" to="/crm/notifications">Benachrichtigungen{unreadCount > 0 ? ` (${unreadCount})` : ""}</Link>
           <Link className="nav-item" to="/crm/organizations">Organisationen</Link>
           <Link className="nav-item" to="/crm/archive">Archiv</Link>
           <span className="nav-item muted">Leads</span>
@@ -76,7 +80,7 @@ export default function CrmDashboard() {
       <section className="app-content">
         <header className="app-header">
           <div><p className="eyebrow">Phase 1 · CRM</p><h1 className="app-title">Guten Tag, {profile.display_name}.</h1></div>
-          <div className="header-actions"><Link className="secondary-button link-button" to="/crm/search">Suchen</Link><Link className="primary-button link-button" to="/crm/contacts/new">+ Kontakt</Link><span className="badge">STAGING</span></div>
+          <div className="header-actions"><Link className="secondary-button link-button" to="/crm/notifications">Inbox{unreadCount > 0 ? ` · ${unreadCount}` : ""}</Link><Link className="secondary-button link-button" to="/crm/search">Suchen</Link><Link className="primary-button link-button" to="/crm/contacts/new">+ Kontakt</Link><span className="badge">STAGING</span></div>
         </header>
 
         <div className="metric-grid">
@@ -93,7 +97,7 @@ export default function CrmDashboard() {
                 {contacts.map((contact) => (
                   <div className="data-row" key={contact.id}>
                     <div><strong>{contact.first_name} {contact.last_name}</strong><small>{contact.contact_number} · {contact.email ?? contact.mobile ?? "—"}</small></div>
-                    <div className="row-meta"><Link className="subtle-link" to={`/crm/contacts/${contact.id}/relations`}>Arbeitsbereich</Link><Link className="subtle-link" to={`/crm/contacts/${contact.id}/associations`}>Firma & Adresse</Link><Link className="subtle-link" to={`/crm/contacts/${contact.id}`}>Stammdaten</Link></div>
+                    <div className="row-meta"><Link className="subtle-link" to={`/crm/contacts/${contact.id}/relations`}>Arbeitsbereich</Link><Link className="subtle-link" to={`/crm/contacts/${contact.id}/collaboration`}>Aktivität & Team</Link><Link className="subtle-link" to={`/crm/contacts/${contact.id}/associations`}>Firma & Adresse</Link><Link className="subtle-link" to={`/crm/contacts/${contact.id}`}>Stammdaten</Link></div>
                   </div>
                 ))}
               </div>
