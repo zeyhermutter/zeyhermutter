@@ -6,6 +6,7 @@ export default [
   route("crm", "routes/crm-dashboard.tsx"),
   route("crm/search", "routes/crm-search.tsx"),
   route("crm/tasks", "routes/tasks.tsx"),
+  route("crm/notifications", "routes/notifications.tsx"),
   route("crm/archive", "routes/crm-archive.tsx"),
   route("crm/contacts/new", "routes/contact-new.tsx"),
   route("crm/contacts/:contactId", "routes/contact-detail.tsx"),
