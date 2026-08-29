@@ -11,6 +11,7 @@ export default [
   route("crm/contacts/:contactId", "routes/contact-detail.tsx"),
   route("crm/contacts/:contactId/relations", "routes/contact-relations.tsx"),
   route("crm/contacts/:contactId/associations", "routes/contact-associations.tsx"),
+  route("crm/contacts/:contactId/collaboration", "routes/contact-collaboration.tsx"),
   route("crm/organizations", "routes/organizations.tsx"),
   route("crm/organizations/:organizationId", "routes/organization-detail.tsx"),
   route("logout", "routes/logout.tsx"),
