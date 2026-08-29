@@ -24,19 +24,22 @@ export default function Home() {
           <span className="brand-mark">ZM</span>
           <span>ZeyherMutterOS</span>
         </div>
-        <span className="badge">STAGING</span>
+        <div className="top-actions">
+          <span className="badge">STAGING</span>
+          <a className="secondary-button compact" href="/login">Anmelden</a>
+        </div>
       </header>
 
       <section className="hero">
-        <p className="eyebrow">Phase 0 · Architektur & Infrastruktur</p>
+        <p className="eyebrow">Phase 1 · CRM-Grundsystem</p>
         <h1>Das digitale Betriebssystem für ZeyherMutter.</h1>
         <p className="lead">
           Cloudflare Workers + React Router + Supabase. Dieses Staging-System ist vollständig von SeasonCrew getrennt.
         </p>
         <div className="status-grid">
-          <div className="status"><strong>Cloudflare</strong><span>Workers-ready</span></div>
-          <div className="status"><strong>Supabase</strong><span>Frankfurt · Staging</span></div>
-          <div className="status"><strong>Environment</strong><span>Keine Production-Daten</span></div>
+          <div className="status"><strong>Cloudflare</strong><span>Workers · Staging live</span></div>
+          <div className="status"><strong>Supabase</strong><span>Frankfurt · RLS aktiv</span></div>
+          <div className="status"><strong>CRM</strong><span>Auth & Datenmodell im Aufbau</span></div>
         </div>
       </section>
 
