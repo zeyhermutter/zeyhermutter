@@ -20,23 +20,47 @@ Phase 1 / CRM – erstes nutzbares Multi-User-Grundsystem.
 - feldgenaue Audit-Trigger
 - Optimistic-Concurrency-Versionierung
 - serverseitige `updated_by`-Pflege
-- Security Advisor: 0 Lints nach CRM-Migration
-- Login/Logout-Routen
+- erster Auth-Benutzer aktiviert
+- Rolle `managing_director` zugewiesen
+- RLS unter echtem `authenticated`-Benutzerkontext erfolgreich geprüft
+- Security-Härtung der privaten Permission-Helper
+- Login/Logout-Routen mit SSR-Cookies und `getClaims()`
 - geschützte `/crm`-Route
 - responsive CRM-Dashboard-Shell
+- Kontaktanlage implementiert
+- Kontaktdetail mit Bearbeitung implementiert
+- Kontakt-History aus append-only AuditLog implementiert
+- Optimistic-Locking-Konflikterkennung in der Kontaktbearbeitung implementiert
+- DB-Smoke-Test erfolgreich: Create → Audit → Update → Version 2 → veralteter Updateversuch blockiert
+- Smoke-Test vollständig zurückgerollt, keine Testkontakte verblieben
 - alle ausgeführten Supabase-Migrationen im Repository gespiegelt
 
-## Aktueller manueller Blocker
-Supabase Auth enthält noch keinen Benutzer. Der erste Benutzer muss einmalig im Supabase-Dashboard angelegt werden. Danach kann ChatGPT Profilstatus und Geschäftsführerrolle über die vorhandene Supabase-Verbindung selbst konfigurieren.
+## Security
+- RLS aktiv auf allen fachlichen Tabellen
+- Permission-Prüfung serverseitig/PostgreSQL
+- `service_role` wird nicht im Frontend verwendet
+- Auth-Responses werden mit `Cache-Control: private, no-store` behandelt
+- Supabase Security Advisor meldet aktuell nur `Leaked Password Protection Disabled`
+- diese Funktion ist auf Supabase Pro+ verfügbar und wird spätestens vor Production aktiviert bzw. erneut bewertet
+- MFA bleibt Production-Hardening-Pflicht
+
+## Aktueller manueller Testpunkt
+Den aktuellen Cloudflare-Build im Browser testen:
+1. `https://zeyhermutter.playsony.workers.dev/login` öffnen
+2. mit dem angelegten STAGING-Benutzer anmelden
+3. prüfen, ob `/crm` geladen wird
+4. einen Testkontakt über `+ Kontakt` anlegen
+5. Kontakt öffnen, einen Wert ändern und prüfen, ob die Historie die Änderung zeigt
+
+Nach erfolgreichem Browser-Smoke-Test wird CRM-Inkrement 1 als abgeschlossen markiert.
 
 ## Danach automatisch
-1. ersten Benutzer aktivieren
-2. Rolle `managing_director` zuweisen
-3. Berechtigungen/RLS mit echtem Benutzer prüfen
-4. Login gegen STAGING testen
-5. CRM Kontaktliste und Kontaktanlage implementieren
-6. History-Ansicht pro Kontakt ergänzen
-7. Optimistic-Locking-Konfliktfall umsetzen
+1. Kontaktrollen in der UI ergänzen
+2. Kontaktbeziehungen ergänzen
+3. Organisationen/Unternehmen ergänzen
+4. Aufgaben/Wiedervorlagen mit Zuweisung implementieren
+5. globale CRM-Suche und Duplikatprüfung erweitern
+6. danach Modul 01 Abschlussprüfung gegen Definition of Done
 
 ## Production
 Nicht angelegt / nicht verändert. Production bleibt bis zur ausdrücklichen Freigabe gesperrt.
