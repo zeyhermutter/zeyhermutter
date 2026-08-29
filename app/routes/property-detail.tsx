@@ -1,0 +1,176 @@
+import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
+import type { Route } from "./+types/property-detail";
+import { requirePermission } from "~/lib/auth.server";
+
+type ActionResult = { error?: string; success?: string };
+
+const TYPE_LABELS: Record<string,string> = {
+  DETACHED_HOUSE:"Einfamilienhaus",SEMI_DETACHED_HOUSE:"Doppelhaushälfte",TERRACED_HOUSE:"Reihenhaus",APARTMENT_BUILDING:"Mehrfamilienhaus",APARTMENT:"Wohnung",PENTHOUSE:"Penthouse",MAISONETTE:"Maisonette",LAND:"Grundstück",COMMERCIAL:"Gewerbe",OFFICE:"Büro",RETAIL:"Einzelhandel",GARAGE:"Garage",PARKING_SPACE:"Stellplatz",OTHER:"Sonstige",
+};
+const FEATURE_OPTIONS = [
+  ["BALCONY","Balkon"],["TERRACE","Terrasse"],["GARDEN","Garten"],["BASEMENT","Keller"],["GARAGE","Garage"],["PARKING_SPACE","Stellplatz"],["ELEVATOR","Aufzug"],["FIREPLACE","Kamin"],["FITTED_KITCHEN","Einbauküche"],["SAUNA","Sauna"],["POOL","Pool"],["PHOTOVOLTAIC","Photovoltaik"],["HEAT_PUMP","Wärmepumpe"],["UNDERFLOOR_HEATING","Fußbodenheizung"],["SMART_HOME","Smart Home"],["ACCESSIBLE","Barrierefrei"],
+] as const;
+
+function text(fd: FormData,key:string){return String(fd.get(key)??"").trim();}
+function num(value:string){return value===""?null:Number(value.replace(",","."));}
+function formatDate(value:string|null){if(!value)return"—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeStyle:"short",timeZone:"Europe/Berlin"}).format(new Date(value));}
+function labelStatus(value:string){return value.replaceAll("_"," ");}
+
+export async function loader({ request, context, params }: Route.LoaderArgs) {
+  const { supabase, responseHeaders, profile } = await requirePermission(request, context.cloudflare.env, "property.read");
+  const propertyId=params.propertyId;
+  const { data: property, error } = await supabase.from("properties").select("*").eq("id",propertyId).maybeSingle();
+  if(error||!property) throw new Response("Immobilie nicht gefunden.",{status:404,headers:responseHeaders()});
+
+  const [addressRes,ownersRes,contactsRes,featuresRes,energyRes,checklistRes,transitionsRes,usersRes,auditPermissionRes] = await Promise.all([
+    supabase.from("property_addresses").select("*").eq("property_id",propertyId).maybeSingle(),
+    supabase.from("property_owners").select("*").eq("property_id",propertyId).order("primary_contact",{ascending:false}),
+    supabase.from("contacts").select("id, contact_number, first_name, last_name, email").is("archived_at",null).order("last_name").limit(1000),
+    supabase.from("property_features").select("*").eq("property_id",propertyId).order("label"),
+    supabase.from("property_energy_data").select("*").eq("property_id",propertyId).maybeSingle(),
+    supabase.from("property_marketing_checklist_items").select("*").eq("property_id",propertyId).order("category").order("title"),
+    supabase.from("property_status_transitions").select("to_status, description").eq("from_status",property.status).order("to_status"),
+    supabase.from("profiles").select("user_id, display_name").eq("status","ACTIVE").order("display_name"),
+    supabase.rpc("current_user_has_permission",{p_permission:"audit.read"}),
+  ]);
+  const firstError=[addressRes,ownersRes,contactsRes,featuresRes,energyRes,checklistRes,transitionsRes,usersRes].find((r)=>r.error)?.error;
+  if(firstError) throw new Response("Objektdaten konnten nicht vollständig geladen werden.",{status:500,headers:responseHeaders()});
+
+  let auditEvents:any[]=[];
+  if(auditPermissionRes.data===true){
+    const auditRes=await supabase.from("audit_events").select("id,occurred_at,actor_display_name_snapshot,action,field_changes,metadata").eq("entity_type","PROPERTY").eq("entity_id",propertyId).order("occurred_at",{ascending:false}).limit(60);
+    if(!auditRes.error) auditEvents=auditRes.data??[];
+  }
+  const contactMap=Object.fromEntries((contactsRes.data??[]).map((c)=>[c.id,c]));
+  return data({property,address:addressRes.data,owners:ownersRes.data??[],contacts:contactsRes.data??[],contactMap,features:featuresRes.data??[],energy:energyRes.data,checklist:checklistRes.data??[],transitions:transitionsRes.data??[],users:usersRes.data??[],auditEvents,profile},{headers:responseHeaders()});
+}
+
+export async function action({ request, context, params }: Route.ActionArgs) {
+  const session=await requirePermission(request,context.cloudflare.env,"property.write");
+  const {supabase,responseHeaders,userId}=session;
+  const propertyId=params.propertyId;
+  const fd=await request.formData();
+  const intent=text(fd,"_intent");
+  const conflict=()=>data<ActionResult>({error:"Der Datensatz wurde zwischenzeitlich geändert. Bitte Seite neu laden."},{status:409,headers:responseHeaders()});
+
+  if(intent==="core"){
+    const version=Number(text(fd,"version"));
+    const transactionType=text(fd,"transaction_type");
+    const update={
+      internal_title:text(fd,"internal_title"), property_type:text(fd,"property_type"), transaction_type:transactionType,
+      purchase_price:transactionType==="SALE"?num(text(fd,"purchase_price")):null,
+      rent_cold:transactionType==="RENT"?num(text(fd,"rent_cold")):null,
+      additional_costs:num(text(fd,"additional_costs")), hoa_fee:num(text(fd,"hoa_fee")), living_area_sqm:num(text(fd,"living_area_sqm")), usable_area_sqm:num(text(fd,"usable_area_sqm")), plot_area_sqm:num(text(fd,"plot_area_sqm")), rooms:num(text(fd,"rooms")), bedrooms:num(text(fd,"bedrooms")), bathrooms:num(text(fd,"bathrooms")), floor:num(text(fd,"floor")), year_built:num(text(fd,"year_built")), modernization_year:num(text(fd,"modernization_year")), condition:text(fd,"condition")||null, available_from:text(fd,"available_from")||null, tenancy_status:text(fd,"tenancy_status")||null, parking_spaces:num(text(fd,"parking_spaces")), residential_units:num(text(fd,"residential_units")), internal_notes:text(fd,"internal_notes")||null,
+    };
+    if(!update.internal_title) return data<ActionResult>({error:"Interner Titel ist erforderlich."},{status:400,headers:responseHeaders()});
+    const {data:updated,error}=await supabase.from("properties").update(update).eq("id",propertyId).eq("version",version).select("id").maybeSingle();
+    if(error) return data<ActionResult>({error:"Objektstammdaten konnten nicht gespeichert werden."},{status:400,headers:responseHeaders()});
+    if(!updated)return conflict();
+    return redirect(`/properties/${propertyId}`,{headers:responseHeaders()});
+  }
+
+  if(intent==="status"){
+    const target=text(fd,"target_status"), version=Number(text(fd,"version"));
+    const {data:current}=await supabase.from("properties").select("status").eq("id",propertyId).maybeSingle();
+    if(target==="ARCHIVED"||current?.status==="ARCHIVED") await requirePermission(request,context.cloudflare.env,"property.archive");
+    const {data:updated,error}=await supabase.from("properties").update({status:target}).eq("id",propertyId).eq("version",version).select("id").maybeSingle();
+    if(error)return data<ActionResult>({error:"Dieser Statuswechsel ist fachlich nicht zulässig."},{status:400,headers:responseHeaders()});
+    if(!updated)return conflict();
+    return redirect(`/properties/${propertyId}`,{headers:responseHeaders()});
+  }
+
+  if(intent==="address"){
+    const addressId=text(fd,"address_id"), version=Number(text(fd,"address_version")||"0");
+    const payload={street:text(fd,"street"),house_number:text(fd,"house_number"),postal_code:text(fd,"postal_code"),city:text(fd,"city"),district:text(fd,"district")||null,country:"DE",public_address_mode:text(fd,"public_address_mode")||"CITY_ONLY"};
+    if(!payload.street||!payload.house_number||!payload.postal_code||!payload.city)return data<ActionResult>({error:"Straße, Hausnummer, PLZ und Ort sind erforderlich."},{status:400,headers:responseHeaders()});
+    if(addressId){
+      const {data:updated,error}=await supabase.from("property_addresses").update(payload).eq("id",addressId).eq("version",version).select("id").maybeSingle();
+      if(error)return data<ActionResult>({error:"Adresse konnte nicht gespeichert werden."},{status:400,headers:responseHeaders()}); if(!updated)return conflict();
+    } else {
+      const {error}=await supabase.from("property_addresses").insert({...payload,property_id:propertyId,created_by:userId,updated_by:userId});
+      if(error)return data<ActionResult>({error:"Adresse konnte nicht angelegt werden."},{status:400,headers:responseHeaders()});
+    }
+    return redirect(`/properties/${propertyId}`,{headers:responseHeaders()});
+  }
+
+  if(intent==="owner_add"){
+    const contactId=text(fd,"contact_id"); if(!contactId)return data<ActionResult>({error:"Eigentümer auswählen."},{status:400,headers:responseHeaders()});
+    const percentage=num(text(fd,"ownership_percentage"));
+    const {error}=await supabase.from("property_owners").insert({property_id:propertyId,contact_id:contactId,ownership_percentage:percentage,ownership_type:text(fd,"ownership_type")||null,primary_contact:fd.get("primary_contact")==="on",created_by:userId,updated_by:userId});
+    if(error)return data<ActionResult>({error:"Eigentümer konnte nicht zugeordnet werden. Prüfe insbesondere die Eigentumsanteile (max. 100 %)."},{status:400,headers:responseHeaders()});
+    return redirect(`/properties/${propertyId}`,{headers:responseHeaders()});
+  }
+  if(intent==="owner_remove"){
+    const {data:removed,error}=await supabase.from("property_owners").delete().eq("id",text(fd,"owner_id")).eq("version",Number(text(fd,"owner_version"))).select("id").maybeSingle();
+    if(error)return data<ActionResult>({error:"Eigentümerbeziehung konnte nicht entfernt werden."},{status:400,headers:responseHeaders()}); if(!removed)return conflict();
+    return redirect(`/properties/${propertyId}`,{headers:responseHeaders()});
+  }
+
+  if(intent==="feature_add"){
+    const key=text(fd,"feature_key"); const option=FEATURE_OPTIONS.find(([v])=>v===key); if(!option)return data<ActionResult>({error:"Ungültiges Ausstattungsmerkmal."},{status:400,headers:responseHeaders()});
+    const {error}=await supabase.from("property_features").insert({property_id:propertyId,feature_key:key,label:option[1],value_type:"BOOLEAN",boolean_value:true,created_by:userId,updated_by:userId});
+    if(error)return data<ActionResult>({error:"Merkmal ist bereits vorhanden oder konnte nicht gespeichert werden."},{status:400,headers:responseHeaders()});
+    return redirect(`/properties/${propertyId}`,{headers:responseHeaders()});
+  }
+  if(intent==="feature_remove"){
+    const {data:removed,error}=await supabase.from("property_features").delete().eq("id",text(fd,"feature_id")).eq("version",Number(text(fd,"feature_version"))).select("id").maybeSingle();
+    if(error)return data<ActionResult>({error:"Merkmal konnte nicht entfernt werden."},{status:400,headers:responseHeaders()}); if(!removed)return conflict();
+    return redirect(`/properties/${propertyId}`,{headers:responseHeaders()});
+  }
+
+  if(intent==="energy"){
+    const energyId=text(fd,"energy_id"), certificatePresent=fd.get("certificate_present")==="on";
+    const payload={certificate_present:certificatePresent,certificate_type:certificatePresent?(text(fd,"certificate_type")||null):null,energy_value_kwh:certificatePresent?num(text(fd,"energy_value_kwh")):null,efficiency_class:certificatePresent?(text(fd,"efficiency_class")||null):null,energy_source:certificatePresent?(text(fd,"energy_source")||null):null,building_year:certificatePresent?num(text(fd,"energy_building_year")):null,valid_until:certificatePresent?(text(fd,"energy_valid_until")||null):null,notes:text(fd,"energy_notes")||null};
+    if(energyId){
+      const {data:updated,error}=await supabase.from("property_energy_data").update(payload).eq("id",energyId).eq("version",Number(text(fd,"energy_version"))).select("id").maybeSingle();
+      if(error)return data<ActionResult>({error:"Energiedaten konnten nicht gespeichert werden."},{status:400,headers:responseHeaders()}); if(!updated)return conflict();
+    }else{
+      const {error}=await supabase.from("property_energy_data").insert({...payload,property_id:propertyId,created_by:userId,updated_by:userId}); if(error)return data<ActionResult>({error:"Energiedaten konnten nicht angelegt werden."},{status:400,headers:responseHeaders()});
+    }
+    return redirect(`/properties/${propertyId}`,{headers:responseHeaders()});
+  }
+
+  if(intent==="checklist"){
+    const status=text(fd,"checklist_status");
+    const payload:any={status,completed_at:status==="DONE"?new Date().toISOString():null,completed_by:status==="DONE"?userId:null};
+    const {data:updated,error}=await supabase.from("property_marketing_checklist_items").update(payload).eq("id",text(fd,"checklist_id")).eq("version",Number(text(fd,"checklist_version"))).select("id").maybeSingle();
+    if(error)return data<ActionResult>({error:"Checklistenpunkt konnte nicht aktualisiert werden."},{status:400,headers:responseHeaders()}); if(!updated)return conflict();
+    return redirect(`/properties/${propertyId}`,{headers:responseHeaders()});
+  }
+
+  return data<ActionResult>({error:"Unbekannte Aktion."},{status:400,headers:responseHeaders()});
+}
+
+export default function PropertyDetail(){
+  const d=useLoaderData<typeof loader>(); const result=useActionData<typeof action>(); const p=d.property;
+  const usedFeatures=new Set(d.features.map((f)=>f.feature_key));
+  return <main className="editor-shell">
+    <header className="editor-header"><div><Link className="back-link" to="/properties">← Immobilien</Link><p className="eyebrow">{p.property_number} · {p.transaction_type==="SALE"?"Verkauf":"Vermietung"}</p><h1 className="editor-title">{p.internal_title}</h1><p className="editor-meta">{TYPE_LABELS[p.property_type]??p.property_type} · Status {p.status} · Version {p.version}</p></div><div className="header-user"><span className="badge">STAGING</span><small>{d.profile.display_name}</small></div></header>
+    {result?.error?<div className="form-error">{result.error}</div>:null}
+
+    <div className="property-summary-grid">
+      <section className="data-card"><div className="card-head"><div><p className="eyebrow">Workflow</p><h2>Status</h2></div><span className="badge">{p.status}</span></div><div className="inline-actions">
+        {p.status==="ARCHIVED" && p.status_before_archive ? <Form method="post"><input type="hidden" name="_intent" value="status"/><input type="hidden" name="version" value={p.version}/><input type="hidden" name="target_status" value={p.status_before_archive}/><button className="secondary-button" type="submit">Wiederherstellen → {labelStatus(p.status_before_archive)}</button></Form> : d.transitions.map((t)=><Form method="post" key={t.to_status}><input type="hidden" name="_intent" value="status"/><input type="hidden" name="version" value={p.version}/><input type="hidden" name="target_status" value={t.to_status}/><button className="secondary-button" type="submit" title={t.description??""}>→ {labelStatus(t.to_status)}</button></Form>)}
+      </div></section>
+      <section className="data-card"><div className="card-head"><div><p className="eyebrow">Vermarktungsreife</p><h2>Checkliste</h2></div><span className="subtle">{d.checklist.filter((i)=>i.status==="DONE"||i.status==="WAIVED").length}/{d.checklist.length}</span></div>{d.checklist.map((item)=><Form method="post" className="checklist-row" key={item.id}><input type="hidden" name="_intent" value="checklist"/><input type="hidden" name="checklist_id" value={item.id}/><input type="hidden" name="checklist_version" value={item.version}/><div><strong>{item.title}</strong><small>{item.category}{item.required?" · Pflicht":" · optional"}</small></div><select name="checklist_status" defaultValue={item.status} onChange={(e)=>e.currentTarget.form?.requestSubmit()}><option value="TODO">Offen</option><option value="IN_PROGRESS">In Arbeit</option><option value="DONE">Erledigt</option><option value="WAIVED">Entfällt</option></select></Form>)}</section>
+    </div>
+
+    <section className="editor-card property-section"><div className="card-head"><div><p className="eyebrow">Objektstammdaten</p><h2>Basis & Kennzahlen</h2></div></div><Form method="post"><input type="hidden" name="_intent" value="core"/><input type="hidden" name="version" value={p.version}/><div className="form-grid">
+      <label className="form-field"><span>Interner Titel</span><input name="internal_title" defaultValue={p.internal_title} required/></label><label className="form-field"><span>Typ</span><select name="property_type" defaultValue={p.property_type}>{Object.entries(TYPE_LABELS).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label>
+      <label className="form-field"><span>Transaktion</span><select name="transaction_type" defaultValue={p.transaction_type}><option value="SALE">Verkauf</option><option value="RENT">Vermietung</option></select></label><label className="form-field"><span>Kaufpreis</span><input name="purchase_price" defaultValue={p.purchase_price??""}/></label><label className="form-field"><span>Kaltmiete</span><input name="rent_cold" defaultValue={p.rent_cold??""}/></label><label className="form-field"><span>Nebenkosten</span><input name="additional_costs" defaultValue={p.additional_costs??""}/></label><label className="form-field"><span>Hausgeld</span><input name="hoa_fee" defaultValue={p.hoa_fee??""}/></label><label className="form-field"><span>Wohnfläche m²</span><input name="living_area_sqm" defaultValue={p.living_area_sqm??""}/></label><label className="form-field"><span>Nutzfläche m²</span><input name="usable_area_sqm" defaultValue={p.usable_area_sqm??""}/></label><label className="form-field"><span>Grundstück m²</span><input name="plot_area_sqm" defaultValue={p.plot_area_sqm??""}/></label><label className="form-field"><span>Zimmer</span><input name="rooms" defaultValue={p.rooms??""}/></label><label className="form-field"><span>Schlafzimmer</span><input name="bedrooms" defaultValue={p.bedrooms??""}/></label><label className="form-field"><span>Bäder</span><input name="bathrooms" defaultValue={p.bathrooms??""}/></label><label className="form-field"><span>Etage</span><input name="floor" defaultValue={p.floor??""}/></label><label className="form-field"><span>Baujahr</span><input name="year_built" defaultValue={p.year_built??""}/></label><label className="form-field"><span>Modernisiert</span><input name="modernization_year" defaultValue={p.modernization_year??""}/></label><label className="form-field"><span>Zustand</span><input name="condition" defaultValue={p.condition??""}/></label><label className="form-field"><span>Verfügbar ab</span><input name="available_from" type="date" defaultValue={p.available_from??""}/></label><label className="form-field"><span>Vermietungsstatus</span><select name="tenancy_status" defaultValue={p.tenancy_status??""}><option value="">—</option><option value="VACANT">Leerstehend</option><option value="OWNER_OCCUPIED">Eigengenutzt</option><option value="RENTED">Vermietet</option><option value="PARTIALLY_RENTED">Teilvermietet</option><option value="UNKNOWN">Unbekannt</option></select></label><label className="form-field"><span>Stellplätze</span><input name="parking_spaces" defaultValue={p.parking_spaces??""}/></label><label className="form-field"><span>Wohneinheiten</span><input name="residential_units" defaultValue={p.residential_units??""}/></label>
+    </div><label className="form-field full-width"><span>Interne Notizen</span><textarea name="internal_notes" rows={5} defaultValue={p.internal_notes??""}/></label><div className="form-actions"><button className="primary-button" type="submit">Stammdaten speichern</button></div></Form></section>
+
+    <div className="dashboard-grid property-section">
+      <section className="data-card"><div className="card-head"><div><p className="eyebrow">Vertraulich intern</p><h2>Objektadresse</h2></div></div><Form method="post" className="auth-form"><input type="hidden" name="_intent" value="address"/><input type="hidden" name="address_id" value={d.address?.id??""}/><input type="hidden" name="address_version" value={d.address?.version??0}/><label><span>Straße</span><input name="street" defaultValue={d.address?.street??""} required/></label><label><span>Hausnummer</span><input name="house_number" defaultValue={d.address?.house_number??""} required/></label><label><span>PLZ</span><input name="postal_code" defaultValue={d.address?.postal_code??""} required/></label><label><span>Ort</span><input name="city" defaultValue={d.address?.city??""} required/></label><label><span>Ortsteil</span><input name="district" defaultValue={d.address?.district??""}/></label><label><span>Öffentlich zeigen</span><select name="public_address_mode" defaultValue={d.address?.public_address_mode??"CITY_ONLY"}><option value="FULL">Vollständig</option><option value="STREET_ONLY">Straße</option><option value="DISTRICT_ONLY">Ortsteil</option><option value="CITY_ONLY">Nur Ort</option><option value="HIDDEN">Verbergen</option></select></label><button className="primary-button" type="submit">Adresse speichern</button></Form></section>
+
+      <section className="data-card"><div className="card-head"><div><p className="eyebrow">Mehrfacheigentum möglich</p><h2>Eigentümer</h2></div></div><div className="data-list">{d.owners.map((owner)=>{const c=d.contactMap[owner.contact_id];return <div className="data-row" key={owner.id}><div><strong>{c?`${c.first_name} ${c.last_name}`:owner.contact_id}</strong><small>{owner.ownership_percentage??"?"} % · {owner.ownership_type??"ohne Typ"}{owner.primary_contact?" · Hauptkontakt":""}</small></div><Form method="post"><input type="hidden" name="_intent" value="owner_remove"/><input type="hidden" name="owner_id" value={owner.id}/><input type="hidden" name="owner_version" value={owner.version}/><button className="text-button" type="submit">Entfernen</button></Form></div>})}{d.owners.length===0?<p className="empty-state">Noch kein Eigentümer zugeordnet.</p>:null}</div><Form method="post" className="auth-form compact-form"><input type="hidden" name="_intent" value="owner_add"/><label><span>Kontakt</span><select name="contact_id" defaultValue="" required><option value="">Auswählen…</option>{d.contacts.map((c)=><option key={c.id} value={c.id}>{c.last_name}, {c.first_name} · {c.contact_number}</option>)}</select></label><label><span>Anteil %</span><input name="ownership_percentage" inputMode="decimal"/></label><label><span>Eigentumsart</span><input name="ownership_type" placeholder="z. B. Miteigentum"/></label><label className="checkbox-row"><input type="checkbox" name="primary_contact"/><span>Hauptkontakt</span></label><button className="secondary-button" type="submit">Eigentümer hinzufügen</button></Form></section>
+    </div>
+
+    <div className="dashboard-grid property-section">
+      <section className="data-card"><div className="card-head"><div><p className="eyebrow">Flexibles Merkmalsmodell</p><h2>Ausstattung</h2></div></div><div className="chip-list">{d.features.map((feature)=><Form method="post" key={feature.id}><input type="hidden" name="_intent" value="feature_remove"/><input type="hidden" name="feature_id" value={feature.id}/><input type="hidden" name="feature_version" value={feature.version}/><button className="feature-chip" type="submit" title="Entfernen">{feature.label} ×</button></Form>)}</div><Form method="post" className="inline-form"><input type="hidden" name="_intent" value="feature_add"/><select name="feature_key" defaultValue=""><option value="">Merkmal hinzufügen…</option>{FEATURE_OPTIONS.filter(([v])=>!usedFeatures.has(v)).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select><button className="secondary-button" type="submit">Hinzufügen</button></Form></section>
+      <section className="data-card"><div className="card-head"><div><p className="eyebrow">Keine Werte erfinden</p><h2>Energiedaten</h2></div></div><Form method="post" className="auth-form"><input type="hidden" name="_intent" value="energy"/><input type="hidden" name="energy_id" value={d.energy?.id??""}/><input type="hidden" name="energy_version" value={d.energy?.version??0}/><label className="checkbox-row"><input type="checkbox" name="certificate_present" defaultChecked={d.energy?.certificate_present??false}/><span>Energieausweis vorhanden</span></label><label><span>Art</span><select name="certificate_type" defaultValue={d.energy?.certificate_type??""}><option value="">—</option><option value="DEMAND">Bedarfsausweis</option><option value="CONSUMPTION">Verbrauchsausweis</option><option value="OTHER">Sonstige</option></select></label><label><span>Kennwert kWh/(m²·a)</span><input name="energy_value_kwh" defaultValue={d.energy?.energy_value_kwh??""}/></label><label><span>Effizienzklasse</span><select name="efficiency_class" defaultValue={d.energy?.efficiency_class??""}><option value="">—</option>{["A+","A","B","C","D","E","F","G","H"].map(v=><option key={v} value={v}>{v}</option>)}</select></label><label><span>Energieträger</span><input name="energy_source" defaultValue={d.energy?.energy_source??""}/></label><label><span>Gebäudebaujahr</span><input name="energy_building_year" defaultValue={d.energy?.building_year??""}/></label><label><span>Gültig bis</span><input name="energy_valid_until" type="date" defaultValue={d.energy?.valid_until??""}/></label><label><span>Notiz</span><textarea name="energy_notes" rows={3} defaultValue={d.energy?.notes??""}/></label><button className="primary-button" type="submit">Energiedaten speichern</button></Form></section>
+    </div>
+
+    {d.auditEvents.length>0?<section className="history-card property-section"><div className="card-head"><div><p className="eyebrow">Append-only</p><h2>Objekthistorie</h2></div><Link className="subtle-link" to={`/crm/history?entity=PROPERTY&reference=${encodeURIComponent(p.property_number)}`}>Systemhistorie</Link></div><div className="history-list">{d.auditEvents.map((event)=><article className="history-event" key={event.id}><div className="history-head"><strong>{event.action}</strong><small>{formatDate(event.occurred_at)}</small></div><p>{event.actor_display_name_snapshot??"System"}{event.metadata?.change_type?` · ${event.metadata.change_type}`:""}</p></article>)}</div></section>:null}
+  </main>;
+}
