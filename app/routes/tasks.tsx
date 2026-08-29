@@ -20,7 +20,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   let query = supabase
     .from("tasks")
-    .select("id, task_number, title, description, status, priority, due_at, contact_id, responsible_user, version")
+    .select("id, task_number, title, description, status, priority, due_at, contact_id, property_id, responsible_user, version")
     .is("archived_at", null)
     .order("due_at", { ascending: true })
     .limit(200);
@@ -32,17 +32,20 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     { data: tasks, error: taskError },
     { data: contacts, error: contactError },
     { data: profiles, error: profileError },
+    { data: properties, error: propertyError },
   ] = await Promise.all([
     query,
     supabase.from("contacts").select("id, contact_number, first_name, last_name").is("archived_at", null).order("last_name").limit(500),
     supabase.from("profiles").select("user_id, display_name, status").eq("status", "ACTIVE").order("display_name"),
+    supabase.from("properties").select("id, property_number, internal_title, status").neq("status", "ARCHIVED").order("updated_at", { ascending: false }).limit(500),
   ]);
 
-  if (taskError || contactError || profileError) throw new Response("Aufgaben konnten nicht geladen werden.", { status: 500 });
+  if (taskError || contactError || profileError || propertyError) throw new Response("Aufgaben konnten nicht geladen werden.", { status: 500 });
   const contactMap = Object.fromEntries((contacts ?? []).map((item) => [item.id, item]));
   const profileMap = Object.fromEntries((profiles ?? []).map((item) => [item.user_id, item.display_name]));
+  const propertyMap = Object.fromEntries((properties ?? []).map((item) => [item.id, item]));
 
-  return data({ tasks: tasks ?? [], contacts: contacts ?? [], profiles: profiles ?? [], contactMap, profileMap, profile, status }, { headers: responseHeaders() });
+  return data({ tasks: tasks ?? [], contacts: contacts ?? [], profiles: profiles ?? [], properties: properties ?? [], contactMap, profileMap, propertyMap, profile, status }, { headers: responseHeaders() });
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
@@ -62,6 +65,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     const priority = text(formData, "priority") || "NORMAL";
     const dueDate = text(formData, "due_date");
     const contactId = text(formData, "contact_id");
+    const propertyId = text(formData, "property_id");
     const responsibleUser = await validAssignee(text(formData, "responsible_user"));
     if (!title || !dueDate) return data<ActionResult>({ error: "Titel und Fälligkeitsdatum sind erforderlich." }, { status: 400, headers: responseHeaders() });
     if (!responsibleUser) return data<ActionResult>({ error: "Der ausgewählte Verantwortliche ist nicht aktiv." }, { status: 400, headers: responseHeaders() });
@@ -73,6 +77,7 @@ export async function action({ request, context }: Route.ActionArgs) {
       due_at: `${dueDate}T12:00:00.000Z`,
       responsible_user: responsibleUser,
       contact_id: contactId || null,
+      property_id: propertyId || null,
       created_by: userId,
       updated_by: userId,
     });
@@ -111,7 +116,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 }
 
 export default function Tasks() {
-  const { tasks, contacts, profiles, contactMap, profileMap, profile, status } = useLoaderData<typeof loader>();
+  const { tasks, contacts, profiles, properties, contactMap, profileMap, propertyMap, profile, status } = useLoaderData<typeof loader>();
   const result = useActionData<typeof action>();
 
   return (
@@ -129,10 +134,11 @@ export default function Tasks() {
           <div className="data-list">
             {tasks.map((task) => {
               const contact = task.contact_id ? contactMap[task.contact_id] : null;
+              const property = task.property_id ? propertyMap[task.property_id] : null;
               const overdue = ["OPEN", "IN_PROGRESS"].includes(task.status) && task.due_at && new Date(task.due_at).getTime() < Date.now();
               return (
                 <div className="data-row" key={task.id}>
-                  <div><strong>{task.title}</strong><small>{task.task_number} · {task.priority} · {overdue ? "ÜBERFÄLLIG · " : ""}fällig {formatDate(task.due_at)}{contact ? ` · ${contact.first_name} ${contact.last_name}` : ""} · verantwortlich: {task.responsible_user ? (profileMap[task.responsible_user] ?? "Benutzer") : "—"}</small></div>
+                  <div><strong>{task.title}</strong><small>{task.task_number} · {task.priority} · {overdue ? "ÜBERFÄLLIG · " : ""}fällig {formatDate(task.due_at)}{contact ? ` · ${contact.first_name} ${contact.last_name}` : ""}{property ? ` · ${property.property_number}` : ""} · verantwortlich: {task.responsible_user ? (profileMap[task.responsible_user] ?? "Benutzer") : "—"}</small>{property ? <Link className="subtle-link" to={`/properties/${property.id}`}>{property.internal_title}</Link> : null}</div>
                   <div className="row-meta">
                     <span>{task.status}</span>
                     <Form method="post" className="inline-actions">
@@ -163,6 +169,7 @@ export default function Tasks() {
             <label><span>Fällig *</span><input name="due_date" type="date" required /></label>
             <label><span>Verantwortlich</span><select name="responsible_user" defaultValue={profile.user_id}>{profiles.map((item) => <option key={item.user_id} value={item.user_id}>{item.display_name}</option>)}</select></label>
             <label><span>Kontakt</span><select name="contact_id" defaultValue=""><option value="">Ohne Kontaktbezug</option>{contacts.map((contact) => <option key={contact.id} value={contact.id}>{contact.last_name}, {contact.first_name} · {contact.contact_number}</option>)}</select></label>
+            <label><span>Immobilie</span><select name="property_id" defaultValue=""><option value="">Ohne Objektbezug</option>{properties.map((property) => <option key={property.id} value={property.id}>{property.property_number} · {property.internal_title}</option>)}</select></label>
             <button className="primary-button" type="submit">Aufgabe speichern</button>
           </Form>
         </section>
