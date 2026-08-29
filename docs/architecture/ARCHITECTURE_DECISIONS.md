@@ -68,3 +68,30 @@ Zu Beginn werden Supabase/Postgres und typisierte Datenzugriffe ohne zusätzlich
 **Status:** Accepted
 
 Provisionen und andere Geldwerte werden nicht mit ungeeigneten Floating-Point-Datentypen persistiert oder berechnet.
+
+## ADR-013 – Atomare Domain-Aktionen über eng begrenzte RPCs
+**Status:** Accepted
+
+Vorgänge, die mehrere Tabellen konsistent verändern müssen, werden bei Bedarf als kleine PostgreSQL-Funktion umgesetzt. Beispiele: Kontakt + Primäradresse und Kommentar + Mentions.
+
+**Regel:** Standard ist `SECURITY INVOKER`, damit RLS erhalten bleibt. `SECURITY DEFINER` ist nur für private Trigger/Helfer zulässig, nicht als allgemeine öffentliche Abkürzung für Berechtigungen.
+
+## ADR-014 – Regelbasierte Duplikaterkennung, kein automatischer Merge
+**Status:** Accepted
+
+Kontaktduplikate werden nachvollziehbar über E-Mail, normalisierte Mobilnummer und Name + vollständige Anschrift erkannt. Treffer erzeugen eine Warnung. Zusammenführen erfolgt niemals automatisch.
+
+## ADR-015 – Archivieren statt still löschen
+**Status:** Accepted
+
+Geschäftsdaten werden standardmäßig archiviert. Archivieren/Wiederherstellen benötigt eigene Permission, setzt serverseitig `archived_by`, erhöht die Version und erzeugt explizite Audit-Aktionen `ARCHIVE` bzw. `RESTORE`.
+
+## ADR-016 – Zentrale CRM-Suche im RLS-Kontext
+**Status:** Accepted
+
+Die globale CRM-Suche läuft serverseitig in PostgreSQL als `SECURITY INVOKER` und respektiert RLS. Suchindizes dürfen früh vorbereitet werden; `unused index`-Hinweise in leerem STAGING sind kein Grund, vorgesehene Produktionsindizes vorschnell zu entfernen.
+
+## ADR-017 – Doppelte Autorisierung für sensible Oberflächen
+**Status:** Accepted
+
+RLS bleibt die Daten-Sicherheitsgrenze. Zusätzlich verwenden sensible serverseitige Routen einen expliziten Permission-Guard und liefern bei fehlender Permission HTTP 403. Beispiel: globale Systemhistorie benötigt `audit.read`.
