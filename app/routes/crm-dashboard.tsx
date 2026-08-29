@@ -13,19 +13,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     { count: taskCount, error: taskCountError },
     { count: unreadCount, error: notificationError },
   ] = await Promise.all([
-    supabase
-      .from("contacts")
-      .select("id, contact_number, first_name, last_name, email, mobile, status, updated_at")
-      .is("archived_at", null)
-      .order("updated_at", { ascending: false })
-      .limit(25),
-    supabase
-      .from("tasks")
-      .select("id, task_number, title, status, priority, due_at, contact_id")
-      .is("archived_at", null)
-      .in("status", ["OPEN", "IN_PROGRESS"])
-      .order("due_at", { ascending: true })
-      .limit(10),
+    supabase.from("contacts").select("id, contact_number, first_name, last_name, email, mobile, status, updated_at").is("archived_at", null).order("updated_at", { ascending: false }).limit(25),
+    supabase.from("tasks").select("id, task_number, title, status, priority, due_at, contact_id").is("archived_at", null).in("status", ["OPEN", "IN_PROGRESS"]).order("due_at", { ascending: true }).limit(10),
     supabase.from("contacts").select("id", { count: "exact", head: true }).is("archived_at", null),
     supabase.from("organizations").select("id", { count: "exact", head: true }).is("archived_at", null),
     supabase.from("tasks").select("id", { count: "exact", head: true }).is("archived_at", null).in("status", ["OPEN", "IN_PROGRESS"]),
@@ -36,18 +25,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     throw new Response("CRM-Daten konnten nicht geladen werden.", { status: 500 });
   }
 
-  return data(
-    {
-      profile,
-      contacts: contacts ?? [],
-      tasks: tasks ?? [],
-      contactCount: contactCount ?? 0,
-      organizationCount: organizationCount ?? 0,
-      taskCount: taskCount ?? 0,
-      unreadCount: unreadCount ?? 0,
-    },
-    { headers: responseHeaders() },
-  );
+  return data({ profile, contacts: contacts ?? [], tasks: tasks ?? [], contactCount: contactCount ?? 0, organizationCount: organizationCount ?? 0, taskCount: taskCount ?? 0, unreadCount: unreadCount ?? 0 }, { headers: responseHeaders() });
 }
 
 function formatDate(value: string | null) {
@@ -68,6 +46,7 @@ export default function CrmDashboard() {
           <Link className="nav-item" to="/crm/tasks">Aufgaben</Link>
           <Link className="nav-item" to="/crm/notifications">Benachrichtigungen{unreadCount > 0 ? ` (${unreadCount})` : ""}</Link>
           <Link className="nav-item" to="/crm/organizations">Organisationen</Link>
+          <Link className="nav-item" to="/crm/history">Systemhistorie</Link>
           <Link className="nav-item" to="/crm/archive">Archiv</Link>
           <span className="nav-item muted">Leads</span>
           <span className="nav-item muted">Immobilien</span>
