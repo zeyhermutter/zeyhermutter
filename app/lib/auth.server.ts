@@ -25,3 +25,19 @@ export async function requireActiveUser(request: Request, env: Env) {
 
   return { supabase, responseHeaders, userId, profile };
 }
+
+export async function requirePermission(request: Request, env: Env, permission: string) {
+  const session = await requireActiveUser(request, env);
+  const { data: allowed, error } = await session.supabase.rpc("current_user_has_permission", {
+    p_permission: permission,
+  });
+
+  if (error || allowed !== true) {
+    throw new Response("Keine Berechtigung für diese Funktion.", {
+      status: 403,
+      headers: session.responseHeaders(),
+    });
+  }
+
+  return session;
+}
