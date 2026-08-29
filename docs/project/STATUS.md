@@ -3,70 +3,112 @@
 Stand: 29.08.2026
 
 ## Aktuelles Ziel
-Phase 1 / CRM – erstes nutzbares Multi-User-Grundsystem.
+Phase 1 / Modul 01 CRM – Abschluss gegen Definition of Done.
 
-## Erledigt
+## Infrastruktur
 - separates GitHub-Repository `zeyhermutter/zeyhermutter`
 - separates Supabase-STAGING in Frankfurt
 - Cloudflare-STAGING über `zeyhermutter.playsony.workers.dev`
-- SeasonCrew-Isolation
-- React Router + Cloudflare Worker Grundsystem
-- Supabase Rollen/Permissions
-- RLS-Sicherheitsbasis
-- append-only Audit-History
-- Activity-History
-- Kommentare/Mentions/Notifications Basismodell
-- CRM-Datenmodell für Kontakte, Organisationen, Beziehungen und Aufgaben
-- feldgenaue Audit-Trigger
-- Optimistic-Concurrency-Versionierung
-- serverseitige `updated_by`-Pflege
-- erster Auth-Benutzer aktiviert
+- SeasonCrew vollständig isoliert
+- Production nicht angelegt / nicht verändert
+
+## Auth & Security
+- Supabase Auth + SSR-Cookies
+- geschützte CRM-Routen mit `getClaims()`
+- erster echter Benutzer ACTIVE
 - Rolle `managing_director` zugewiesen
-- RLS unter echtem `authenticated`-Benutzerkontext erfolgreich geprüft
-- Login/Logout mit SSR-Cookies und `getClaims()`
-- `/crm` geschützt
-- Browser-Smoke-Test Login erfolgreich
-- erster realer STAGING-Kontakt erfolgreich angelegt
+- serverseitige Rollen/Permissions
+- RLS auf fachlichen Tabellen
+- RLS unter echtem `authenticated` Geschäftsführer-Kontext getestet
+- keine `service_role`-Credentials im Client
+- private Security-Helper nicht über Data API exponiert
+- öffentliche RPCs für Suche/Duplikate/Kontaktanlegen laufen als SECURITY INVOKER
+- Mention-Notifications werden über privaten Trigger erzeugt; öffentliche Kommentar-RPC bleibt im RLS-Kontext
+- Security Advisor: nur `Leaked Password Protection Disabled` verbleibt; auf Free-STAGING akzeptiert, vor Production erneut prüfen
+- Performance Advisor: FK-Index- und RLS-InitPlan-Warnungen behoben; verbleibende `unused index`-Infos sind bei leerem/neuem STAGING erwartbar
+
+## CRM – implementiert
+### Kontakte
 - Kontaktanlage und Stammdatenbearbeitung
-- Kontakt-History aus append-only AuditLog
-- Optimistic-Locking-Konflikterkennung
-- Kontaktrollen-Datenmodell und UI-Arbeitsbereich
-- Personenbeziehungen mit eingehender/ausgehender Darstellung
-- Rollen- und Beziehungsänderungen werden dem Kontakt-Audit zugeordnet
-- kontaktbezogene Aufgaben/Wiedervorlagen
-- Task-Audit und Optimistic Locking beim Abschließen
-- CRM-Dashboard mit Arbeitsbereich/Stammdaten-Navigation
-- Organisationen-Verzeichnis und Neuanlage
-- Organisationsdetail mit History und Optimistic Locking
-- DB-Smoke-Test Kontakte: Create → Audit → Update → Version 2 → veralteter Updateversuch blockiert
-- DB-Smoke-Test Rollen/Beziehungen/Aufgaben unter echter Geschäftsführer-RLS erfolgreich
-- Audit-Smoke-Test: Kontakt- und Task-Ereignisse erfolgreich erzeugt
-- Smoke-Test-Daten vollständig zurückgerollt
-- alle ausgeführten Supabase-Migrationen im Repository gespiegelt
+- strukturierte optionale Primäradresse
+- atomare Kontakt + Adresse Anlage
+- automatische Geschäftsnummer `ZM-K-...`
+- Rollen
+- Personenbeziehungen
+- Kontakt ↔ Organisation Beziehungen mit Rolle/Funktion
+- mehrere Adressen
+- Arbeitsbereich und getrennte Stammdaten/Verknüpfungen
 
-## Security
-- RLS aktiv auf allen fachlichen Tabellen
-- Permission-Prüfung serverseitig/PostgreSQL
-- `service_role` wird nicht im Frontend verwendet
-- Auth-Responses werden mit `Cache-Control: private, no-store` behandelt
-- Supabase Security Advisor meldet aktuell nur `Leaked Password Protection Disabled`
-- diese Funktion wird vor Production erneut bewertet/aktiviert, wenn der verwendete Supabase-Tarif sie unterstützt
-- MFA bleibt Production-Hardening-Pflicht
+### Organisationen
+- Verzeichnis
+- Neuanlage
+- Detail/Bearbeitung
+- History
+- Optimistic Locking
 
-## Aktueller Stand im CRM
-- Login funktioniert im Browser
-- Kontakte können real in STAGING angelegt werden
-- CRM-Inkrement 1 ist technisch und im Browser bestätigt
-- CRM-Inkrement 2 ist serverseitig/RLS-seitig getestet und im Repository implementiert
-- Cloudflare baut neue `main`-Commits automatisch; der neueste UI-Stand muss nach Abschluss des laufenden Builds im Browser sichtbar sein
+### Aufgaben
+- globale Aufgaben-/Wiedervorlagenverwaltung
+- Priorität, Beschreibung, Fälligkeit und Kontaktbezug
+- Verantwortlicher Benutzer
+- spätere Umzuweisung an andere aktive Benutzer
+- OPEN / IN_PROGRESS / DONE / CANCELLED
+- Überfällig-Erkennung
+- Archivierung erledigter/abgebrochener Aufgaben
+- Optimistic Locking
 
-## Als Nächstes automatisch
-1. Kontakt ↔ Organisation Zuordnung im Kontakt-Arbeitsbereich ergänzen
-2. Aufgabenverwaltung um Zuständigkeit, Beschreibung und Statuswechsel erweitern
-3. globale CRM-Suche implementieren
-4. Duplikatprüfung Name + Anschrift ergänzen
-5. Archivieren/Wiederherstellen in der UI
-6. Modul 01 Abschlussprüfung gegen Definition of Done
+### Zusammenarbeit
+- Activity History pro Kontakt
+- Notiz / Telefonat / E-Mail / Meeting
+- interne Kommentare
+- @Mentions
+- Benachrichtigungs-Inbox
+- einzelne/alle Benachrichtigungen als gelesen markieren
+- zweiter aktiver Benutzer erscheint automatisch in Zuweisung und Mention-Auswahl
+
+### Suche & Duplikate
+- globale Suche über Kontakte, Kontaktnummern, Vollnamen, E-Mail, Telefon/Mobil, Anschriften, Organisationen und Aufgaben
+- Archiv kann optional in Suche einbezogen werden
+- regelbasierte Duplikaterkennung: gleiche E-Mail, gleiche normalisierte Mobilnummer oder gleicher Name + vollständige Anschrift
+- niemals automatischer Merge
+- vorhandenen Datensatz öffnen oder bewusst trotzdem neu anlegen
+
+### Archiv
+- zentrale Archivverwaltung für Kontakte, Organisationen und Aufgaben
+- getrennte Archive-Permissions
+- `archived_by` serverseitig gesetzt
+- Wiederherstellung löscht `archived_by`
+- Audit-Aktionen `ARCHIVE` und `RESTORE`
+- Versionierung/Concurrency auch bei Archivaktionen
+
+### History
+- append-only AuditLog
+- CREATE / UPDATE / STATUS_CHANGE / ARCHIVE / RESTORE / DELETE
+- alter/neuer Wert für Stammdaten
+- Rollen-/Personen-/Firmenbeziehungen dem Kontakt-Audit zugeordnet
+- Adressänderungen dem Kontakt-Audit zugeordnet
+- fachliche Activity getrennt vom Audit
+
+## Verifizierte Tests
+- echter Browser-Login erfolgreich
+- echter Kontakt im Browser erfolgreich angelegt und CREATE-Audit verifiziert
+- Kontakt Create → Audit → Update → Version 2 → stale Update blockiert
+- Rollen/Beziehungen/Aufgaben unter echter RLS erfolgreich
+- Audit für Rolle + Beziehung + Aufgabe erfolgreich
+- Kontakt+Adresse atomar erstellt
+- Duplikaterkennung liefert erwarteten Treffer
+- Vollnamensuche und kombinierte PLZ/Ort-Suche erfolgreich
+- Archiv: `archived_by` = ausführender Benutzer, Version 2, genau ein ARCHIVE-Event
+- Restore: `archived_by` leer, Version 3, RESTORE-Event
+- Collaboration: Aktivität + Kommentar + zugewiesene Aufgabe erfolgreich; Selbst-Mention erzeugt bewusst keine Notification
+- alle technischen Smoke-Test-Daten jeweils per Rollback entfernt
+
+## Noch offene Akzeptanzpunkte vor „Modul 01 DONE“
+1. aktueller kompletter UI-Stand muss erfolgreich von Cloudflare aus `main` gebaut/deployed sein
+2. Browser-Smoke-Test der neuen Bereiche: Suche, Aufgaben, Organisationen, Archiv, Firma & Adresse, Aktivität & Team, Inbox
+3. echter Zwei-Benutzer-Akzeptanztest für Aufgabe zuweisen + @Mention + Notification; dafür wird später ein zweites reales Benutzerkonto benötigt
+
+## Danach
+Nach erfolgreicher Modul-01-Abnahme beginnt Phase 2 / Modul 02 Immobilien. Gemeinsame Grundlagen dürfen weiter gehärtet werden, aber keine Production-Änderungen ohne ausdrückliche Freigabe.
 
 ## Production
 Nicht angelegt / nicht verändert. Production bleibt bis zur ausdrücklichen Freigabe gesperrt.
