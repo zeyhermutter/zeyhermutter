@@ -16,5 +16,8 @@ export default [
   route("crm/contacts/:contactId/collaboration", "routes/contact-collaboration.tsx"),
   route("crm/organizations", "routes/organizations.tsx"),
   route("crm/organizations/:organizationId", "routes/organization-detail.tsx"),
+  route("properties", "routes/properties.tsx"),
+  route("properties/new", "routes/property-new.tsx"),
+  route("properties/:propertyId", "routes/property-detail.tsx"),
   route("logout", "routes/logout.tsx"),
 ] satisfies RouteConfig;
