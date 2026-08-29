@@ -20,6 +20,9 @@ Phase 1 / Modul 01 CRM – Abschluss gegen Definition of Done.
 - serverseitige Rollen/Permissions
 - RLS auf fachlichen Tabellen
 - RLS unter echtem `authenticated` Geschäftsführer-Kontext getestet
+- expliziter serverseitiger Permission-Guard für sensible Routen
+- sichere `current_user_has_permission()`-RPC läuft als SECURITY INVOKER
+- Systemhistorie benötigt explizit `audit.read`
 - keine `service_role`-Credentials im Client
 - private Security-Helper nicht über Data API exponiert
 - öffentliche RPCs für Suche/Duplikate/Kontaktanlegen laufen als SECURITY INVOKER
@@ -87,6 +90,10 @@ Phase 1 / Modul 01 CRM – Abschluss gegen Definition of Done.
 - Rollen-/Personen-/Firmenbeziehungen dem Kontakt-Audit zugeordnet
 - Adressänderungen dem Kontakt-Audit zugeordnet
 - fachliche Activity getrennt vom Audit
+- globale Systemhistorie `/crm/history`
+- Filter nach Entity, Aktion, Benutzer und Geschäftsreferenz
+- Pagination mit 50 Ereignissen pro Seite
+- Zugriff zusätzlich zu RLS explizit über `audit.read` geschützt
 
 ## Verifizierte Tests
 - echter Browser-Login erfolgreich
@@ -100,12 +107,13 @@ Phase 1 / Modul 01 CRM – Abschluss gegen Definition of Done.
 - Archiv: `archived_by` = ausführender Benutzer, Version 2, genau ein ARCHIVE-Event
 - Restore: `archived_by` leer, Version 3, RESTORE-Event
 - Collaboration: Aktivität + Kommentar + zugewiesene Aufgabe erfolgreich; Selbst-Mention erzeugt bewusst keine Notification
+- Permission-Test: `audit.read = true`, nicht vorhandene Permission = false, `permission.manage` für Geschäftsführer = false
 - alle technischen Smoke-Test-Daten jeweils per Rollback entfernt
 
 ## Noch offene Akzeptanzpunkte vor „Modul 01 DONE“
 1. aktueller kompletter UI-Stand muss erfolgreich von Cloudflare aus `main` gebaut/deployed sein
-2. Browser-Smoke-Test der neuen Bereiche: Suche, Aufgaben, Organisationen, Archiv, Firma & Adresse, Aktivität & Team, Inbox
-3. echter Zwei-Benutzer-Akzeptanztest für Aufgabe zuweisen + @Mention + Notification; dafür wird später ein zweites reales Benutzerkonto benötigt
+2. Browser-Smoke-Test der neuen Bereiche: Suche, Aufgaben, Organisationen, Archiv, Firma & Adresse, Aktivität & Team, Inbox, Systemhistorie
+3. echter Zwei-Benutzer-Akzeptanztest für Aufgabe zuweisen + @Mention + Notification; dafür wird ein zweites reales Benutzerkonto benötigt
 
 ## Danach
 Nach erfolgreicher Modul-01-Abnahme beginnt Phase 2 / Modul 02 Immobilien. Gemeinsame Grundlagen dürfen weiter gehärtet werden, aber keine Production-Änderungen ohne ausdrückliche Freigabe.
