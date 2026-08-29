@@ -19,5 +19,6 @@ export default [
   route("properties", "routes/properties.tsx"),
   route("properties/new", "routes/property-new.tsx"),
   route("properties/:propertyId", "routes/property-detail.tsx"),
+  route("properties/:propertyId/documents", "routes/property-documents.tsx"),
   route("logout", "routes/logout.tsx"),
 ] satisfies RouteConfig;
