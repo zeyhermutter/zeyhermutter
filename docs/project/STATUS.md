@@ -44,15 +44,23 @@ Phase 1 / CRM – erstes nutzbares Multi-User-Grundsystem.
 - diese Funktion ist auf Supabase Pro+ verfügbar und wird spätestens vor Production aktiviert bzw. erneut bewertet
 - MFA bleibt Production-Hardening-Pflicht
 
-## Aktueller manueller Testpunkt
-Den aktuellen Cloudflare-Build im Browser testen:
+## Aktueller Deployment-Blocker
+Beim Browser-Smoke-Test liefert `/login` die ZeyherMutterOS-404-Seite. Die Route ist auf `main` korrekt registriert. Damit läuft auf Cloudflare noch nicht der aktuelle Route-Stand bzw. ein neuerer Build wurde nicht erfolgreich aktiviert.
+
+Deployment-Checkpoint: Dieser Commit dient bewusst als neuer Trigger für den Cloudflare-Git-Build.
+
+Zu prüfen in Cloudflare:
+1. Worker `zeyhermutter`
+2. Builds / Deployments
+3. neuester Build muss auf diesen bzw. einen neueren `main`-Commit zeigen
+4. Build- und Deploy-Schritt müssen erfolgreich sein
+
+## Nach erfolgreichem Deploy testen
 1. `https://zeyhermutter.playsony.workers.dev/login` öffnen
 2. mit dem angelegten STAGING-Benutzer anmelden
 3. prüfen, ob `/crm` geladen wird
 4. einen Testkontakt über `+ Kontakt` anlegen
 5. Kontakt öffnen, einen Wert ändern und prüfen, ob die Historie die Änderung zeigt
-
-Nach erfolgreichem Browser-Smoke-Test wird CRM-Inkrement 1 als abgeschlossen markiert.
 
 ## Danach automatisch
 1. Kontaktrollen in der UI ergänzen
