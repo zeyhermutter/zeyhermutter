@@ -1,0 +1,70 @@
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #eef2f3;
+  background: #101516;
+  font-synthesis: none;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-width: 320px;
+  background: radial-gradient(circle at 80% 0%, #263234 0, #101516 38rem);
+}
+.shell { min-height: 100vh; }
+.topbar {
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 28px;
+  border-bottom: 1px solid #2e393a;
+}
+.brand { display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: -.02em; }
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid #647173;
+  border-radius: 11px;
+  font-size: 12px;
+}
+.badge {
+  font-size: 11px;
+  letter-spacing: .14em;
+  border: 1px solid #617072;
+  border-radius: 999px;
+  padding: 8px 11px;
+  color: #bbc6c7;
+}
+.hero, .modules { max-width: 1180px; margin: 0 auto; padding: 84px 28px; }
+.hero { border-bottom: 1px solid #2e393a; }
+.eyebrow {
+  margin: 0 0 14px;
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  color: #91a0a2;
+  font-size: 11px;
+  font-weight: 700;
+}
+h1 { max-width: 850px; margin: 0; font-size: clamp(42px, 7vw, 82px); line-height: .98; letter-spacing: -.055em; }
+.lead { max-width: 720px; margin: 28px 0 0; color: #aeb9ba; font-size: 18px; line-height: 1.65; }
+.status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 52px; }
+.status { border: 1px solid #344143; border-radius: 16px; padding: 20px; background: #151c1d99; }
+.status strong, .status span { display: block; }
+.status span { margin-top: 7px; color: #91a0a2; font-size: 13px; }
+.section-head h2 { margin: 0; font-size: 34px; letter-spacing: -.04em; }
+.module-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 34px; }
+.module { min-height: 188px; padding: 22px; border-radius: 18px; border: 1px solid #303c3d; background: #151b1c; }
+.module span { color: #718083; font: 700 11px/1 monospace; }
+.module h3 { margin: 38px 0 8px; font-size: 20px; }
+.module p { color: #8f9b9d; line-height: 1.5; margin: 0; }
+.error-shell { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+.panel { max-width: 600px; padding: 36px; border: 1px solid #303c3d; border-radius: 18px; }
+@media (max-width: 760px) {
+  .hero, .modules { padding: 56px 18px; }
+  .status-grid, .module-grid { grid-template-columns: 1fr; }
+  .topbar { padding: 0 18px; }
+}
