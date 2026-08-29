@@ -23,16 +23,25 @@ Phase 1 / CRM – erstes nutzbares Multi-User-Grundsystem.
 - erster Auth-Benutzer aktiviert
 - Rolle `managing_director` zugewiesen
 - RLS unter echtem `authenticated`-Benutzerkontext erfolgreich geprüft
-- Security-Härtung der privaten Permission-Helper
-- Login/Logout-Routen mit SSR-Cookies und `getClaims()`
-- geschützte `/crm`-Route
-- responsive CRM-Dashboard-Shell
-- Kontaktanlage implementiert
-- Kontaktdetail mit Bearbeitung implementiert
-- Kontakt-History aus append-only AuditLog implementiert
-- Optimistic-Locking-Konflikterkennung in der Kontaktbearbeitung implementiert
-- DB-Smoke-Test erfolgreich: Create → Audit → Update → Version 2 → veralteter Updateversuch blockiert
-- Smoke-Test vollständig zurückgerollt, keine Testkontakte verblieben
+- Login/Logout mit SSR-Cookies und `getClaims()`
+- `/crm` geschützt
+- Browser-Smoke-Test Login erfolgreich
+- erster realer STAGING-Kontakt erfolgreich angelegt
+- Kontaktanlage und Stammdatenbearbeitung
+- Kontakt-History aus append-only AuditLog
+- Optimistic-Locking-Konflikterkennung
+- Kontaktrollen-Datenmodell und UI-Arbeitsbereich
+- Personenbeziehungen mit eingehender/ausgehender Darstellung
+- Rollen- und Beziehungsänderungen werden dem Kontakt-Audit zugeordnet
+- kontaktbezogene Aufgaben/Wiedervorlagen
+- Task-Audit und Optimistic Locking beim Abschließen
+- CRM-Dashboard mit Arbeitsbereich/Stammdaten-Navigation
+- Organisationen-Verzeichnis und Neuanlage
+- Organisationsdetail mit History und Optimistic Locking
+- DB-Smoke-Test Kontakte: Create → Audit → Update → Version 2 → veralteter Updateversuch blockiert
+- DB-Smoke-Test Rollen/Beziehungen/Aufgaben unter echter Geschäftsführer-RLS erfolgreich
+- Audit-Smoke-Test: Kontakt- und Task-Ereignisse erfolgreich erzeugt
+- Smoke-Test-Daten vollständig zurückgerollt
 - alle ausgeführten Supabase-Migrationen im Repository gespiegelt
 
 ## Security
@@ -41,34 +50,23 @@ Phase 1 / CRM – erstes nutzbares Multi-User-Grundsystem.
 - `service_role` wird nicht im Frontend verwendet
 - Auth-Responses werden mit `Cache-Control: private, no-store` behandelt
 - Supabase Security Advisor meldet aktuell nur `Leaked Password Protection Disabled`
-- diese Funktion ist auf Supabase Pro+ verfügbar und wird spätestens vor Production aktiviert bzw. erneut bewertet
+- diese Funktion wird vor Production erneut bewertet/aktiviert, wenn der verwendete Supabase-Tarif sie unterstützt
 - MFA bleibt Production-Hardening-Pflicht
 
-## Aktueller Deployment-Blocker
-Beim Browser-Smoke-Test liefert `/login` die ZeyherMutterOS-404-Seite. Die Route ist auf `main` korrekt registriert. Damit läuft auf Cloudflare noch nicht der aktuelle Route-Stand bzw. ein neuerer Build wurde nicht erfolgreich aktiviert.
+## Aktueller Stand im CRM
+- Login funktioniert im Browser
+- Kontakte können real in STAGING angelegt werden
+- CRM-Inkrement 1 ist technisch und im Browser bestätigt
+- CRM-Inkrement 2 ist serverseitig/RLS-seitig getestet und im Repository implementiert
+- Cloudflare baut neue `main`-Commits automatisch; der neueste UI-Stand muss nach Abschluss des laufenden Builds im Browser sichtbar sein
 
-Deployment-Checkpoint: Dieser Commit dient bewusst als neuer Trigger für den Cloudflare-Git-Build.
-
-Zu prüfen in Cloudflare:
-1. Worker `zeyhermutter`
-2. Builds / Deployments
-3. neuester Build muss auf diesen bzw. einen neueren `main`-Commit zeigen
-4. Build- und Deploy-Schritt müssen erfolgreich sein
-
-## Nach erfolgreichem Deploy testen
-1. `https://zeyhermutter.playsony.workers.dev/login` öffnen
-2. mit dem angelegten STAGING-Benutzer anmelden
-3. prüfen, ob `/crm` geladen wird
-4. einen Testkontakt über `+ Kontakt` anlegen
-5. Kontakt öffnen, einen Wert ändern und prüfen, ob die Historie die Änderung zeigt
-
-## Danach automatisch
-1. Kontaktrollen in der UI ergänzen
-2. Kontaktbeziehungen ergänzen
-3. Organisationen/Unternehmen ergänzen
-4. Aufgaben/Wiedervorlagen mit Zuweisung implementieren
-5. globale CRM-Suche und Duplikatprüfung erweitern
-6. danach Modul 01 Abschlussprüfung gegen Definition of Done
+## Als Nächstes automatisch
+1. Kontakt ↔ Organisation Zuordnung im Kontakt-Arbeitsbereich ergänzen
+2. Aufgabenverwaltung um Zuständigkeit, Beschreibung und Statuswechsel erweitern
+3. globale CRM-Suche implementieren
+4. Duplikatprüfung Name + Anschrift ergänzen
+5. Archivieren/Wiederherstellen in der UI
+6. Modul 01 Abschlussprüfung gegen Definition of Done
 
 ## Production
 Nicht angelegt / nicht verändert. Production bleibt bis zur ausdrücklichen Freigabe gesperrt.
