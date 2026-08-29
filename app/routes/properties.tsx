@@ -57,15 +57,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   if (addressError) throw new Response("Objektadressen konnten nicht geladen werden.", { status: 500 });
   const addressMap = Object.fromEntries((addresses ?? []).map((address) => [address.property_id, address]));
 
-  return data({
-    properties: properties ?? [],
-    addressMap,
-    total: count ?? 0,
-    page,
-    pageCount: Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE)),
-    filters: { status, transaction, propertyType },
-    profile,
-  }, { headers: responseHeaders() });
+  return data({ properties: properties ?? [], addressMap, total: count ?? 0, page, pageCount: Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE)), filters: { status, transaction, propertyType }, profile }, { headers: responseHeaders() });
 }
 
 export default function Properties() {
@@ -91,10 +83,10 @@ export default function Properties() {
         <div className="data-list">
           {properties.map((property) => {
             const address = addressMap[property.id];
-            return <Link className="data-row data-row-link" key={property.id} to={`/properties/${property.id}`}>
-              <div><strong>{property.internal_title}</strong><small>{property.property_number} · {TYPE_LABELS[property.property_type] ?? property.property_type} · {property.transaction_type === "SALE" ? "Verkauf" : "Vermietung"}</small></div>
+            return <div className="data-row" key={property.id}>
+              <div><Link className="data-title-link" to={`/properties/${property.id}`}><strong>{property.internal_title}</strong></Link><small>{property.property_number} · {TYPE_LABELS[property.property_type] ?? property.property_type} · {property.transaction_type === "SALE" ? "Verkauf" : "Vermietung"}</small><div className="row-links"><Link className="subtle-link" to={`/properties/${property.id}`}>Objektakte</Link><Link className="subtle-link" to={`/properties/${property.id}/documents`}>Dokumente</Link><Link className="subtle-link" to={`/properties/${property.id}/media`}>Medien</Link></div></div>
               <div className="row-meta"><span>{property.transaction_type === "SALE" ? money(property.purchase_price) : money(property.rent_cold)}</span><small>{address ? `${address.postal_code} ${address.city}${address.district ? ` · ${address.district}` : ""}` : "Adresse offen"} · {property.status}</small></div>
-            </Link>;
+            </div>;
           })}
           {properties.length === 0 ? <p className="empty-state">Keine Immobilien in dieser Ansicht.</p> : null}
         </div>
