@@ -1,0 +1,143 @@
+import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
+import type { Route } from "./+types/tasks";
+import { requireActiveUser } from "~/lib/auth.server";
+
+type ActionResult = { error?: string };
+
+function text(formData: FormData, key: string) {
+  return String(formData.get(key) ?? "").trim();
+}
+
+function formatDate(value: string | null) {
+  if (!value) return "—";
+  return new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeZone: "Europe/Berlin" }).format(new Date(value));
+}
+
+export async function loader({ request, context }: Route.LoaderArgs) {
+  const { supabase, responseHeaders, profile } = await requireActiveUser(request, context.cloudflare.env);
+  const url = new URL(request.url);
+  const status = url.searchParams.get("status") ?? "OPEN";
+
+  let query = supabase
+    .from("tasks")
+    .select("id, task_number, title, description, status, priority, due_at, contact_id, responsible_user, version")
+    .is("archived_at", null)
+    .order("due_at", { ascending: true })
+    .limit(200);
+
+  if (status === "OPEN") query = query.in("status", ["OPEN", "IN_PROGRESS"]);
+  else if (status !== "ALL") query = query.eq("status", status);
+
+  const [{ data: tasks, error: taskError }, { data: contacts, error: contactError }] = await Promise.all([
+    query,
+    supabase.from("contacts").select("id, contact_number, first_name, last_name").is("archived_at", null).order("last_name").limit(500),
+  ]);
+
+  if (taskError || contactError) throw new Response("Aufgaben konnten nicht geladen werden.", { status: 500 });
+  const contactMap = Object.fromEntries((contacts ?? []).map((item) => [item.id, item]));
+
+  return data({ tasks: tasks ?? [], contacts: contacts ?? [], contactMap, profile, status }, { headers: responseHeaders() });
+}
+
+export async function action({ request, context }: Route.ActionArgs) {
+  const { supabase, responseHeaders, userId } = await requireActiveUser(request, context.cloudflare.env);
+  const formData = await request.formData();
+  const intent = text(formData, "_intent");
+
+  if (intent === "create") {
+    const title = text(formData, "title");
+    const description = text(formData, "description");
+    const priority = text(formData, "priority") || "NORMAL";
+    const dueDate = text(formData, "due_date");
+    const contactId = text(formData, "contact_id");
+    if (!title || !dueDate) return data<ActionResult>({ error: "Titel und Fälligkeitsdatum sind erforderlich." }, { status: 400, headers: responseHeaders() });
+
+    const { error } = await supabase.from("tasks").insert({
+      title,
+      description: description || null,
+      priority,
+      due_at: `${dueDate}T12:00:00.000Z`,
+      responsible_user: userId,
+      contact_id: contactId || null,
+      created_by: userId,
+      updated_by: userId,
+    });
+    if (error) return data<ActionResult>({ error: "Aufgabe konnte nicht gespeichert werden." }, { status: 400, headers: responseHeaders() });
+    return redirect("/crm/tasks", { headers: responseHeaders() });
+  }
+
+  if (["start", "complete", "cancel", "reopen", "archive"].includes(intent)) {
+    const taskId = text(formData, "task_id");
+    const version = Number(text(formData, "version"));
+    const update: Record<string, unknown> = {};
+    if (intent === "start") update.status = "IN_PROGRESS";
+    if (intent === "complete") { update.status = "DONE"; update.completed_at = new Date().toISOString(); }
+    if (intent === "cancel") update.status = "CANCELLED";
+    if (intent === "reopen") { update.status = "OPEN"; update.completed_at = null; }
+    if (intent === "archive") update.archived_at = new Date().toISOString();
+
+    const { data: updated, error } = await supabase.from("tasks").update(update).eq("id", taskId).eq("version", version).select("id").maybeSingle();
+    if (error) return data<ActionResult>({ error: intent === "archive" ? "Aufgabe darf nicht archiviert werden oder konnte nicht gespeichert werden." : "Aufgabe konnte nicht aktualisiert werden." }, { status: 400, headers: responseHeaders() });
+    if (!updated) return data<ActionResult>({ error: "Die Aufgabe wurde zwischenzeitlich geändert. Bitte neu laden." }, { status: 409, headers: responseHeaders() });
+    return redirect("/crm/tasks", { headers: responseHeaders() });
+  }
+
+  return data<ActionResult>({ error: "Unbekannte Aktion." }, { status: 400, headers: responseHeaders() });
+}
+
+export default function Tasks() {
+  const { tasks, contacts, contactMap, profile, status } = useLoaderData<typeof loader>();
+  const result = useActionData<typeof action>();
+
+  return (
+    <main className="editor-shell">
+      <header className="editor-header">
+        <div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">Modul 01 · CRM</p><h1 className="editor-title">Aufgaben & Wiedervorlagen</h1></div>
+        <div className="header-user"><span className="badge">STAGING</span><small>{profile.display_name}</small></div>
+      </header>
+
+      {result?.error ? <div className="form-error">{result.error}</div> : null}
+
+      <div className="dashboard-grid">
+        <section className="data-card">
+          <div className="card-head"><div><p className="eyebrow">Wiedervorlagen</p><h2>Aufgaben</h2></div><Form method="get"><select name="status" defaultValue={status} onChange={(event) => event.currentTarget.form?.submit()}><option value="OPEN">Offen</option><option value="ALL">Alle</option><option value="DONE">Erledigt</option><option value="CANCELLED">Abgebrochen</option></select></Form></div>
+          <div className="data-list">
+            {tasks.map((task) => {
+              const contact = task.contact_id ? contactMap[task.contact_id] : null;
+              return (
+                <div className="data-row" key={task.id}>
+                  <div><strong>{task.title}</strong><small>{task.task_number} · {task.priority} · fällig {formatDate(task.due_at)}{contact ? ` · ${contact.first_name} ${contact.last_name}` : ""}</small></div>
+                  <div className="row-meta">
+                    <span>{task.status}</span>
+                    <Form method="post" className="inline-actions">
+                      <input type="hidden" name="task_id" value={task.id} /><input type="hidden" name="version" value={task.version} />
+                      {task.status === "OPEN" ? <button className="text-button" name="_intent" value="start" type="submit">Starten</button> : null}
+                      {task.status === "OPEN" || task.status === "IN_PROGRESS" ? <button className="text-button" name="_intent" value="complete" type="submit">Erledigt</button> : null}
+                      {task.status === "OPEN" || task.status === "IN_PROGRESS" ? <button className="text-button" name="_intent" value="cancel" type="submit">Abbrechen</button> : null}
+                      {task.status === "DONE" || task.status === "CANCELLED" ? <button className="text-button" name="_intent" value="reopen" type="submit">Wieder öffnen</button> : null}
+                      {task.status === "DONE" || task.status === "CANCELLED" ? <button className="text-button" name="_intent" value="archive" type="submit">Archivieren</button> : null}
+                    </Form>
+                  </div>
+                </div>
+              );
+            })}
+            {tasks.length === 0 ? <p className="empty-state">Keine Aufgaben in dieser Ansicht.</p> : null}
+          </div>
+        </section>
+
+        <section className="data-card">
+          <div className="card-head"><div><p className="eyebrow">Neu</p><h2>Aufgabe anlegen</h2></div></div>
+          <Form method="post" className="auth-form">
+            <input type="hidden" name="_intent" value="create" />
+            <label><span>Titel *</span><input name="title" required /></label>
+            <label><span>Beschreibung</span><textarea name="description" rows={4} /></label>
+            <label><span>Priorität</span><select name="priority" defaultValue="NORMAL"><option value="LOW">Niedrig</option><option value="NORMAL">Normal</option><option value="HIGH">Hoch</option><option value="URGENT">Dringend</option></select></label>
+            <label><span>Fällig *</span><input name="due_date" type="date" required /></label>
+            <label><span>Kontakt</span><select name="contact_id" defaultValue=""><option value="">Ohne Kontaktbezug</option>{contacts.map((contact) => <option key={contact.id} value={contact.id}>{contact.last_name}, {contact.first_name} · {contact.contact_number}</option>)}</select></label>
+            <button className="primary-button" type="submit">Aufgabe speichern</button>
+          </Form>
+        </section>
+      </div>
+    </main>
+  );
+}
