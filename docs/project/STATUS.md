@@ -3,7 +3,7 @@
 Stand: 29.08.2026
 
 ## Aktuelles Ziel
-Phase 1 / Modul 01 CRM – Abschluss gegen Definition of Done.
+Phase 2 / Modul 02 Immobilien – STAGING-Implementierung und Abschluss gegen Definition of Done.
 
 ## Infrastruktur
 - separates GitHub-Repository `zeyhermutter/zeyhermutter`
@@ -12,111 +12,152 @@ Phase 1 / Modul 01 CRM – Abschluss gegen Definition of Done.
 - SeasonCrew vollständig isoliert
 - Production nicht angelegt / nicht verändert
 
-## Auth & Security
-- Supabase Auth + SSR-Cookies
-- geschützte CRM-Routen mit `getClaims()`
-- erster echter Benutzer ACTIVE
-- Rolle `managing_director` zugewiesen
-- serverseitige Rollen/Permissions
-- RLS auf fachlichen Tabellen
-- RLS unter echtem `authenticated` Geschäftsführer-Kontext getestet
-- expliziter serverseitiger Permission-Guard für sensible Routen
-- sichere `current_user_has_permission()`-RPC läuft als SECURITY INVOKER
-- Systemhistorie benötigt explizit `audit.read`
-- keine `service_role`-Credentials im Client
-- private Security-Helper nicht über Data API exponiert
-- öffentliche RPCs für Suche/Duplikate/Kontaktanlegen laufen als SECURITY INVOKER
-- Mention-Notifications werden über privaten Trigger erzeugt; öffentliche Kommentar-RPC bleibt im RLS-Kontext
-- Security Advisor: nur `Leaked Password Protection Disabled` verbleibt; auf Free-STAGING akzeptiert, vor Production erneut prüfen
-- Performance Advisor: FK-Index- und RLS-InitPlan-Warnungen behoben; verbleibende `unused index`-Infos sind bei leerem/neuem STAGING erwartbar
+## Phase 0 – DONE
+- Cloudflare Workers + GitHub-Deployment
+- Supabase PostgreSQL/Auth/Storage/RLS
+- Rollen + granulare Permissions
+- append-only AuditLog + Activity
+- Optimistic Concurrency
+- migrationsbasierte Datenbankänderungen
+- Security-/Performance-Advisor im Entwicklungsprozess
+- zwei echte Geschäftsführerkonten
 
-## CRM – implementiert
-### Kontakte
-- Kontaktanlage und Stammdatenbearbeitung
-- strukturierte optionale Primäradresse
-- atomare Kontakt + Adresse Anlage
-- automatische Geschäftsnummer `ZM-K-...`
-- Rollen
-- Personenbeziehungen
-- Kontakt ↔ Organisation Beziehungen mit Rolle/Funktion
-- mehrere Adressen
-- Arbeitsbereich und getrennte Stammdaten/Verknüpfungen
+## Modul 01 · CRM – DONE
+- beide Geschäftsführer können sich im Browser anmelden
+- Kontakte und strukturierte Adressen
+- Organisationen
+- Rollen, Personen- und Firmenbeziehungen
+- Aufgaben/Wiedervorlagen mit Benutzerzuweisung
+- Activity Feed
+- Kommentare / @Mentions
+- Notification Inbox
+- Duplikaterkennung
+- globale Suche
+- Archivieren/Wiederherstellen
+- feldgenaue History
+- globale Systemhistorie
+- Optimistic Locking
+- echter Zwei-Benutzer-Test: Aufgabe zugewiesen, Mention erzeugt, Notification für Benutzer 2 sichtbar
+- direkter RLS-/Permission-Zugriff getestet
 
-### Organisationen
-- Verzeichnis
-- Neuanlage
-- Detail/Bearbeitung
-- History
+## Modul 02 · Immobilien – implementierter STAGING-Stand
+### Objektkern
+- automatische Nummer `ZM-YYYY-####`
+- Immobilientypen und SALE/RENT
+- Preise als PostgreSQL `numeric`
+- Flächen, Zimmer, Baujahr, Zustand, Verfügbarkeit, Vermietungsstatus, Stellplätze, Einheiten
+- primär verantwortlicher Benutzer
+- interne Notizen
 - Optimistic Locking
 
-### Aufgaben
-- globale Aufgaben-/Wiedervorlagenverwaltung
-- Priorität, Beschreibung, Fälligkeit und Kontaktbezug
-- Verantwortlicher Benutzer
-- spätere Umzuweisung an andere aktive Benutzer
-- OPEN / IN_PROGRESS / DONE / CANCELLED
-- Überfällig-Erkennung
-- Archivierung erledigter/abgebrochener Aufgaben
-- Optimistic Locking
+### Statusmaschine
+- DRAFT
+- ACQUISITION
+- VALUATION
+- CONTRACT_PENDING
+- PREPARATION
+- MARKETING
+- RESERVED
+- NOTARY
+- SOLD
+- LOST
+- WITHDRAWN
+- ARCHIVED
+- nur definierte Übergänge
+- ungültiger direkter Übergang DRAFT → SOLD im DB-Test erfolgreich blockiert
+- Archivierung merkt vorherigen Status und Restore darf nur dorthin zurück
+- Vermarktungsstart benötigt `property.publish`
+- Archiv/Restore benötigt `property.archive`
+- Zuständigkeitswechsel benötigt `property.assign`
 
-### Zusammenarbeit
-- Activity History pro Kontakt
-- Notiz / Telefonat / E-Mail / Meeting
-- interne Kommentare
-- @Mentions
-- Benachrichtigungs-Inbox
-- einzelne/alle Benachrichtigungen als gelesen markieren
-- zweiter aktiver Benutzer erscheint automatisch in Zuweisung und Mention-Auswahl
+### Adresse
+- vollständige interne Objektadresse
+- öffentliche Darstellung separat steuerbar: FULL / STREET_ONLY / DISTRICT_ONLY / CITY_ONLY / HIDDEN
+- Objekt + optionale vollständige Adresse werden atomar angelegt
 
-### Suche & Duplikate
-- globale Suche über Kontakte, Kontaktnummern, Vollnamen, E-Mail, Telefon/Mobil, Anschriften, Organisationen und Aufgaben
-- Archiv kann optional in Suche einbezogen werden
-- regelbasierte Duplikaterkennung: gleiche E-Mail, gleiche normalisierte Mobilnummer oder gleicher Name + vollständige Anschrift
-- niemals automatischer Merge
-- vorhandenen Datensatz öffnen oder bewusst trotzdem neu anlegen
+### Eigentümer
+- mehrere Eigentümer pro Objekt
+- Prozentanteile
+- Eigentumsart
+- Hauptkontakt
+- Gültigkeitszeitraum
+- aktive Prozentanteile > 100 % werden von PostgreSQL blockiert
 
-### Archiv
-- zentrale Archivverwaltung für Kontakte, Organisationen und Aufgaben
-- getrennte Archive-Permissions
-- `archived_by` serverseitig gesetzt
-- Wiederherstellung löscht `archived_by`
-- Audit-Aktionen `ARCHIVE` und `RESTORE`
-- Versionierung/Concurrency auch bei Archivaktionen
+### Ausstattung & Energie
+- flexibles PropertyFeature-Modell
+- Standardmerkmale wie Balkon, Terrasse, Garten, Aufzug, PV, Wärmepumpe usw.
+- Energieausweis vorhanden/nicht vorhanden
+- Art, Kennwert, Effizienzklasse, Energieträger, Gebäudebaujahr, Gültigkeit
+- keine künstlichen Ersatzwerte
 
-### History
-- append-only AuditLog
-- CREATE / UPDATE / STATUS_CHANGE / ARCHIVE / RESTORE / DELETE
-- alter/neuer Wert für Stammdaten
-- Rollen-/Personen-/Firmenbeziehungen dem Kontakt-Audit zugeordnet
-- Adressänderungen dem Kontakt-Audit zugeordnet
-- fachliche Activity getrennt vom Audit
-- globale Systemhistorie `/crm/history`
-- Filter nach Entity, Aktion, Benutzer und Geschäftsreferenz
-- Pagination mit 50 Ereignissen pro Seite
-- Zugriff zusätzlich zu RLS explizit über `audit.read` geschützt
+### Vermarktungscheckliste
+- 10 Standardpunkte werden beim Objekt automatisch angelegt
+- Pflicht/optional
+- TODO / IN_PROGRESS / DONE / WAIVED
+- Abschlussbenutzer und Zeitstempel
+- initiales Seeding erzeugt bewusst keine Audit-Spam-Ereignisse
 
-## Verifizierte Tests
-- echter Browser-Login erfolgreich
-- echter Kontakt im Browser erfolgreich angelegt und CREATE-Audit verifiziert
-- Kontakt Create → Audit → Update → Version 2 → stale Update blockiert
-- Rollen/Beziehungen/Aufgaben unter echter RLS erfolgreich
-- Audit für Rolle + Beziehung + Aufgabe erfolgreich
-- Kontakt+Adresse atomar erstellt
-- Duplikaterkennung liefert erwarteten Treffer
-- Vollnamensuche und kombinierte PLZ/Ort-Suche erfolgreich
-- Archiv: `archived_by` = ausführender Benutzer, Version 2, genau ein ARCHIVE-Event
-- Restore: `archived_by` leer, Version 3, RESTORE-Event
-- Collaboration: Aktivität + Kommentar + zugewiesene Aufgabe erfolgreich; Selbst-Mention erzeugt bewusst keine Notification
-- Permission-Test: `audit.read = true`, nicht vorhandene Permission = false, `permission.manage` für Geschäftsführer = false
-- alle technischen Smoke-Test-Daten jeweils per Rollback entfernt
+### Dokumente
+- Document + append-only DocumentVersion
+- Kategorien gemäß Maklerworkflow
+- PUBLIC / INTERNAL / CONFIDENTIAL
+- private Storage-Bucket `zm-private-documents`
+- Storage-RLS
+- Upload-MIME- und Größenbeschränkung
+- SHA-256
+- Originaldateiname
+- Dateigröße
+- MIME-Type
+- Änderungsgrund
+- automatische fortlaufende Dokumentversion
+- zeitlich begrenzte Signed Downloads
+- keine Datei wird per Upsert überschrieben
+- Dokumentarchivierung benötigt `document.archive`
 
-## Noch offene Akzeptanzpunkte vor „Modul 01 DONE“
-1. aktueller kompletter UI-Stand muss erfolgreich von Cloudflare aus `main` gebaut/deployed sein
-2. Browser-Smoke-Test der neuen Bereiche: Suche, Aufgaben, Organisationen, Archiv, Firma & Adresse, Aktivität & Team, Inbox, Systemhistorie
-3. echter Zwei-Benutzer-Akzeptanztest für Aufgabe zuweisen + @Mention + Notification; dafür wird ein zweites reales Benutzerkonto benötigt
+### Medien
+- privater Bucket `zm-property-media`
+- Fotos, Grundrisse, MP4 und sonstige freigegebene Medien
+- Sortierung
+- Alt-Text
+- Kennzeichen für spätere Veröffentlichungsfreigabe
+- noch keine öffentliche Bucket-Freigabe
 
-## Danach
-Nach erfolgreicher Modul-01-Abnahme beginnt Phase 2 / Modul 02 Immobilien. Gemeinsame Grundlagen dürfen weiter gehärtet werden, aber keine Production-Änderungen ohne ausdrückliche Freigabe.
+### Integration
+- Immobilien im CRM-Dashboard verlinkt
+- globale Suche findet Property-Nummer, Titel und Adresse
+- Aufgaben können einen `property_id`-Bezug haben
+- Objektänderungen im zentralen AuditLog
+- Kinddaten wie Adresse/Eigentümer/Ausstattung/Energie/Checkliste werden dem PROPERTY-Audit zugeordnet
+
+## UI im Repository
+- `/properties` Objektverzeichnis mit Filtern/Pagination
+- `/properties/new` atomare Neuanlage
+- `/properties/:propertyId` Objektakte
+- `/properties/:propertyId/documents` private Dokumentverwaltung
+- `/properties/:propertyId/media` Medienbibliothek
+- Objektakte: Status, Stammdaten, Adresse, Eigentümer, Ausstattung, Energie, Checkliste, History
+- Dokumente und Medien direkt aus Objektverzeichnis erreichbar
+- responsive Layouts für Desktop/Tablet/Mobil
+
+## Verifizierte technische Tests Modul 02
+- Nummerngenerierung serverseitig und ohne Client-Zugriff auf privaten Zähler
+- Checklisten-Seeding = 10 Punkte
+- valide Statuswechsel DRAFT → ACQUISITION → VALUATION
+- ungültiger Statuswechsel DRAFT → SOLD blockiert
+- Eigentümer-/Adressanlage unter echter Geschäftsführer-RLS
+- Dokumentversion setzt `current_version=1` und `version_number=1`
+- Property-Suche über Titel/Adresse liefert PROPERTY-Treffer
+- Makler-Rolle ohne Archiv-/Publish-Permission: Contact Archive BLOCKED, Document Archive BLOCKED, Property Archive BLOCKED, Property Publish BLOCKED
+- alle technischen Testdaten per Rollback entfernt
+- Security Advisor: nur `Leaked Password Protection Disabled` auf Free-STAGING
+- Performance Advisor: keine fehlenden FK-Indizes; nur erwartbare `unused index`-Infos im frischen STAGING
+
+## Noch offen für Modul 02 DONE
+1. Cloudflare muss den aktuellen `main`-Stand erfolgreich bauen/deployen.
+2. Browser-Smoke-Test Objekt anlegen/bearbeiten/Status wechseln.
+3. Browser-Smoke-Test Dokument hochladen → neue Version → Signed Download.
+4. Browser-Smoke-Test Medienupload.
+5. Danach DoD-Abgleich und Modul 02 schließen.
 
 ## Production
 Nicht angelegt / nicht verändert. Production bleibt bis zur ausdrücklichen Freigabe gesperrt.
