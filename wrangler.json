@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "zeyhermutteros-app-staging",
+  "main": "./workers/app.ts",
+  "compatibility_date": "2026-08-29",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  "upload_source_maps": true,
+  "vars": {
+    "APP_ENV": "staging",
+    "SUPABASE_URL": "https://zqhcxudpfwsfuokencvy.supabase.co"
+  }
+}
