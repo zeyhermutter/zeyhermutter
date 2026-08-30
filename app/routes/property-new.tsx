@@ -1,6 +1,7 @@
 import { data, Form, Link, redirect, useActionData } from "react-router";
 import type { Route } from "./+types/property-new";
 import { requirePermission } from "~/lib/auth.server";
+import { geocodePropertyAddress } from "~/lib/geocoding.server";
 
 type ActionResult = { error?: string; fields?: Record<string, string> };
 
@@ -26,6 +27,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   if (!internalTitle || !propertyType || !transactionType) return data<ActionResult>({ error: "Titel, Immobilientyp und Transaktion sind Pflichtfelder.", fields }, { status: 400, headers: responseHeaders() });
 
   const street=text(fd,"street"), houseNumber=text(fd,"house_number"), postalCode=text(fd,"postal_code"), city=text(fd,"city");
+  const district=text(fd,"district")||null;
   const addressValues=[street,houseNumber,postalCode,city];
   if (addressValues.some(Boolean) && !addressValues.every(Boolean)) return data<ActionResult>({ error: "Wenn eine Adresse erfasst wird, sind Straße, Hausnummer, PLZ und Ort erforderlich.", fields }, { status: 400, headers: responseHeaders() });
 
@@ -49,10 +51,25 @@ export async function action({ request, context }: Route.ActionArgs) {
     p_house_number: houseNumber || null,
     p_postal_code: postalCode || null,
     p_city: city || null,
-    p_district: text(fd,"district") || null,
+    p_district: district,
     p_public_address_mode: text(fd,"public_address_mode") || "CITY_ONLY",
   });
   if (error || !propertyId) return data<ActionResult>({ error: "Immobilie konnte nicht angelegt werden. Bitte Eingaben prüfen.", fields }, { status: 400, headers: responseHeaders() });
+
+  if (street && houseNumber && postalCode && city) {
+    try {
+      const coordinates = await geocodePropertyAddress(supabase, { street, houseNumber, postalCode, city, district, country: "DE" });
+      if (coordinates) {
+        await supabase
+          .from("property_addresses")
+          .update({ latitude: coordinates.latitude, longitude: coordinates.longitude })
+          .eq("property_id", propertyId);
+      }
+    } catch {
+      // Die Objektanlage darf nicht an einem temporär nicht erreichbaren Geokodierungsdienst scheitern.
+    }
+  }
+
   return redirect(`/properties/${propertyId}`, { headers: responseHeaders() });
 }
 
@@ -81,6 +98,7 @@ export default function PropertyNew() {
         <label className="form-field"><span>Ortsteil</span><input name="district" defaultValue={f.district} placeholder="z. B. Heimstetten" /></label>
         <label className="form-field"><span>Öffentliche Adressdarstellung</span><select name="public_address_mode" defaultValue={f.public_address_mode ?? "CITY_ONLY"}><option value="FULL">Vollständig</option><option value="STREET_ONLY">Nur Straße</option><option value="DISTRICT_ONLY">Nur Ortsteil</option><option value="CITY_ONLY">Nur Ort</option><option value="HIDDEN">Verbergen</option></select></label>
       </div>
+      <p className="form-help">Breiten- und Längengrad werden nach dem Anlegen automatisch aus der Adresse über OpenStreetMap ermittelt.</p>
       <div className="form-actions"><Link className="secondary-button link-button" to="/properties">Abbrechen</Link><button className="primary-button" type="submit">Immobilie anlegen</button></div>
     </Form>
   </main>;
