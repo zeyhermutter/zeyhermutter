@@ -190,3 +190,71 @@
   .owner-card summary { align-items:flex-start; flex-direction:column; }
   .owner-edit-hint { white-space:normal; }
 }
+
+/* Medien – geöffnete Metadaten nutzen die volle Medienbreite */
+.media-editable-card:has(.media-disclosure[open]) {
+  grid-column: 1 / -1;
+}
+.media-disclosure.owner-card {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.media-disclosure.owner-card[open] {
+  background: #111718;
+}
+.media-summary-main {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.media-summary-main small,
+.media-summary-main span {
+  color: #748183;
+  overflow-wrap: anywhere;
+}
+.media-summary-main span { font-size: 12px; line-height: 1.45; }
+.media-detail-body { width: 100%; }
+.media-metadata-form.owner-edit-form {
+  width: 100%;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding: 20px;
+}
+.media-metadata-form label {
+  min-width: 0;
+}
+.media-metadata-form input,
+.media-metadata-form textarea {
+  width: 100%;
+  padding: 12px 13px;
+  border: 1px solid #3a4748;
+  border-radius: 10px;
+  background: #0e1415;
+  color: #eef2f3;
+  font: inherit;
+  outline: none;
+}
+.media-metadata-form textarea { resize: vertical; line-height: 1.5; }
+.media-alt-field { grid-column: 1 / -1; }
+.media-public-field { align-self: end; }
+.media-metadata-actions.owner-edit-actions {
+  align-self: end;
+  margin: 0;
+}
+.media-integrity-note { margin: 0; padding: 0 20px 14px; line-height: 1.5; }
+.media-archive-form.owner-remove-form { padding: 0 20px 20px; }
+.media-editable-card:has(.media-disclosure[open]) .media-preview-link img {
+  max-height: 300px;
+  aspect-ratio: 16 / 6;
+}
+
+@media (max-width: 720px) {
+  .media-editable-card:has(.media-disclosure[open]) { grid-column: auto; }
+  .media-metadata-form.owner-edit-form { grid-template-columns: 1fr; padding: 16px; }
+  .media-alt-field { grid-column: auto; }
+  .media-metadata-actions.owner-edit-actions { justify-content: stretch; }
+  .media-metadata-actions .primary-button { width: 100%; }
+  .media-integrity-note { padding: 0 16px 14px; }
+  .media-archive-form.owner-remove-form { padding: 0 16px 16px; }
+}
