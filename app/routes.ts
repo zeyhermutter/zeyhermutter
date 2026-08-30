@@ -21,5 +21,6 @@ export default [
   route("properties/:propertyId", "routes/property-detail.tsx"),
   route("properties/:propertyId/documents", "routes/property-documents.tsx"),
   route("properties/:propertyId/media", "routes/property-media.tsx"),
+  route("api/geocode-address", "routes/api-geocode-address.ts"),
   route("logout", "routes/logout.tsx"),
 ] satisfies RouteConfig;
