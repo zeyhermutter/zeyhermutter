@@ -162,7 +162,7 @@ export default function PropertyDetail(){
   const d=useLoaderData<typeof loader>(); const result=useActionData<typeof action>(); const p=d.property;
   const usedFeatures=new Set(d.features.map((f)=>f.feature_key));
   return <main className="editor-shell">
-    <header className="editor-header"><div><Link className="back-link" to="/properties">← Immobilien</Link><p className="eyebrow">{p.property_number} · {p.transaction_type==="SALE"?"Verkauf":"Vermietung"}</p><h1 className="editor-title">{p.internal_title}</h1><p className="editor-meta">{TYPE_LABELS[p.property_type]??p.property_type} · Status {labelStatus(p.status)} · Version {p.version}</p></div><div className="header-user"><span className="badge">STAGING</span><small>{d.profile.display_name}</small></div></header>
+    <header className="editor-header property-header"><div><Link className="back-link" to="/properties">← Immobilien</Link><p className="eyebrow">{p.property_number} · {p.transaction_type==="SALE"?"Verkauf":"Vermietung"}</p><div className="property-title-row"><h1 className="editor-title">{p.internal_title}</h1><span className={`status-pill status-${p.status.toLowerCase().replace("_","-")}`}>{labelStatus(p.status)}</span></div><p className="editor-meta">{TYPE_LABELS[p.property_type]??p.property_type} · Version {p.version}</p></div><div className="header-user"><span className="badge">STAGING</span><small>{d.profile.display_name}</small></div></header>
     {result?.error?<div className="form-error">{result.error}</div>:null}
 
     <div className="property-summary-grid">
