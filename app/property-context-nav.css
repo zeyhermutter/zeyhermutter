@@ -1,0 +1,47 @@
+.property-context-nav {
+  width: min(1320px, calc(100% - 72px));
+  margin: 22px auto -12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid #293536;
+  border-radius: 13px;
+  background: #121819;
+}
+
+.property-context-nav a {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  border-radius: 9px;
+  color: #94a1a3;
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.property-context-nav a:hover {
+  color: #fff;
+  background: #1a2324;
+}
+
+.property-context-nav a.active {
+  color: #fff;
+  background: #263132;
+  box-shadow: inset 0 0 0 1px #3a4748;
+}
+
+@media (max-width: 720px) {
+  .property-context-nav {
+    width: calc(100% - 32px);
+    margin-top: 14px;
+    overflow-x: auto;
+  }
+
+  .property-context-nav a {
+    flex: 1 0 auto;
+  }
+}
