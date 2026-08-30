@@ -156,8 +156,8 @@
 /* Global sichtbarer Softwarestand */
 .build-version {
   position: fixed;
-  right: 10px;
-  bottom: 8px;
+  left: 26px;
+  top: 64px;
   z-index: 1000;
   padding: 5px 8px;
   border: 1px solid #334041;
@@ -167,4 +167,8 @@
   font: 600 10px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   letter-spacing: .02em;
   pointer-events: none;
+}
+
+@media (max-width:720px) {
+  .build-version { left: 16px; top: 58px; }
 }
