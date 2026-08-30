@@ -19,7 +19,8 @@ const STATUS_LABELS: Record<string,string> = {
   PREPARATION:"Vorbereitung", MARKETING:"Vermarktung", RESERVED:"Reserviert", NOTARY:"Notar",
   SOLD:"Verkauft", LOST:"Verloren", WITHDRAWN:"Zurückgezogen", ARCHIVED:"Archiviert",
 };
-function labelStatus(value:string){return STATUS_LABELS[value]??value.replaceAll("_"," ");}\nfunction auditValueLabel(value:unknown){if(value===null||value===undefined||value==="")return"—";const raw=typeof value==="object"?JSON.stringify(value):String(value);return raw.length>140?`${raw.slice(0,137)}…`:raw;}
+function labelStatus(value:string){return STATUS_LABELS[value]??value.replaceAll("_"," ");}
+function auditValueLabel(value:unknown){if(value===null||value===undefined||value==="")return"—";const raw=typeof value==="object"?JSON.stringify(value):String(value);return raw.length>140?`${raw.slice(0,137)}…`:raw;}
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
   const { supabase, responseHeaders, profile } = await requirePermission(request, context.cloudflare.env, "property.read");
