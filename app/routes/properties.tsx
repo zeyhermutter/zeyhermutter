@@ -91,7 +91,7 @@ export default function Properties() {
             const address = addressMap[property.id];
             return <div className="data-row" key={property.id}>
               <div><Link className="data-title-link" to={`/properties/${property.id}`}><strong>{property.internal_title}</strong></Link><small>{property.property_number} · {TYPE_LABELS[property.property_type] ?? property.property_type} · {property.transaction_type === "SALE" ? "Verkauf" : "Vermietung"}</small><div className="row-links"><Link className="subtle-link" to={`/properties/${property.id}`}>Objektakte</Link><Link className="subtle-link" to={`/properties/${property.id}/documents`}>Dokumente</Link><Link className="subtle-link" to={`/properties/${property.id}/media`}>Medien</Link></div></div>
-              <div className="row-meta"><span>{property.transaction_type === "SALE" ? money(property.purchase_price) : money(property.rent_cold)}</span><small>{address ? `${address.postal_code} ${address.city}${address.district ? ` · ${address.district}` : ""}` : "Adresse offen"} · {property.status}</small></div>
+              <div className="row-meta"><span>{property.transaction_type === "SALE" ? money(property.purchase_price) : money(property.rent_cold)}</span><small>{address ? `${address.postal_code} ${address.city}${address.district ? ` · ${address.district}` : ""}` : "Adresse offen"} · {STATUS_LABELS[property.status] ?? property.status}</small></div>
             </div>;
           })}
           {properties.length === 0 ? <p className="empty-state">Keine Immobilien in dieser Ansicht.</p> : null}
