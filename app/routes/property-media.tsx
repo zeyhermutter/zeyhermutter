@@ -1,7 +1,6 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/property-media";
 import { requirePermission } from "~/lib/auth.server";
-import "~/property-media.css";
 
 type ActionResult = { error?: string };
 const MAX_UPLOAD_BYTES = 75 * 1024 * 1024;
@@ -114,18 +113,18 @@ export default function PropertyMedia(){
                 <a className="media-placeholder" href={signedUrls[item.id]} target="_blank" rel="noreferrer">{mediaTypeLabel(item.media_type)} öffnen</a>
                 :<div className="media-placeholder">Kein Zugriff</div>}
 
-            <details className="media-disclosure" id={`media-${item.id}`}>
+            <details className="media-disclosure owner-card" id={`media-${item.id}`}>
               <summary className="media-summary">
                 <div className="media-summary-main">
                   <strong>{item.title??mediaTypeLabel(item.media_type)}</strong>
                   <small>{mediaTypeLabel(item.media_type)} · Sortierung {item.sort_order}{item.public_approved?" · für Veröffentlichung freigegeben":" · intern"}</small>
                   {item.alt_text?<span>{item.alt_text}</span>:null}
                 </div>
-                <span className="media-edit-hint">Metadaten bearbeiten</span>
+                <span className="media-edit-hint owner-edit-hint">Metadaten bearbeiten</span>
               </summary>
 
               <div className="media-detail-body">
-                <Form method="post" className="auth-form media-metadata-form">
+                <Form method="post" className="auth-form media-metadata-form owner-edit-form">
                   <input type="hidden" name="_intent" value="metadata_update"/>
                   <input type="hidden" name="media_id" value={item.id}/>
                   <input type="hidden" name="version" value={item.version}/>
@@ -134,10 +133,10 @@ export default function PropertyMedia(){
                   <label className="media-alt-field"><span>Alt-Text / Beschreibung</span><textarea name="alt_text" rows={3} defaultValue={item.alt_text??""}/></label>
                   <label><span>Sortierung</span><input name="sort_order" type="number" defaultValue={item.sort_order}/></label>
                   <label className="checkbox-row media-public-field"><input name="public_approved" type="checkbox" defaultChecked={item.public_approved}/><span>Für spätere Veröffentlichung freigeben</span></label>
-                  <div className="media-metadata-actions"><button className="primary-button" type="submit">Metadaten speichern</button></div>
+                  <div className="media-metadata-actions owner-edit-actions"><button className="primary-button" type="submit">Metadaten speichern</button></div>
                 </Form>
-                <p className="media-integrity-note">Titel, Alt-Text, Sortierung und Freigabe können geändert werden. Medientyp, Datei und privater Storage-Pfad bleiben an den ursprünglichen Upload gebunden.</p>
-                <Form method="post" className="media-archive-form"><input type="hidden" name="_intent" value="archive"/><input type="hidden" name="media_id" value={item.id}/><input type="hidden" name="version" value={item.version}/><button className="text-button" type="submit">Medium archivieren</button></Form>
+                <p className="media-integrity-note subtle">Titel, Alt-Text, Sortierung und Freigabe können geändert werden. Medientyp, Datei und privater Storage-Pfad bleiben an den ursprünglichen Upload gebunden.</p>
+                <Form method="post" className="media-archive-form owner-remove-form"><input type="hidden" name="_intent" value="archive"/><input type="hidden" name="media_id" value={item.id}/><input type="hidden" name="version" value={item.version}/><button className="text-button" type="submit">Medium archivieren</button></Form>
               </div>
             </details>
           </article>)}
