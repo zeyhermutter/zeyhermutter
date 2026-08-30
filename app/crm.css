@@ -172,3 +172,21 @@
 @media (max-width:720px) {
   .build-version { left: 16px; top: 58px; }
 }
+
+
+/* Immobilien – bearbeitbare immobilienspezifische Eigentümerrelation */
+.owner-list { display:grid; gap:10px; }
+.owner-card { border:1px solid #2c3738; border-radius:12px; background:#111718; overflow:hidden; scroll-margin-top:24px; }
+.owner-card summary { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px; cursor:pointer; list-style:none; }
+.owner-card summary::-webkit-details-marker { display:none; }
+.owner-card summary > div { display:grid; gap:4px; }
+.owner-card summary small { color:#748183; }
+.owner-card[open] summary { border-bottom:1px solid #2a3536; background:#151c1d; }
+.owner-edit-hint { color:#98a5a6; font-size:12px; white-space:nowrap; }
+.owner-edit-form { padding:14px; }
+.owner-edit-actions { display:flex; justify-content:flex-end; margin-top:6px; }
+.owner-remove-form { padding:0 14px 14px; }
+@media (max-width:720px) {
+  .owner-card summary { align-items:flex-start; flex-direction:column; }
+  .owner-edit-hint { white-space:normal; }
+}
