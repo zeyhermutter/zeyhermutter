@@ -76,10 +76,69 @@ function OwnerAddDisclosureEnhancer() {
   return null;
 }
 
+function AddressGeocodingEnhancer() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const forms = Array.from(document.querySelectorAll<HTMLFormElement>("form"));
+    const form = forms.find((candidate) => candidate.querySelector<HTMLInputElement>('input[name="_intent"][value="address"]'));
+    if (!form) return;
+
+    const onSubmit = async (event: SubmitEvent) => {
+      if (form.dataset.geocodeReady === "1") {
+        delete form.dataset.geocodeReady;
+        return;
+      }
+
+      const street = form.querySelector<HTMLInputElement>('input[name="street"]')?.value.trim() ?? "";
+      const houseNumber = form.querySelector<HTMLInputElement>('input[name="house_number"]')?.value.trim() ?? "";
+      const postalCode = form.querySelector<HTMLInputElement>('input[name="postal_code"]')?.value.trim() ?? "";
+      const city = form.querySelector<HTMLInputElement>('input[name="city"]')?.value.trim() ?? "";
+      if (!street || !houseNumber || !postalCode || !city) return;
+
+      event.preventDefault();
+      const submitter = event.submitter as HTMLButtonElement | null;
+      if (submitter) submitter.disabled = true;
+
+      const latitude = form.querySelector<HTMLInputElement>('input[name="latitude"]');
+      const longitude = form.querySelector<HTMLInputElement>('input[name="longitude"]');
+
+      try {
+        const response = await fetch("/api/geocode-address", {
+          method: "POST",
+          body: new FormData(form),
+          credentials: "same-origin",
+        });
+        const result = await response.json() as { coordinates?: { latitude: number; longitude: number } | null };
+        if (result.coordinates) {
+          if (latitude) latitude.value = String(result.coordinates.latitude);
+          if (longitude) longitude.value = String(result.coordinates.longitude);
+        } else {
+          if (latitude) latitude.value = "";
+          if (longitude) longitude.value = "";
+        }
+      } catch {
+        if (latitude) latitude.value = "";
+        if (longitude) longitude.value = "";
+      } finally {
+        if (submitter) submitter.disabled = false;
+        form.dataset.geocodeReady = "1";
+        form.requestSubmit(submitter ?? undefined);
+      }
+    };
+
+    form.addEventListener("submit", onSubmit);
+    return () => form.removeEventListener("submit", onSubmit);
+  }, [location.key, location.pathname]);
+
+  return null;
+}
+
 export default function App() {
   return (
     <>
       <OwnerAddDisclosureEnhancer />
+      <AddressGeocodingEnhancer />
       <Outlet />
     </>
   );
