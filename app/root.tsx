@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   isRouteErrorResponse,
   Links,
@@ -5,6 +6,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLocation,
 } from "react-router";
 import type { Route } from "./+types/root";
 import "./styles.css";
@@ -31,8 +33,56 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+function OwnerAddDisclosureEnhancer() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const section = document.getElementById("eigentuemer");
+    const form = section?.querySelector<HTMLFormElement>("form.auth-form.compact-form");
+    if (!section || !form || section.querySelector(".owner-add-toggle")) return;
+
+    const wrapper = document.createElement("div");
+    wrapper.style.marginTop = "18px";
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "secondary-button owner-add-toggle";
+
+    const shouldOpen = new URLSearchParams(location.search).has("newOwner");
+    form.hidden = !shouldOpen;
+
+    const sync = () => {
+      const open = !form.hidden;
+      button.textContent = open ? "− Eigentümer hinzufügen schließen" : "+ Eigentümer hinzufügen";
+      button.setAttribute("aria-expanded", String(open));
+    };
+
+    button.addEventListener("click", () => {
+      form.hidden = !form.hidden;
+      sync();
+      if (!form.hidden) form.querySelector<HTMLElement>("select, input")?.focus();
+    });
+
+    form.parentElement?.insertBefore(wrapper, form);
+    wrapper.appendChild(button);
+    sync();
+
+    return () => {
+      wrapper.remove();
+      form.hidden = false;
+    };
+  }, [location.key, location.pathname, location.search]);
+
+  return null;
+}
+
 export default function App() {
-  return <Outlet />;
+  return (
+    <>
+      <OwnerAddDisclosureEnhancer />
+      <Outlet />
+    </>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
