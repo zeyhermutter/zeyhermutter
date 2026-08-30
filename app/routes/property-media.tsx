@@ -4,7 +4,16 @@ import { requirePermission } from "~/lib/auth.server";
 
 type ActionResult = { error?: string };
 const MAX_UPLOAD_BYTES = 75 * 1024 * 1024;
-const ALLOWED = new Set(["image/jpeg","image/png","image/webp","image/heic","video/mp4","application/pdf"]);
+const IMAGE_MIME_TYPES = new Set(["image/jpeg","image/png","image/webp","image/heic"]);
+const ALLOWED = new Set([...IMAGE_MIME_TYPES,"video/mp4","application/pdf"]);
+const MEDIA_TYPES = new Set(["IMAGE","FLOOR_PLAN","VIDEO","OTHER"]);
+
+function mimeAllowedForType(mediaType:string,mimeType:string){
+  if(mediaType==="IMAGE") return IMAGE_MIME_TYPES.has(mimeType);
+  if(mediaType==="FLOOR_PLAN") return IMAGE_MIME_TYPES.has(mimeType)||mimeType==="application/pdf";
+  if(mediaType==="VIDEO") return mimeType==="video/mp4";
+  return ALLOWED.has(mimeType);
+}
 
 function text(fd: FormData,key:string){return String(fd.get(key)??"").trim();}
 function safeFilename(name:string){const v=name.normalize("NFKD").replace(/[^a-zA-Z0-9._-]+/g,"-").replace(/-+/g,"-");return v.slice(-140)||"medium";}
@@ -39,7 +48,8 @@ export async function action({request,context,params}:Route.ActionArgs){
   if(file.size>MAX_UPLOAD_BYTES)return data<ActionResult>({error:"Datei ist zu groß. Maximal 75 MB."},{status:400,headers:responseHeaders()});
   if(!ALLOWED.has(file.type))return data<ActionResult>({error:`Dateityp ${file.type||"unbekannt"} ist nicht freigegeben.`},{status:400,headers:responseHeaders()});
   const mediaType=text(fd,"media_type")||"IMAGE";
-  if(mediaType==="VIDEO"&&file.type!=="video/mp4")return data<ActionResult>({error:"Videos müssen als MP4 vorliegen."},{status:400,headers:responseHeaders()});
+  if(!MEDIA_TYPES.has(mediaType))return data<ActionResult>({error:"Ungültiger Medientyp."},{status:400,headers:responseHeaders()});
+  if(!mimeAllowedForType(mediaType,file.type))return data<ActionResult>({error:"Dateityp und gewählter Medientyp passen nicht zusammen."},{status:400,headers:responseHeaders()});
   const storagePath=`properties/${propertyId}/media/${crypto.randomUUID()}-${safeFilename(file.name)}`;
   const {error:uploadError}=await supabase.storage.from("zm-property-media").upload(storagePath,file,{contentType:file.type,upsert:false});
   if(uploadError)return data<ActionResult>({error:"Medium konnte nicht in den privaten Storage geladen werden."},{status:400,headers:responseHeaders()});
