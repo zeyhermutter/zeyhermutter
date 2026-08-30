@@ -1,6 +1,8 @@
 import { data, Form, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/crm-dashboard";
+import { PropertyOverviewMap, type PropertyMapPoint } from "~/components/property-overview-map";
 import { requireActiveUser } from "~/lib/auth.server";
+import "~/property-map.css";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { supabase, responseHeaders, profile } = await requireActiveUser(request, context.cloudflare.env);
@@ -13,6 +15,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     { count: taskCount, error: taskCountError },
     { count: unreadCount, error: notificationError },
     { count: propertyCount, error: propertyError },
+    propertyPermission,
   ] = await Promise.all([
     supabase.from("contacts").select("id, contact_number, first_name, last_name, email, mobile, status, updated_at").is("archived_at", null).order("updated_at", { ascending: false }).limit(25),
     supabase.from("tasks").select("id, task_number, title, status, priority, due_at, contact_id").is("archived_at", null).in("status", ["OPEN", "IN_PROGRESS"]).order("due_at", { ascending: true }).limit(10),
@@ -21,13 +24,42 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     supabase.from("tasks").select("id", { count: "exact", head: true }).is("archived_at", null).in("status", ["OPEN", "IN_PROGRESS"]),
     supabase.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null),
     supabase.from("properties").select("id", { count: "exact", head: true }).neq("status", "ARCHIVED"),
+    supabase.rpc("current_user_has_permission", { p_permission: "property.read" }),
   ]);
 
   if (contactError || taskError || contactCountError || organizationError || taskCountError || notificationError || propertyError) {
     throw new Response("CRM-Daten konnten nicht geladen werden.", { status: 500 });
   }
 
-  return data({ profile, contacts: contacts ?? [], tasks: tasks ?? [], contactCount: contactCount ?? 0, organizationCount: organizationCount ?? 0, taskCount: taskCount ?? 0, unreadCount: unreadCount ?? 0, propertyCount: propertyCount ?? 0 }, { headers: responseHeaders() });
+  let propertyMapPoints: PropertyMapPoint[] = [];
+  if (propertyPermission.data === true) {
+    const { data: addressRows } = await supabase
+      .from("property_addresses")
+      .select("property_id, latitude, longitude, street, house_number, postal_code, city, district, properties!inner(id, property_number, internal_title, status, transaction_type)")
+      .not("latitude", "is", null)
+      .not("longitude", "is", null)
+      .neq("properties.status", "ARCHIVED")
+      .order("city");
+
+    propertyMapPoints = (addressRows ?? []).flatMap((row: any) => {
+      const property = Array.isArray(row.properties) ? row.properties[0] : row.properties;
+      const latitude = Number(row.latitude);
+      const longitude = Number(row.longitude);
+      if (!property || !Number.isFinite(latitude) || !Number.isFinite(longitude)) return [];
+      return [{
+        id: property.id,
+        propertyNumber: property.property_number,
+        title: property.internal_title,
+        status: property.status,
+        transactionType: property.transaction_type,
+        latitude,
+        longitude,
+        addressLabel: `${row.street} ${row.house_number}, ${row.postal_code} ${row.city}${row.district ? ` · ${row.district}` : ""}`,
+      } satisfies PropertyMapPoint];
+    });
+  }
+
+  return data({ profile, contacts: contacts ?? [], tasks: tasks ?? [], contactCount: contactCount ?? 0, organizationCount: organizationCount ?? 0, taskCount: taskCount ?? 0, unreadCount: unreadCount ?? 0, propertyCount: propertyCount ?? 0, propertyMapPoints }, { headers: responseHeaders() });
 }
 
 function formatDate(value: string | null) {
@@ -36,7 +68,7 @@ function formatDate(value: string | null) {
 }
 
 export default function CrmDashboard() {
-  const { profile, contacts, tasks, contactCount, organizationCount, taskCount, unreadCount, propertyCount } = useLoaderData<typeof loader>();
+  const { profile, contacts, tasks, contactCount, organizationCount, taskCount, unreadCount, propertyCount, propertyMapPoints } = useLoaderData<typeof loader>();
 
   return (
     <main className="app-shell">
@@ -69,6 +101,11 @@ export default function CrmDashboard() {
           <article className="metric-card"><span>Organisationen</span><strong>{organizationCount}</strong><small>aktive Firmen/Partner</small></article>
           <article className="metric-card"><span>Offene Aufgaben</span><strong>{taskCount}</strong><small>offen / in Bearbeitung</small></article>
         </div>
+
+        <section className="data-card property-map-card">
+          <div className="card-head"><div><p className="eyebrow">Immobilien</p><h2>Standorte</h2></div><div><Link className="subtle-link" to="/properties">Alle Immobilien</Link><div className="map-coverage-note">{propertyMapPoints.length} von {propertyCount} lokalisiert</div></div></div>
+          <PropertyOverviewMap points={propertyMapPoints} />
+        </section>
 
         <div className="dashboard-grid">
           <section className="data-card">
