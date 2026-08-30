@@ -21,6 +21,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
+        <div className="build-version" title="Aktuell ausgelieferter ZeyherMutterOS-Stand">Stand e2721a7</div>
         <ScrollRestoration />
         <Scripts />
       </body>
