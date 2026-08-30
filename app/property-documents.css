@@ -1,0 +1,45 @@
+.document-disclosure { padding: 0; overflow: hidden; scroll-margin-top: 24px; }
+.document-disclosure > summary {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px;
+  cursor: pointer;
+  list-style: none;
+}
+.document-disclosure > summary::-webkit-details-marker { display: none; }
+.document-disclosure[open] > summary { border-bottom: 1px solid #293536; background: #151c1d; }
+.document-summary-main { display: grid; gap: 5px; min-width: 0; }
+.document-summary-main small { color: #748183; }
+.document-summary-main span { color: #899597; font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
+.document-edit-hint { color: #98a5a6; font-size: 12px; white-space: nowrap; }
+.document-detail-body { display: grid; gap: 18px; padding: 16px; }
+.document-metadata-section, .document-version-section { padding: 16px; border: 1px solid #293536; border-radius: 12px; background: #111718; }
+.document-subhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+.document-subhead h3 { margin: 0; font-size: 18px; }
+.document-metadata-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.document-metadata-form label:nth-of-type(4) { grid-column: 1 / -1; }
+.document-metadata-form textarea,
+.document-metadata-form select {
+  width: 100%;
+  padding: 12px 13px;
+  border: 1px solid #3a4748;
+  border-radius: 10px;
+  background: #0e1415;
+  color: #eef2f3;
+  font: inherit;
+}
+.document-metadata-form textarea { resize: vertical; line-height: 1.5; }
+.document-metadata-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; }
+.document-integrity-note { margin: 12px 0 0; color: #738082; font-size: 12px; line-height: 1.5; }
+.document-archive-form { margin-top: 12px; }
+.document-version-section .inline-upload { margin-top: 16px; }
+@media (max-width: 760px) {
+  .document-disclosure > summary { flex-direction: column; gap: 8px; }
+  .document-edit-hint { white-space: normal; }
+  .document-metadata-form { grid-template-columns: 1fr; }
+  .document-metadata-form label:nth-of-type(4), .document-metadata-actions { grid-column: auto; }
+  .document-metadata-actions { justify-content: stretch; }
+  .document-metadata-actions .primary-button { width: 100%; }
+}
