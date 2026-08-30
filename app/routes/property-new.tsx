@@ -29,11 +29,13 @@ export async function action({ request, context }: Route.ActionArgs) {
   const addressValues=[street,houseNumber,postalCode,city];
   if (addressValues.some(Boolean) && !addressValues.every(Boolean)) return data<ActionResult>({ error: "Wenn eine Adresse erfasst wird, sind Straße, Hausnummer, PLZ und Ort erforderlich.", fields }, { status: 400, headers: responseHeaders() });
 
-  const purchasePrice=numeric(text(fd,"purchase_price"));
-  const rentCold=numeric(text(fd,"rent_cold"));
+  const purchasePriceRaw=numeric(text(fd,"purchase_price"));
+  const rentColdRaw=numeric(text(fd,"rent_cold"));
+  const purchasePrice=transactionType==="SALE"?purchasePriceRaw:null;
+  const rentCold=transactionType==="RENT"?rentColdRaw:null;
   const livingArea=numeric(text(fd,"living_area_sqm"));
   const rooms=numeric(text(fd,"rooms"));
-  if ([purchasePrice,rentCold,livingArea,rooms].some((v) => v !== null && (!Number.isFinite(v) || v < 0))) return data<ActionResult>({ error: "Preis-, Flächen- und Zimmerwerte müssen gültige positive Zahlen sein.", fields }, { status: 400, headers: responseHeaders() });
+  if ([purchasePriceRaw,rentColdRaw,livingArea,rooms].some((v) => v !== null && (!Number.isFinite(v) || v < 0))) return data<ActionResult>({ error: "Preis-, Flächen- und Zimmerwerte müssen gültige positive Zahlen sein.", fields }, { status: 400, headers: responseHeaders() });
   if (transactionType === "SALE" && purchasePrice === null) return data<ActionResult>({ error: "Für einen Verkaufsdatensatz ist zunächst ein Kaufpreis erforderlich.", fields }, { status: 400, headers: responseHeaders() });
   if (transactionType === "RENT" && rentCold === null) return data<ActionResult>({ error: "Für einen Vermietungsdatensatz ist zunächst die Kaltmiete erforderlich.", fields }, { status: 400, headers: responseHeaders() });
 
