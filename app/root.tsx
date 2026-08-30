@@ -10,6 +10,8 @@ import type { Route } from "./+types/root";
 import "./styles.css";
 import "./crm.css";
 
+declare const __BUILD_COMMIT__: string;
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="de">
@@ -21,7 +23,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
-        <div className="build-version" title="Aktuell ausgelieferter ZeyherMutterOS-Stand">Stand e2721a7</div>
+        <div className="build-version" title="Git-Commit des aktuell ausgelieferten Cloudflare-Builds">Stand {__BUILD_COMMIT__}</div>
         <ScrollRestoration />
         <Scripts />
       </body>
