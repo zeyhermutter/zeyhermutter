@@ -84,51 +84,144 @@ function AddressGeocodingEnhancer() {
     const form = forms.find((candidate) => candidate.querySelector<HTMLInputElement>('input[name="_intent"][value="address"]'));
     if (!form) return;
 
+    const street = form.querySelector<HTMLInputElement>('input[name="street"]');
+    const houseNumber = form.querySelector<HTMLInputElement>('input[name="house_number"]');
+    const postalCode = form.querySelector<HTMLInputElement>('input[name="postal_code"]');
+    const city = form.querySelector<HTMLInputElement>('input[name="city"]');
+    const country = form.querySelector<HTMLInputElement>('input[name="country"]');
+    const latitude = form.querySelector<HTMLInputElement>('input[name="latitude"]');
+    const longitude = form.querySelector<HTMLInputElement>('input[name="longitude"]');
+    if (!street || !houseNumber || !postalCode || !city || !latitude || !longitude) return;
+
+    latitude.readOnly = true;
+    longitude.readOnly = true;
+    latitude.setAttribute("aria-readonly", "true");
+    longitude.setAttribute("aria-readonly", "true");
+    latitude.title = "Wird automatisch über OpenStreetMap/Nominatim ermittelt";
+    longitude.title = "Wird automatisch über OpenStreetMap/Nominatim ermittelt";
+
+    const latLabel = latitude.closest("label")?.querySelector("span");
+    const lonLabel = longitude.closest("label")?.querySelector("span");
+    if (latLabel) latLabel.textContent = "Breitengrad (automatisch)";
+    if (lonLabel) lonLabel.textContent = "Längengrad (automatisch)";
+
+    const note = document.createElement("small");
+    note.className = "coordinate-auto-note";
+    longitude.closest("label")?.insertAdjacentElement("afterend", note);
+
+    const addressInputs = [street, houseNumber, postalCode, city, country].filter(Boolean) as HTMLInputElement[];
+    let lastGeocodedSignature = latitude.value && longitude.value ? currentSignature() : "";
+    let running: Promise<boolean> | null = null;
+
+    function currentSignature() {
+      return [street.value.trim(), houseNumber.value.trim(), postalCode.value.trim(), city.value.trim(), (country?.value.trim() || "DE").toUpperCase()].join("|");
+    }
+
+    function isComplete() {
+      return Boolean(street.value.trim() && houseNumber.value.trim() && postalCode.value.trim() && city.value.trim());
+    }
+
+    function updateNote(message?: string) {
+      if (message) {
+        note.textContent = message;
+        return;
+      }
+      if (latitude.value && longitude.value) {
+        note.textContent = `Automatisch ermittelt: ${latitude.value} / ${longitude.value}`;
+      } else {
+        note.textContent = "Koordinaten werden aus Straße, Hausnummer, PLZ und Ort automatisch ermittelt.";
+      }
+    }
+
+    async function geocode(force = false) {
+      if (!isComplete()) {
+        latitude.value = "";
+        longitude.value = "";
+        lastGeocodedSignature = "";
+        updateNote();
+        return false;
+      }
+
+      const signature = currentSignature();
+      if (!force && signature === lastGeocodedSignature && latitude.value && longitude.value) {
+        updateNote();
+        return true;
+      }
+      if (running) return running;
+
+      running = (async () => {
+        updateNote("Koordinaten werden über OpenStreetMap ermittelt …");
+        try {
+          const response = await fetch("/api/geocode-address", {
+            method: "POST",
+            body: new FormData(form),
+            credentials: "same-origin",
+          });
+          const result = await response.json() as { coordinates?: { latitude: number; longitude: number } | null };
+          if (!result.coordinates) {
+            latitude.value = "";
+            longitude.value = "";
+            lastGeocodedSignature = "";
+            updateNote("Für diese Adresse konnten keine eindeutigen Koordinaten ermittelt werden.");
+            return false;
+          }
+
+          latitude.value = String(result.coordinates.latitude);
+          longitude.value = String(result.coordinates.longitude);
+          lastGeocodedSignature = signature;
+          updateNote();
+          return true;
+        } catch {
+          latitude.value = "";
+          longitude.value = "";
+          lastGeocodedSignature = "";
+          updateNote("Koordinaten konnten aktuell nicht ermittelt werden. Die Adresse kann trotzdem gespeichert werden.");
+          return false;
+        } finally {
+          running = null;
+        }
+      })();
+
+      return running;
+    }
+
+    const handleAddressChange = () => {
+      if (currentSignature() === lastGeocodedSignature) return;
+      latitude.value = "";
+      longitude.value = "";
+      updateNote();
+      void geocode();
+    };
+
     const onSubmit = async (event: SubmitEvent) => {
       if (form.dataset.geocodeReady === "1") {
         delete form.dataset.geocodeReady;
         return;
       }
+      if (!isComplete()) return;
 
-      const street = form.querySelector<HTMLInputElement>('input[name="street"]')?.value.trim() ?? "";
-      const houseNumber = form.querySelector<HTMLInputElement>('input[name="house_number"]')?.value.trim() ?? "";
-      const postalCode = form.querySelector<HTMLInputElement>('input[name="postal_code"]')?.value.trim() ?? "";
-      const city = form.querySelector<HTMLInputElement>('input[name="city"]')?.value.trim() ?? "";
-      if (!street || !houseNumber || !postalCode || !city) return;
+      const signature = currentSignature();
+      if (signature === lastGeocodedSignature && latitude.value && longitude.value) return;
 
       event.preventDefault();
       const submitter = event.submitter as HTMLButtonElement | null;
       if (submitter) submitter.disabled = true;
-
-      const latitude = form.querySelector<HTMLInputElement>('input[name="latitude"]');
-      const longitude = form.querySelector<HTMLInputElement>('input[name="longitude"]');
-
-      try {
-        const response = await fetch("/api/geocode-address", {
-          method: "POST",
-          body: new FormData(form),
-          credentials: "same-origin",
-        });
-        const result = await response.json() as { coordinates?: { latitude: number; longitude: number } | null };
-        if (result.coordinates) {
-          if (latitude) latitude.value = String(result.coordinates.latitude);
-          if (longitude) longitude.value = String(result.coordinates.longitude);
-        } else {
-          if (latitude) latitude.value = "";
-          if (longitude) longitude.value = "";
-        }
-      } catch {
-        if (latitude) latitude.value = "";
-        if (longitude) longitude.value = "";
-      } finally {
-        if (submitter) submitter.disabled = false;
-        form.dataset.geocodeReady = "1";
-        form.requestSubmit(submitter ?? undefined);
-      }
+      await geocode(true);
+      if (submitter) submitter.disabled = false;
+      form.dataset.geocodeReady = "1";
+      form.requestSubmit(submitter ?? undefined);
     };
 
+    addressInputs.forEach((input) => input.addEventListener("change", handleAddressChange));
     form.addEventListener("submit", onSubmit);
-    return () => form.removeEventListener("submit", onSubmit);
+    updateNote();
+    if (!latitude.value || !longitude.value) void geocode();
+
+    return () => {
+      addressInputs.forEach((input) => input.removeEventListener("change", handleAddressChange));
+      form.removeEventListener("submit", onSubmit);
+      note.remove();
+    };
   }, [location.key, location.pathname]);
 
   return null;
