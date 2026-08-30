@@ -49,18 +49,18 @@ function OwnerAddDisclosureEnhancer() {
     button.className = "secondary-button owner-add-toggle";
 
     const shouldOpen = new URLSearchParams(location.search).has("newOwner");
-    form.hidden = !shouldOpen;
+    let open = shouldOpen;
 
     const sync = () => {
-      const open = !form.hidden;
+      form.style.display = open ? "" : "none";
       button.textContent = open ? "− Eigentümer hinzufügen schließen" : "+ Eigentümer hinzufügen";
       button.setAttribute("aria-expanded", String(open));
     };
 
     button.addEventListener("click", () => {
-      form.hidden = !form.hidden;
+      open = !open;
       sync();
-      if (!form.hidden) form.querySelector<HTMLElement>("select, input")?.focus();
+      if (open) form.querySelector<HTMLElement>("select, input")?.focus();
     });
 
     form.parentElement?.insertBefore(wrapper, form);
@@ -69,7 +69,7 @@ function OwnerAddDisclosureEnhancer() {
 
     return () => {
       wrapper.remove();
-      form.hidden = false;
+      form.style.display = "";
     };
   }, [location.key, location.pathname, location.search]);
 
