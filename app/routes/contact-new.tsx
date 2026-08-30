@@ -1,4 +1,4 @@
-import { data, Form, Link, redirect, useActionData } from "react-router";
+import { data, Form, Link, redirect, useActionData, useSearchParams } from "react-router";
 import type { Route } from "./+types/contact-new";
 import { requireActiveUser } from "~/lib/auth.server";
 
@@ -100,6 +100,12 @@ export async function action({ request, context }: Route.ActionArgs) {
     return data<ActionResult>({ error: "Kontakt konnte nicht atomar gespeichert werden. Es wurden keine Teil-Datensätze übernommen.", fields }, { status: 400, headers: responseHeaders() });
   }
 
+  const returnTo = new URL(request.url).searchParams.get("returnTo") ?? "";
+  if (returnTo.startsWith("/properties/")) {
+    const target = new URL(returnTo, "https://zeyhermutter.local");
+    target.searchParams.set("newOwner", String(contactId));
+    return redirect(`${target.pathname}${target.search}${target.hash}`, { headers: responseHeaders() });
+  }
   return redirect(`/crm/contacts/${contactId}`, { headers: responseHeaders() });
 }
 
@@ -121,13 +127,15 @@ const reasonLabel: Record<string, string> = {
 
 export default function NewContact() {
   const result = useActionData<typeof action>();
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get("returnTo") ?? "";
   const fields = result?.fields ?? {};
   const duplicates = result?.duplicates ?? [];
 
   return (
     <main className="editor-shell">
       <header className="editor-header">
-        <div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">Modul 01 · CRM</p><h1 className="editor-title">Kontakt anlegen</h1></div>
+        <div><Link className="back-link" to={returnTo.startsWith("/properties/") ? returnTo : "/crm"}>← Zurück</Link><p className="eyebrow">Modul 01 · CRM</p><h1 className="editor-title">Kontakt anlegen</h1></div>
         <span className="badge">STAGING</span>
       </header>
 
@@ -169,7 +177,7 @@ export default function NewContact() {
         <label className="form-field full-width"><span>Interne Notiz</span><textarea name="internal_notes" rows={5} defaultValue={fields.internal_notes} /></label>
 
         <div className="form-actions">
-          <Link className="secondary-button link-button" to="/crm">Abbrechen</Link>
+          <Link className="secondary-button link-button" to={returnTo.startsWith("/properties/") ? returnTo : "/crm"}>Abbrechen</Link>
           {duplicates.length > 0 ? <button className="primary-button" type="submit" name="force_duplicate" value="1">Trotzdem neu anlegen</button> : <button className="primary-button" type="submit">Kontakt speichern</button>}
         </div>
       </Form>
