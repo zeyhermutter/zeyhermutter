@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import {
   isRouteErrorResponse,
+  Link,
   Links,
   Meta,
   Outlet,
@@ -227,11 +228,28 @@ function AddressGeocodingEnhancer() {
   return null;
 }
 
+function PropertyContextNavigation() {
+  const location = useLocation();
+  const match = location.pathname.match(/^\/properties\/([^/]+)(?:\/(documents|media))?\/?$/);
+  if (!match) return null;
+
+  const propertyId = match[1];
+  const section = match[2] ?? "record";
+  return (
+    <nav className="property-context-nav" aria-label="Immobilienakte">
+      <Link className={section === "record" ? "active" : ""} to={`/properties/${propertyId}`}>Objektakte</Link>
+      <Link className={section === "documents" ? "active" : ""} to={`/properties/${propertyId}/documents`}>Dokumente</Link>
+      <Link className={section === "media" ? "active" : ""} to={`/properties/${propertyId}/media`}>Medien</Link>
+    </nav>
+  );
+}
+
 export default function App() {
   return (
     <>
       <OwnerAddDisclosureEnhancer />
       <AddressGeocodingEnhancer />
+      <PropertyContextNavigation />
       <Outlet />
     </>
   );
