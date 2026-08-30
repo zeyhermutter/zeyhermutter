@@ -1,0 +1,72 @@
+.property-map-card { margin-bottom: 16px; }
+.property-map-card .card-head { margin-bottom: 14px; }
+.property-map {
+  position: relative;
+  height: 360px;
+  overflow: hidden;
+  border: 1px solid #2c3738;
+  border-radius: 14px;
+  background: #d9ded9;
+}
+.property-map-tiles { position: absolute; inset: 0; overflow: hidden; }
+.property-map-tiles img {
+  position: absolute;
+  width: 256px;
+  height: 256px;
+  max-width: none;
+  user-select: none;
+}
+.property-map-marker {
+  position: absolute;
+  z-index: 5;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  transform: translate(-50%, -100%);
+  border: 2px solid #fff;
+  border-radius: 50% 50% 50% 4px;
+  background: #22363c;
+  color: #fff;
+  text-decoration: none;
+  box-shadow: 0 3px 12px rgba(0,0,0,.35);
+  rotate: -45deg;
+}
+.property-map-marker span { rotate: 45deg; font-size: 11px; font-weight: 800; }
+.property-map-marker.status-marketing,
+.property-map-marker.status-reserved,
+.property-map-marker.status-notary { background: #245e80; }
+.property-map-marker.status-sold { background: #2f7448; }
+.property-map-marker.status-lost,
+.property-map-marker.status-withdrawn { background: #7c3434; }
+.property-map-marker.status-draft { background: #5b6364; }
+.property-map-attribution {
+  position: absolute;
+  right: 6px;
+  bottom: 5px;
+  z-index: 6;
+  padding: 3px 5px;
+  border-radius: 4px;
+  background: rgba(255,255,255,.88);
+  color: #283233;
+  font-size: 10px;
+}
+.property-map-attribution a { color: inherit; }
+.property-map-list { display: grid; gap: 6px; margin-top: 12px; }
+.property-map-list-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  color: #dce3e4;
+  text-decoration: none;
+}
+.property-map-list-item:hover { background: #182021; }
+.property-map-list-item small { color: #768385; text-align: right; }
+.map-coverage-note { color: #768385; font-size: 12px; }
+@media (max-width: 720px) {
+  .property-map { height: 300px; }
+  .property-map-list-item { flex-direction: column; gap: 4px; }
+  .property-map-list-item small { text-align: left; }
+}
