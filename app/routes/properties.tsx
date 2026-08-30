@@ -1,6 +1,7 @@
 import { data, Form, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/properties";
 import { requirePermission } from "~/lib/auth.server";
+import "~/properties-workflow.css";
 
 const PAGE_SIZE = 50;
 
@@ -8,6 +9,28 @@ const STATUS_LABELS: Record<string,string> = {
   DRAFT:"Entwurf", ACQUISITION:"Akquise", VALUATION:"Bewertung", CONTRACT_PENDING:"Vertrag in Vorbereitung",
   PREPARATION:"Vorbereitung", MARKETING:"Vermarktung", RESERVED:"Reserviert", NOTARY:"Notar",
   SOLD:"Verkauft", LOST:"Verloren", WITHDRAWN:"Zurückgezogen", ARCHIVED:"Archiviert",
+};
+
+const STATUS_EXPLANATIONS: Record<string,string> = {
+  DRAFT:"Objekt ist angelegt, aber die aktive Akquise hat noch nicht begonnen.",
+  ACQUISITION:"Eigentümerkontakt und Akquise laufen.",
+  VALUATION:"Immobilie und realistischer Marktwert werden bewertet.",
+  CONTRACT_PENDING:"Maklervertrag bzw. Beauftragung wird vorbereitet oder abgestimmt.",
+  PREPARATION:"Unterlagen, Daten, Medien und Vermarktung werden vorbereitet.",
+  MARKETING:"Objekt befindet sich aktiv in der Vermarktung.",
+  RESERVED:"Objekt ist für einen Interessenten reserviert.",
+  NOTARY:"Kaufvertrags- und Notarprozess läuft. Regulärer nächster Schritt: Verkauft.",
+  SOLD:"Verkauf ist abgeschlossen. Danach kann das Objekt archiviert werden.",
+  LOST:"Vorgang wurde verloren. Eine erneute Akquise ist möglich.",
+  WITHDRAWN:"Objekt wurde zurückgezogen. Der Vorgang kann wieder in die Akquise gehen.",
+  ARCHIVED:"Abschlussstatus. In der aktuellen Statusmaschine ist kein weiterer Statuswechsel freigegeben.",
+};
+
+const MAIN_FLOW = ["DRAFT","ACQUISITION","VALUATION","CONTRACT_PENDING","PREPARATION","MARKETING","RESERVED","NOTARY","SOLD","ARCHIVED"] as const;
+const PREFERRED_NEXT: Record<string,string> = {
+  DRAFT:"ACQUISITION", ACQUISITION:"VALUATION", VALUATION:"CONTRACT_PENDING", CONTRACT_PENDING:"PREPARATION",
+  PREPARATION:"MARKETING", MARKETING:"RESERVED", RESERVED:"NOTARY", NOTARY:"SOLD", SOLD:"ARCHIVED",
+  LOST:"ACQUISITION", WITHDRAWN:"ACQUISITION",
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -53,8 +76,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   if (transaction) query = query.eq("transaction_type", transaction);
   if (propertyType) query = query.eq("property_type", propertyType);
 
-  const { data: properties, count, error } = await query;
+  const [{ data: properties, count, error }, { data: transitions, error: transitionError }] = await Promise.all([
+    query,
+    supabase.from("property_status_transitions").select("from_status,to_status,description").order("from_status").order("to_status"),
+  ]);
   if (error) throw new Response("Immobilien konnten nicht geladen werden.", { status: 500 });
+  if (transitionError) throw new Response("Status-Workflow konnte nicht geladen werden.", { status: 500 });
 
   const ids = (properties ?? []).map((item) => item.id);
   const { data: addresses, error: addressError } = ids.length
@@ -63,11 +90,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   if (addressError) throw new Response("Objektadressen konnten nicht geladen werden.", { status: 500 });
   const addressMap = Object.fromEntries((addresses ?? []).map((address) => [address.property_id, address]));
 
-  return data({ properties: properties ?? [], addressMap, total: count ?? 0, page, pageCount: Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE)), filters: { status, transaction, propertyType }, profile }, { headers: responseHeaders() });
+  return data({ properties: properties ?? [], addressMap, transitions: transitions ?? [], total: count ?? 0, page, pageCount: Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE)), filters: { status, transaction, propertyType }, profile }, { headers: responseHeaders() });
 }
 
 export default function Properties() {
-  const { properties, addressMap, total, page, pageCount, filters, profile } = useLoaderData<typeof loader>();
+  const { properties, addressMap, transitions, total, page, pageCount, filters, profile } = useLoaderData<typeof loader>();
+  const transitionsByStatus = Object.fromEntries(Object.keys(STATUS_LABELS).map((status) => [status, transitions.filter((transition) => transition.from_status === status)]));
   return (
     <main className="editor-shell">
       <header className="editor-header">
@@ -97,6 +125,45 @@ export default function Properties() {
           {properties.length === 0 ? <p className="empty-state">Keine Immobilien in dieser Ansicht.</p> : null}
         </div>
         {pageCount > 1 ? <div className="pagination">{page > 1 ? <Link className="secondary-button link-button" to={`?status=${filters.status}&transaction=${filters.transaction}&type=${filters.propertyType}&page=${page - 1}`}>← Zurück</Link> : <span />}{page < pageCount ? <Link className="secondary-button link-button" to={`?status=${filters.status}&transaction=${filters.transaction}&type=${filters.propertyType}&page=${page + 1}`}>Weiter →</Link> : null}</div> : null}
+      </section>
+
+      <section className="data-card property-workflow-section" id="status-workflow">
+        <div className="property-workflow-heading">
+          <div><p className="eyebrow">Status & Workflow</p><h2>So läuft eine Immobilie durch ZeyherMutterOS</h2><p>Der obere Pfad zeigt den regulären Verkaufsprozess. Darunter siehst du für jeden Status den empfohlenen nächsten Schritt und alle weiteren technisch erlaubten Wechsel.</p></div>
+          <span className="workflow-rule-badge">PostgreSQL-Statusmaschine</span>
+        </div>
+
+        <div className="workflow-main-path" aria-label="Regulärer Immobilien-Workflow">
+          {MAIN_FLOW.map((status, index) => <div className="workflow-main-step-wrap" key={status}>
+            <div className={`workflow-main-step status-${status.toLowerCase().replaceAll("_","-")}`}>
+              <span>{index + 1}</span><strong>{STATUS_LABELS[status]}</strong>
+            </div>
+            {index < MAIN_FLOW.length - 1 ? <span className="workflow-arrow" aria-hidden="true">→</span> : null}
+          </div>)}
+        </div>
+
+        <div className="workflow-callouts">
+          <div className="workflow-callout workflow-callout-primary"><strong>Notar erreicht?</strong><span>Regulärer nächster Schritt ist <b>Verkauft</b>. Falls der Notarprozess scheitert, sind auch Rückkehr oder Abbruch möglich.</span></div>
+          <div className="workflow-callout"><strong>Verkauft?</strong><span>Danach kann das Objekt in <b>Archiviert</b> überführt werden.</span></div>
+          <div className="workflow-callout"><strong>Archiviert?</strong><span>Das ist aktuell ein <b>Endstatus</b>. Von dort ist kein weiterer Statuswechsel freigegeben.</span></div>
+        </div>
+
+        <div className="workflow-status-grid">
+          {Object.keys(STATUS_LABELS).map((status) => {
+            const allowed = transitionsByStatus[status] ?? [];
+            const preferred = PREFERRED_NEXT[status];
+            return <article className={`workflow-status-card status-${status.toLowerCase().replaceAll("_","-")}`} key={status}>
+              <div className="workflow-status-card-head"><strong>{STATUS_LABELS[status]}</strong>{preferred ? <span>Empfohlen: {STATUS_LABELS[preferred]}</span> : <span>Endstatus</span>}</div>
+              <p>{STATUS_EXPLANATIONS[status]}</p>
+              <div className="workflow-transition-list">
+                {allowed.length ? allowed.map((transition) => <div className={transition.to_status === preferred ? "workflow-transition preferred" : "workflow-transition"} key={`${transition.from_status}-${transition.to_status}`}>
+                  <span>→ {STATUS_LABELS[transition.to_status] ?? transition.to_status}</span><small>{transition.description}</small>
+                </div>) : <div className="workflow-transition terminal"><span>Keine weiteren Wechsel</span><small>Statusmaschine beendet den Vorgang hier.</small></div>}
+              </div>
+            </article>;
+          })}
+        </div>
+        <p className="workflow-footnote">Hinweis: Diese Übersicht wird aus den tatsächlich hinterlegten Statusübergängen geladen. Nicht aufgeführte Wechsel werden serverseitig blockiert.</p>
       </section>
     </main>
   );
