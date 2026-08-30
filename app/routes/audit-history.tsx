@@ -73,7 +73,7 @@ export default function AuditHistory() {
 
       <section className="data-card">
         <Form method="get" className="filter-grid">
-          <label><span>Entity</span><select name="entity" defaultValue={filters.entityType}><option value="">Alle</option><option value="CONTACT">Kontakt</option><option value="ORGANIZATION">Organisation</option><option value="TASK">Aufgabe</option></select></label>
+          <label><span>Entity</span><select name="entity" defaultValue={filters.entityType}><option value="">Alle</option><option value="CONTACT">Kontakt</option><option value="ORGANIZATION">Organisation</option><option value="TASK">Aufgabe</option><option value="PROPERTY">Immobilie</option><option value="DOCUMENT">Dokument</option></select></label>
           <label><span>Aktion</span><select name="action" defaultValue={filters.action}><option value="">Alle</option><option value="CREATE">CREATE</option><option value="UPDATE">UPDATE</option><option value="STATUS_CHANGE">STATUS_CHANGE</option><option value="ARCHIVE">ARCHIVE</option><option value="RESTORE">RESTORE</option><option value="DELETE">DELETE</option></select></label>
           <label><span>Benutzer</span><input name="actor" defaultValue={filters.actor} placeholder="Name" /></label>
           <label><span>Referenz</span><input name="reference" defaultValue={filters.reference} placeholder="z. B. ZM-K-000002" /></label>
