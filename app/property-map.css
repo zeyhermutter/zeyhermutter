@@ -1,8 +1,12 @@
-.property-map-card { margin-bottom: 16px; }
+.property-map-card {
+  width: 100%;
+  max-width: 1320px;
+  margin: 12px auto 16px;
+}
 .property-map-card .card-head { margin-bottom: 14px; }
 .property-map {
   position: relative;
-  height: 360px;
+  height: 340px;
   overflow: hidden;
   border: 1px solid #2c3738;
   border-radius: 14px;
@@ -35,11 +39,95 @@
 .property-map-marker span { rotate: 45deg; font-size: 11px; font-weight: 800; }
 .property-map-marker.status-marketing,
 .property-map-marker.status-reserved,
-.property-map-marker.status-notary { background: #245e80; }
-.property-map-marker.status-sold { background: #2f7448; }
+.property-map-marker.status-notary,
+.property-map-popup-marker.status-marketing,
+.property-map-popup-marker.status-reserved,
+.property-map-popup-marker.status-notary { background: #245e80; }
+.property-map-marker.status-sold,
+.property-map-popup-marker.status-sold { background: #2f7448; }
 .property-map-marker.status-lost,
-.property-map-marker.status-withdrawn { background: #7c3434; }
-.property-map-marker.status-draft { background: #5b6364; }
+.property-map-marker.status-withdrawn,
+.property-map-popup-marker.status-lost,
+.property-map-popup-marker.status-withdrawn { background: #7c3434; }
+.property-map-marker.status-draft,
+.property-map-popup-marker.status-draft { background: #5b6364; }
+.property-map-cluster {
+  position: absolute;
+  z-index: 7;
+  width: 42px;
+  height: 42px;
+  transform: translate(-50%, -50%);
+  border: 3px solid rgba(255,255,255,.92);
+  border-radius: 999px;
+  background: #173f57;
+  color: #fff;
+  font: 800 14px/1 inherit;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(0,0,0,.42), 0 0 0 7px rgba(36,94,128,.18);
+}
+.property-map-cluster:hover,
+.property-map-cluster.active { background: #2b6f96; transform: translate(-50%, -50%) scale(1.06); }
+.property-map-popup {
+  position: absolute;
+  z-index: 10;
+  left: 16px;
+  bottom: 16px;
+  width: min(390px, calc(100% - 32px));
+  max-height: calc(100% - 32px);
+  overflow: auto;
+  border: 1px solid #334344;
+  border-radius: 14px;
+  background: rgba(15,20,21,.96);
+  color: #eef2f3;
+  box-shadow: 0 14px 42px rgba(0,0,0,.48);
+  backdrop-filter: blur(8px);
+}
+.property-map-popup-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 14px 12px;
+  border-bottom: 1px solid #293536;
+}
+.property-map-popup-head > div { display: grid; gap: 3px; }
+.property-map-popup-head small { color: #829092; }
+.property-map-popup-head button {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 8px;
+  background: #20292a;
+  color: #dce3e4;
+  cursor: pointer;
+  font-size: 18px;
+}
+.property-map-popup-list { display: grid; padding: 6px; }
+.property-map-popup-item {
+  display: grid;
+  grid-template-columns: 32px minmax(0,1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border-radius: 9px;
+  color: inherit;
+  text-decoration: none;
+}
+.property-map-popup-item:hover { background: #1b2425; }
+.property-map-popup-item > span:last-child { display: grid; gap: 3px; min-width: 0; }
+.property-map-popup-item small { color: #829092; overflow-wrap: anywhere; }
+.property-map-popup-marker {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,.72);
+  border-radius: 999px;
+  background: #22363c;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+}
 .property-map-attribution {
   position: absolute;
   right: 6px;
@@ -52,21 +140,9 @@
   font-size: 10px;
 }
 .property-map-attribution a { color: inherit; }
-.property-map-list { display: grid; gap: 6px; margin-top: 12px; }
-.property-map-list-item {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 9px 10px;
-  border-radius: 9px;
-  color: #dce3e4;
-  text-decoration: none;
-}
-.property-map-list-item:hover { background: #182021; }
-.property-map-list-item small { color: #768385; text-align: right; }
 .map-coverage-note { color: #768385; font-size: 12px; }
 @media (max-width: 720px) {
+  .property-map-card { margin-top: 12px; }
   .property-map { height: 300px; }
-  .property-map-list-item { flex-direction: column; gap: 4px; }
-  .property-map-list-item small { text-align: left; }
+  .property-map-popup { left: 10px; bottom: 10px; width: calc(100% - 20px); max-height: calc(100% - 20px); }
 }
