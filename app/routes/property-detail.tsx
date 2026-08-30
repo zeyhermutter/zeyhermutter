@@ -2,7 +2,8 @@ import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-
 import type { Route } from "./+types/property-detail";
 import { requirePermission } from "~/lib/auth.server";
 
-type ActionResult = { error?: string; success?: string };
+type FeatureChoice = { key:string; label:string };
+type ActionResult = { error?: string; success?: string; featurePreview?: { entered:string; formatted:string; exact?:FeatureChoice; suggestion?:FeatureChoice } };
 
 const TYPE_LABELS: Record<string,string> = {
   DETACHED_HOUSE:"Einfamilienhaus",SEMI_DETACHED_HOUSE:"Doppelhaushälfte",TERRACED_HOUSE:"Reihenhaus",APARTMENT_BUILDING:"Mehrfamilienhaus",APARTMENT:"Wohnung",PENTHOUSE:"Penthouse",MAISONETTE:"Maisonette",LAND:"Grundstück",COMMERCIAL:"Gewerbe",OFFICE:"Büro",RETAIL:"Einzelhandel",GARAGE:"Garage",PARKING_SPACE:"Stellplatz",OTHER:"Sonstige",
@@ -14,6 +15,12 @@ const FEATURE_OPTIONS = [
 function text(fd: FormData,key:string){return String(fd.get(key)??"").trim();}
 function num(value:string){return value===""?null:Number(value.replace(",","."));}
 function formatDate(value:string|null){if(!value)return"—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeStyle:"short",timeZone:"Europe/Berlin"}).format(new Date(value));}
+function normalizeFeatureLabel(value:string){return value.trim().toLocaleLowerCase("de-DE").replaceAll("ß","ss").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g," ").trim().replace(/\s+/g," ");}
+function formatFeatureLabel(value:string){const clean=value.trim().replace(/\s+/g," ");return clean?clean.charAt(0).toLocaleUpperCase("de-DE")+clean.slice(1):clean;}
+function customFeatureKey(value:string){const normalized=normalizeFeatureLabel(value).toUpperCase().replace(/[^A-Z0-9]+/g,"_").replace(/^_+|_+$/g,"");return `CUSTOM_${normalized.slice(0,52)}`;}
+function levenshtein(a:string,b:string){const row=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){let prev=row[0];row[0]=i;for(let j=1;j<=b.length;j++){const old=row[j];row[j]=Math.min(row[j]+1,row[j-1]+1,prev+(a[i-1]===b[j-1]?0:1));prev=old;}}return row[b.length];}
+function findFeatureMatch(value:string,options:FeatureChoice[]){const normalized=normalizeFeatureLabel(value);const exact=options.find((o)=>normalizeFeatureLabel(o.label)===normalized);if(exact)return {exact};let best:FeatureChoice|undefined;let bestDistance=Infinity;for(const option of options){const distance=levenshtein(normalized,normalizeFeatureLabel(option.label));if(distance<bestDistance){bestDistance=distance;best=option;}}const threshold=normalized.length<=8?1:normalized.length<=16?2:3;return {suggestion:bestDistance<=threshold?best:undefined};}
+
 const STATUS_LABELS: Record<string,string> = {
   DRAFT:"Entwurf", ACQUISITION:"Akquise", VALUATION:"Bewertung", CONTRACT_PENDING:"Vertrag in Vorbereitung",
   PREPARATION:"Vorbereitung", MARKETING:"Vermarktung", RESERVED:"Reserviert", NOTARY:"Notar",
@@ -29,18 +36,19 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   const { data: property, error } = await supabase.from("properties").select("*").eq("id",propertyId).maybeSingle();
   if(error||!property) throw new Response("Immobilie nicht gefunden.",{status:404,headers:responseHeaders()});
 
-  const [addressRes,ownersRes,contactsRes,featuresRes,energyRes,checklistRes,transitionsRes,usersRes,auditPermissionRes] = await Promise.all([
+  const [addressRes,ownersRes,contactsRes,featuresRes,customFeaturesRes,energyRes,checklistRes,transitionsRes,usersRes,auditPermissionRes] = await Promise.all([
     supabase.from("property_addresses").select("*").eq("property_id",propertyId).maybeSingle(),
     supabase.from("property_owners").select("*").eq("property_id",propertyId).order("primary_contact",{ascending:false}),
     supabase.from("contacts").select("id, contact_number, first_name, last_name, email").is("archived_at",null).order("last_name").limit(1000),
     supabase.from("property_features").select("*").eq("property_id",propertyId).order("label"),
+    supabase.from("property_features").select("feature_key,label").like("feature_key","CUSTOM_%").order("label").limit(1000),
     supabase.from("property_energy_data").select("*").eq("property_id",propertyId).maybeSingle(),
     supabase.from("property_marketing_checklist_items").select("*").eq("property_id",propertyId).order("category").order("title"),
     supabase.from("property_status_transitions").select("to_status, description").eq("from_status",property.status).order("to_status"),
     supabase.from("profiles").select("user_id, display_name").eq("status","ACTIVE").order("display_name"),
     supabase.rpc("current_user_has_permission",{p_permission:"audit.read"}),
   ]);
-  const firstError=[addressRes,ownersRes,contactsRes,featuresRes,energyRes,checklistRes,transitionsRes,usersRes].find((r)=>r.error)?.error;
+  const firstError=[addressRes,ownersRes,contactsRes,featuresRes,customFeaturesRes,energyRes,checklistRes,transitionsRes,usersRes].find((r)=>r.error)?.error;
   if(firstError) throw new Response("Objektdaten konnten nicht vollständig geladen werden.",{status:500,headers:responseHeaders()});
 
   let auditEvents:any[]=[];
@@ -49,7 +57,8 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     if(!auditRes.error) auditEvents=auditRes.data??[];
   }
   const contactMap=Object.fromEntries((contactsRes.data??[]).map((c)=>[c.id,c]));
-  return data({property,address:addressRes.data,owners:ownersRes.data??[],contacts:contactsRes.data??[],contactMap,features:featuresRes.data??[],energy:energyRes.data,checklist:checklistRes.data??[],transitions:transitionsRes.data??[],users:usersRes.data??[],auditEvents,profile,newOwner},{headers:responseHeaders()});
+  const customFeatureOptions=Array.from(new Map((customFeaturesRes.data??[]).map((f)=>[f.feature_key,{key:f.feature_key,label:f.label}])).values());
+  return data({property,address:addressRes.data,owners:ownersRes.data??[],contacts:contactsRes.data??[],contactMap,features:featuresRes.data??[],customFeatureOptions,energy:energyRes.data,checklist:checklistRes.data??[],transitions:transitionsRes.data??[],users:usersRes.data??[],auditEvents,profile,newOwner},{headers:responseHeaders()});
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
@@ -148,8 +157,44 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if(intent==="feature_add"){
-    const key=text(fd,"feature_key"); const option=FEATURE_OPTIONS.find(([v])=>v===key); if(!option)return data<ActionResult>({error:"Ungültiges Ausstattungsmerkmal."},{status:400,headers:responseHeaders()});
-    const {error}=await supabase.from("property_features").insert({property_id:propertyId,feature_key:key,label:option[1],value_type:"BOOLEAN",boolean_value:true,created_by:userId,updated_by:userId});
+    const key=text(fd,"feature_key");
+    let option:FeatureChoice|undefined=FEATURE_OPTIONS.map(([k,l])=>({key:k,label:l})).find((o)=>o.key===key);
+    if(!option&&key.startsWith("CUSTOM_")){
+      const {data:custom}=await supabase.from("property_features").select("feature_key,label").eq("feature_key",key).limit(1).maybeSingle();
+      if(custom)option={key:custom.feature_key,label:custom.label};
+    }
+    if(!option)return data<ActionResult>({error:"Ungültiges Ausstattungsmerkmal."},{status:400,headers:responseHeaders()});
+    const {error}=await supabase.from("property_features").insert({property_id:propertyId,feature_key:option.key,label:option.label,value_type:"BOOLEAN",boolean_value:true,created_by:userId,updated_by:userId});
+    if(error)return data<ActionResult>({error:"Merkmal ist bereits vorhanden oder konnte nicht gespeichert werden."},{status:400,headers:responseHeaders()});
+    return redirect(`/properties/${propertyId}#ausstattung`,{headers:responseHeaders()});
+  }
+  if(intent==="feature_custom_preview"){
+    const entered=text(fd,"custom_feature");
+    if(entered.length<2||entered.length>60)return data<ActionResult>({error:"Eigene Ausstattung muss zwischen 2 und 60 Zeichen lang sein."},{status:400,headers:responseHeaders()});
+    if(!/[\p{L}\p{N}]/u.test(entered))return data<ActionResult>({error:"Bitte einen verständlichen Ausstattungsbegriff eingeben."},{status:400,headers:responseHeaders()});
+    const {data:customRows}=await supabase.from("property_features").select("feature_key,label").like("feature_key","CUSTOM_%").limit(1000);
+    const options:FeatureChoice[]=[...FEATURE_OPTIONS.map(([key,label])=>({key,label})),...Array.from(new Map((customRows??[]).map((f)=>[f.feature_key,{key:f.feature_key,label:f.label}])).values())];
+    const formatted=formatFeatureLabel(entered);
+    const match=findFeatureMatch(formatted,options);
+    const targetKey=match.exact?.key??customFeatureKey(formatted);
+    const {data:alreadyUsed}=await supabase.from("property_features").select("id").eq("property_id",propertyId).eq("feature_key",targetKey).maybeSingle();
+    if(alreadyUsed)return data<ActionResult>({error:`„${match.exact?.label??formatted}“ ist bei dieser Immobilie bereits vorhanden.`},{status:400,headers:responseHeaders()});
+    return data<ActionResult>({featurePreview:{entered,formatted,...match}},{headers:responseHeaders()});
+  }
+  if(intent==="feature_custom_confirm"){
+    if(text(fd,"confirmed")!=="yes")return data<ActionResult>({error:"Die neue Ausstattung muss vor dem Übernehmen noch einmal bestätigt werden."},{status:400,headers:responseHeaders()});
+    const entered=text(fd,"custom_feature");
+    const choice=text(fd,"feature_choice");
+    if(entered.length<2||entered.length>60)return data<ActionResult>({error:"Ungültiger Ausstattungsbegriff."},{status:400,headers:responseHeaders()});
+    const {data:customRows}=await supabase.from("property_features").select("feature_key,label").like("feature_key","CUSTOM_%").limit(1000);
+    const options:FeatureChoice[]=[...FEATURE_OPTIONS.map(([key,label])=>({key,label})),...Array.from(new Map((customRows??[]).map((f)=>[f.feature_key,{key:f.feature_key,label:f.label}])).values())];
+    const formatted=formatFeatureLabel(entered);
+    const match=findFeatureMatch(formatted,options);
+    let option:FeatureChoice;
+    if(choice==="suggestion"&&match.suggestion)option=match.suggestion;
+    else if(match.exact)option=match.exact;
+    else option={key:customFeatureKey(formatted),label:formatted};
+    const {error}=await supabase.from("property_features").insert({property_id:propertyId,feature_key:option.key,label:option.label,value_type:"BOOLEAN",boolean_value:true,created_by:userId,updated_by:userId});
     if(error)return data<ActionResult>({error:"Merkmal ist bereits vorhanden oder konnte nicht gespeichert werden."},{status:400,headers:responseHeaders()});
     return redirect(`/properties/${propertyId}#ausstattung`,{headers:responseHeaders()});
   }
@@ -185,6 +230,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 export default function PropertyDetail(){
   const d=useLoaderData<typeof loader>(); const result=useActionData<typeof action>(); const p=d.property;
   const usedFeatures=new Set(d.features.map((f)=>f.feature_key));
+  const allFeatureOptions:FeatureChoice[]=[...FEATURE_OPTIONS.map(([key,label])=>({key,label})),...d.customFeatureOptions];
   return <main className="editor-shell">
     <header className="editor-header property-header"><div><Link className="back-link" to="/properties">← Immobilien</Link><p className="eyebrow">{p.property_number} · {p.transaction_type==="SALE"?"Verkauf":"Vermietung"}</p><div className="property-title-row"><h1 className="editor-title">{p.internal_title}</h1><span className={`status-pill status-${p.status.toLowerCase().replace("_","-")}`}>{labelStatus(p.status)}</span></div><p className="editor-meta">{TYPE_LABELS[p.property_type]??p.property_type} · Version {p.version}</p></div><div className="header-user"><span className="badge">STAGING</span><small>{d.profile.display_name}</small></div></header>
     {result?.error?<div className="form-error">{result.error}</div>:null}
@@ -214,7 +260,7 @@ export default function PropertyDetail(){
     </div>
 
     <div className="dashboard-grid property-section">
-      <section className="data-card" id="ausstattung"><div className="card-head"><div><p className="eyebrow">Flexible Ausstattung</p><h2>Ausstattung</h2></div></div><div className="chip-list">{d.features.map((feature)=><Form method="post" key={feature.id}><input type="hidden" name="_intent" value="feature_remove"/><input type="hidden" name="feature_id" value={feature.id}/><input type="hidden" name="feature_version" value={feature.version}/><button className="feature-chip" type="submit" title="Entfernen">{feature.label} ×</button></Form>)}</div><Form method="post" className="inline-form"><input type="hidden" name="_intent" value="feature_add"/><select name="feature_key" defaultValue=""><option value="">Merkmal hinzufügen…</option>{FEATURE_OPTIONS.filter(([v])=>!usedFeatures.has(v)).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select><button className="secondary-button" type="submit">Hinzufügen</button></Form></section>
+      <section className="data-card" id="ausstattung"><div className="card-head"><div><p className="eyebrow">Flexible Ausstattung</p><h2>Ausstattung</h2></div></div><div className="chip-list">{d.features.map((feature)=><Form method="post" key={feature.id}><input type="hidden" name="_intent" value="feature_remove"/><input type="hidden" name="feature_id" value={feature.id}/><input type="hidden" name="feature_version" value={feature.version}/><button className="feature-chip" type="submit" title="Entfernen">{feature.label} ×</button></Form>)}</div><Form method="post" className="inline-form"><input type="hidden" name="_intent" value="feature_add"/><select name="feature_key" defaultValue=""><option value="">Merkmal hinzufügen…</option>{allFeatureOptions.filter((o)=>!usedFeatures.has(o.key)).map((o)=><option key={o.key} value={o.key}>{o.label}</option>)}</select><button className="secondary-button" type="submit">Hinzufügen</button></Form><details className="section-separator"><summary className="subtle-link">+ Eigene Ausstattung ergänzen</summary><Form method="post" className="inline-form"><input type="hidden" name="_intent" value="feature_custom_preview"/><input name="custom_feature" lang="de" spellCheck={true} maxLength={60} placeholder="z. B. Wallbox" defaultValue={result?.featurePreview?.entered??""}/><button className="secondary-button" type="submit">Prüfen</button></Form><small className="subtle">Rechtschreibprüfung des Browsers ist aktiv. Zusätzlich wird auf vorhandene und ähnlich geschriebene Merkmale geprüft.</small>{result?.featurePreview?<div className="form-warning"><strong>Bitte noch einmal bestätigen:</strong><p>{result.featurePreview.exact?`„${result.featurePreview.formatted}“ gibt es bereits als „${result.featurePreview.exact.label}“. Es wird keine Dublette angelegt.`:result.featurePreview.suggestion?`„${result.featurePreview.formatted}“ ähnelt stark „${result.featurePreview.suggestion.label}“. Prüfe bitte die Schreibweise.`:`„${result.featurePreview.formatted}“ ist noch nicht vorhanden und kann als neues Merkmal übernommen werden.`}</p><div className="inline-actions">{result.featurePreview.suggestion&&!result.featurePreview.exact?<Form method="post"><input type="hidden" name="_intent" value="feature_custom_confirm"/><input type="hidden" name="confirmed" value="yes"/><input type="hidden" name="feature_choice" value="suggestion"/><input type="hidden" name="custom_feature" value={result.featurePreview.entered}/><button className="primary-button" type="submit">OK – {result.featurePreview.suggestion.label} verwenden</button></Form>:null}<Form method="post"><input type="hidden" name="_intent" value="feature_custom_confirm"/><input type="hidden" name="confirmed" value="yes"/><input type="hidden" name="feature_choice" value="entered"/><input type="hidden" name="custom_feature" value={result.featurePreview.entered}/><button className="secondary-button" type="submit">OK – {result.featurePreview.exact?result.featurePreview.exact.label:result.featurePreview.formatted} übernehmen</button></Form></div></div>:null}</details></section>
       <section className="data-card" id="energie"><div className="card-head"><div><p className="eyebrow">Energieausweis</p><h2>Energiedaten</h2></div></div><Form method="post" className="auth-form"><input type="hidden" name="_intent" value="energy"/><input type="hidden" name="energy_id" value={d.energy?.id??""}/><input type="hidden" name="energy_version" value={d.energy?.version??0}/><label className="checkbox-row"><input type="checkbox" name="certificate_present" defaultChecked={d.energy?.certificate_present??false}/><span>Energieausweis vorhanden</span></label><label><span>Art</span><select name="certificate_type" defaultValue={d.energy?.certificate_type??""}><option value="">—</option><option value="DEMAND">Bedarfsausweis</option><option value="CONSUMPTION">Verbrauchsausweis</option><option value="OTHER">Sonstige</option></select></label><label><span>Kennwert kWh/(m²·a)</span><input name="energy_value_kwh" defaultValue={d.energy?.energy_value_kwh??""}/></label><label><span>Effizienzklasse</span><select name="efficiency_class" defaultValue={d.energy?.efficiency_class??""}><option value="">—</option>{["A+","A","B","C","D","E","F","G","H"].map(v=><option key={v} value={v}>{v}</option>)}</select></label><label><span>Energieträger</span><input name="energy_source" defaultValue={d.energy?.energy_source??""}/></label><label><span>Gebäudebaujahr</span><input name="energy_building_year" defaultValue={d.energy?.building_year??""}/></label><label><span>Gültig bis</span><input name="energy_valid_until" type="date" defaultValue={d.energy?.valid_until??""}/></label><label><span>Notiz</span><textarea name="energy_notes" rows={3} defaultValue={d.energy?.notes??""}/></label><button className="primary-button" type="submit">Energiedaten speichern</button></Form></section>
     </div>
 
