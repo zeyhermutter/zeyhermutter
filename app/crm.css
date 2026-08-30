@@ -151,3 +151,20 @@
   .property-title-row { align-items:flex-start; flex-direction:column; gap:10px; }
   .status-pill { min-height:34px; }
 }
+
+
+/* Global sichtbarer Softwarestand */
+.build-version {
+  position: fixed;
+  right: 10px;
+  bottom: 8px;
+  z-index: 1000;
+  padding: 5px 8px;
+  border: 1px solid #334041;
+  border-radius: 8px;
+  background: rgba(13,18,19,.88);
+  color: #7f8b8d;
+  font: 600 10px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: .02em;
+  pointer-events: none;
+}
