@@ -64,21 +64,21 @@ export default function PropertyNew() {
     <Form method="post" className="editor-card">
       {result?.error ? <div className="form-error">{result.error}</div> : null}
       <div className="form-grid">
-        <label className="form-field"><span>Interner Objekttitel *</span><input name="internal_title" defaultValue={f.internal_title} required /></label>
+        <label className="form-field"><span>Interner Objekttitel *</span><input name="internal_title" defaultValue={f.internal_title} placeholder="z. B. ETW Familie Müller – Feldkirchen" required /></label>
         <label className="form-field"><span>Immobilientyp *</span><select name="property_type" defaultValue={f.property_type ?? "APARTMENT"}>{TYPES.map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></label>
         <label className="form-field"><span>Transaktion *</span><select name="transaction_type" defaultValue={f.transaction_type ?? "SALE"}><option value="SALE">Verkauf</option><option value="RENT">Vermietung</option></select></label>
-        <label className="form-field"><span>Kaufpreis <small>(im Entwurf optional)</small></span><input name="purchase_price" inputMode="decimal" defaultValue={f.purchase_price} placeholder="z. B. 875000" /></label>
-        <label className="form-field"><span>Kaltmiete <small>(im Entwurf optional)</small></span><input name="rent_cold" inputMode="decimal" defaultValue={f.rent_cold} /></label>
-        <label className="form-field"><span>Wohnfläche m²</span><input name="living_area_sqm" inputMode="decimal" defaultValue={f.living_area_sqm} /></label>
-        <label className="form-field"><span>Zimmer</span><input name="rooms" inputMode="decimal" defaultValue={f.rooms} /></label>
+        <label className="form-field"><span>Kaufpreis <small>(im Entwurf optional)</small></span><input name="purchase_price" inputMode="decimal" defaultValue={f.purchase_price} placeholder="z. B. 875.000" /></label>
+        <label className="form-field"><span>Kaltmiete <small>(im Entwurf optional)</small></span><input name="rent_cold" inputMode="decimal" defaultValue={f.rent_cold} placeholder="z. B. 1.850" /></label>
+        <label className="form-field"><span>Wohnfläche m²</span><input name="living_area_sqm" inputMode="decimal" defaultValue={f.living_area_sqm} placeholder="z. B. 92,5" /></label>
+        <label className="form-field"><span>Zimmer</span><input name="rooms" inputMode="decimal" defaultValue={f.rooms} placeholder="z. B. 3,5" /></label>
       </div>
       <div className="section-separator"><p className="eyebrow">Interne Objektadresse · optional im Entwurf</p></div>
       <div className="form-grid">
-        <label className="form-field"><span>Straße</span><input name="street" defaultValue={f.street} /></label>
-        <label className="form-field"><span>Hausnummer</span><input name="house_number" defaultValue={f.house_number} /></label>
-        <label className="form-field"><span>PLZ</span><input name="postal_code" defaultValue={f.postal_code} /></label>
-        <label className="form-field"><span>Ort</span><input name="city" defaultValue={f.city} /></label>
-        <label className="form-field"><span>Ortsteil</span><input name="district" defaultValue={f.district} /></label>
+        <label className="form-field"><span>Straße</span><input name="street" defaultValue={f.street} placeholder="z. B. Bahnhofstraße" /></label>
+        <label className="form-field"><span>Hausnummer</span><input name="house_number" defaultValue={f.house_number} placeholder="z. B. 12a" /></label>
+        <label className="form-field"><span>PLZ</span><input name="postal_code" defaultValue={f.postal_code} placeholder="z. B. 85622" /></label>
+        <label className="form-field"><span>Ort</span><input name="city" defaultValue={f.city} placeholder="z. B. Feldkirchen" /></label>
+        <label className="form-field"><span>Ortsteil</span><input name="district" defaultValue={f.district} placeholder="z. B. Heimstetten" /></label>
         <label className="form-field"><span>Öffentliche Adressdarstellung</span><select name="public_address_mode" defaultValue={f.public_address_mode ?? "CITY_ONLY"}><option value="FULL">Vollständig</option><option value="STREET_ONLY">Nur Straße</option><option value="DISTRICT_ONLY">Nur Ortsteil</option><option value="CITY_ONLY">Nur Ort</option><option value="HIDDEN">Verbergen</option></select></label>
       </div>
       <div className="form-actions"><Link className="secondary-button link-button" to="/properties">Abbrechen</Link><button className="primary-button" type="submit">Immobilie anlegen</button></div>
