@@ -132,3 +132,22 @@
 .checklist-waived select { border-color: #566264; }
 .owner-actions { justify-content: space-between; margin-top: 12px; }
 .owner-create-link { padding: 9px 0; }
+
+
+/* Immobilien – prominenter Workflowstatus */
+.property-title-row { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.status-pill { display:inline-flex; align-items:center; justify-content:center; min-height:36px; padding:8px 14px; border-radius:999px; border:1px solid #4b5b5d; background:#1d2728; color:#f4f7f7; font-size:13px; font-weight:700; letter-spacing:.02em; white-space:nowrap; }
+.status-draft { background:#2b3031; border-color:#626f71; }
+.status-acquisition, .status-valuation, .status-contract-pending, .status-preparation { background:#3a3117; border-color:#806f32; color:#f3dda1; }
+.status-marketing, .status-reserved, .status-notary { background:#17354a; border-color:#376f93; color:#b9def3; }
+.status-sold { background:#173524; border-color:#3d7a55; color:#c3ebd0; }
+.status-lost, .status-withdrawn { background:#351919; border-color:#743535; color:#f0bcbc; }
+.status-archived { background:#252b2c; border-color:#505c5e; color:#b9c2c3; }
+.creation-status-note { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px; color:#8d999b; }
+.creation-status-note small { max-width:680px; line-height:1.45; }
+.form-field span small { color:#7f8b8d; font-weight:400; }
+
+@media (max-width:720px) {
+  .property-title-row { align-items:flex-start; flex-direction:column; gap:10px; }
+  .status-pill { min-height:34px; }
+}
