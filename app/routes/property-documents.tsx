@@ -1,6 +1,7 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/property-documents";
 import { requirePermission } from "~/lib/auth.server";
+import "~/property-documents.css";
 
 type ActionResult = { error?: string };
 
@@ -37,8 +38,25 @@ const CATEGORIES = [
   ["OTHER", "Sonstige"],
 ] as const;
 
+const CLASSIFICATIONS = [
+  ["PUBLIC", "Öffentlich"],
+  ["INTERNAL", "Intern"],
+  ["CONFIDENTIAL", "Vertraulich"],
+] as const;
+
+const CATEGORY_VALUES = new Set(CATEGORIES.map(([value]) => value));
+const CLASSIFICATION_VALUES = new Set(CLASSIFICATIONS.map(([value]) => value));
+
 function text(fd: FormData, key: string) {
   return String(fd.get(key) ?? "").trim();
+}
+
+function categoryLabel(value: string) {
+  return CATEGORIES.find(([key]) => key === value)?.[1] ?? value;
+}
+
+function classificationLabel(value: string) {
+  return CLASSIFICATIONS.find(([key]) => key === value)?.[1] ?? value;
 }
 
 function safeFilename(name: string) {
@@ -98,9 +116,42 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   const fd = await request.formData();
   const intent = text(fd, "_intent");
 
+  if (intent === "metadata_update") {
+    const documentId = text(fd, "document_id");
+    const version = Number(text(fd, "version"));
+    const title = text(fd, "title");
+    const category = text(fd, "category");
+    const classification = text(fd, "classification");
+
+    if (!documentId || !Number.isInteger(version) || version < 1) {
+      return data<ActionResult>({ error: "Ungültiger Dokumentstand. Bitte Seite neu laden." }, { status: 400, headers: responseHeaders() });
+    }
+    if (!title) return data<ActionResult>({ error: "Der Dokumenttitel ist erforderlich." }, { status: 400, headers: responseHeaders() });
+    if (!CATEGORY_VALUES.has(category as never)) return data<ActionResult>({ error: "Ungültige Dokumentkategorie." }, { status: 400, headers: responseHeaders() });
+    if (!CLASSIFICATION_VALUES.has(classification as never)) return data<ActionResult>({ error: "Ungültige Klassifizierung." }, { status: 400, headers: responseHeaders() });
+
+    const { data: updated, error } = await supabase
+      .from("documents")
+      .update({
+        title,
+        category,
+        classification,
+        description: text(fd, "description") || null,
+      })
+      .eq("id", documentId)
+      .eq("property_id", propertyId)
+      .eq("version", version)
+      .select("id")
+      .maybeSingle();
+
+    if (error) return data<ActionResult>({ error: "Dokument-Metadaten konnten nicht gespeichert werden." }, { status: 400, headers: responseHeaders() });
+    if (!updated) return data<ActionResult>({ error: "Dokument wurde zwischenzeitlich geändert. Bitte Seite neu laden." }, { status: 409, headers: responseHeaders() });
+    return redirect(`/properties/${propertyId}/documents#document-${documentId}`, { headers: responseHeaders() });
+  }
+
   if (intent === "archive") {
     await requirePermission(request, context.cloudflare.env, "document.archive");
-    const { data: updated, error } = await supabase.from("documents").update({ archived_at: new Date().toISOString() }).eq("id", text(fd, "document_id")).eq("version", Number(text(fd, "version"))).select("id").maybeSingle();
+    const { data: updated, error } = await supabase.from("documents").update({ archived_at: new Date().toISOString() }).eq("id", text(fd, "document_id")).eq("property_id", propertyId).eq("version", Number(text(fd, "version"))).select("id").maybeSingle();
     if (error) return data<ActionResult>({ error: "Dokument konnte nicht archiviert werden." }, { status: 400, headers: responseHeaders() });
     if (!updated) return data<ActionResult>({ error: "Dokument wurde zwischenzeitlich geändert. Bitte neu laden." }, { status: 409, headers: responseHeaders() });
     return redirect(`/properties/${propertyId}/documents`, { headers: responseHeaders() });
@@ -173,12 +224,40 @@ export default function PropertyDocuments() {
       <section className="data-card">
         <div className="card-head"><div><p className="eyebrow">Bestehende Unterlagen</p><h2>Dokumente</h2></div><span className="subtle">{documents.length}</span></div>
         <div className="document-list">
-          {documents.map((document) => <article className="document-card" key={document.id}>
-            <div className="card-head"><div><strong>{document.title}</strong><small>{document.category} · {document.classification} · Version {document.current_version}</small></div>{canArchive ? <Form method="post"><input type="hidden" name="_intent" value="archive"/><input type="hidden" name="document_id" value={document.id}/><input type="hidden" name="version" value={document.version}/><button className="text-button" type="submit">Archivieren</button></Form> : null}</div>
-            {document.description ? <p className="subtle">{document.description}</p> : null}
-            <div className="version-list">{(versionMap[document.id] ?? []).map((version) => <div className="version-row" key={version.id}><div><strong>v{version.version_number} · {version.original_filename}</strong><small>{formatDate(version.uploaded_at)} · {formatSize(version.file_size_bytes)} · SHA-256 {version.sha256.slice(0, 12)}…{version.change_reason ? ` · ${version.change_reason}` : ""}</small></div>{signedUrls[version.id] ? <a className="subtle-link" href={signedUrls[version.id]} target="_blank" rel="noreferrer">Download</a> : <span className="subtle">Kein Zugriff</span>}</div>)}</div>
-            <Form method="post" encType="multipart/form-data" className="inline-upload"><input type="hidden" name="_intent" value="new_version"/><input type="hidden" name="document_id" value={document.id}/><label><span>Neue Version</span><input type="file" name="file" required/></label><label><span>Änderungsgrund</span><input name="change_reason" required placeholder="z. B. aktualisierte Unterschrift"/></label><button className="secondary-button" type="submit">Version hochladen</button></Form>
-          </article>)}
+          {documents.map((document) => <details className="document-card document-disclosure" id={`document-${document.id}`} key={document.id}>
+            <summary>
+              <div className="document-summary-main">
+                <strong>{document.title}</strong>
+                <small>{categoryLabel(document.category)} · {classificationLabel(document.classification)} · Version {document.current_version}</small>
+                {document.description ? <span>{document.description}</span> : null}
+              </div>
+              <span className="document-edit-hint">Metadaten & Versionen</span>
+            </summary>
+
+            <div className="document-detail-body">
+              <section className="document-metadata-section">
+                <div className="document-subhead"><div><p className="eyebrow">Gilt für das gesamte Dokument</p><h3>Metadaten bearbeiten</h3></div></div>
+                <Form method="post" className="auth-form document-metadata-form">
+                  <input type="hidden" name="_intent" value="metadata_update"/>
+                  <input type="hidden" name="document_id" value={document.id}/>
+                  <input type="hidden" name="version" value={document.version}/>
+                  <label><span>Titel *</span><input name="title" defaultValue={document.title} required/></label>
+                  <label><span>Kategorie *</span><select name="category" defaultValue={document.category}>{CATEGORIES.map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+                  <label><span>Klassifizierung *</span><select name="classification" defaultValue={document.classification}>{CLASSIFICATIONS.map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+                  <label><span>Beschreibung</span><textarea name="description" rows={3} defaultValue={document.description ?? ""}/></label>
+                  <div className="document-metadata-actions"><button className="primary-button" type="submit">Metadaten speichern</button></div>
+                </Form>
+                <p className="document-integrity-note">Diese Angaben können geändert werden. Bereits hochgeladene Dateiversionen, Prüfsummen und Upload-Historie bleiben unverändert erhalten.</p>
+                {canArchive ? <Form method="post" className="document-archive-form"><input type="hidden" name="_intent" value="archive"/><input type="hidden" name="document_id" value={document.id}/><input type="hidden" name="version" value={document.version}/><button className="text-button" type="submit">Dokument archivieren</button></Form> : null}
+              </section>
+
+              <section className="document-version-section">
+                <div className="document-subhead"><div><p className="eyebrow">Append-only</p><h3>Dateiversionen</h3></div><span className="subtle">{(versionMap[document.id] ?? []).length}</span></div>
+                <div className="version-list">{(versionMap[document.id] ?? []).map((version) => <div className="version-row" key={version.id}><div><strong>v{version.version_number} · {version.original_filename}</strong><small>{formatDate(version.uploaded_at)} · {formatSize(version.file_size_bytes)} · SHA-256 {version.sha256.slice(0, 12)}…{version.change_reason ? ` · ${version.change_reason}` : ""}</small></div>{signedUrls[version.id] ? <a className="subtle-link" href={signedUrls[version.id]} target="_blank" rel="noreferrer">Download</a> : <span className="subtle">Kein Zugriff</span>}</div>)}</div>
+                <Form method="post" encType="multipart/form-data" className="inline-upload"><input type="hidden" name="_intent" value="new_version"/><input type="hidden" name="document_id" value={document.id}/><label><span>Neue Version</span><input type="file" name="file" required/></label><label><span>Änderungsgrund</span><input name="change_reason" required placeholder="z. B. aktualisierte Unterschrift"/></label><button className="secondary-button" type="submit">Version hochladen</button></Form>
+              </section>
+            </div>
+          </details>)}
           {documents.length === 0 ? <p className="empty-state">Noch keine Dokumente vorhanden.</p> : null}
         </div>
       </section>
@@ -189,7 +268,7 @@ export default function PropertyDocuments() {
           <input type="hidden" name="_intent" value="create"/>
           <label><span>Titel *</span><input name="title" required/></label>
           <label><span>Kategorie *</span><select name="category" defaultValue="OTHER">{CATEGORIES.map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></label>
-          <label><span>Klassifizierung *</span><select name="classification" defaultValue="INTERNAL"><option value="PUBLIC">Public</option><option value="INTERNAL">Intern</option><option value="CONFIDENTIAL">Vertraulich</option></select></label>
+          <label><span>Klassifizierung *</span><select name="classification" defaultValue="INTERNAL">{CLASSIFICATIONS.map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></label>
           <label><span>Beschreibung</span><textarea name="description" rows={3}/></label>
           <label><span>Datei *</span><input name="file" type="file" required/></label>
           <label><span>Änderungsgrund</span><input name="change_reason" defaultValue="Initiale Version"/></label>
