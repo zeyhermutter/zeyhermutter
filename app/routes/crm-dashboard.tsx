@@ -1,7 +1,9 @@
-import { data, Form, Link, useLoaderData } from "react-router";
+import { useEffect, useRef } from "react";
+import { data, Form, Link, useFetcher, useLoaderData } from "react-router";
 import type { Route } from "./+types/crm-dashboard";
 import { PropertyOverviewMap, type PropertyMapPoint } from "~/components/property-overview-map";
-import { requireActiveUser } from "~/lib/auth.server";
+import { requireActiveUser, requirePermission } from "~/lib/auth.server";
+import { geocodePropertyAddress } from "~/lib/geocoding.server";
 import "~/property-map.css";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -32,15 +34,24 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   }
 
   let propertyMapPoints: PropertyMapPoint[] = [];
+  let missingCoordinateCount = 0;
   if (propertyPermission.data === true) {
-    const { data: addressRows } = await supabase
-      .from("property_addresses")
-      .select("property_id, latitude, longitude, street, house_number, postal_code, city, district, properties!inner(id, property_number, internal_title, status, transaction_type)")
-      .not("latitude", "is", null)
-      .not("longitude", "is", null)
-      .neq("properties.status", "ARCHIVED")
-      .order("city");
+    const [{ data: addressRows }, { count: missingCount }] = await Promise.all([
+      supabase
+        .from("property_addresses")
+        .select("property_id, latitude, longitude, street, house_number, postal_code, city, district, properties!inner(id, property_number, internal_title, status, transaction_type)")
+        .not("latitude", "is", null)
+        .not("longitude", "is", null)
+        .neq("properties.status", "ARCHIVED")
+        .order("city"),
+      supabase
+        .from("property_addresses")
+        .select("id, properties!inner(status)", { count: "exact", head: true })
+        .or("latitude.is.null,longitude.is.null")
+        .neq("properties.status", "ARCHIVED"),
+    ]);
 
+    missingCoordinateCount = missingCount ?? 0;
     propertyMapPoints = (addressRows ?? []).flatMap((row: any) => {
       const property = Array.isArray(row.properties) ? row.properties[0] : row.properties;
       const latitude = Number(row.latitude);
@@ -59,7 +70,52 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     });
   }
 
-  return data({ profile, contacts: contacts ?? [], tasks: tasks ?? [], contactCount: contactCount ?? 0, organizationCount: organizationCount ?? 0, taskCount: taskCount ?? 0, unreadCount: unreadCount ?? 0, propertyCount: propertyCount ?? 0, propertyMapPoints }, { headers: responseHeaders() });
+  return data({ profile, contacts: contacts ?? [], tasks: tasks ?? [], contactCount: contactCount ?? 0, organizationCount: organizationCount ?? 0, taskCount: taskCount ?? 0, unreadCount: unreadCount ?? 0, propertyCount: propertyCount ?? 0, propertyMapPoints, missingCoordinateCount }, { headers: responseHeaders() });
+}
+
+export async function action({ request, context }: Route.ActionArgs) {
+  const { supabase, responseHeaders } = await requirePermission(request, context.cloudflare.env, "property.write");
+  const fd = await request.formData();
+  if (String(fd.get("_intent") ?? "") !== "backfill_geocodes") {
+    return data({ error: "Unbekannte Aktion." }, { status: 400, headers: responseHeaders() });
+  }
+
+  const { data: addresses, error } = await supabase
+    .from("property_addresses")
+    .select("id, version, street, house_number, postal_code, city, district, country, properties!inner(status)")
+    .or("latitude.is.null,longitude.is.null")
+    .neq("properties.status", "ARCHIVED")
+    .limit(5);
+
+  if (error) return data({ error: "Fehlende Koordinaten konnten nicht ermittelt werden." }, { status: 400, headers: responseHeaders() });
+
+  let geocoded = 0;
+  for (const address of addresses ?? []) {
+    if (!address.street || !address.house_number || !address.postal_code || !address.city) continue;
+    try {
+      const coordinates = await geocodePropertyAddress(supabase, {
+        street: address.street,
+        houseNumber: address.house_number,
+        postalCode: address.postal_code,
+        city: address.city,
+        district: address.district,
+        country: address.country,
+      });
+      if (!coordinates) continue;
+      const { data: updated } = await supabase
+        .from("property_addresses")
+        .update({ latitude: coordinates.latitude, longitude: coordinates.longitude })
+        .eq("id", address.id)
+        .eq("version", address.version)
+        .select("id")
+        .maybeSingle();
+      if (updated) geocoded += 1;
+    } catch {
+      // Einzelne externe Geokodierungsfehler blockieren die übrigen Adressen nicht.
+    }
+  }
+
+  return data({ geocoded }, { headers: responseHeaders() });
 }
 
 function formatDate(value: string | null) {
@@ -68,7 +124,17 @@ function formatDate(value: string | null) {
 }
 
 export default function CrmDashboard() {
-  const { profile, contacts, tasks, contactCount, organizationCount, taskCount, unreadCount, propertyCount, propertyMapPoints } = useLoaderData<typeof loader>();
+  const { profile, contacts, tasks, contactCount, organizationCount, taskCount, unreadCount, propertyCount, propertyMapPoints, missingCoordinateCount } = useLoaderData<typeof loader>();
+  const geocodeFetcher = useFetcher<typeof action>();
+  const backfillStarted = useRef(false);
+
+  useEffect(() => {
+    if (backfillStarted.current || missingCoordinateCount <= 0 || geocodeFetcher.state !== "idle") return;
+    backfillStarted.current = true;
+    const formData = new FormData();
+    formData.set("_intent", "backfill_geocodes");
+    geocodeFetcher.submit(formData, { method: "post" });
+  }, [missingCoordinateCount, geocodeFetcher]);
 
   return (
     <main className="app-shell">
@@ -103,7 +169,7 @@ export default function CrmDashboard() {
         </div>
 
         <section className="data-card property-map-card">
-          <div className="card-head"><div><p className="eyebrow">Immobilien</p><h2>Standorte</h2></div><div><Link className="subtle-link" to="/properties">Alle Immobilien</Link><div className="map-coverage-note">{propertyMapPoints.length} von {propertyCount} lokalisiert</div></div></div>
+          <div className="card-head"><div><p className="eyebrow">Immobilien</p><h2>Standorte</h2></div><div><Link className="subtle-link" to="/properties">Alle Immobilien</Link><div className="map-coverage-note">{propertyMapPoints.length} von {propertyCount} lokalisiert{geocodeFetcher.state !== "idle" ? " · Koordinaten werden ergänzt…" : ""}</div></div></div>
           <PropertyOverviewMap points={propertyMapPoints} />
         </section>
 
