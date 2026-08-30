@@ -12,6 +12,7 @@ import {
 import type { Route } from "./+types/root";
 import "./styles.css";
 import "./crm.css";
+import "./property-context-nav.css";
 
 declare const __BUILD_COMMIT__: string;
 
