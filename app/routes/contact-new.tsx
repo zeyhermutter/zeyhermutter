@@ -155,14 +155,15 @@ export default function NewContact() {
           </section>
         ) : null}
 
+        <p className="required-hint">* Pflichtfeld · Bei E-Mail, Mobil und Telefon muss mindestens eines der drei Felder ausgefüllt sein.</p>
         <div className="form-grid">
           <label className="form-field"><span>Anrede</span><select name="salutation" defaultValue={fields.salutation ?? ""}><option value="">—</option><option value="Herr">Herr</option><option value="Frau">Frau</option><option value="Divers">Divers</option></select></label>
           <div />
           <Field label="Vorname" name="first_name" defaultValue={fields.first_name} required />
           <Field label="Nachname" name="last_name" defaultValue={fields.last_name} required />
-          <Field label="E-Mail" name="email" type="email" defaultValue={fields.email} />
-          <Field label="Mobil" name="mobile" type="tel" defaultValue={fields.mobile} />
-          <Field label="Telefon" name="phone" type="tel" defaultValue={fields.phone} />
+          <label className="form-field"><span>E-Mail *</span><input name="email" type="email" defaultValue={fields.email} /></label>
+          <label className="form-field"><span>Mobil *</span><input name="mobile" type="tel" defaultValue={fields.mobile} /></label>
+          <label className="form-field"><span>Telefon *</span><input name="phone" type="tel" defaultValue={fields.phone} /></label>
           <label className="form-field"><span>Bevorzugter Kontaktweg</span><select name="preferred_channel" defaultValue={fields.preferred_channel ?? ""}><option value="">—</option><option value="EMAIL">E-Mail</option><option value="MOBILE">Mobil</option><option value="PHONE">Telefon</option><option value="OTHER">Sonstiges</option></select></label>
         </div>
 
