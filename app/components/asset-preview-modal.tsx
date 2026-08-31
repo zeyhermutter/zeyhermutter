@@ -13,7 +13,9 @@ type Props = {
   title: string;
   subtitle?: string;
   url?: string;
+  downloadUrl?: string;
   downloadName?: string;
+  editorResetKey?: string | number;
   kind: AssetPreviewKind;
   positionLabel?: string;
   metadata: MetadataEntry[];
@@ -45,7 +47,9 @@ export function AssetPreviewModal({
   title,
   subtitle,
   url,
+  downloadUrl,
   downloadName,
+  editorResetKey,
   kind,
   positionLabel,
   metadata,
@@ -93,7 +97,7 @@ export function AssetPreviewModal({
       window.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = previousOverflow;
     };
-  }, [open, title, hasPrevious, hasNext, onClose, onPrevious, onNext]);
+  }, [open, title, editorResetKey, hasPrevious, hasNext, onClose, onPrevious, onNext]);
 
   if (!open) return null;
 
@@ -109,7 +113,7 @@ export function AssetPreviewModal({
           <button className="secondary-button compact" type="button" onClick={onPrevious} disabled={!hasPrevious} aria-label="Vorheriges Element">← Vorheriges</button>
           <button className="secondary-button compact" type="button" onClick={onNext} disabled={!hasNext} aria-label="Nächstes Element">Nächstes →</button>
           {url ? <a className="secondary-button compact asset-action-link" href={url} target="_blank" rel="noreferrer">Original öffnen</a> : null}
-          {url ? <a className="secondary-button compact asset-action-link" href={url} download={downloadName}>Herunterladen</a> : null}
+          {downloadUrl || url ? <a className="secondary-button compact asset-action-link" href={downloadUrl ?? url} download={downloadUrl ? undefined : downloadName}>Herunterladen</a> : null}
           {printable && url ? <button className="secondary-button compact" type="button" onClick={() => printAsset(url)}>Drucken</button> : null}
           <button className="secondary-button compact" type="button" onClick={() => setMetadataVisible((value) => !value)}>{metadataVisible ? "Metadaten ausblenden" : "Metadaten anzeigen"}</button>
           {metadataEditor ? <button className={editing ? "primary-button asset-toolbar-primary" : "secondary-button compact"} type="button" onClick={() => { setMetadataVisible(true); setEditing((value) => !value); }}>{editing ? "Bearbeitung schließen" : "Metadaten bearbeiten"}</button> : null}
@@ -132,7 +136,7 @@ export function AssetPreviewModal({
             {metadata.map((entry) => <div key={entry.label}><dt>{entry.label}</dt><dd>{entry.value || "—"}</dd></div>)}
           </dl>
 
-          {editing && metadataEditor ? <section className="asset-editor-section" onSubmitCapture={() => setEditing(false)}><div className="asset-panel-subhead"><h4>Metadaten bearbeiten</h4></div>{metadataEditor}</section> : null}
+          {editing && metadataEditor ? <section className="asset-editor-section"><div className="asset-panel-subhead"><h4>Metadaten bearbeiten</h4></div>{metadataEditor}</section> : null}
 
           {versions ? <section className="asset-versions-section">
             <button className="asset-section-toggle" type="button" onClick={() => setVersionsVisible((value) => !value)}><span>Versionshistorie</span><span>{versionsVisible ? "−" : "+"}</span></button>
