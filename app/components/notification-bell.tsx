@@ -9,6 +9,7 @@ function entityTarget(entityType:string|null,entityId:string|null) {
   if (entityType === "PROPERTY" && entityId) return `/properties/${entityId}`;
   if (entityType === "SEARCH_PROFILE" && entityId) return `/search-profiles/${entityId}`;
   if (entityType === "INQUIRY" && entityId) return `/inquiries/${entityId}`;
+  if (entityType === "VIEWING" && entityId) return `/viewings/${entityId}`;
   if (entityType === "TASK") return "/crm/tasks";
   return "/crm";
 }
