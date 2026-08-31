@@ -1,0 +1,2 @@
+drop trigger if exists search_profile_property_decisions_set_update_metadata on public.search_profile_property_decisions;
+create trigger search_profile_property_decisions_set_update_metadata before update on public.search_profile_property_decisions for each row execute function app_private.set_standard_update_metadata();
