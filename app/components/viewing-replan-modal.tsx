@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Form, useLocation } from "react-router";
+import { useFetcher, useLocation } from "react-router";
 import "~/viewing-replan-modal.css";
 
 type Context = {
@@ -15,6 +15,8 @@ type Context = {
   responsibleUser: string;
   responsibleOptions: Array<{ value: string; label: string }>;
 };
+
+type CreateResult = { error?: string; fields?: Record<string, string> };
 
 function hrefId(selector: string, prefix: string) {
   const link = document.querySelector<HTMLAnchorElement>(selector);
@@ -75,11 +77,13 @@ function plusOneHour(value: string) {
 
 export function ViewingReplanModal() {
   const location = useLocation();
+  const fetcher = useFetcher<CreateResult>();
   const [open, setOpen] = useState(false);
   const [context, setContext] = useState<Context | null>(null);
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
   const [endEdited, setEndEdited] = useState(false);
+  const submitting = fetcher.state !== "idle";
 
   useEffect(() => {
     if (!/^\/viewings\/[^/]+\/?$/.test(location.pathname)) return;
@@ -119,16 +123,22 @@ export function ViewingReplanModal() {
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape" && !submitting) setOpen(false);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open]);
+  }, [open, submitting]);
 
   if (!open || !context) return null;
 
+  const contextError = !context.propertyId || !context.contactId
+    ? "Immobilie oder Interessent konnten aus der bestehenden Besichtigung nicht übernommen werden."
+    : "";
+  const submitError = fetcher.data?.error ?? contextError;
+  const returnTo = `${location.pathname}${location.search}`;
+
   return (
-    <div className="viewing-replan-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
+    <div className="viewing-replan-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !submitting) setOpen(false); }}>
       <section className="viewing-replan-modal" role="dialog" aria-modal="true" aria-labelledby="viewing-replan-title">
         <div className="viewing-replan-head">
           <div>
@@ -136,7 +146,7 @@ export function ViewingReplanModal() {
             <h2 id="viewing-replan-title">Neue Besichtigung planen</h2>
             <p>Bekannte Zuordnungen werden aus der bisherigen Besichtigung übernommen.</p>
           </div>
-          <button className="viewing-replan-close" type="button" aria-label="Schließen" onClick={() => setOpen(false)}>×</button>
+          <button className="viewing-replan-close" type="button" aria-label="Schließen" disabled={submitting} onClick={() => setOpen(false)}>×</button>
         </div>
 
         <div className="viewing-replan-context">
@@ -146,11 +156,14 @@ export function ViewingReplanModal() {
           <div><span>Anfrage</span><strong>{context.inquiryLabel}</strong></div>
         </div>
 
-        <Form method="post" action="/viewings/new" className="viewing-replan-form">
+        {submitError ? <div className="form-error" role="alert">{submitError}</div> : null}
+
+        <fetcher.Form method="post" action="/viewings/new" className="viewing-replan-form">
           <input type="hidden" name="property_id" value={context.propertyId}/>
           <input type="hidden" name="contact_id" value={context.contactId}/>
           <input type="hidden" name="search_profile_id" value={context.searchProfileId}/>
           <input type="hidden" name="inquiry_id" value={context.inquiryId}/>
+          <input type="hidden" name="return_to" value={returnTo}/>
 
           <div className="form-grid">
             <label className="form-field"><span>Beginn *</span><input name="starts_at" type="datetime-local" required autoFocus value={startsAt} onChange={(event) => { const value = event.currentTarget.value; setStartsAt(value); if (!endEdited) setEndsAt(plusOneHour(value)); }}/></label>
@@ -161,10 +174,10 @@ export function ViewingReplanModal() {
           <label className="form-field"><span>Interne Notizen</span><textarea name="internal_notes" rows={3}/></label>
 
           <div className="viewing-replan-actions">
-            <button className="secondary-button" type="button" onClick={() => setOpen(false)}>Abbrechen</button>
-            <button className="primary-button" type="submit" disabled={!context.propertyId || !context.contactId}>Besichtigung anlegen</button>
+            <button className="secondary-button" type="button" disabled={submitting} onClick={() => setOpen(false)}>Abbrechen</button>
+            <button className="primary-button" type="submit" disabled={submitting || Boolean(contextError)}>{submitting ? "Besichtigung wird angelegt …" : "Besichtigung anlegen"}</button>
           </div>
-        </Form>
+        </fetcher.Form>
       </section>
     </div>
   );
