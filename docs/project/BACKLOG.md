@@ -39,7 +39,7 @@ Priorisierung: **MUST > SHOULD > COULD > LATER**.
 - [x] echter zweiter Browser-Login
 - [x] Zwei-Benutzer-Test Zuweisung + @Mention + Notification
 
-## MUST – Immobilien MVP — IN ARBEIT
+## MUST – Immobilien MVP — DONE
 - [x] Property mit `ZM-YYYY-####`
 - [x] PropertyAddress intern/öffentlich getrennt
 - [x] Objektstatusmaschine mit erlaubten Übergängen
@@ -59,11 +59,26 @@ Priorisierung: **MUST > SHOULD > COULD > LATER**.
 - [x] UI Eigentümer / Ausstattung / Energie / Checkliste
 - [x] UI Dokumente / Versionen / Signed Download
 - [x] UI Medien
-- [ ] Cloudflare-Build des aktuellen Immobilienstands bestätigen
-- [ ] Browser-Smoke-Test Immobilie anlegen und bearbeiten
-- [ ] Browser-Smoke-Test Dokumentupload + neue Version + Download
-- [ ] Browser-Smoke-Test Medienupload
-- [ ] Modul-02-DoD abschließen
+- [x] Cloudflare-Stand im Browser bestätigt
+- [x] Browser-Smoke-Test Immobilie anlegen/bearbeiten/status
+- [x] Browser-Smoke-Test Dokumentdownload + Versionsworkflow
+- [x] Browser-Smoke-Test Medien und Metadaten
+- [x] Modul-02-DoD abgeschlossen
+
+## MUST – Eigentümer & Leads MVP — IN ARBEIT
+- [ ] Lead mit eigener Nummer und Statusmaschine
+- [ ] Verkäufer-Lead-Status NEW / CONTACTED / QUALIFIED / APPOINTMENT / VALUATION / OFFER / WON / LOST / NURTURE
+- [ ] Leadquelle separat von Status speichern
+- [ ] verlorenen Grund speichern
+- [ ] Lead mit bestehendem CRM-Kontakt verknüpfen; kein paralleles Kontaktsystem
+- [ ] mehrere Leads pro Kontakt zulassen
+- [ ] Objekt-/Bewertungsanfrage inkl. Adresse, Typ, Baujahr, Flächen, Zimmer, Zustand, Belegung, Verkaufshorizont, Preisvorstellung, Nachricht, Quelle und Consent
+- [ ] verantwortlicher Benutzer + Wiedervorlage
+- [ ] Activity / Kommentare / @Mentions wiederverwenden
+- [ ] Audit, RLS, Permissions und Optimistic Locking
+- [ ] Archivieren statt löschen
+- [ ] atomarer Lead → Immobilie Workflow ohne Doppelanlage
+- [ ] Browser-Smoke-Test und DoD
 
 ## SHOULD – Zusammenarbeit
 - [ ] Soft Presence
