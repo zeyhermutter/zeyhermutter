@@ -5,7 +5,7 @@ ZeyherMutterOS wird als produktionsfähige, sichere und nachvollziehbare Plattfo
 
 ## Arbeitsweise
 - STAGING zuerst, Production nur nach ausdrücklicher Freigabe.
-- SeasonCrew bleibt technisch vollständig getrennt.
+- ZeyherMutterOS verwendet eine eigenständige Projektinfrastruktur.
 - Kleine, abgeschlossene Inkremente statt großer unkontrollierter Rewrites.
 - Architektur-, Security- und Datenintegritätsentscheidungen werden dokumentiert.
 - Tests erfolgen risikobasiert.
@@ -67,15 +67,25 @@ ZeyherMutterOS wird als produktionsfähige, sichere und nachvollziehbare Plattfo
 - [x] Modul-02-Abschlussprüfung gegen Definition of Done
 
 ### Phase 3 – Eigentümer & Leads — IN ARBEIT
-- [ ] Verkäufer-Lead-Pipeline
-- [ ] Leadquellen/Attribution
-- [ ] Bewertungsformular
-- [ ] Lead ↔ CRM-Kontakt
-- [ ] Wiedervorlage / Verantwortlicher Benutzer
-- [ ] Activity / Kommentare / @Mentions / Audit
-- [ ] Optimistic Locking / Archivieren
-- [ ] Lead → Immobilie Workflow
-- [ ] Browser-Smoke-Test und DoD
+- [x] Verkäufer-Lead-Datenmodell und automatische `ZM-L-######` Nummer
+- [x] serverseitige Lead-Statusmaschine
+- [x] Leadquellen/Attribution getrennt vom Status
+- [x] Lead ↔ bestehender CRM-Kontakt; mehrere Leads pro Kontakt
+- [x] Lead-Verzeichnis `/leads` mit Pipeline, Filtern, Suche und Pagination
+- [x] Lead-Neuanlage `/leads/new`
+- [x] zentrale Leadakte `/leads/:leadId`
+- [x] Bewertungsworkflow inkl. Termin, Marktwert, Notiz und Angebotsdaten
+- [x] Wiedervorlage / verantwortlicher Benutzer
+- [x] Aufgaben mit Leadbezug und Rücklink
+- [x] Activity / Kommentare / @Mentions / Notifications
+- [x] feldgenaues Audit / Optimistic Locking / Archivieren
+- [x] globale CRM-Suche findet Leads
+- [x] CRM-Dashboard integriert Verkäufer-Leads
+- [x] atomarer und idempotenter Lead → Immobilie Workflow
+- [x] serverseitige Permission-, Conversion-, Integritäts- und Concurrency-Tests
+- [ ] aktueller Modul-03-UI-Stand erfolgreich auf Cloudflare sichtbar
+- [ ] vollständiger Browser-Smoke-Test Modul 03
+- [ ] Modul-03-Abschlussprüfung gegen Definition of Done
 
 ### Phase 4 – Interessenten & Besichtigungen
 - [ ] Anfragen
