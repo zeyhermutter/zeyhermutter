@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFetcher, useLocation } from "react-router";
 import "~/viewing-replan-modal.css";
 
@@ -83,6 +83,7 @@ export function ViewingReplanModal() {
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
   const [endEdited, setEndEdited] = useState(false);
+  const previousFetcherState = useRef(fetcher.state);
   const submitting = fetcher.state !== "idle";
 
   useEffect(() => {
@@ -119,6 +120,19 @@ export function ViewingReplanModal() {
       .catch(() => undefined);
     return () => { cancelled = true; };
   }, [open, context?.propertyId]);
+
+  useEffect(() => {
+    const wasSubmitting = previousFetcherState.current !== "idle";
+    const finishedSuccessfully = wasSubmitting && fetcher.state === "idle" && !fetcher.data?.error;
+    if (finishedSuccessfully) {
+      setOpen(false);
+      setContext(null);
+      setStartsAt("");
+      setEndsAt("");
+      setEndEdited(false);
+    }
+    previousFetcherState.current = fetcher.state;
+  }, [fetcher.state, fetcher.data]);
 
   useEffect(() => {
     if (!open) return;
