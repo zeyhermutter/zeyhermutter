@@ -1,35 +1,10 @@
+import { data, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/home";
+import { createSupabaseServerClient } from "~/lib/supabase.server";
+import "~/public-website.css";
 
-export function meta({}: Route.MetaArgs) {
-  return [
-    { title: "ZeyherMutterOS · Staging" },
-    { name: "description", content: "ZeyherMutterOS Staging-System" },
-  ];
-}
-
-const modules = [
-  ["01", "CRM", "Kontakte, Aktivitäten und Aufgaben", "DONE"],
-  ["02", "Immobilien", "Objekte, Eigentümer und Dokumente", "DONE"],
-  ["03", "Eigentümer & Leads", "Akquise und Verkäufer-Pipeline", "DONE"],
-  ["04", "Interessenten & Besichtigungen", "Anfragen, Suchprofile und Termine", "IN ARBEIT"],
-  ["05", "Website & Exposés", "Publikation und Dokumenterzeugung", "IN ARBEIT"],
-  ["06", "Dashboard & Provisionen", "Steuerung, Pipeline und Umsatz", "GEPLANT"],
-];
-
-export default function Home() {
-  return (
-    <main className="shell">
-      <header className="topbar">
-        <div className="brand"><span className="brand-mark">ZM</span><span>ZeyherMutterOS</span></div>
-        <div className="top-actions"><span className="badge">STAGING</span><a className="secondary-button compact" href="/login">Anmelden</a></div>
-      </header>
-      <section className="hero">
-        <p className="eyebrow">ZeyherMutterOS · Staging</p>
-        <h1>Das digitale Betriebssystem für ZeyherMutter.</h1>
-        <p className="lead">CRM, Immobilien, Verkäufer-Leads, Interessentenprozesse und kontrollierte Objektpublikation auf einer gemeinsamen, nachvollziehbaren Datenbasis.</p>
-        <div className="status-grid"><div className="status"><strong>Cloudflare</strong><span>Workers · Staging</span></div><div className="status"><strong>Supabase</strong><span>Frankfurt · RLS aktiv</span></div><div className="status"><strong>Aktuell</strong><span>Module 04 & 05 · Interessenten + Website</span></div></div>
-      </section>
-      <section className="modules"><div className="section-head"><p className="eyebrow">Roadmap</p><h2>Sechs Kernmodule</h2></div><div className="module-grid">{modules.map(([number,name,description,status])=><article className="module" key={number}><span>{number}</span><h3>{name}</h3><p>{description}</p><small>{status}</small></article>)}</div></section>
-    </main>
-  );
-}
+function mediaUrl(item:any){return item?.id&&item?.source_version?`/immobilien/medien/${item.id}/${item.source_version}`:null;}
+function money(v:any){return v===null||v===undefined?"Preis auf Anfrage":new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(Number(v));}
+export function meta(){return[{title:"ZeyherMutter · Immobilienvermittlung"},{name:"description",content:"ZeyherMutter begleitet Immobilienverkauf, Vermietung und Immobiliensuche persönlich und strukturiert."}]}
+export async function loader({request,context}:Route.LoaderArgs){const {supabase}=createSupabaseServerClient(request,context.cloudflare.env);const {data:rows,error}=await supabase.rpc("public_property_listings");return data({featured:error?[]:(rows??[]).slice(0,3)},{headers:{"Cache-Control":"public, max-age=60, s-maxage=120"}});}
+export default function Home(){const {featured}=useLoaderData<typeof loader>();return <main className="public-site"><header className="public-header"><Link className="public-brand" to="/"><span>ZM</span><strong>ZeyherMutter</strong></Link><nav className="public-nav"><Link to="/immobilien">Immobilien</Link><Link to="/kontakt">Kontakt</Link></nav></header><section className="public-home-hero"><div><p className="public-eyebrow">Immobilienvermittlung</p><h1>Persönlich. Klar. Verlässlich.</h1><p>Wir begleiten Eigentümer und Interessenten vom ersten Gespräch bis zum Abschluss – mit nachvollziehbaren Prozessen und direkter persönlicher Betreuung.</p><div className="public-home-actions"><Link className="public-primary-button dark" to="/immobilien">Immobilien ansehen</Link><Link className="public-secondary-link" to="/kontakt">Kontakt aufnehmen →</Link></div></div><div className="public-home-mark">ZM</div></section><section className="public-home-services"><article><span>01</span><h2>Verkaufen & vermieten</h2><p>Von Bewertung und Vorbereitung bis Vermarktung, Besichtigung und Abschluss.</p></article><article><span>02</span><h2>Immobilie finden</h2><p>Suchwünsche strukturiert erfassen und passende Immobilien transparent zusammenbringen.</p></article><article><span>03</span><h2>Direkte Betreuung</h2><p>Keine anonyme Plattform: Ansprechpartner, Aufgaben und Kommunikation bleiben nachvollziehbar.</p></article></section>{featured.length?<section className="public-home-featured"><div className="public-section-head"><div><p className="public-eyebrow">Aktuelle Immobilien</p><h2>Neu im Angebot.</h2></div><Link to="/immobilien">Alle Immobilien →</Link></div><div className="public-property-grid compact">{featured.map((row:any)=>{const s=row.snapshot??{},main=(s.media??[])[0],image=mediaUrl(main);return <Link className="public-property-card" key={row.public_slug} to={`/immobilien/${row.public_slug}`}>{image?<div className="public-property-image-wrap"><img className="public-property-image" src={image} alt={main.alt_text||main.title||row.public_title}/></div>:<div className="public-property-placeholder"><span>Immobilie</span></div>}<div className="public-property-card-body"><p className="public-eyebrow">{s.transaction_type==="RENT"?"Zur Miete":"Zum Kauf"}</p><h2>{row.public_title}</h2><div className="public-property-facts"><strong>{money(s.price)}</strong><span>{s.living_area_sqm?`${Number(s.living_area_sqm)} m²`:""}</span></div></div></Link>})}</div></section>:null}<section className="public-home-cta"><p className="public-eyebrow">Ihr Anliegen</p><h2>Immobilie verkaufen, vermieten oder suchen?</h2><Link className="public-primary-button" to="/kontakt">Mit uns sprechen</Link></section><footer className="public-footer"><span>ZeyherMutter · Immobilienvermittlung</span><div><Link to="/impressum">Impressum</Link><Link to="/datenschutz">Datenschutz</Link><Link className="public-internal-link" to="/login">Intern</Link></div></footer></main>}
