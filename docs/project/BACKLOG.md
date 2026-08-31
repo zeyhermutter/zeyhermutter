@@ -97,21 +97,32 @@ Priorisierung: **MUST > SHOULD > COULD > LATER**.
 - [x] Anfragen mit Nummer `ZM-A-######`
 - [x] Kauf-/Miet-Suchprofile mit Preis, Fläche, Zimmern, Grundstück, Baujahr, Einzug und Finanzierung
 - [x] mehrere Suchorte je Suchprofil inkl. PLZ/Ort/Ortsteil/Radius
+- [x] Pflicht-Suchort und serverseitig validierter Suchradius
 - [x] RLS, Audit, Archivieren und Optimistic Concurrency für Suchprofile/Anfragen
-- [x] Aufgaben können technisch an Anfrage oder Suchprofil hängen
+- [x] Aufgaben können an Anfrage, Suchprofil und Besichtigung hängen
 - [x] Suchprofil-Verzeichnis und Filter
 - [x] Suchprofil-Neuanlage und Detailakte
 - [x] mehrere Suchorte in der Suchprofilakte verwalten
-- [ ] CRM-Navigation/Dashboard für Interessenten
-- [ ] Anfrage-Verzeichnis und Anfrageakte
-- [ ] globale Suche findet Suchprofile und Anfragen
-- [ ] Activity / Kommentare / @Mentions / Notifications integrieren
-- [ ] regelbasiertes Immobilien-Matching
-- [ ] Match-Bewertung/Begründung nachvollziehbar anzeigen
-- [ ] Besichtigungsworkflow
-- [ ] Feedback
-- [ ] Kaufangebote
-- [ ] Browser-Smoke-Test Modul 04
+- [x] CRM-Navigation/Dashboard für Interessenten
+- [x] Anfrage-Verzeichnis und Anfrageakte
+- [x] globale Suche findet Suchprofile und Anfragen
+- [x] Activity / Kommentare / @Mentions / Notifications integriert
+- [x] regelbasiertes Immobilien-Matching
+- [x] PLZ-/Ort-/Radius-Matching mit nachvollziehbaren Match-Gründen
+- [x] Reverse Matching in der Immobilienakte über dieselbe Matching-Engine
+- [x] Matchentscheidungen wie Interessant / Gesendet / Abgelehnt / Besichtigung gewünscht
+- [x] Besichtigungsworkflow inkl. Kontextübernahme und Rücklinks
+- [x] kontrollierter Korrekturpfad für versehentlich „Durchgeführt“
+- [x] Feedback
+- [x] Kaufangebote mit `ZM-KA-######`
+- [x] Folgeangebote ersetzen den vorherigen aktiven Preisstand ohne Historienverlust
+- [x] pro Kontakt + Immobilie maximal ein aktives abgegebenes Angebot
+- [x] Aufgabenmodal und deutsche Status-/Prioritätsbezeichnungen
+- [x] negative Permission-/RLS-/API-Bypass-Tests M04-17 / 45 / 46 / 47 / 48
+- [x] Advisor-Prüfung nach dem Browser-Fixblock
+- [ ] M04-49 Responsive Browser-Abnahme
+- [ ] M04-50 vollständiger End-to-End-Browser-Test
+- [ ] Browser-Smoke-Test Modul 04 final abschließen
 - [ ] Modul-04-DoD abschließen
 
 ## SHOULD – Zusammenarbeit
