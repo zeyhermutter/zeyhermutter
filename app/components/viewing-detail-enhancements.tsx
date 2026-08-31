@@ -10,6 +10,20 @@ const FINANCING_OPTIONS = [
   ["NOT_REQUIRED", "Nicht erforderlich"],
 ] as const;
 
+type ViewingHistoryPayload = {
+  currentViewingId: string;
+  viewings: Array<{ id: string; viewing_number: string; starts_at: string | null; status: string }>;
+  audit: Array<{
+    id: string;
+    entity_id: string;
+    occurred_at: string;
+    actor_display_name_snapshot: string | null;
+    action: string;
+    description: string | null;
+  }>;
+  error?: string;
+};
+
 function plusOneHour(value: string) {
   if (!value) return "";
   const date = new Date(`${value}:00`);
@@ -17,6 +31,18 @@ function plusOneHour(value: string) {
   date.setHours(date.getHours() + 1);
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function formatHistoryDate(value: string) {
+  try {
+    return new Intl.DateTimeFormat("de-DE", {
+      dateStyle: "medium",
+      timeStyle: "short",
+      timeZone: "Europe/Berlin",
+    }).format(new Date(value));
+  } catch {
+    return value;
+  }
 }
 
 function openNativePicker(input: HTMLInputElement) {
@@ -67,6 +93,85 @@ function enhanceOfferFinancingFields() {
   }
 }
 
+function enhanceCombinedViewingHistory(viewingId: string, cleanups: Array<() => void>) {
+  const cards = Array.from(document.querySelectorAll<HTMLElement>(".inquiry-page > section.data-card"));
+  const historyCard = cards.find((card) => card.querySelector("h2")?.textContent?.trim() === "Änderungen");
+  const historyList = historyCard?.querySelector<HTMLElement>(".history-list");
+  if (!historyList || historyList.dataset.viewingHistoryChain) return;
+
+  historyList.dataset.viewingHistoryChain = "loading";
+  const controller = new AbortController();
+  let injected: HTMLElement | null = null;
+
+  fetch(`/api/viewings/${encodeURIComponent(viewingId)}/history`, {
+    credentials: "same-origin",
+    headers: { Accept: "application/json" },
+    signal: controller.signal,
+  })
+    .then(async (response) => {
+      if (!response.ok) return null;
+      return (await response.json()) as ViewingHistoryPayload;
+    })
+    .then((payload) => {
+      if (!payload || payload.error || controller.signal.aborted) return;
+
+      const previousEvents = payload.audit.filter((event) => event.entity_id !== payload.currentViewingId);
+      historyList.dataset.viewingHistoryChain = "ready";
+      if (!previousEvents.length) return;
+
+      const viewingNumber = new Map(payload.viewings.map((viewing) => [viewing.id, viewing.viewing_number]));
+      const relatedPreviousCount = payload.viewings.filter((viewing) => viewing.id !== payload.currentViewingId).length;
+
+      injected = document.createElement("div");
+      injected.className = "viewing-history-chain";
+      injected.dataset.viewingChainHistory = "true";
+
+      const separator = document.createElement("div");
+      separator.className = "viewing-history-chain-head";
+      const eyebrow = document.createElement("span");
+      eyebrow.textContent = "Frühere Besichtigungstermine";
+      const count = document.createElement("small");
+      count.textContent = `${relatedPreviousCount} vorherige${relatedPreviousCount === 1 ? "r Termin" : " Termine"}`;
+      separator.append(eyebrow, count);
+      injected.append(separator);
+
+      for (const event of previousEvents) {
+        const article = document.createElement("article");
+        article.className = "history-event viewing-chain-history-event";
+
+        const head = document.createElement("div");
+        head.className = "history-head";
+        const strong = document.createElement("strong");
+        const number = viewingNumber.get(event.entity_id) ?? "Frühere Besichtigung";
+        strong.textContent = `${number} · ${event.actor_display_name_snapshot ?? "System"} · ${event.action}`;
+        const small = document.createElement("small");
+        small.textContent = formatHistoryDate(event.occurred_at);
+        head.append(strong, small);
+        article.append(head);
+
+        if (event.description) {
+          const description = document.createElement("p");
+          description.textContent = event.description;
+          article.append(description);
+        }
+
+        injected.append(article);
+      }
+
+      historyList.querySelector(".empty-state")?.remove();
+      historyList.append(injected);
+    })
+    .catch(() => {
+      if (!controller.signal.aborted) delete historyList.dataset.viewingHistoryChain;
+    });
+
+  cleanups.push(() => {
+    controller.abort();
+    injected?.remove();
+    delete historyList.dataset.viewingHistoryChain;
+  });
+}
+
 export function ViewingDetailEnhancements() {
   const location = useLocation();
 
@@ -83,7 +188,8 @@ export function ViewingDetailEnhancements() {
   }, []);
 
   useEffect(() => {
-    const isViewingDetail = /^\/viewings\/[^/]+\/?$/.test(location.pathname);
+    const viewingMatch = location.pathname.match(/^\/viewings\/([^/]+)\/?$/);
+    const isViewingDetail = Boolean(viewingMatch);
     const isViewingNew = location.pathname === "/viewings/new";
     if (!isViewingDetail && !isViewingNew) return;
 
@@ -105,6 +211,7 @@ export function ViewingDetailEnhancements() {
         }
 
         enhanceOfferFinancingFields();
+        if (viewingMatch?.[1]) enhanceCombinedViewingHistory(viewingMatch[1], cleanups);
       }
 
       const forms = Array.from(document.querySelectorAll<HTMLFormElement>("form"));
