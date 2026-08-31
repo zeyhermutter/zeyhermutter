@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/property-documents";
+import { AssetPreviewModal, type AssetPreviewKind } from "~/components/asset-preview-modal";
 import { requirePermission } from "~/lib/auth.server";
 import "~/property-documents.css";
 
@@ -78,6 +80,14 @@ function formatSize(bytes: number) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
+function previewKind(mimeType?: string | null): AssetPreviewKind {
+  if (!mimeType) return "file";
+  if (mimeType === "application/pdf") return "pdf";
+  if (mimeType.startsWith("image/")) return "image";
+  if (mimeType.startsWith("video/")) return "video";
+  return "file";
+}
+
 export async function loader({ request, context, params }: Route.LoaderArgs) {
   const { supabase, responseHeaders, profile } = await requirePermission(request, context.cloudflare.env, "document.read");
   const propertyId = params.propertyId;
@@ -132,12 +142,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 
     const { data: updated, error } = await supabase
       .from("documents")
-      .update({
-        title,
-        category,
-        classification,
-        description: text(fd, "description") || null,
-      })
+      .update({ title, category, classification, description: text(fd, "description") || null })
       .eq("id", documentId)
       .eq("property_id", propertyId)
       .eq("version", version)
@@ -146,7 +151,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 
     if (error) return data<ActionResult>({ error: "Dokument-Metadaten konnten nicht gespeichert werden." }, { status: 400, headers: responseHeaders() });
     if (!updated) return data<ActionResult>({ error: "Dokument wurde zwischenzeitlich geändert. Bitte Seite neu laden." }, { status: 409, headers: responseHeaders() });
-    return redirect(`/properties/${propertyId}/documents#document-${documentId}`, { headers: responseHeaders() });
+    return redirect(`/properties/${propertyId}/documents`, { headers: responseHeaders() });
   }
 
   if (intent === "archive") {
@@ -216,6 +221,12 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 export default function PropertyDocuments() {
   const { property, documents, versionMap, signedUrls, profile, canArchive } = useLoaderData<typeof loader>();
   const result = useActionData<typeof action>();
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const activeDocument = openIndex === null ? null : documents[openIndex];
+  const activeVersions = activeDocument ? (versionMap[activeDocument.id] ?? []) : [];
+  const activeVersion = activeDocument ? (activeVersions.find((version) => version.version_number === activeDocument.current_version) ?? activeVersions[0]) : undefined;
+  const activeUrl = activeVersion ? signedUrls[activeVersion.id] : undefined;
+
   return <main className="editor-shell">
     <header className="editor-header"><div><Link className="back-link" to={`/properties/${property.id}`}>← {property.property_number}</Link><p className="eyebrow">Modul 02 · Dokumente</p><h1 className="editor-title">Dokumente</h1><p className="editor-meta">{property.internal_title} · private Ablage · versioniert</p></div><div className="header-user"><span className="badge">STAGING</span><small>{profile.display_name}</small></div></header>
     {result?.error ? <div className="form-error">{result.error}</div> : null}
@@ -224,40 +235,16 @@ export default function PropertyDocuments() {
       <section className="data-card">
         <div className="card-head"><div><p className="eyebrow">Bestehende Unterlagen</p><h2>Dokumente</h2></div><span className="subtle">{documents.length}</span></div>
         <div className="document-list">
-          {documents.map((document) => <details className="document-card document-disclosure" id={`document-${document.id}`} key={document.id}>
-            <summary>
+          {documents.map((document, index) => <article className="document-card" id={`document-${document.id}`} key={document.id}>
+            <button className="document-preview-trigger" type="button" onClick={() => setOpenIndex(index)}>
               <div className="document-summary-main">
                 <strong>{document.title}</strong>
                 <small>{categoryLabel(document.category)} · {classificationLabel(document.classification)} · Version {document.current_version}</small>
                 {document.description ? <span>{document.description}</span> : null}
               </div>
-              <span className="document-edit-hint">Metadaten & Versionen</span>
-            </summary>
-
-            <div className="document-detail-body">
-              <section className="document-metadata-section">
-                <div className="document-subhead"><div><p className="eyebrow">Gilt für das gesamte Dokument</p><h3>Metadaten bearbeiten</h3></div></div>
-                <Form method="post" className="auth-form document-metadata-form">
-                  <input type="hidden" name="_intent" value="metadata_update"/>
-                  <input type="hidden" name="document_id" value={document.id}/>
-                  <input type="hidden" name="version" value={document.version}/>
-                  <label><span>Titel *</span><input name="title" defaultValue={document.title} required/></label>
-                  <label><span>Kategorie *</span><select name="category" defaultValue={document.category}>{CATEGORIES.map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></label>
-                  <label><span>Klassifizierung *</span><select name="classification" defaultValue={document.classification}>{CLASSIFICATIONS.map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></label>
-                  <label><span>Beschreibung</span><textarea name="description" rows={3} defaultValue={document.description ?? ""}/></label>
-                  <div className="document-metadata-actions"><button className="primary-button" type="submit">Metadaten speichern</button></div>
-                </Form>
-                <p className="document-integrity-note">Diese Angaben können geändert werden. Bereits hochgeladene Dateiversionen, Prüfsummen und Upload-Historie bleiben unverändert erhalten.</p>
-                {canArchive ? <Form method="post" className="document-archive-form"><input type="hidden" name="_intent" value="archive"/><input type="hidden" name="document_id" value={document.id}/><input type="hidden" name="version" value={document.version}/><button className="text-button" type="submit">Dokument archivieren</button></Form> : null}
-              </section>
-
-              <section className="document-version-section">
-                <div className="document-subhead"><div><p className="eyebrow">Append-only</p><h3>Dateiversionen</h3></div><span className="subtle">{(versionMap[document.id] ?? []).length}</span></div>
-                <div className="version-list">{(versionMap[document.id] ?? []).map((version) => <div className="version-row" key={version.id}><div><strong>v{version.version_number} · {version.original_filename}</strong><small>{formatDate(version.uploaded_at)} · {formatSize(version.file_size_bytes)} · SHA-256 {version.sha256.slice(0, 12)}…{version.change_reason ? ` · ${version.change_reason}` : ""}</small></div>{signedUrls[version.id] ? <a className="subtle-link" href={signedUrls[version.id]} target="_blank" rel="noreferrer">Download</a> : <span className="subtle">Kein Zugriff</span>}</div>)}</div>
-                <Form method="post" encType="multipart/form-data" className="inline-upload"><input type="hidden" name="_intent" value="new_version"/><input type="hidden" name="document_id" value={document.id}/><label><span>Neue Version</span><input type="file" name="file" required/></label><label><span>Änderungsgrund</span><input name="change_reason" required placeholder="z. B. aktualisierte Unterschrift"/></label><button className="secondary-button" type="submit">Version hochladen</button></Form>
-              </section>
-            </div>
-          </details>)}
+              <span className="document-edit-hint">Vorschau & Metadaten →</span>
+            </button>
+          </article>)}
           {documents.length === 0 ? <p className="empty-state">Noch keine Dokumente vorhanden.</p> : null}
         </div>
       </section>
@@ -276,5 +263,48 @@ export default function PropertyDocuments() {
         </Form>
       </section>
     </div>
+
+    {activeDocument ? <AssetPreviewModal
+      open={true}
+      title={activeDocument.title}
+      subtitle={`${categoryLabel(activeDocument.category)} · ${classificationLabel(activeDocument.classification)}`}
+      url={activeUrl}
+      downloadName={activeVersion?.original_filename}
+      kind={previewKind(activeVersion?.mime_type)}
+      positionLabel={`${(openIndex ?? 0) + 1} von ${documents.length}`}
+      hasPrevious={(openIndex ?? 0) > 0}
+      hasNext={(openIndex ?? 0) < documents.length - 1}
+      onPrevious={() => setOpenIndex((index) => index === null ? 0 : Math.max(0, index - 1))}
+      onNext={() => setOpenIndex((index) => index === null ? 0 : Math.min(documents.length - 1, index + 1))}
+      onClose={() => setOpenIndex(null)}
+      metadata={[
+        { label: "Titel", value: activeDocument.title },
+        { label: "Kategorie", value: categoryLabel(activeDocument.category) },
+        { label: "Klassifizierung", value: classificationLabel(activeDocument.classification) },
+        { label: "Beschreibung", value: activeDocument.description || "—" },
+        { label: "Aktuelle Version", value: `v${activeDocument.current_version}` },
+        { label: "Dateiname", value: activeVersion?.original_filename || "—" },
+        { label: "Dateityp", value: activeVersion?.mime_type || "—" },
+        { label: "Dateigröße", value: activeVersion ? formatSize(activeVersion.file_size_bytes) : "—" },
+        { label: "Hochgeladen", value: activeVersion ? formatDate(activeVersion.uploaded_at) : "—" },
+        { label: "SHA-256", value: activeVersion?.sha256 || "—" },
+        { label: "Angelegt", value: formatDate(activeDocument.created_at) },
+      ]}
+      metadataEditor={<Form method="post" className="auth-form">
+        <input type="hidden" name="_intent" value="metadata_update"/>
+        <input type="hidden" name="document_id" value={activeDocument.id}/>
+        <input type="hidden" name="version" value={activeDocument.version}/>
+        <label><span>Titel *</span><input name="title" defaultValue={activeDocument.title} required/></label>
+        <label><span>Kategorie *</span><select name="category" defaultValue={activeDocument.category}>{CATEGORIES.map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+        <label><span>Klassifizierung *</span><select name="classification" defaultValue={activeDocument.classification}>{CLASSIFICATIONS.map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+        <label><span>Beschreibung</span><textarea name="description" rows={3} defaultValue={activeDocument.description ?? ""}/></label>
+        <button className="primary-button" type="submit">Metadaten speichern</button>
+      </Form>}
+      versions={<>
+        <div className="version-list">{activeVersions.map((version) => <div className="version-row" key={version.id}><div><strong>v{version.version_number}{version.version_number === activeDocument.current_version ? " · aktuell" : ""}</strong><small>{version.original_filename}</small><small>{formatDate(version.uploaded_at)} · {formatSize(version.file_size_bytes)}</small><small>SHA-256 {version.sha256}</small>{version.change_reason ? <small>{version.change_reason}</small> : null}</div>{signedUrls[version.id] ? <a className="subtle-link" href={signedUrls[version.id]} target="_blank" rel="noreferrer">Öffnen</a> : <span className="subtle">Kein Zugriff</span>}</div>)}</div>
+        <Form method="post" encType="multipart/form-data" className="inline-upload"><input type="hidden" name="_intent" value="new_version"/><input type="hidden" name="document_id" value={activeDocument.id}/><label><span>Neue Version</span><input type="file" name="file" required/></label><label><span>Änderungsgrund</span><input name="change_reason" required placeholder="z. B. aktualisierte Unterschrift"/></label><button className="secondary-button" type="submit">Version hochladen</button></Form>
+      </>}
+      moreActions={canArchive ? <Form method="post" onSubmit={(event) => { if (!window.confirm("Dokument wirklich archivieren?")) event.preventDefault(); }}><input type="hidden" name="_intent" value="archive"/><input type="hidden" name="document_id" value={activeDocument.id}/><input type="hidden" name="version" value={activeDocument.version}/><button className="text-button" type="submit">Dokument archivieren</button></Form> : undefined}
+    /> : null}
   </main>;
 }
