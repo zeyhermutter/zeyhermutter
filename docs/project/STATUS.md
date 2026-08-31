@@ -3,7 +3,7 @@
 Stand: 31.08.2026
 
 ## Aktuelles Ziel
-Modul 04 bleibt **IN ARBEIT** und wartet vor allem auf Browser-Smoke-Test/DoD. Parallel ist Modul 05 **Website & Exposés – IN ARBEIT** gestartet. Schwerpunkt des ersten Modul-05-Inkrements ist eine kontrollierte Publikationsschicht zwischen interner Objektakte und öffentlicher Website.
+Modul 04 bleibt **IN ARBEIT**, ist technisch nach dem Browser-Fixblock aber weitgehend stabilisiert. Offen sind bewusst noch M04-49 (Responsive Browser-Abnahme) und M04-50 (vollständiger End-to-End-Browser-Test) durch den Nutzer sowie danach die finale DoD-Abnahme. Parallel bleibt Modul 05 **Website & Exposés – IN ARBEIT**.
 
 ## Infrastruktur
 - separates GitHub-Repository `zeyhermutter/zeyhermutter`
@@ -25,7 +25,53 @@ Objektstammdaten, Statusmaschine, Eigentümer, Ausstattung, Energie, Checkliste,
 Verkäufer-Pipeline, Bewertungsworkflow, Zusammenarbeit, Pflichtfeld-/Freigabelogik, atomare Lead→Immobilie-Konvertierung und Browser-Abnahme sind abgeschlossen.
 
 ## Modul 04 · Interessenten & Besichtigungen – IN ARBEIT
-Technisch vorhanden sind inzwischen Suchprofile, Anfragen, regelbasiertes Matching, Matchentscheidungen, Besichtigungen, Feedback, Kaufangebote sowie die wesentliche Integration in Suche, Aufgaben, Activity und Collaboration. Serverseitige Rollback-Tests für Kernworkflow und Besichtigungs-/Angebotsworkflow sind grün. Offen bleiben insbesondere der vollständige Browser-Smoke-Test und die finale Definition-of-Done-Abnahme.
+
+### Aktueller Funktionsstand
+- Interessenten bleiben CRM-Kontakte; mehrere Suchprofile je Kontakt
+- Suchprofile mit Pflicht-Suchort, Radius, PLZ/Ort/Ortsteil und serverseitiger Validierung
+- Altbestand mit numerischer PLZ im falschen Ortsfeld wird normalisiert
+- Matching Suchprofil → Immobilie mit nachvollziehbaren Gründen
+- gleiche PLZ wird explizit als Standorttreffer bewertet
+- Reverse Matching Immobilie → passende Interessenten nutzt dieselbe Matching-Engine
+- Anfragen inklusive Statusmaschine und Suchprofil-Verknüpfung
+- Besichtigungen mit Kontextübernahme aus Anfrage/Suchprofil/Immobilie/Reverse Match
+- kontrollierter Korrekturpfad für versehentlich „Durchgeführt“
+- Feedback
+- Kaufangebote mit `ZM-KA-######`, Folgeangeboten und Historie
+- nur ein aktuell aktives abgegebenes Angebot je Kontakt + Immobilie
+- Aufgaben mit lesbaren fachlichen Bezügen und Aufgabenmodal
+- gemeinsame deutsche Status-/Prioritätsdarstellung
+- einheitliches ca. 1120-px-Inhaltsraster für die überarbeiteten Modul-04-Bereiche
+
+### Technische Abnahme des Fixblocks
+- M04-17 ungültiger Inquiry-Statussprung: PASS
+- M04-45 Suchprofil read-only / write blockiert: PASS
+- M04-46 Anfrage read-only / write blockiert: PASS
+- M04-47 Archiv-Permission Suchprofil + Anfrage: PASS
+- M04-48 API-/DB-Bypass-Regeln: PASS für geprüfte Inquiry-, Suchprofil-, Besichtigungs- und Kaufangebotsregeln
+- exakt gleiche Suchprofil-/Immobilien-PLZ: PASS, Match-Begründung `PLZ entspricht Suchgebiet`
+- Suchprofil ohne Suchort bei direktem Tabellen-Bypass: blockiert
+- ungültiger Suchradius: blockiert
+- falscher Kontaktbezug bei Besichtigung: blockiert
+- abgegebenes Kaufangebot nachträglich verändern: blockiert
+- Folgeangebot ersetzt vorheriges aktives Angebot: PASS
+- nach Rollback-Tests bleiben keine technischen Testdatensätze zurück
+
+### Relevante Migrationen des Browser-Fixblocks
+- `20260831120356_module04_browser_acceptance_fixes_core.sql`
+- `20260831123129_module04_reverse_matching_details.sql`
+- `20260831123907_module04_search_location_postal_normalization.sql`
+- `20260831124952_module04_search_profile_location_commit_guard.sql`
+
+### Advisor
+Security Advisor zeigt keinen neuen kritischen Modul-04-Fund. Die policylose Tabelle `public_form_rate_limits` gehört zum service-only Website-Intake von Modul 05 und ist absichtlich nicht anonym direkt nutzbar. Die bekannte Supabase-Auth-Warnung `Leaked Password Protection Disabled` bleibt extern offen.
+
+Performance Advisor zeigt ausschließlich `unused index`-Hinweise im jungen STAGING; diese werden nicht blind entfernt.
+
+### Noch offen vor DONE
+1. M04-49 Responsive Browser-Abnahme durch den Nutzer
+2. M04-50 kompletter End-to-End-Browser-Test durch den Nutzer
+3. danach Modul-04-DoD final bewerten
 
 ## Modul 05 · Website & Exposés – IN ARBEIT
 
@@ -50,31 +96,14 @@ Damit gilt:
 - interne Route `/properties/:propertyId/publication`
 - öffentliche Liste `/immobilien`
 - öffentliche Detailseite `/immobilien/:slug`
-- SEO-Titel/-Beschreibung im Publikationssnapshot
-- Snapshot enthält nur explizit öffentliche Objekt-, Lage-, Ausstattungs-, Energie- und freigegebene Medien-Metadaten; keine Storage-Pfade
+- kontrollierte öffentliche Medien-Grundlage
+- Website-Anfrage-Intake in das bestehende CRM-/Inquiry-Modell
+- Exposé-Datenmodell und PDF-Generator-Grundlage auf Basis einer konkreten Publikationsversion
 
-### Migrationen Modul 05
-- `20260831100149_module05_publication_versioning_foundation.sql`
-- `20260831100722_module05_fix_publication_foreign_key_indexes.sql`
-
-### Verifizierte Tests
-- Entwurf ist anonym nicht sichtbar: PASS
-- READY/Freigabeversion ist anonym nicht sichtbar: PASS
-- PUBLISHED ist anonym sichtbar: PASS
-- spätere interne Änderung lässt bisherigen veröffentlichten Snapshot unverändert live: PASS
-- UNPUBLISHED entfernt öffentliche Sichtbarkeit: PASS
-- stale Update wird nicht übernommen: PASS
-- Rollback hinterließ 0 technische Publikationsdaten: PASS
-- Security Advisor: keine neuen Modul-05-RLS/Security-Findings
-- neue FK-Index-Findings wurden migrationsbasiert behoben
-
-### Nächste Schritte Modul 05
-1. kontrollierte öffentliche Bildauslieferung für `public_approved` Medien
-2. Website-Anfrageformular direkt in `inquiries`
-3. Exposé-Generator auf Basis derselben freigegebenen Snapshot-Version
-4. Exposé-Historie/Freigabe und Download
-5. Veröffentlichungsübersicht und bessere Navigation aus der Objektakte
-6. Browser-Smoke-Test und DoD
+### Noch offen Modul 05
+- Exposé-UI/Route vollständig integrieren
+- vollständiger Browser-Smoke-Test Website/Medien/Anfrage/Exposé
+- Modul-05-DoD
 
 ## Offener externer Security-Punkt
 Supabase Auth meldet weiterhin `Leaked Password Protection Disabled`. Remediation: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
