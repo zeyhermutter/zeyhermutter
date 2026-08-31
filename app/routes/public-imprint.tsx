@@ -1,0 +1,5 @@
+import { Link } from "react-router";
+import "~/public-website.css";
+
+export function meta(){return[{title:"Impressum · ZeyherMutter"},{name:"robots",content:"noindex,follow"}]}
+export default function PublicImprint(){return <main className="public-site"><header className="public-header"><Link className="public-brand" to="/"><span>ZM</span><strong>ZeyherMutter</strong></Link><nav className="public-nav"><Link to="/immobilien">Immobilien</Link><Link to="/kontakt">Kontakt</Link></nav></header><section className="public-legal"><p className="public-eyebrow">Rechtliches</p><h1>Impressum</h1><div className="public-legal-notice"><strong>Finaler Inhalt noch zu hinterlegen.</strong><p>Die technische Seite ist vorbereitet. Unternehmensform, ladungsfähige Anschrift, Vertretungsberechtigte, Registerangaben, Aufsichtsbehörde und weitere Pflichtangaben werden erst eingetragen, wenn die verbindlichen Daten vorliegen. Es werden keine Angaben erfunden.</p></div></section><footer className="public-footer"><span>ZeyherMutter · Immobilienvermittlung</span><div><Link to="/impressum">Impressum</Link><Link to="/datenschutz">Datenschutz</Link></div></footer></main>}
