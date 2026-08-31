@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router";
 import "~/live-list-filters.css";
+import "~/live-list-filters-extended.css";
 
 const FILTER_FORM_SELECTOR = ".search-profile-filter-grid, .inquiry-filter-grid, .organization-filter-grid, .property-filter-grid, .lead-filter-grid";
 const SEARCH_DEBOUNCE_MS = 350;
