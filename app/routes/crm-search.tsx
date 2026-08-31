@@ -36,6 +36,7 @@ function target(result: { entity_type: string; entity_id: string }) {
   if (result.entity_type === "CONTACT") return `/crm/contacts/${result.entity_id}`;
   if (result.entity_type === "ORGANIZATION") return `/crm/organizations/${result.entity_id}`;
   if (result.entity_type === "PROPERTY") return `/properties/${result.entity_id}`;
+  if (result.entity_type === "LEAD") return `/leads/${result.entity_id}`;
   return "/crm/tasks";
 }
 
@@ -51,14 +52,14 @@ export default function CrmSearch() {
 
       <section className="data-card">
         <Form method="get" className="search-bar">
-          <input name="q" defaultValue={q} placeholder="Kontakt, Firma, Immobilie, Objektnummer, Adresse oder Aufgabe …" minLength={2} autoFocus />
+          <input name="q" defaultValue={q} placeholder="Kontakt, Firma, Lead, Immobilie, Nummer, Adresse oder Aufgabe …" minLength={2} autoFocus />
           <label className="checkbox-row"><input type="checkbox" name="archived" value="1" defaultChecked={includeArchived} /><span>Archiv einbeziehen</span></label>
           <button className="primary-button" type="submit">Suchen</button>
         </Form>
       </section>
 
       <section className="data-card">
-        <div className="card-head"><div><p className="eyebrow">Ergebnisse</p><h2>{q.length >= 2 ? `${results.length} Treffer` : "Suchbegriff eingeben"}</h2></div><Link className="subtle-link" to="/properties">Immobilien</Link></div>
+        <div className="card-head"><div><p className="eyebrow">Ergebnisse</p><h2>{q.length >= 2 ? `${results.length} Treffer` : "Suchbegriff eingeben"}</h2></div><div className="inline-actions"><Link className="subtle-link" to="/leads">Leads</Link><Link className="subtle-link" to="/properties">Immobilien</Link></div></div>
         {q.length >= 2 && results.length === 0 ? <p className="empty-state">Keine Treffer gefunden.</p> : null}
         <div className="data-list">
           {results.map((result) => (
