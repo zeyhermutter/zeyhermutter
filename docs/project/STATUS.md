@@ -37,7 +37,7 @@ Objektstammdaten, Statusmaschine, Eigentümer, Ausstattung, Energie, Checkliste,
 ### Architekturentscheidung
 Ein Interessent ist kein neues Personenobjekt. Er bleibt ein bestehender CRM-Kontakt. Suchkriterien und einzelne Anfragen werden als eigene fachliche Vorgänge daran gehängt.
 
-### Bereits umgesetzt
+### Datenmodell bereits umgesetzt
 - `search_profiles` mit automatischer Nummer `ZM-S-######`
 - mehrere Suchprofile je CRM-Kontakt
 - Status ACTIVE / PAUSED / CLOSED
@@ -58,16 +58,42 @@ Ein Interessent ist kein neues Personenobjekt. Er bleibt ein bestehender CRM-Kon
 - Archiv-Permissions für Suchprofile und Anfragen
 - Audit-History und Optimistic Concurrency
 - Aufgaben besitzen technisch `inquiry_id` und `search_profile_id`
-- Migration `20260831091447_module04_inquiries_search_profiles_core.sql` ist in STAGING und Repository vorhanden
+
+### UI bereits umgesetzt
+- `/search-profiles` als Suchprofil-/Interessenten-Verzeichnis
+- Filter nach Status, Kauf/Miete, Verantwortlichem und Archiv
+- Suche nach Profilnummer, Kontakt und Suchort
+- `/search-profiles/new` für die Suchprofil-Neuanlage
+- atomare Neuanlage über `create_search_profile`
+- `/search-profiles/:searchProfileId` als zentrale Suchprofilakte
+- Bearbeitung von Budget, Flächen, Zimmern, Baujahr, Finanzierung und Merkmalen
+- mehrere Suchorte können hinzugefügt und entfernt werden
+- Archivieren/Wiederherstellen
+- Optimistic-Concurrency-Konflikte werden beim Speichern abgefangen
+
+### Migrationen Modul 04
+- `20260831091447_module04_inquiries_search_profiles_core.sql`
+- `20260831091802_atomic_search_profile_create.sql`
+- `20260831092122_index_inquiry_responsible_user.sql`
+
+### Verifizierte technische Tests
+- Permissions `search_profile.read/write/archive` für Geschäftsführer: PASS
+- atomare Suchprofilanlage inkl. erstem Suchort: PASS
+- initiale Version = 1: PASS
+- Versionsinkrement bei Änderung: PASS
+- stale Update überschreibt neuen Stand nicht: PASS
+- Archivieren mit eigener Permission: PASS
+- Rollback-Test hinterließ 0 technische Suchprofile
+- Security Advisor: keine neuen Datenbank-/RLS-Warnungen
+- Performance Advisor: neuer FK-Index-Fund behoben; danach nur `unused index`-Infos
 
 ### Nächste Schritte Modul 04
-1. Suchprofil-Verzeichnis und Neuanlage
-2. zentrale Suchprofilakte inkl. mehreren Suchorten
-3. Anfrage-Verzeichnis und Anfrageakte
-4. globale Suche / Aufgaben / Collaboration integrieren
-5. regelbasiertes Matching gegen Immobilien
-6. Besichtigungen, Feedback und Kaufangebote
-7. Browser-Smoke-Test und DoD
+1. Suchprofile prominent in CRM-Navigation/Dashboard integrieren
+2. Anfrage-Verzeichnis und Anfrageakte
+3. globale Suche / Aufgaben / Collaboration integrieren
+4. regelbasiertes Matching gegen Immobilien
+5. Besichtigungen, Feedback und Kaufangebote
+6. Browser-Smoke-Test und DoD
 
 ## Offener externer Security-Punkt
 Supabase Auth meldet weiterhin `Leaked Password Protection Disabled`. Diese Projekt-Auth-Einstellung ist kein Datenmodell-/Modulfehler und muss separat in der Supabase-Projektkonfiguration aktiviert werden, sobald gewünscht/verfügbar.
