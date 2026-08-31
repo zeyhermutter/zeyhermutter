@@ -99,8 +99,10 @@ Priorisierung: **MUST > SHOULD > COULD > LATER**.
 - [x] mehrere Suchorte je Suchprofil inkl. PLZ/Ort/Ortsteil/Radius
 - [x] RLS, Audit, Archivieren und Optimistic Concurrency für Suchprofile/Anfragen
 - [x] Aufgaben können technisch an Anfrage oder Suchprofil hängen
-- [ ] Suchprofil-Verzeichnis und Filter
-- [ ] Suchprofil-Neuanlage und Detailakte
+- [x] Suchprofil-Verzeichnis und Filter
+- [x] Suchprofil-Neuanlage und Detailakte
+- [x] mehrere Suchorte in der Suchprofilakte verwalten
+- [ ] CRM-Navigation/Dashboard für Interessenten
 - [ ] Anfrage-Verzeichnis und Anfrageakte
 - [ ] globale Suche findet Suchprofile und Anfragen
 - [ ] Activity / Kommentare / @Mentions / Notifications integrieren
