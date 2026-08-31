@@ -43,7 +43,7 @@ ZeyherMutterOS wird als produktionsfähige, sichere und nachvollziehbare Plattfo
 - [x] Concurrent Editing / Optimistic Locking
 - [x] Zwei-Benutzer-Akzeptanztest
 
-### Phase 2 – Immobilien — IN ARBEIT
+### Phase 2 – Immobilien — DONE
 - [x] Objektstammdaten-Datenmodell
 - [x] automatische Objektnummer `ZM-YYYY-####`
 - [x] validierte Objektstatusmaschine
@@ -60,15 +60,22 @@ ZeyherMutterOS wird als produktionsfähige, sichere und nachvollziehbare Plattfo
 - [x] private Medienbibliothek
 - [x] Objekt-History, RLS und Optimistic Locking
 - [x] sensible Rechte (Archiv, Zuständigkeit, Vermarktungsstart) in PostgreSQL erzwungen
-- [ ] aktueller Phase-2-UI-Stand erfolgreich durch Cloudflare bauen
-- [ ] Browser-Smoke-Test Immobilienanlage, Objektakte, Dokumentupload und Medienupload
-- [ ] Modul 02 Abschlussprüfung gegen Definition of Done
+- [x] aktueller Phase-2-UI-Stand in Cloudflare sichtbar
+- [x] Browser-Smoke-Test Immobilienanlage und Objektakte
+- [x] Browser-Smoke-Test Dokumentdownload, neue Version und Versionshistorie
+- [x] Browser-Smoke-Test Medien-Metadaten und Uploadpfad
+- [x] Modul-02-Abschlussprüfung gegen Definition of Done
 
-### Phase 3 – Eigentümer & Leads
+### Phase 3 – Eigentümer & Leads — IN ARBEIT
 - [ ] Verkäufer-Lead-Pipeline
 - [ ] Leadquellen/Attribution
 - [ ] Bewertungsformular
+- [ ] Lead ↔ CRM-Kontakt
+- [ ] Wiedervorlage / Verantwortlicher Benutzer
+- [ ] Activity / Kommentare / @Mentions / Audit
+- [ ] Optimistic Locking / Archivieren
 - [ ] Lead → Immobilie Workflow
+- [ ] Browser-Smoke-Test und DoD
 
 ### Phase 4 – Interessenten & Besichtigungen
 - [ ] Anfragen
