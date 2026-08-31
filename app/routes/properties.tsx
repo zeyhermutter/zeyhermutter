@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { data, Form, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/properties";
 import { requirePermission } from "~/lib/auth.server";
@@ -26,7 +27,23 @@ const STATUS_EXPLANATIONS: Record<string,string> = {
   ARCHIVED:"Abschlussstatus. In der aktuellen Statusmaschine ist kein weiterer Statuswechsel freigegeben.",
 };
 
+const WORKFLOW_ACTIONS: Record<string,string[]> = {
+  DRAFT:["Objektstammdaten vervollständigen","Eigentümer und Objektadresse erfassen","Prüfen, ob die aktive Akquise gestartet werden kann"],
+  ACQUISITION:["Eigentümerkontakt dokumentieren","Bedarf, Verkaufsabsicht und Rahmendaten klären","Bewertung vorbereiten und fehlende Unterlagen anfordern"],
+  VALUATION:["Objektdaten und Lage prüfen","Marktwert bzw. Angebotspreis herleiten","Bewertung mit Eigentümer abstimmen"],
+  CONTRACT_PENDING:["Maklerauftrag vorbereiten","Vertragsdaten und Parteien prüfen","Unterschrift bzw. Beauftragung nachhalten"],
+  PREPARATION:["Dokumente vollständig einsammeln","Fotos, Grundrisse und Medien vorbereiten","Exposé- und Vermarktungsdaten finalisieren"],
+  MARKETING:["Objekt veröffentlichen und Anfragen bearbeiten","Besichtigungen organisieren","Interessenten und Angebote dokumentieren"],
+  RESERVED:["Reservierung und Interessent verbindlich nachhalten","Finanzierung bzw. Bonität prüfen","Notarvorbereitung anstoßen"],
+  NOTARY:["Kaufvertragsentwurf abstimmen","Notartermin und offene Punkte koordinieren","Nach Beurkundung auf Verkauft setzen"],
+  SOLD:["Abschlussunterlagen vervollständigen","Übergabe und Restpunkte dokumentieren","Vorgang anschließend archivieren"],
+  LOST:["Verlustgrund dokumentieren","Wiedervorlage oder erneute Akquise bewerten","Bei neuer Chance zurück in Akquise wechseln"],
+  WITHDRAWN:["Rückzugsgrund dokumentieren","Offene Aufgaben beenden oder terminieren","Bei Wiederaufnahme zurück in Akquise wechseln"],
+  ARCHIVED:["Vorgang nur noch nachvollziehen und recherchieren","Historie und Unterlagen aufbewahren","Keine reguläre weitere Bearbeitung im Workflow"],
+};
+
 const MAIN_FLOW = ["DRAFT","ACQUISITION","VALUATION","CONTRACT_PENDING","PREPARATION","MARKETING","RESERVED","NOTARY","SOLD","ARCHIVED"] as const;
+const SIDE_STATUSES = ["LOST","WITHDRAWN"] as const;
 const PREFERRED_NEXT: Record<string,string> = {
   DRAFT:"ACQUISITION", ACQUISITION:"VALUATION", VALUATION:"CONTRACT_PENDING", CONTRACT_PENDING:"PREPARATION",
   PREPARATION:"MARKETING", MARKETING:"RESERVED", RESERVED:"NOTARY", NOTARY:"SOLD", SOLD:"ARCHIVED",
@@ -54,6 +71,8 @@ function money(value: number | string | null) {
   if (value === null || value === undefined) return "—";
   return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(Number(value));
 }
+
+function statusClass(status:string){return `status-${status.toLowerCase().replaceAll("_","-")}`;}
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { supabase, responseHeaders, profile } = await requirePermission(request, context.cloudflare.env, "property.read");
@@ -95,7 +114,11 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 export default function Properties() {
   const { properties, addressMap, transitions, total, page, pageCount, filters, profile } = useLoaderData<typeof loader>();
+  const [selectedStatus,setSelectedStatus]=useState<string>("DRAFT");
   const transitionsByStatus = Object.fromEntries(Object.keys(STATUS_LABELS).map((status) => [status, transitions.filter((transition) => transition.from_status === status)]));
+  const allowedTransitions=transitionsByStatus[selectedStatus]??[];
+  const preferred=PREFERRED_NEXT[selectedStatus];
+
   return (
     <main className="editor-shell">
       <header className="editor-header">
@@ -103,7 +126,7 @@ export default function Properties() {
         <div className="header-actions"><span className="badge">{total} Objekte</span><Link className="primary-button link-button" to="/properties/new">+ Immobilie</Link><small>{profile.display_name}</small></div>
       </header>
 
-      <section className="data-card">
+      <section className="data-card property-section">
         <Form method="get" className="filter-grid">
           <label><span>Status</span><select name="status" defaultValue={filters.status}><option value="ACTIVE">Aktive</option><option value="ALL">Alle</option><option value="ARCHIVED">Archiv</option></select></label>
           <label><span>Transaktion</span><select name="transaction" defaultValue={filters.transaction}><option value="">Alle</option><option value="SALE">Verkauf</option><option value="RENT">Vermietung</option></select></label>
@@ -112,7 +135,7 @@ export default function Properties() {
         </Form>
       </section>
 
-      <section className="data-card">
+      <section className="data-card property-section">
         <div className="card-head"><div><p className="eyebrow">Objektbestand</p><h2>Verzeichnis</h2></div><span className="subtle">Seite {page} / {pageCount}</span></div>
         <div className="data-list">
           {properties.map((property) => {
@@ -129,41 +152,49 @@ export default function Properties() {
 
       <section className="data-card property-workflow-section" id="status-workflow">
         <div className="property-workflow-heading">
-          <div><p className="eyebrow">Status & Workflow</p><h2>So läuft eine Immobilie durch ZeyherMutterOS</h2><p>Der obere Pfad zeigt den regulären Verkaufsprozess. Darunter siehst du für jeden Status den empfohlenen nächsten Schritt und alle weiteren technisch erlaubten Wechsel.</p></div>
-          <span className="workflow-rule-badge">PostgreSQL-Statusmaschine</span>
+          <div><p className="eyebrow">Interaktiver Status & Workflow</p><h2>Was kann ich in welchem Stand machen?</h2><p>Klicke auf einen Status. Darunter erscheinen die typischen Aufgaben, der empfohlene nächste Schritt und alle Statuswechsel, die die echte PostgreSQL-Statusmaschine aktuell erlaubt.</p></div>
+          <span className="workflow-rule-badge">Live aus Statusmaschine</span>
         </div>
 
         <div className="workflow-main-path" aria-label="Regulärer Immobilien-Workflow">
           {MAIN_FLOW.map((status, index) => <div className="workflow-main-step-wrap" key={status}>
-            <div className={`workflow-main-step status-${status.toLowerCase().replaceAll("_","-")}`}>
+            <button type="button" aria-pressed={selectedStatus===status} onClick={()=>setSelectedStatus(status)} className={`workflow-main-step workflow-status-button ${statusClass(status)}${selectedStatus===status?" selected":""}`}>
               <span>{index + 1}</span><strong>{STATUS_LABELS[status]}</strong>
-            </div>
+            </button>
             {index < MAIN_FLOW.length - 1 ? <span className="workflow-arrow" aria-hidden="true">→</span> : null}
           </div>)}
         </div>
 
-        <div className="workflow-callouts">
-          <div className="workflow-callout workflow-callout-primary"><strong>Notar erreicht?</strong><span>Regulärer nächster Schritt ist <b>Verkauft</b>. Falls der Notarprozess scheitert, sind auch Rückkehr oder Abbruch möglich.</span></div>
-          <div className="workflow-callout"><strong>Verkauft?</strong><span>Danach kann das Objekt in <b>Archiviert</b> überführt werden.</span></div>
-          <div className="workflow-callout"><strong>Archiviert?</strong><span>Das ist aktuell ein <b>Endstatus</b>. Von dort ist kein weiterer Statuswechsel freigegeben.</span></div>
+        <div className="workflow-side-statuses" aria-label="Alternative Status">
+          <span>Alternative Verläufe:</span>
+          {SIDE_STATUSES.map(status=><button type="button" key={status} aria-pressed={selectedStatus===status} onClick={()=>setSelectedStatus(status)} className={`workflow-side-button ${statusClass(status)}${selectedStatus===status?" selected":""}`}>{STATUS_LABELS[status]}</button>)}
         </div>
 
-        <div className="workflow-status-grid">
-          {Object.keys(STATUS_LABELS).map((status) => {
-            const allowed = transitionsByStatus[status] ?? [];
-            const preferred = PREFERRED_NEXT[status];
-            return <article className={`workflow-status-card status-${status.toLowerCase().replaceAll("_","-")}`} key={status}>
-              <div className="workflow-status-card-head"><strong>{STATUS_LABELS[status]}</strong>{preferred ? <span>Empfohlen: {STATUS_LABELS[preferred]}</span> : <span>Endstatus</span>}</div>
-              <p>{STATUS_EXPLANATIONS[status]}</p>
-              <div className="workflow-transition-list">
-                {allowed.length ? allowed.map((transition) => <div className={transition.to_status === preferred ? "workflow-transition preferred" : "workflow-transition"} key={`${transition.from_status}-${transition.to_status}`}>
-                  <span>→ {STATUS_LABELS[transition.to_status] ?? transition.to_status}</span><small>{transition.description}</small>
-                </div>) : <div className="workflow-transition terminal"><span>Keine weiteren Wechsel</span><small>Statusmaschine beendet den Vorgang hier.</small></div>}
+        <div className="workflow-inspector" aria-live="polite">
+          <div className="workflow-inspector-head">
+            <div><p className="eyebrow">Ausgewählter Stand</p><h3>{STATUS_LABELS[selectedStatus]}</h3><p>{STATUS_EXPLANATIONS[selectedStatus]}</p></div>
+            <span className={`status-pill ${statusClass(selectedStatus)}`}>{STATUS_LABELS[selectedStatus]}</span>
+          </div>
+
+          <div className="workflow-inspector-grid">
+            <div className="workflow-action-panel">
+              <h4>Was jetzt gemacht werden kann</h4>
+              <ol>{(WORKFLOW_ACTIONS[selectedStatus]??[]).map(action=><li key={action}>{action}</li>)}</ol>
+            </div>
+
+            <div className="workflow-transition-panel">
+              <h4>Nächste Statusmöglichkeiten</h4>
+              {preferred?<div className="workflow-recommended"><small>Empfohlener nächster Schritt</small><strong>→ {STATUS_LABELS[preferred]}</strong></div>:<div className="workflow-recommended terminal"><small>Workflow</small><strong>Endstatus</strong></div>}
+              <div className="workflow-transition-list interactive">
+                {allowedTransitions.length?allowedTransitions.map((transition)=><button type="button" onClick={()=>setSelectedStatus(transition.to_status)} className={transition.to_status===preferred?"workflow-transition preferred":"workflow-transition"} key={`${transition.from_status}-${transition.to_status}`}>
+                  <span>→ {STATUS_LABELS[transition.to_status]??transition.to_status}</span><small>{transition.description}</small>
+                </button>):<div className="workflow-transition terminal"><span>Keine weiteren Wechsel</span><small>Statusmaschine beendet den Vorgang hier.</small></div>}
               </div>
-            </article>;
-          })}
+            </div>
+          </div>
         </div>
-        <p className="workflow-footnote">Hinweis: Diese Übersicht wird aus den tatsächlich hinterlegten Statusübergängen geladen. Nicht aufgeführte Wechsel werden serverseitig blockiert.</p>
+
+        <p className="workflow-footnote">Die Aufgaben sind eine Arbeitsorientierung. Die angezeigten Statuswechsel werden dagegen direkt aus den tatsächlich hinterlegten Übergängen geladen; nicht aufgeführte Wechsel werden serverseitig blockiert.</p>
       </section>
     </main>
   );
