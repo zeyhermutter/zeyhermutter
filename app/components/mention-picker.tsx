@@ -42,7 +42,7 @@ export function MentionPicker({ users }: { users: MentionUser[] }) {
     textareaRef.current = textarea;
     if (!textarea) return;
 
-    textarea.placeholder = "Interner Kommentar – @ tippen, um einen Geschäftsführer zu erwähnen";
+    textarea.placeholder = "Interner Kommentar – @ tippen, um Sebastian oder Jochen zu erwähnen";
     textarea.addEventListener("input", syncFromTextarea);
     textarea.addEventListener("click", syncFromTextarea);
     textarea.addEventListener("keyup", syncFromTextarea);
@@ -89,14 +89,13 @@ export function MentionPicker({ users }: { users: MentionUser[] }) {
   return (
     <div className="mention-picker" ref={rootRef}>
       {selected.map((id) => <input key={id} type="hidden" name="mention_user_id" value={id} />)}
-      {query !== null ? (
+      {query !== null && suggestions.length > 0 ? (
         <div className="mention-suggestions mention-suggestions-open" aria-label="Mögliche @Mentions">
           {suggestions.map((user) => (
             <button key={user.user_id} className="mention-chip" type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => add(user)}>
               @{user.display_name}
             </button>
           ))}
-          {suggestions.length === 0 ? <small>Kein passender Geschäftsführer.</small> : null}
         </div>
       ) : null}
       {selected.length ? (
@@ -106,7 +105,7 @@ export function MentionPicker({ users }: { users: MentionUser[] }) {
             return user ? <button key={id} className="mention-chip selected" type="button" onClick={() => remove(id)}>@{user.display_name} ×</button> : null;
           })}
         </div>
-      ) : <small className="form-help">Tipp: Schreibe <strong>@</strong> in den Kommentar, dann erscheinen die möglichen Mentions.</small>}
+      ) : null}
     </div>
   );
 }
