@@ -5,12 +5,17 @@
   background: #0e1314;
 }
 
-.persistent-app-main { min-width: 0; }
+.persistent-app-main {
+  grid-column: 2;
+  min-width: 0;
+}
 
 .persistent-sidebar {
-  position: sticky;
+  position: fixed;
+  left: 0;
   top: 0;
   z-index: 120;
+  width: 236px;
   height: 100vh;
   padding: 24px 16px 18px;
   border-right: 1px solid #283334;
@@ -116,7 +121,7 @@
 
 .persistent-mobile-menu { display: none; }
 
-/* Die bisher nur auf /crm gerenderte Sidebar wird im globalen Frame ausgeblendet. */
+/* Die bisher nur auf /crm gerenderte Sidebar wird durch die globale Navigation ersetzt. */
 .persistent-app-frame .app-shell {
   display: block;
   min-height: 100vh;
@@ -124,20 +129,37 @@
 }
 .persistent-app-frame .app-shell > .sidebar { display: none; }
 
-/* Immobilien-Kontextnavigation bleibt innerhalb der globalen Hauptnavigation. */
-.persistent-app-main > .property-context-nav { max-width: 1320px; }
+/* Root enthält noch den historischen Objekt-Untermenü-Mount; im internen Layout gilt nur die neue Instanz. */
+.property-context-nav:not(.persistent-property-context-nav) { display: none; }
+.persistent-app-main > .persistent-property-context-nav { max-width: 1320px; }
+
+/* Der einmalige Lead→Objekt-Hinweis sitzt ebenfalls im Hauptinhalt und nicht unter der Sidebar. */
+body > [aria-label="Nächste Schritte nach Lead-Übernahme"] {
+  width: min(1320px, calc(100% - 308px));
+  margin-left: max(272px, calc((100vw - 236px - 1320px) / 2 + 236px));
+  margin-right: 36px;
+}
 
 @media (max-width: 1120px) {
   .persistent-app-frame { grid-template-columns: 214px minmax(0, 1fr); }
-  .persistent-sidebar { padding-left: 12px; padding-right: 12px; }
+  .persistent-app-main { grid-column: 2; }
+  .persistent-sidebar { width: 214px; padding-left: 12px; padding-right: 12px; }
   .persistent-brand > span:last-child { font-size: 13px; }
+  body > [aria-label="Nächste Schritte nach Lead-Übernahme"] {
+    width: calc(100% - 262px);
+    margin-left: 238px;
+    margin-right: 24px;
+  }
 }
 
 @media (max-width: 920px) {
   .persistent-app-frame { display: block; }
+  .persistent-app-main { min-width: 0; }
   .persistent-sidebar {
     position: sticky;
+    left: auto;
     top: 0;
+    width: 100%;
     height: auto;
     min-height: 58px;
     padding: 10px 16px;
@@ -179,6 +201,10 @@
   .persistent-nav-groups.mobile { margin: 0; gap: 18px; overflow: visible; }
   .persistent-mobile-panel > .persistent-nav-item { margin-top: 14px; border-top: 1px solid #263031; padding-top: 14px; border-radius: 0; }
   .persistent-mobile-panel form { margin-top: 12px; }
+  body > [aria-label="Nächste Schritte nach Lead-Übernahme"] {
+    width: calc(100% - 32px);
+    margin: 16px;
+  }
 }
 
 @media (max-width: 520px) {
