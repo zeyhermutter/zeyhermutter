@@ -3,6 +3,10 @@
   margin: 14px auto 0;
 }
 
+.editor-shell > .property-section + .property-section {
+  max-width: 1180px;
+}
+
 .property-workflow-heading {
   display: flex;
   align-items: flex-start;
