@@ -3,6 +3,11 @@
   max-width: 1320px;
   margin: 12px auto 16px;
 }
+.app-content > .metric-grid + .data-card {
+  width: 100%;
+  max-width: 1120px;
+  margin: 12px auto 0;
+}
 .property-map-card .card-head { margin-bottom: 14px; }
 .property-map {
   position: relative;
