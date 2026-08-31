@@ -1,0 +1,1 @@
+create index if not exists inquiries_responsible_idx on public.inquiries(primary_responsible_user) where primary_responsible_user is not null and archived_at is null;
