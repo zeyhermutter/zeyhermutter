@@ -31,9 +31,55 @@
   cursor:pointer;
 }
 
+.viewing-history-chain{
+  margin-top:18px;
+  padding-top:18px;
+  border-top:1px solid #2b3739;
+  display:grid;
+  gap:12px;
+}
+
+.viewing-history-chain-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.viewing-history-chain-head span{
+  font-weight:700;
+  color:#eef4f2;
+}
+
+.viewing-history-chain-head small{
+  color:#98aaa5;
+}
+
+.viewing-chain-history-event{
+  position:relative;
+  padding-left:16px;
+}
+
+.viewing-chain-history-event::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:5px;
+  bottom:5px;
+  width:2px;
+  border-radius:999px;
+  background:#4d6761;
+}
+
 @media(max-width:760px){
   .viewing-appointment-combined-card::before{
     left:16px;
     right:16px;
+  }
+
+  .viewing-history-chain{
+    margin-top:14px;
+    padding-top:14px;
   }
 }
