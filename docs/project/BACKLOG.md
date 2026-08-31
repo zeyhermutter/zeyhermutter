@@ -5,7 +5,7 @@ Priorisierung: **MUST > SHOULD > COULD > LATER**.
 ## MUST – Fundament — DONE
 - [x] Eigenes Repository / eigene Infrastruktur
 - [x] Cloudflare STAGING über workers.dev
-- [x] Supabase STAGING getrennt von SeasonCrew
+- [x] Eigenes Supabase STAGING
 - [x] Rollen und Permissions als Datenmodell
 - [x] append-only Audit-History
 - [x] Activity-History
@@ -66,19 +66,29 @@ Priorisierung: **MUST > SHOULD > COULD > LATER**.
 - [x] Modul-02-DoD abgeschlossen
 
 ## MUST – Eigentümer & Leads MVP — IN ARBEIT
-- [ ] Lead mit eigener Nummer und Statusmaschine
-- [ ] Verkäufer-Lead-Status NEW / CONTACTED / QUALIFIED / APPOINTMENT / VALUATION / OFFER / WON / LOST / NURTURE
-- [ ] Leadquelle separat von Status speichern
-- [ ] verlorenen Grund speichern
-- [ ] Lead mit bestehendem CRM-Kontakt verknüpfen; kein paralleles Kontaktsystem
-- [ ] mehrere Leads pro Kontakt zulassen
-- [ ] Objekt-/Bewertungsanfrage inkl. Adresse, Typ, Baujahr, Flächen, Zimmer, Zustand, Belegung, Verkaufshorizont, Preisvorstellung, Nachricht, Quelle und Consent
-- [ ] verantwortlicher Benutzer + Wiedervorlage
-- [ ] Activity / Kommentare / @Mentions wiederverwenden
-- [ ] Audit, RLS, Permissions und Optimistic Locking
-- [ ] Archivieren statt löschen
-- [ ] atomarer Lead → Immobilie Workflow ohne Doppelanlage
-- [ ] Browser-Smoke-Test und DoD
+- [x] Lead mit eigener Nummer und Statusmaschine
+- [x] Verkäufer-Lead-Status NEW / CONTACTED / QUALIFIED / APPOINTMENT / VALUATION / OFFER / WON / LOST / NURTURE
+- [x] Leadquelle separat von Status speichern
+- [x] Verlustgrund bei LOST erzwingen
+- [x] Lead mit bestehendem CRM-Kontakt verknüpfen; kein paralleles Kontaktsystem
+- [x] mehrere Leads pro Kontakt zulassen
+- [x] Objekt-/Bewertungsanfrage inkl. Adresse, Typ, Baujahr, Flächen, Zimmer, Zustand, Belegung, Verkaufshorizont, Preisvorstellung, Nachricht, Quelle und Consent
+- [x] Bewertungstermin, Marktwert, Bewertungsnotiz, Angebotszeitpunkt und Konditionen
+- [x] verantwortlicher Benutzer + Wiedervorlage
+- [x] Lead-Verzeichnis, Pipeline, Filter und Lead-Neuanlage
+- [x] zentrale Leadakte
+- [x] Activity / Kommentare / @Mentions / Notifications wiederverwenden
+- [x] Aufgaben können an Leads hängen und verlinken zurück
+- [x] globale Suche findet Leads
+- [x] Verkäufer-Leads im CRM-Dashboard
+- [x] Audit, RLS, Permissions und Optimistic Locking
+- [x] Archivieren/Wiederherstellen statt löschen
+- [x] atomarer und idempotenter Lead → Immobilie Workflow ohne Doppelanlage
+- [x] Kontakt als Eigentümer sowie Objektadresse/-daten bei Konvertierung übernehmen
+- [x] serverseitige Permission-, Conversion-, Integritäts- und Concurrency-Tests
+- [ ] aktueller Modul-03-UI-Stand auf Cloudflare sichtbar bestätigen
+- [ ] Browser-Smoke-Test Leadanlage, Bearbeitung, Pipeline, Aufgaben, Collaboration, Archiv, Suche und Konvertierung
+- [ ] Modul-03-DoD abschließen
 
 ## SHOULD – Zusammenarbeit
 - [ ] Soft Presence
