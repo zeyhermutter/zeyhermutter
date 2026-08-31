@@ -17,32 +17,44 @@ function formatDate(v:string|null){if(!v)return"—";return new Intl.DateTimeFor
 export async function loader({request,context,params}:Route.LoaderArgs){
  const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"property.read");
  const propertyId=params.propertyId!;
+ const [{data:canReadSearchProfiles},{data:canReadViewings}]=await Promise.all([
+  supabase.rpc("current_user_has_permission",{p_permission:"search_profile.read"}),
+  supabase.rpc("current_user_has_permission",{p_permission:"viewing.read"}),
+ ]);
+ if(canReadSearchProfiles!==true)throw new Response("Keine Berechtigung für Interessenten-Matching.",{status:403,headers:responseHeaders()});
+ const viewingsPromise=canReadViewings===true
+  ? supabase.from("viewings").select("id,viewing_number,status,starts_at,primary_responsible_user,contact_id,search_profile_id,inquiry_id,contacts!inner(id,first_name,last_name),search_profiles(id,search_profile_number,title),inquiries(id,inquiry_number)").eq("property_id",propertyId).is("archived_at",null).order("starts_at",{ascending:false}).limit(100)
+  : Promise.resolve({data:[],error:null} as any);
  const [{data:property,error:propertyError},{data:matches,error:matchError},{data:viewings,error:viewingError},{data:profiles},{data:canDecide},{data:canCreateViewing}]=await Promise.all([
   supabase.from("properties").select("id,property_number,internal_title,status,transaction_type").eq("id",propertyId).maybeSingle(),
   supabase.rpc("match_search_profiles_for_property",{p_property_id:propertyId,p_limit:100}),
-  supabase.from("viewings").select("id,viewing_number,status,starts_at,primary_responsible_user,contact_id,search_profile_id,inquiry_id,contacts!inner(id,first_name,last_name),search_profiles(id,search_profile_number,title),inquiries(id,inquiry_number)").eq("property_id",propertyId).is("archived_at",null).order("starts_at",{ascending:false}).limit(100),
+  viewingsPromise,
   supabase.from("profiles").select("user_id,display_name,status").eq("status","ACTIVE").order("display_name"),
   supabase.rpc("current_user_has_permission",{p_permission:"search_profile.write"}),
   supabase.rpc("current_user_has_permission",{p_permission:"viewing.write"}),
  ]);
  if(propertyError||!property)throw new Response("Immobilie nicht gefunden.",{status:404,headers:responseHeaders()});
  if(matchError||viewingError)throw new Response("Interessenten und Besichtigungen konnten nicht geladen werden.",{status:500,headers:responseHeaders()});
- return data({property,matches:matches??[],viewings:viewings??[],profiles:profiles??[],profile,canDecide:canDecide===true,canCreateViewing:canCreateViewing===true},{headers:responseHeaders()});
+ return data({property,matches:matches??[],viewings:viewings??[],profiles:profiles??[],profile,canDecide:canDecide===true,canCreateViewing:canCreateViewing===true,canReadViewings:canReadViewings===true},{headers:responseHeaders()});
 }
 
 export async function action({request,context,params}:Route.ActionArgs){
  const {supabase,responseHeaders,userId}=await requirePermission(request,context.cloudflare.env,"search_profile.write");
+ const {data:canReadProperty}=await supabase.rpc("current_user_has_permission",{p_permission:"property.read"});
+ if(canReadProperty!==true)throw new Response("Keine Berechtigung für diese Immobilie.",{status:403,headers:responseHeaders()});
  const fd=await request.formData(),intent=text(fd,"_intent"),propertyId=params.propertyId!;
  if(intent!=="decision")return data<ActionResult>({error:"Unbekannte Aktion."},{status:400,headers:responseHeaders()});
  const searchProfileId=text(fd,"search_profile_id"),status=text(fd,"status"),score=Number(text(fd,"score"));
  if(!searchProfileId||!Object.hasOwn(DECISION,status))return data<ActionResult>({error:"Ungültige Match-Entscheidung."},{status:400,headers:responseHeaders()});
+ const {data:property}=await supabase.from("properties").select("id").eq("id",propertyId).maybeSingle();
+ if(!property)return data<ActionResult>({error:"Immobilie nicht gefunden oder nicht lesbar."},{status:404,headers:responseHeaders()});
  const {error}=await supabase.from("search_profile_property_decisions").upsert({search_profile_id:searchProfileId,property_id:propertyId,status,last_match_score:Number.isFinite(score)?score:null,decided_at:new Date().toISOString(),decided_by:userId,created_by:userId,updated_by:userId},{onConflict:"search_profile_id,property_id"});
  if(error)return data<ActionResult>({error:"Match-Entscheidung konnte nicht gespeichert werden."},{status:400,headers:responseHeaders()});
  return data<ActionResult>({ok:`Match als „${DECISION[status]}“ markiert.`},{headers:responseHeaders()});
 }
 
 export default function PropertyInterests(){
- const {property,matches,viewings,profiles,profile,canDecide,canCreateViewing}=useLoaderData<typeof loader>();
+ const {property,matches,viewings,profiles,profile,canDecide,canCreateViewing,canReadViewings}=useLoaderData<typeof loader>();
  const result=useActionData<typeof action>();
  const profileMap=Object.fromEntries(profiles.map((x:any)=>[x.user_id,x.display_name]));
  return <main className="editor-shell">
@@ -52,7 +64,7 @@ export default function PropertyInterests(){
    <section className="data-card" id="interessenten"><div className="card-head"><div><p className="eyebrow">Reverse Matching</p><h2>Passende Interessenten</h2></div><span className="subtle">{matches.length} aktive Suchprofile</span></div>
     <div className="property-match-list">{matches.map((m:any)=><article className="property-match-card" key={m.search_profile_id}><div className="property-match-main"><div className="property-match-title"><div><strong>{m.contact_name}</strong><small>{m.search_profile_number} · {m.profile_title}</small></div><div className="property-match-score">{Number(m.score).toLocaleString("de-DE",{maximumFractionDigits:0})}%</div></div><div className="property-match-facts"><span><small>Status</small><strong>{PROFILE_STATUS[m.profile_status]??m.profile_status}</strong></span><span><small>Art</small><strong>{m.transaction_type==="BUY"?"Kauf":"Miete"}</strong></span><span><small>Budget</small><strong>{range(m.min_price,m.max_price,money)}</strong></span><span><small>Wohnfläche</small><strong>{range(m.min_living_area,m.max_living_area,(v)=>number(v," m²"))}</strong></span><span><small>Zimmer</small><strong>{m.min_rooms!=null?`ab ${number(m.min_rooms)}`:"—"}</strong></span></div><div className="match-reasons">{(m.reasons??[]).map((reason:string)=><span key={reason}>{reason}</span>)}</div><div className="property-match-locations">{(m.locations??[]).map((location:string)=><span key={location}>{location}</span>)}</div></div><aside className="property-match-actions"><span className={`inquiry-status ${m.decision_status?"qualified":"new"}`}>{m.decision_status?DECISION[m.decision_status]??m.decision_status:"Noch keine Entscheidung"}</span><Link className="secondary-button link-button compact" to={`/search-profiles/${m.search_profile_id}`}>Suchprofil öffnen</Link><Link className="secondary-button link-button compact" to={`/crm/contacts/${m.contact_id}`}>Kontakt öffnen</Link>{canCreateViewing?<Link className="secondary-button link-button compact" to={`/viewings/new?propertyId=${property.id}&contactId=${m.contact_id}&searchProfileId=${m.search_profile_id}`}>Besichtigung anlegen</Link>:null}{canDecide?<Form method="post" className="property-match-decision"><input type="hidden" name="_intent" value="decision"/><input type="hidden" name="search_profile_id" value={m.search_profile_id}/><input type="hidden" name="score" value={m.score}/><select name="status" defaultValue={m.decision_status??"INTERESTED"}><option value="INTERESTED">Interessant</option><option value="SENT">Gesendet</option><option value="VIEWING_REQUESTED">Besichtigung gewünscht</option><option value="REJECTED">Abgelehnt</option></select><button className="secondary-button compact" type="submit">Speichern</button></Form>:null}</aside></article>)}{matches.length===0?<p className="empty-state">Für diese Immobilie wurden aktuell keine passenden aktiven Suchprofile gefunden.</p>:null}</div>
    </section>
-   <section className="data-card" id="besichtigungen"><div className="card-head"><div><p className="eyebrow">Termine</p><h2>Besichtigungen</h2></div>{canCreateViewing?<Link className="secondary-button link-button compact" to={`/viewings/new?propertyId=${property.id}`}>+ Besichtigung anlegen</Link>:null}</div><div className="inquiry-list">{viewings.map((v:any)=>{const c=one(v.contacts),sp=one(v.search_profiles),inq=one(v.inquiries);return <div className="inquiry-row property-viewing-row" key={v.id}><div><strong>{v.viewing_number} · {c?.first_name} {c?.last_name}</strong><small>{sp?.search_profile_number??"Ohne Suchprofil"}{inq?.inquiry_number?` · ${inq.inquiry_number}`:""}</small></div><div><span className={`inquiry-status ${String(v.status).toLowerCase()}`}>{VIEWING_STATUS[v.status]??v.status}</span><small>{profileMap[v.primary_responsible_user]??"Nicht zugewiesen"}</small></div><div><strong>{formatDate(v.starts_at)}</strong><small>{v.status==="PLANNED"?"Nächster Schritt: Termin bestätigen":v.status==="CONFIRMED"?"Nächster Schritt: durchführen oder absagen":"Status dokumentiert"}</small></div><Link className="secondary-button link-button compact" to={`/viewings/${v.id}`}>Besichtigung öffnen</Link></div>})}{viewings.length===0?<p className="empty-state">Für diese Immobilie sind noch keine Besichtigungen angelegt.</p>:null}</div></section>
+   <section className="data-card" id="besichtigungen"><div className="card-head"><div><p className="eyebrow">Termine</p><h2>Besichtigungen</h2></div>{canCreateViewing?<Link className="secondary-button link-button compact" to={`/viewings/new?propertyId=${property.id}`}>+ Besichtigung anlegen</Link>:null}</div>{canReadViewings?<div className="inquiry-list">{viewings.map((v:any)=>{const c=one(v.contacts),sp=one(v.search_profiles),inq=one(v.inquiries);return <div className="inquiry-row property-viewing-row" key={v.id}><div><strong>{v.viewing_number} · {c?.first_name} {c?.last_name}</strong><small>{sp?.search_profile_number??"Ohne Suchprofil"}{inq?.inquiry_number?` · ${inq.inquiry_number}`:""}</small></div><div><span className={`inquiry-status ${String(v.status).toLowerCase()}`}>{VIEWING_STATUS[v.status]??v.status}</span><small>{profileMap[v.primary_responsible_user]??"Nicht zugewiesen"}</small></div><div><strong>{formatDate(v.starts_at)}</strong><small>{v.status==="PLANNED"?"Nächster Schritt: Termin bestätigen":v.status==="CONFIRMED"?"Nächster Schritt: durchführen oder absagen":"Status dokumentiert"}</small></div><Link className="secondary-button link-button compact" to={`/viewings/${v.id}`}>Besichtigung öffnen</Link></div>})}{viewings.length===0?<p className="empty-state">Für diese Immobilie sind noch keine Besichtigungen angelegt.</p>:null}</div>:<p className="empty-state">Keine Berechtigung zum Anzeigen von Besichtigungen.</p>}</section>
   </div>
  </main>;
 }
