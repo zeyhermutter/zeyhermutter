@@ -30,7 +30,7 @@ export default [
     route("leads/:leadId", "routes/lead-detail.tsx"),
     route("search-profiles", "routes/search-profiles.tsx"),
     route("search-profiles/new", "routes/search-profile-new.tsx"),
-    route("search-profiles/:searchProfileId", "routes/search-profile-detail-with-geocode-repair.tsx"),
+    route("search-profiles/:searchProfileId", "routes/search-profile-detail.tsx"),
     route("inquiries", "routes/inquiries.tsx"),
     route("inquiries/new", "routes/inquiry-new.tsx"),
     route("inquiries/:inquiryId", "routes/inquiry-detail.tsx"),
