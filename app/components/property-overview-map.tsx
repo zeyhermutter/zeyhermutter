@@ -23,7 +23,6 @@ const DASHBOARD_LAYOUT_CSS = `
 .app-content>.metric-grid+.data-card{width:100%;max-width:1320px!important;margin:12px auto 0}
 @media(max-width:1180px){.app-content .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:720px){.app-content .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:520px){.app-content .metric-grid{grid-template-columns:1fr}}
 `;
 
 function clampLatitude(latitude: number) {
