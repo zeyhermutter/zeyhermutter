@@ -50,7 +50,7 @@ Solange nur ein GitHub-Verantwortlicher vorhanden ist, bleibt PROD zusätzlich d
 
 ## Supabase
 
-Das bisherige STAGING-Projekt wird als BETA verwendet. PROD ist als eigenes Projekt `zeyhermutteros-production` (`vtmtxaaojbqqzwxkodye`) in `eu-central-1` angelegt und teilt weder Datenbank noch Storage mit BETA. Die 73 versionierten Migrationen und `generate-property-expose` sind ausgerollt; `website-inquiry` bleibt bis zur ausdrücklichen Freigabe des anonymen PII-Endpunkts deaktiviert.
+Das bisherige STAGING-Projekt wird als BETA verwendet. PROD ist als eigenes Projekt `zeyhermutteros-production` (`vtmtxaaojbqqzwxkodye`) in `eu-central-1` angelegt und teilt weder Datenbank noch Storage mit BETA. Die 73 versionierten Migrationen sowie `generate-property-expose` und der ausdrücklich freigegebene öffentliche PII-Endpunkt `website-inquiry` sind ausgerollt. `website-inquiry` läuft mit `verify_jwt=false` und schützt den Intake durch POST-only, Validierung, Honeypot, Deduplizierung und Rate Limit.
 
 Supabase Preview-Branches sind datenlos und eignen sich für Pull Requests. Ein persistenter Branch verursacht eigene Nutzungskosten; vor seiner Anlage ist eine Kostenbestätigung erforderlich. Neue Tabellen benötigen weiterhin explizite Data-API-Grants und RLS.
 

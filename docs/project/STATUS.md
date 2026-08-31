@@ -125,4 +125,6 @@ Supabase Auth meldet weiterhin `Leaked Password Protection Disabled`. Remediatio
 ## Production
 Das separate Supabase-Projekt `zeyhermutteros-production` (`vtmtxaaojbqqzwxkodye`, `eu-central-1`) ist aktiv. Alle 73 Repository-Migrationen sind angewandt; das öffentliche Schema hat vollständig aktiviertes RLS, der private Medien-Bucket ist policy-geschützt, und `generate-property-expose` ist aktiv. PROD ist leer und enthält weder BETA-Geschäftsdaten noch übernommene Auth-Nutzer.
 
-Noch nicht ausgerollt sind der öffentliche PII-Endpunkt `website-inquiry` (gesonderte Freigabe erforderlich) und der Cloudflare-Worker `zeyhermutter-production`. Worker-Konfiguration, manueller GitHub-Workflow und Fail-closed-Deploy-Guard sind vorbereitet; der erste Web-Rollout folgt ausschließlich nach Release-PR und ausdrücklicher Go-live-Freigabe.
+Der ausdrücklich freigegebene öffentliche PII-Endpunkt `website-inquiry` ist als Version 1 mit `verify_jwt=false` aktiv. Ein anonymer Honeypot-Smoke-Test lieferte HTTP 200, erzeugte keine Geschäfts- oder Rate-Limit-Daten und zeigte keine Laufzeitfehler. Validierung, Honeypot, Deduplizierung und Rate Limit bleiben serverseitig aktiv.
+
+Noch nicht ausgerollt ist der Cloudflare-Worker `zeyhermutter-production`. Worker-Konfiguration, manueller GitHub-Workflow und Fail-closed-Deploy-Guard sind vorbereitet; der erste Web-Rollout folgt ausschließlich nach Release-PR und ausdrücklicher Go-live-Freigabe.

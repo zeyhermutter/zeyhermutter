@@ -10,7 +10,7 @@ Aktueller Aufbauzustand:
 - alle Tabellen im exponierten `public`-Schema mit RLS; Advisor ohne Fehler
 - privater Bucket `zm-public-media` mit kontrolliertem anonymem Lesen aktueller Veröffentlichungen und `property.write`-geschützten Uploads
 - Edge Function `generate-property-expose` aktiv
-- öffentlicher PII-Endpunkt `website-inquiry` bis zur gesonderten Freigabe nicht deployed
+- öffentlicher PII-Endpunkt `website-inquiry` nach gesonderter Freigabe als Version 1 mit `verify_jwt=false` aktiv; anonymer Honeypot-Smoke-Test bestanden
 - keine BETA-Testdaten oder Auth-Nutzer nach PROD übernommen
 
 Das verbindliche Branch-/Umgebungsmodell steht in `docs/operations/ENVIRONMENTS.md`: `develop` liefert BETA, `main` liefert PROD.
