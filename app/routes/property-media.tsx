@@ -68,7 +68,7 @@ export async function action({request,context,params}:Route.ActionArgs){
       .maybeSingle();
     if(error)return data<ActionResult>({error:"Medien-Metadaten konnten nicht gespeichert werden."},{status:400,headers:responseHeaders()});
     if(!updated)return data<ActionResult>({error:"Medium wurde zwischenzeitlich geändert. Bitte Seite neu laden."},{status:409,headers:responseHeaders()});
-    return redirect(`/properties/${propertyId}/media#media-${mediaId}`,{headers:responseHeaders()});
+    return redirect(`/properties/${propertyId}/media`,{headers:responseHeaders()});
   }
 
   if(intent==="archive"){
