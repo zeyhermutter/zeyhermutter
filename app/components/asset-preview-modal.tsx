@@ -132,7 +132,7 @@ export function AssetPreviewModal({
             {metadata.map((entry) => <div key={entry.label}><dt>{entry.label}</dt><dd>{entry.value || "—"}</dd></div>)}
           </dl>
 
-          {editing && metadataEditor ? <section className="asset-editor-section"><div className="asset-panel-subhead"><h4>Metadaten bearbeiten</h4></div>{metadataEditor}</section> : null}
+          {editing && metadataEditor ? <section className="asset-editor-section" onSubmitCapture={() => setEditing(false)}><div className="asset-panel-subhead"><h4>Metadaten bearbeiten</h4></div>{metadataEditor}</section> : null}
 
           {versions ? <section className="asset-versions-section">
             <button className="asset-section-toggle" type="button" onClick={() => setVersionsVisible((value) => !value)}><span>Versionshistorie</span><span>{versionsVisible ? "−" : "+"}</span></button>
