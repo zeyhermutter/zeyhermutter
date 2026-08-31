@@ -65,7 +65,7 @@ Priorisierung: **MUST > SHOULD > COULD > LATER**.
 - [x] Browser-Smoke-Test Medien und Metadaten
 - [x] Modul-02-DoD abgeschlossen
 
-## MUST – Eigentümer & Leads MVP — IN ARBEIT
+## MUST – Eigentümer & Leads MVP — DONE
 - [x] Lead mit eigener Nummer und Statusmaschine
 - [x] Verkäufer-Lead-Status NEW / CONTACTED / QUALIFIED / APPOINTMENT / VALUATION / OFFER / WON / LOST / NURTURE
 - [x] Leadquelle separat von Status speichern
@@ -86,9 +86,31 @@ Priorisierung: **MUST > SHOULD > COULD > LATER**.
 - [x] atomarer und idempotenter Lead → Immobilie Workflow ohne Doppelanlage
 - [x] Kontakt als Eigentümer sowie Objektadresse/-daten bei Konvertierung übernehmen
 - [x] serverseitige Permission-, Conversion-, Integritäts- und Concurrency-Tests
-- [ ] aktueller Modul-03-UI-Stand auf Cloudflare sichtbar bestätigen
-- [ ] Browser-Smoke-Test Leadanlage, Bearbeitung, Pipeline, Aufgaben, Collaboration, Archiv, Suche und Konvertierung
-- [ ] Modul-03-DoD abschließen
+- [x] aktueller Modul-03-UI-Stand auf Cloudflare sichtbar bestätigt
+- [x] Browser-Smoke-Test Leadanlage, Bearbeitung, Pipeline, Aufgaben, Collaboration, Archiv, Suche und Konvertierung
+- [x] Modul-03-DoD abgeschlossen
+
+## MUST – Interessenten & Suchprofile MVP — IN ARBEIT
+- [x] Interessent bleibt bestehender CRM-Kontakt; kein paralleles Personenmodell
+- [x] mehrere Suchprofile je Kontakt
+- [x] Suchprofilnummer `ZM-S-######`
+- [x] Anfragen mit Nummer `ZM-A-######`
+- [x] Kauf-/Miet-Suchprofile mit Preis, Fläche, Zimmern, Grundstück, Baujahr, Einzug und Finanzierung
+- [x] mehrere Suchorte je Suchprofil inkl. PLZ/Ort/Ortsteil/Radius
+- [x] RLS, Audit, Archivieren und Optimistic Concurrency für Suchprofile/Anfragen
+- [x] Aufgaben können technisch an Anfrage oder Suchprofil hängen
+- [ ] Suchprofil-Verzeichnis und Filter
+- [ ] Suchprofil-Neuanlage und Detailakte
+- [ ] Anfrage-Verzeichnis und Anfrageakte
+- [ ] globale Suche findet Suchprofile und Anfragen
+- [ ] Activity / Kommentare / @Mentions / Notifications integrieren
+- [ ] regelbasiertes Immobilien-Matching
+- [ ] Match-Bewertung/Begründung nachvollziehbar anzeigen
+- [ ] Besichtigungsworkflow
+- [ ] Feedback
+- [ ] Kaufangebote
+- [ ] Browser-Smoke-Test Modul 04
+- [ ] Modul-04-DoD abschließen
 
 ## SHOULD – Zusammenarbeit
 - [ ] Soft Presence
