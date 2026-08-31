@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
 import { LiveListFilters } from "~/components/live-list-filters";
 import { PersistentNavigation } from "~/components/persistent-navigation";
+import { ViewingReplanModal } from "~/components/viewing-replan-modal";
 
 const NAV_STACK_KEY = "zm_internal_navigation_stack";
 
@@ -73,6 +74,7 @@ export default function InternalLayout() {
   return (
     <div className="persistent-app-frame">
       <SmartBackNavigation />
+      <ViewingReplanModal />
       <PersistentNavigation />
       <div className="persistent-app-main">
         <LiveListFilters />
