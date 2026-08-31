@@ -10,6 +10,7 @@ export function MentionPicker({ users }: { users: MentionUser[] }) {
   const [selected, setSelected] = useState<string[]>([]);
   const [resolvedUsers, setResolvedUsers] = useState<MentionUser[]>(users);
   const [popup, setPopup] = useState<PopupPosition | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
     const byId = new Map(users.map((user) => [user.user_id, user]));
@@ -32,6 +33,10 @@ export function MentionPicker({ users }: { users: MentionUser[] }) {
           .slice(0, 6),
     [resolvedUsers, selected, normalized, query],
   );
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [normalized]);
 
   function activeMention(value: string, cursor: number) {
     const before = value.slice(0, cursor);
@@ -58,33 +63,12 @@ export function MentionPicker({ users }: { users: MentionUser[] }) {
     setQuery(mention);
     if (mention !== null) positionPopup();
     else setPopup(null);
-    setSelected((current) => current.filter((id) => {
-      const user = resolvedUsers.find((item) => item.user_id === id);
-      return Boolean(user && textarea.value.includes(`@${user.display_name}`));
-    }));
+
+    const mentionedIds = resolvedUsers
+      .filter((user) => new RegExp(`(?:^|\\s)@${user.display_name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?=\\s|$|[.,!?;:])`, "u").test(textarea.value))
+      .map((user) => user.user_id);
+    setSelected(mentionedIds);
   }
-
-  useEffect(() => {
-    const form = rootRef.current?.closest("form");
-    const textarea = form?.querySelector<HTMLTextAreaElement>('textarea[name="body"]') ?? null;
-    textareaRef.current = textarea;
-    if (!textarea) return;
-
-    textarea.placeholder = "Interner Kommentar – @ tippen, um Sebastian oder Jochen zu erwähnen";
-    textarea.addEventListener("input", syncFromTextarea);
-    textarea.addEventListener("click", syncFromTextarea);
-    textarea.addEventListener("keyup", syncFromTextarea);
-    window.addEventListener("resize", positionPopup);
-    window.addEventListener("scroll", positionPopup, true);
-    return () => {
-      textarea.removeEventListener("input", syncFromTextarea);
-      textarea.removeEventListener("click", syncFromTextarea);
-      textarea.removeEventListener("keyup", syncFromTextarea);
-      window.removeEventListener("resize", positionPopup);
-      window.removeEventListener("scroll", positionPopup, true);
-      textareaRef.current = null;
-    };
-  }, [resolvedUsers]);
 
   function add(user: MentionUser) {
     const textarea = textareaRef.current;
@@ -108,6 +92,48 @@ export function MentionPicker({ users }: { users: MentionUser[] }) {
     });
   }
 
+  useEffect(() => {
+    const form = rootRef.current?.closest("form");
+    const textarea = form?.querySelector<HTMLTextAreaElement>('textarea[name="body"]') ?? null;
+    textareaRef.current = textarea;
+    if (!textarea) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (query === null || suggestions.length === 0) return;
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        setActiveIndex((index) => (index + 1) % suggestions.length);
+      } else if (event.key === "ArrowUp") {
+        event.preventDefault();
+        setActiveIndex((index) => (index - 1 + suggestions.length) % suggestions.length);
+      } else if (event.key === "Enter" || event.key === "Tab") {
+        event.preventDefault();
+        add(suggestions[Math.min(activeIndex, suggestions.length - 1)]);
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        setQuery(null);
+        setPopup(null);
+      }
+    };
+
+    textarea.placeholder = "Interner Kommentar – @ tippen, um Sebastian oder Jochen zu erwähnen";
+    textarea.addEventListener("input", syncFromTextarea);
+    textarea.addEventListener("click", syncFromTextarea);
+    textarea.addEventListener("keyup", syncFromTextarea);
+    textarea.addEventListener("keydown", onKeyDown);
+    window.addEventListener("resize", positionPopup);
+    window.addEventListener("scroll", positionPopup, true);
+    return () => {
+      textarea.removeEventListener("input", syncFromTextarea);
+      textarea.removeEventListener("click", syncFromTextarea);
+      textarea.removeEventListener("keyup", syncFromTextarea);
+      textarea.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("resize", positionPopup);
+      window.removeEventListener("scroll", positionPopup, true);
+      textareaRef.current = null;
+    };
+  }, [resolvedUsers, query, suggestions, activeIndex]);
+
   return (
     <div className="mention-picker" ref={rootRef}>
       {selected.map((id) => <input key={id} type="hidden" name="mention_user_id" value={id} />)}
@@ -129,12 +155,14 @@ export function MentionPicker({ users }: { users: MentionUser[] }) {
           }}
         >
           <div style={{ padding: "6px 8px 7px", color: "#7f8c8e", fontSize: 11, fontWeight: 700, letterSpacing: ".05em" }}>PERSON ERWÄHNEN</div>
-          {suggestions.map((user) => (
+          {suggestions.map((user, index) => (
             <button
               key={user.user_id}
               type="button"
               role="option"
+              aria-selected={index === activeIndex}
               onMouseDown={(event) => event.preventDefault()}
+              onMouseEnter={() => setActiveIndex(index)}
               onClick={() => add(user)}
               style={{
                 width: "100%",
@@ -144,13 +172,11 @@ export function MentionPicker({ users }: { users: MentionUser[] }) {
                 padding: "9px 10px",
                 border: 0,
                 borderRadius: 7,
-                background: "transparent",
+                background: index === activeIndex ? "#20292a" : "transparent",
                 color: "#eef2f3",
                 textAlign: "left",
                 cursor: "pointer",
               }}
-              onMouseEnter={(event) => { event.currentTarget.style.background = "#20292a"; }}
-              onMouseLeave={(event) => { event.currentTarget.style.background = "transparent"; }}
             >
               <span style={{ width: 28, height: 28, display: "grid", placeItems: "center", borderRadius: "50%", background: "#2a3638", fontSize: 12, fontWeight: 800 }}>{user.display_name.slice(0, 1)}</span>
               <span style={{ display: "grid", gap: 2 }}><strong style={{ fontSize: 13 }}>@{user.display_name}</strong><small style={{ color: "#869395" }}>Geschäftsführer</small></span>
