@@ -12,10 +12,19 @@ function getBuildCommit() {
 }
 
 const buildCommit = getBuildCommit();
+const cloudflareEnvironment = process.env.CLOUDFLARE_ENV ?? "beta";
+
+if (!new Set(["beta", "production"]).has(cloudflareEnvironment)) {
+  throw new Error(`Unsupported CLOUDFLARE_ENV: ${cloudflareEnvironment}`);
+}
+
+const appEnvironmentLabel = cloudflareEnvironment === "production" ? "PROD" : "BETA";
 
 export default defineConfig({
   define: {
     __BUILD_COMMIT__: JSON.stringify(buildCommit),
+    __APP_ENV__: JSON.stringify(cloudflareEnvironment),
+    __APP_ENV_LABEL__: JSON.stringify(appEnvironmentLabel),
   },
   resolve: {
     alias: {

@@ -119,7 +119,7 @@ export default function PropertyMedia(){
   const activeDownloadUrl=activeItem?downloadUrls[activeItem.id]:undefined;
 
   return <main className="editor-shell">
-    <header className="editor-header"><div><Link className="back-link" to={`/properties/${property.id}`}>← {property.property_number}</Link><p className="eyebrow">Modul 02 · Medien</p><h1 className="editor-title">Medienbibliothek</h1><p className="editor-meta">{property.internal_title} · private Ablage</p></div><div className="header-user"><span className="badge">STAGING</span><small>{profile.display_name}</small></div></header>
+    <header className="editor-header"><div><Link className="back-link" to={`/properties/${property.id}`}>← {property.property_number}</Link><p className="eyebrow">Modul 02 · Medien</p><h1 className="editor-title">Medienbibliothek</h1><p className="editor-meta">{property.internal_title} · private Ablage</p></div><div className="header-user"><span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div></header>
     {result?.error?<div className="form-error">{result.error}</div>:null}
 
     <div className="dashboard-grid">

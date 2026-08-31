@@ -5,13 +5,19 @@
   "type": "module",
   "packageManager": "pnpm@11.19.0",
   "scripts": {
-    "dev": "react-router dev",
-    "build": "react-router build",
-    "deploy": "wrangler deploy",
+    "dev": "node scripts/with-cloudflare-env.mjs beta react-router dev",
+    "build": "pnpm run build:beta",
+    "build:beta": "node scripts/with-cloudflare-env.mjs beta react-router build",
+    "build:production": "node scripts/with-cloudflare-env.mjs production react-router build",
+    "deploy": "node scripts/require-explicit-deploy-target.mjs",
+    "deploy:beta": "pnpm run check:beta && wrangler deploy",
+    "deploy:production": "node scripts/guard-production-deploy.mjs && pnpm run check:production && wrangler deploy",
     "typegen": "react-router typegen",
-    "cf-typegen": "wrangler types",
+    "cf-typegen": "wrangler types --include-runtime=false",
     "typecheck": "react-router typegen && tsc -b",
-    "check": "pnpm run typecheck && pnpm run build && wrangler deploy --dry-run"
+    "check": "pnpm run check:beta",
+    "check:beta": "pnpm run typecheck && pnpm run build:beta && wrangler deploy --dry-run",
+    "check:production": "pnpm run typecheck && pnpm run build:production && wrangler deploy --dry-run"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.5",

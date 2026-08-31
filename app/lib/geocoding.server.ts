@@ -23,8 +23,6 @@ export type GeocodedCoordinates = {
 };
 
 const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
-const APP_URL = "https://zeyhermutter.playsony.workers.dev/";
-const APP_USER_AGENT = `ZeyherMutterOS/0.1 (+${APP_URL})`;
 
 function wait(ms: number) {
   return ms > 0 ? new Promise((resolve) => setTimeout(resolve, ms)) : Promise.resolve();
@@ -36,13 +34,15 @@ async function reserveSlot(supabase: SupabaseClient) {
   await wait(Number(waitMs ?? 0));
 }
 
-async function fetchFirstCoordinates(params: URLSearchParams): Promise<GeocodedCoordinates | null> {
+async function fetchFirstCoordinates(params: URLSearchParams, appBaseUrl: string): Promise<GeocodedCoordinates | null> {
+  const appUrl = new URL(appBaseUrl).toString();
+  const appUserAgent = `ZeyherMutterOS/0.1 (+${appUrl})`;
   params.set("countrycodes", params.get("countrycodes") || "de");
   params.set("format", "jsonv2");
   params.set("limit", "1");
   params.set("addressdetails", "0");
   const response = await fetch(`${NOMINATIM_URL}?${params.toString()}`, {
-    headers: { Accept: "application/json", "Accept-Language": "de", Referer: APP_URL, "User-Agent": APP_USER_AGENT },
+    headers: { Accept: "application/json", "Accept-Language": "de", Referer: appUrl, "User-Agent": appUserAgent },
   });
   if (!response.ok) throw new Error(`Nominatim antwortete mit HTTP ${response.status}.`);
   const results = (await response.json()) as Array<{ lat?: string; lon?: string }>;
@@ -56,6 +56,7 @@ async function fetchFirstCoordinates(params: URLSearchParams): Promise<GeocodedC
 export async function geocodePropertyAddress(
   supabase: SupabaseClient,
   address: PropertyAddressInput,
+  appBaseUrl: string,
 ): Promise<GeocodedCoordinates | null> {
   const country = (address.country || "DE").toUpperCase();
   const { data: cached, error: cacheError } = await supabase
@@ -81,12 +82,13 @@ export async function geocodePropertyAddress(
     countrycodes: country.toLowerCase(),
     layer: "address",
   });
-  return fetchFirstCoordinates(params);
+  return fetchFirstCoordinates(params, appBaseUrl);
 }
 
 export async function geocodeSearchLocation(
   supabase: SupabaseClient,
   location: SearchLocationInput,
+  appBaseUrl: string,
 ): Promise<GeocodedCoordinates | null> {
   const postalCode = location.postalCode?.trim() || "";
   const city = location.city?.trim() || "";
@@ -112,5 +114,5 @@ export async function geocodeSearchLocation(
   if (postalCode) params.set("postalcode", postalCode);
   if (city) params.set("city", city);
   if (district) params.set("q", [district, city, postalCode].filter(Boolean).join(", "));
-  return fetchFirstCoordinates(params);
+  return fetchFirstCoordinates(params, appBaseUrl);
 }

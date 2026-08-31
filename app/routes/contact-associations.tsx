@@ -139,7 +139,7 @@ export default function ContactAssociations() {
           <p className="eyebrow">{contact.contact_number} · Verknüpfungen</p>
           <h1 className="editor-title">{contact.first_name} {contact.last_name}</h1>
         </div>
-        <div className="header-user"><span className="badge">STAGING</span><small>{profile.display_name}</small></div>
+        <div className="header-user"><span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div>
       </header>
 
       {result?.error ? <div className="form-error">{result.error}</div> : null}

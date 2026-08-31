@@ -29,7 +29,7 @@ export async function action({ request, context }: Route.ActionArgs) {
       city,
       district,
       country,
-    });
+    }, context.cloudflare.env.APP_BASE_URL);
     return data({ coordinates }, { headers: responseHeaders() });
   } catch {
     return data({ coordinates: null, error: "Koordinaten konnten aktuell nicht ermittelt werden." }, { status: 503, headers: responseHeaders() });

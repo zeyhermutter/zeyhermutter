@@ -166,7 +166,7 @@ export default function ContactDetail() {
           <h1 className="editor-title">{contact.first_name} {contact.last_name}</h1>
           <p className="editor-meta">Version {contact.version} · zuletzt geändert {formatDate(contact.updated_at)}</p>
         </div>
-        <div className="header-user"><span className="badge">STAGING</span><small>{profile.display_name}</small></div>
+        <div className="header-user"><span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div>
       </header>
 
       <div className="contact-layout">

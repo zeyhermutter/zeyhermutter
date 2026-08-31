@@ -248,3 +248,10 @@ Die Anlage eines Suchprofils aus einer Anfrage und die Rückverknüpfung der Anf
 **Status:** Accepted
 
 Das Repository pinnt pnpm und enthält einen Lockfile. Browser-/React-Router-Code und Cloudflare-Worker-Code werden in getrennten TypeScript-Projekten geprüft, damit DOM- und Worker-Globals nicht versehentlich vermischt werden. Das zentrale Qualitätsgate umfasst Typgenerierung, striktes TypeScript, Produktions-Build und Wrangler-Dry-Run.
+
+## ADR-040 – `develop` liefert BETA, `main` liefert PROD
+**Status:** Accepted
+
+`develop` ist die einzige dauerhafte Integrationslinie und wird nach erfolgreichem Quality Gate nach BETA ausgerollt. `main` enthält ausschließlich für PROD freigegebene Stände. Releases gelangen per Pull Request von `develop` nach `main`; Hotfixes werden anschließend nach `develop` zurückgeführt.
+
+BETA und PROD verwenden getrennte Cloudflare Worker, Supabase-Projekte, Keys, Auth-Konfigurationen, Storage-Buckets und Daten. Ein uneindeutiger Deploy-Befehl ist verboten. PROD benötigt einen sauberen `main`, vollständig konfigurierte PROD-Werte und eine explizite Freigabe; fehlende Angaben führen zum Abbruch.

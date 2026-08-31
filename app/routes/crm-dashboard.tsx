@@ -81,7 +81,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   for (const address of addresses ?? []) {
     if (!address.street || !address.house_number || !address.postal_code || !address.city) continue;
     try {
-      const coordinates = await geocodePropertyAddress(supabase, { street: address.street, houseNumber: address.house_number, postalCode: address.postal_code, city: address.city, district: address.district, country: address.country });
+      const coordinates = await geocodePropertyAddress(supabase, { street: address.street, houseNumber: address.house_number, postalCode: address.postal_code, city: address.city, district: address.district, country: address.country }, context.cloudflare.env.APP_BASE_URL);
       if (!coordinates) continue;
       const { data: updated } = await supabase.from("property_addresses").update({ latitude: coordinates.latitude, longitude: coordinates.longitude }).eq("id", address.id).eq("version", address.version).select("id").maybeSingle();
       if (updated) geocoded += 1;
@@ -122,13 +122,13 @@ export default function CrmDashboard() {
         <Link className="nav-item" to="/crm/archive">Archiv</Link>
         <span className="nav-item muted">Provisionen</span>
       </nav>
-      <div className="sidebar-footer"><small>STAGING</small><strong>{profile.display_name}</strong><Form method="post" action="/logout"><button className="text-button" type="submit">Abmelden</button></Form></div>
+      <div className="sidebar-footer"><small>{__APP_ENV_LABEL__}</small><strong>{profile.display_name}</strong><Form method="post" action="/logout"><button className="text-button" type="submit">Abmelden</button></Form></div>
     </aside>
 
     <section className="app-content">
       <header className="app-header">
         <div><p className="eyebrow">CRM · Immobilien · Verkäufer · Interessenten</p><div className="dashboard-greeting-row"><h1 className="app-title">Guten Tag, {profile.display_name}.</h1><NotificationBell notifications={headerNotifications} unreadCount={unreadCount}/></div></div>
-        <div className="header-actions"><Link className="secondary-button link-button" to="/search-profiles">Interessenten · {searchProfileCount}</Link><Link className="secondary-button link-button" to="/inquiries">Anfragen · {openInquiryCount}</Link><Link className="secondary-button link-button" to="/viewings">Besichtigungen · {upcomingViewingCount}</Link><Link className="secondary-button link-button" to="/crm/search">Suchen</Link><Link className="primary-button link-button" to="/inquiries/new">+ Anfrage</Link><span className="badge">STAGING</span></div>
+        <div className="header-actions"><Link className="secondary-button link-button" to="/search-profiles">Interessenten · {searchProfileCount}</Link><Link className="secondary-button link-button" to="/inquiries">Anfragen · {openInquiryCount}</Link><Link className="secondary-button link-button" to="/viewings">Besichtigungen · {upcomingViewingCount}</Link><Link className="secondary-button link-button" to="/crm/search">Suchen</Link><Link className="primary-button link-button" to="/inquiries/new">+ Anfrage</Link><span className="badge">{__APP_ENV_LABEL__}</span></div>
       </header>
 
       <div className="metric-grid"><article className="metric-card"><span>Kontakte</span><strong>{contactCount}</strong><small>aktive Kontakte</small></article><article className="metric-card"><span>Verkäufer-Leads</span><strong>{leadCount}</strong><small>{newLeadCount} neu · {overdueLeadCount} überfällig</small></article><article className="metric-card"><span>Organisationen</span><strong>{organizationCount}</strong><small>aktive Firmen/Partner</small></article><article className="metric-card"><span>Offene Aufgaben</span><strong>{taskCount}</strong><small>offen / in Bearbeitung</small></article></div>

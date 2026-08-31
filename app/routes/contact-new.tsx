@@ -136,7 +136,7 @@ export default function NewContact() {
     <main className="editor-shell">
       <header className="editor-header">
         <div><Link className="back-link" to={returnTo.startsWith("/properties/") ? returnTo : "/crm"}>← Zurück</Link><p className="eyebrow">Modul 01 · CRM</p><h1 className="editor-title">Kontakt anlegen</h1></div>
-        <span className="badge">STAGING</span>
+        <span className="badge">{__APP_ENV_LABEL__}</span>
       </header>
 
       <Form method="post" className="editor-card">

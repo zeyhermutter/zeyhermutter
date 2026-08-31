@@ -9,8 +9,29 @@
   },
   "upload_source_maps": true,
   "vars": {
-    "APP_ENV": "staging",
+    "APP_ENV": "beta",
+    "APP_BASE_URL": "https://zeyhermutter.playsony.workers.dev",
     "SUPABASE_URL": "https://zqhcxudpfwsfuokencvy.supabase.co",
     "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_9KqTRvRzAYxDAPWAzMDRTA_9QhasRgx"
+  },
+  "env": {
+    "beta": {
+      "name": "zeyhermutter",
+      "vars": {
+        "APP_ENV": "beta",
+        "APP_BASE_URL": "https://zeyhermutter.playsony.workers.dev",
+        "SUPABASE_URL": "https://zqhcxudpfwsfuokencvy.supabase.co",
+        "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_9KqTRvRzAYxDAPWAzMDRTA_9QhasRgx"
+      }
+    },
+    "production": {
+      "name": "zeyhermutter-production",
+      "vars": {
+        "APP_ENV": "production",
+        "APP_BASE_URL": "https://SET_PRODUCTION_DOMAIN",
+        "SUPABASE_URL": "https://SET_PRODUCTION_PROJECT_REF.supabase.co",
+        "SUPABASE_PUBLISHABLE_KEY": "SET_PRODUCTION_PUBLISHABLE_KEY"
+      }
+    }
   }
 }

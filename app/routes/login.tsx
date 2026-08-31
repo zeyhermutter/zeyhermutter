@@ -55,7 +55,7 @@ export default function Login() {
           <span className="brand-mark">ZM</span>
           <span>ZeyherMutterOS</span>
         </a>
-        <p className="eyebrow">Interner Bereich · STAGING</p>
+        <p className="eyebrow">Interner Bereich · {__APP_ENV_LABEL__}</p>
         <h1 className="auth-title">Anmelden</h1>
         <p className="auth-copy">
           Zugriff nur für freigeschaltete Benutzer der ZeyherMutter-Plattform.

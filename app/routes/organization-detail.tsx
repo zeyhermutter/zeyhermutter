@@ -108,7 +108,7 @@ export default function OrganizationDetail() {
     <main className="editor-shell">
       <header className="editor-header">
         <div><Link className="back-link" to="/crm/organizations">← Organisationen</Link><p className="eyebrow">{organization.organization_number}</p><h1 className="editor-title">{organization.name}</h1><p className="editor-meta">Version {organization.version} · zuletzt geändert {formatDate(organization.updated_at)}</p></div>
-        <div className="header-user"><span className="badge">STAGING</span><small>{profile.display_name}</small></div>
+        <div className="header-user"><span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div>
       </header>
 
       <div className="contact-layout">

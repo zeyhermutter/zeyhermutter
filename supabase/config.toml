@@ -1,0 +1,26 @@
+project_id = "zeyhermutteros"
+
+[db]
+major_version = 17
+
+[db.seed]
+enabled = false
+
+[functions.seed-demo-assets]
+verify_jwt = true
+
+[functions.website-inquiry]
+verify_jwt = false
+
+[functions.generate-property-expose]
+verify_jwt = true
+
+[remotes.beta]
+project_id = "zqhcxudpfwsfuokencvy"
+
+[remotes.beta.db.seed]
+enabled = false
+
+# Add only after the dedicated project has been created and verified:
+# [remotes.production]
+# project_id = "<production-project-ref>"

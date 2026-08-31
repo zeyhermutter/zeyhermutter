@@ -91,7 +91,7 @@ export default function CrmArchive() {
     <main className="editor-shell">
       <header className="editor-header">
         <div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">Modul 01 · CRM</p><h1 className="editor-title">Archivverwaltung</h1></div>
-        <div className="header-user"><span className="badge">STAGING</span><small>{profile.display_name}</small></div>
+        <div className="header-user"><span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div>
       </header>
 
       {result?.error ? <div className="form-error">{result.error}</div> : null}

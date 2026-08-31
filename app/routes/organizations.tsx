@@ -91,7 +91,7 @@ export default function Organizations() {
     <main className="editor-shell">
       <header className="editor-header">
         <div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">Modul 01 · CRM</p><h1 className="editor-title">Organisationen</h1></div>
-        <div className="header-user"><span className="badge">STAGING</span><small>{profile.display_name}</small></div>
+        <div className="header-user"><span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div>
       </header>
 
       <div className="dashboard-grid">

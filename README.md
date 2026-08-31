@@ -7,7 +7,7 @@ Zentrale Immobilienmaklerplattform für ZeyherMutter.
 - React Router + TypeScript
 - Cloudflare Workers / Static Assets
 - Supabase PostgreSQL / Auth / Storage / Realtime
-- Staging-first; Production nur nach ausdrücklicher Freigabe
+- BETA-first; Production nur nach ausdrücklicher Freigabe
 
 ## Isolation
 
@@ -15,8 +15,8 @@ Dieses Repository und seine Infrastruktur sind ausschließlich für ZeyherMutter
 
 ## Environments
 
-- `STAGING`: Cloudflare Worker `zeyhermutter` unter `https://zeyhermutter.playsony.workers.dev` + Supabase `zeyhermutteros-staging` (`zqhcxudpfwsfuokencvy`)
-- `PRODUCTION`: noch nicht eingerichtet; Anlage erst nach Kosten-/Organisationsfreigabe und Ausführung des Produktions-Runbooks
+- `develop` → `BETA`: Cloudflare Worker `zeyhermutter` unter `https://zeyhermutter.playsony.workers.dev` + Supabase `zeyhermutteros-staging` (`zqhcxudpfwsfuokencvy`)
+- `main` → `PROD`: separater Worker `zeyhermutter-production` und separates Supabase-Projekt; Ressourcen werden erst nach Kosten-/Organisationsfreigabe aktiviert
 
 ## Befehle
 
@@ -24,10 +24,12 @@ Dieses Repository und seine Infrastruktur sind ausschließlich für ZeyherMutter
 pnpm install --frozen-lockfile
 pnpm run dev
 pnpm run check
+pnpm run check:production
 ```
 
-`pnpm run check` führt React-Router-Typgenerierung, striktes TypeScript,
-Produktions-Build und einen Cloudflare-Deploy-Dry-Run aus.
+`pnpm run check` prüft BETA mit React-Router-Typgenerierung, strengem TypeScript,
+Produktions-Build und Cloudflare-Deploy-Dry-Run. `pnpm run check:production`
+prüft denselben Stand gegen die getrennte PROD-Konfiguration.
 
 ## Secrets
 
@@ -40,3 +42,4 @@ Keine Secrets committen. Publishable Keys und spätere Integrations-Secrets werd
 - Workflows: `docs/architecture/WORKFLOWS.md`
 - Rollen/Rechte: `docs/architecture/PERMISSIONS.md`
 - Produktions-Runbook: `docs/operations/PRODUCTION_RUNBOOK.md`
+- Branch-/Umgebungsmodell: `docs/operations/ENVIRONMENTS.md`

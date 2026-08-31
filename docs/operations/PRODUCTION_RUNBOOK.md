@@ -4,6 +4,8 @@ Stand: 31.08.2026
 
 PROD existiert noch nicht. Dieses Runbook ist die Freigabecheckliste; keine PROD-Ressource wird aus STAGING abgeleitet oder still geteilt.
 
+Das verbindliche Branch-/Umgebungsmodell steht in `docs/operations/ENVIRONMENTS.md`: `develop` liefert BETA, `main` liefert PROD.
+
 ## 1. Freigaben vor der Anlage
 
 - Supabase-Organisation und wiederkehrende Kosten ausdrücklich bestätigen.
@@ -40,9 +42,9 @@ PROD existiert noch nicht. Dieses Runbook ist die Freigabecheckliste; keine PROD
 ## 5. Cloudflare-Release
 
 1. `pnpm install --frozen-lockfile`
-2. `pnpm run check`
+2. `pnpm run check:production`
 3. PROD-Variablen/Secrets auf eigene Supabase-Ref setzen; keine Secretwerte loggen.
-4. Worker zunächst auf isolierter Vorschau-/Stagingroute bereitstellen.
+4. `DEPLOY_PRODUCTION=YES pnpm run deploy:production` ausschließlich auf sauberem `main` oder den manuellen GitHub-Workflow verwenden.
 5. HTTP-Smoke, Login, Berechtigungsnegative und Kernflows durchführen.
 6. Erst danach Custom Domain aktivieren und DNS kontrolliert umschalten.
 7. Deployment-ID, Git-SHA, Zeitpunkt und ausführende Person dokumentieren.
