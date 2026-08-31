@@ -423,7 +423,7 @@ function AddressGeocodingEnhancer() {
 
 function PropertyContextNavigation() {
   const location = useLocation();
-  const match = location.pathname.match(/^\/properties\/([^/]+)(?:\/(documents|media))?\/?$/);
+  const match = location.pathname.match(/^\/properties\/([^/]+)(?:\/(documents|media|interests))?\/?$/);
   if (!match) return null;
 
   const propertyId = match[1];
@@ -431,6 +431,7 @@ function PropertyContextNavigation() {
   return (
     <nav className="property-context-nav" aria-label="Immobilienakte">
       <Link className={section === "record" ? "active" : ""} to={`/properties/${propertyId}`}>Objektakte</Link>
+      <Link className={section === "interests" ? "active" : ""} to={`/properties/${propertyId}/interests`}>Interessenten & Besichtigungen</Link>
       <Link className={section === "documents" ? "active" : ""} to={`/properties/${propertyId}/documents`}>Dokumente</Link>
       <Link className={section === "media" ? "active" : ""} to={`/properties/${propertyId}/media`}>Medien</Link>
     </nav>
