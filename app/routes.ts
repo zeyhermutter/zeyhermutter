@@ -48,5 +48,6 @@ export default [
     route("properties/:propertyId/media", "routes/property-media.tsx"),
   ]),
   route("api/geocode-address", "routes/api-geocode-address.ts"),
+  route("api/viewings/:viewingId/history", "routes/api-viewing-history.ts"),
   route("logout", "routes/logout.tsx"),
 ] satisfies RouteConfig;
