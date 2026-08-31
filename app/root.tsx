@@ -36,6 +36,197 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+function DateTimePickerEnhancer() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const inputs = Array.from(document.querySelectorAll<HTMLInputElement>('input[type="date"], input[type="datetime-local"], input[type="time"]'));
+    const openPicker = (event: Event) => {
+      const input = event.currentTarget as HTMLInputElement & { showPicker?: () => void };
+      if (input.disabled || input.readOnly || typeof input.showPicker !== "function") return;
+      try { input.showPicker(); } catch { /* Browser may restrict programmatic picker opening. */ }
+    };
+
+    inputs.forEach((input) => {
+      input.classList.add("app-date-picker");
+      input.title = input.type === "date" ? "Datum im Kalender auswählen" : input.type === "time" ? "Uhrzeit auswählen" : "Datum und Uhrzeit auswählen";
+      input.addEventListener("click", openPicker);
+    });
+
+    return () => inputs.forEach((input) => input.removeEventListener("click", openPicker));
+  }, [location.key, location.pathname]);
+
+  return null;
+}
+
+function LeadAddressQuickEntryEnhancer() {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!location.pathname.startsWith("/leads")) return;
+    const forms = Array.from(document.querySelectorAll<HTMLFormElement>("form"));
+    const cleanups: Array<() => void> = [];
+
+    for (const form of forms) {
+      const street = form.querySelector<HTMLInputElement>('input[name="property_street"]');
+      const houseNumber = form.querySelector<HTMLInputElement>('input[name="property_house_number"]');
+      const postalCode = form.querySelector<HTMLInputElement>('input[name="property_postal_code"]');
+      const city = form.querySelector<HTMLInputElement>('input[name="property_city"]');
+      if (!street || !houseNumber || !postalCode || !city || form.querySelector(".lead-address-quick-entry")) continue;
+
+      const controls: Array<[HTMLInputElement | HTMLSelectElement, string]> = [
+        [street, "property-street"],
+        [houseNumber, "property-house-number"],
+        [postalCode, "property-postal-code"],
+        [city, "property-city"],
+      ];
+      const propertyType = form.querySelector<HTMLSelectElement>('select[name="property_type"]');
+      if (propertyType) controls.push([propertyType, "property-type"]);
+      controls.forEach(([control, key]) => { if (!control.id) control.id = `lead-field-${key}`; });
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "lead-address-quick-entry";
+      const label = document.createElement("label");
+      label.className = "form-field";
+      const caption = document.createElement("span");
+      caption.textContent = "Adresse (Schnelleingabe)";
+      const row = document.createElement("div");
+      row.className = "lead-address-quick-row";
+      const input = document.createElement("input");
+      input.type = "text";
+      input.autocomplete = "street-address";
+      input.placeholder = "z. B. Landshuter Str. 33, 85356 Freising";
+      input.setAttribute("aria-label", "Vollständige Adresse zur automatischen Aufteilung");
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "secondary-button";
+      button.textContent = "Adresse aufteilen";
+      const note = document.createElement("small");
+      note.className = "lead-address-quick-note";
+      note.textContent = "Straße, Hausnummer, PLZ und Ort werden automatisch in die Felder darunter übernommen.";
+      row.append(input, button);
+      label.append(caption, row, note);
+      wrapper.append(label);
+
+      const streetLabel = street.closest("label");
+      streetLabel?.parentElement?.insertBefore(wrapper, streetLabel);
+
+      const split = () => {
+        const raw = input.value.trim().replace(/\s+/g, " ");
+        if (!raw) return false;
+        const match = raw.match(/^(.+?)\s+(\d+[a-zA-Z]?(?:[-/]\d+[a-zA-Z]?)?)\s*,?\s+(\d{5})\s+(.+)$/);
+        if (!match) {
+          note.textContent = "Adresse konnte nicht sicher aufgeteilt werden. Beispiel: Landshuter Str. 33, 85356 Freising";
+          note.classList.add("lead-address-quick-error");
+          return false;
+        }
+        street.value = match[1].trim();
+        houseNumber.value = match[2].trim();
+        postalCode.value = match[3].trim();
+        city.value = match[4].trim().replace(/^,\s*/, "");
+        [street, houseNumber, postalCode, city].forEach((field) => {
+          field.dispatchEvent(new Event("input", { bubbles: true }));
+          field.dispatchEvent(new Event("change", { bubbles: true }));
+        });
+        input.value = "";
+        note.textContent = "Adresse erfolgreich aufgeteilt und übernommen.";
+        note.classList.remove("lead-address-quick-error");
+        note.classList.add("lead-address-quick-success");
+        street.focus();
+        return true;
+      };
+
+      const onKeyDown = (event: KeyboardEvent) => {
+        if (event.key !== "Enter") return;
+        event.preventDefault();
+        split();
+      };
+      const onBlur = () => { if (input.value.includes(",") && /\b\d{5}\b/.test(input.value)) split(); };
+      button.addEventListener("click", split);
+      input.addEventListener("keydown", onKeyDown);
+      input.addEventListener("blur", onBlur);
+      cleanups.push(() => {
+        button.removeEventListener("click", split);
+        input.removeEventListener("keydown", onKeyDown);
+        input.removeEventListener("blur", onBlur);
+        wrapper.remove();
+      });
+    }
+
+    return () => cleanups.forEach((cleanup) => cleanup());
+  }, [location.key, location.pathname]);
+
+  return null;
+}
+
+function LeadReleaseBlockerEnhancer() {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!/^\/leads\/[^/]+\/?$/.test(location.pathname)) return;
+    const coreForm = Array.from(document.querySelectorAll<HTMLFormElement>("form")).find((form) => form.querySelector('input[name="_intent"][value="core"]'));
+    const readiness = document.querySelector<HTMLElement>(".lead-conversion-readiness");
+    if (!coreForm) return;
+
+    const propertyType = coreForm.querySelector<HTMLSelectElement>('select[name="property_type"]');
+    const street = coreForm.querySelector<HTMLInputElement>('input[name="property_street"]');
+    const houseNumber = coreForm.querySelector<HTMLInputElement>('input[name="property_house_number"]');
+    const postalCode = coreForm.querySelector<HTMLInputElement>('input[name="property_postal_code"]');
+    const city = coreForm.querySelector<HTMLInputElement>('input[name="property_city"]');
+    const fieldDefs = [
+      { control: propertyType, key: "property-type", label: "Immobilientyp auswählen" },
+      { control: street, key: "property-street", label: "Straße ergänzen" },
+      { control: houseNumber, key: "property-house-number", label: "Hausnummer ergänzen" },
+      { control: postalCode, key: "property-postal-code", label: "PLZ ergänzen" },
+      { control: city, key: "property-city", label: "Ort ergänzen" },
+    ];
+    fieldDefs.forEach(({ control, key }) => { if (control && !control.id) control.id = `lead-field-${key}`; });
+
+    const blockers: typeof fieldDefs = [];
+    if (propertyType && !propertyType.value) blockers.push(fieldDefs[0]);
+    const addressControls = [street, houseNumber, postalCode, city];
+    const anyAddress = addressControls.some((control) => Boolean(control?.value.trim()));
+    if (anyAddress) {
+      fieldDefs.slice(1).forEach((item) => { if (item.control && !item.control.value.trim()) blockers.push(item); });
+    }
+
+    blockers.forEach(({ control }) => control?.closest("label")?.classList.add("lead-release-blocker"));
+
+    if (readiness) {
+      const existingPermission = Array.from(readiness.querySelectorAll("li")).some((item) => item.textContent?.includes("Berechtigung"));
+      let list = readiness.querySelector("ul");
+      if (!list) {
+        list = document.createElement("ul");
+        readiness.appendChild(list);
+      }
+      list.innerHTML = "";
+      blockers.forEach(({ control, label }) => {
+        if (!control) return;
+        const item = document.createElement("li");
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "lead-blocker-link";
+        button.textContent = label;
+        button.addEventListener("click", () => {
+          control.scrollIntoView({ behavior: "smooth", block: "center" });
+          window.setTimeout(() => control.focus(), 250);
+        });
+        item.appendChild(button);
+        list?.appendChild(item);
+      });
+      if (existingPermission) {
+        const item = document.createElement("li");
+        item.textContent = "Berechtigung für Lead-/Immobilienübernahme";
+        list.appendChild(item);
+      }
+    }
+
+    return () => blockers.forEach(({ control }) => control?.closest("label")?.classList.remove("lead-release-blocker"));
+  }, [location.key, location.pathname]);
+
+  return null;
+}
+
 function OwnerAddDisclosureEnhancer() {
   const location = useLocation();
 
@@ -249,6 +440,9 @@ function PropertyContextNavigation() {
 export default function App() {
   return (
     <>
+      <DateTimePickerEnhancer />
+      <LeadAddressQuickEntryEnhancer />
+      <LeadReleaseBlockerEnhancer />
       <OwnerAddDisclosureEnhancer />
       <AddressGeocodingEnhancer />
       <PropertyContextNavigation />
