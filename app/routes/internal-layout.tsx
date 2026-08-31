@@ -1,6 +1,54 @@
-import { Link, Outlet, useLocation } from "react-router";
+import { useEffect } from "react";
+import { Link, Outlet, useLocation, useNavigate } from "react-router";
 import { LiveListFilters } from "~/components/live-list-filters";
 import { PersistentNavigation } from "~/components/persistent-navigation";
+
+const NAV_STACK_KEY = "zm_internal_navigation_stack";
+
+function readStack() {
+  try {
+    const value = JSON.parse(sessionStorage.getItem(NAV_STACK_KEY) || "[]");
+    return Array.isArray(value) ? value.filter((item) => typeof item === "string" && item.startsWith("/")).slice(-50) : [];
+  } catch {
+    return [] as string[];
+  }
+}
+
+function SmartBackNavigation() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const current = `${location.pathname}${location.search}${location.hash}`;
+
+  useEffect(() => {
+    const stack = readStack();
+    if (stack.at(-1) !== current) {
+      stack.push(current);
+      sessionStorage.setItem(NAV_STACK_KEY, JSON.stringify(stack.slice(-50)));
+    }
+  }, [current]);
+
+  useEffect(() => {
+    const onClick = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const element = event.target instanceof Element ? event.target.closest("a.back-link") : null;
+      if (!(element instanceof HTMLAnchorElement)) return;
+
+      const stack = readStack();
+      if (stack.at(-1) === current) stack.pop();
+      const previous = stack.at(-1);
+      if (!previous || previous === current) return;
+
+      event.preventDefault();
+      sessionStorage.setItem(NAV_STACK_KEY, JSON.stringify(stack));
+      navigate(previous);
+    };
+
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, [current, navigate]);
+
+  return null;
+}
 
 function PropertyContextNavigation() {
   const location = useLocation();
@@ -24,6 +72,7 @@ function PropertyContextNavigation() {
 export default function InternalLayout() {
   return (
     <div className="persistent-app-frame">
+      <SmartBackNavigation />
       <PersistentNavigation />
       <div className="persistent-app-main">
         <LiveListFilters />
