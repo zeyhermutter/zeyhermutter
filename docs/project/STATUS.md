@@ -3,14 +3,14 @@
 Stand: 31.08.2026
 
 ## Aktuelles Ziel
-Phase 3 / Modul 03 Eigentümer & Leads – Verkäufer-Lead-Pipeline und kontrollierter Lead→Immobilie-Workflow auf STAGING.
+Phase 3 / Modul 03 Eigentümer & Leads – Verkäufer-Lead-Pipeline, Bewertungsworkflow und kontrollierter Lead→Immobilie-Workflow auf STAGING. Technische Implementierung ist weitgehend abgeschlossen; Cloudflare-/Browser-Abnahme steht noch aus.
 
 ## Infrastruktur
 - separates GitHub-Repository `zeyhermutter/zeyhermutter`
 - separates Supabase-STAGING in Frankfurt
 - Cloudflare-STAGING über `zeyhermutter.playsony.workers.dev`
-- SeasonCrew vollständig isoliert
-- Production nicht angelegt / nicht verändert
+- eigenständige ZeyherMutterOS-Infrastruktur
+- Production nicht verändert
 
 ## Phase 0 – DONE
 - Cloudflare Workers + GitHub-Deployment
@@ -23,7 +23,6 @@ Phase 3 / Modul 03 Eigentümer & Leads – Verkäufer-Lead-Pipeline und kontroll
 - zwei echte Geschäftsführerkonten
 
 ## Modul 01 · CRM – DONE
-- beide Geschäftsführer können sich im Browser anmelden
 - Kontakte und strukturierte Adressen
 - Organisationen
 - Rollen, Personen- und Firmenbeziehungen
@@ -37,92 +36,117 @@ Phase 3 / Modul 03 Eigentümer & Leads – Verkäufer-Lead-Pipeline und kontroll
 - feldgenaue History
 - globale Systemhistorie
 - Optimistic Locking
-- echter Zwei-Benutzer-Test: Aufgabe zugewiesen, Mention erzeugt, Notification für Benutzer 2 sichtbar
-- direkter RLS-/Permission-Zugriff getestet
+- Zwei-Benutzer-Akzeptanztest und direkte RLS-/Permission-Tests
 
 ## Modul 02 · Immobilien – DONE
-
-### Objektkern
-- automatische Nummer `ZM-YYYY-####`
-- Immobilientypen und SALE/RENT
-- Preise als PostgreSQL `numeric`
-- Flächen, Zimmer, Baujahr, Zustand, Verfügbarkeit, Vermietungsstatus, Stellplätze, Einheiten
-- primär verantwortlicher Benutzer
-- interne Notizen
-- Optimistic Locking
-
-### Statusmaschine
-- DRAFT / ACQUISITION / VALUATION / CONTRACT_PENDING / PREPARATION / MARKETING / RESERVED / NOTARY / SOLD / LOST / WITHDRAWN / ARCHIVED
-- nur definierte Übergänge
-- DRAFT → SOLD serverseitig blockiert
-- Archivierung merkt vorherigen Status und Restore darf nur dorthin zurück
-- Vermarktungsstart benötigt `property.publish`
-- Archiv/Restore benötigt `property.archive`
-- Zuständigkeitswechsel benötigt `property.assign`
-
-### Adresse / Eigentümer / Ausstattung / Energie
-- interne Objektadresse und separate öffentliche Adressdarstellung
-- atomare Objektanlage mit optionaler Adresse
-- mehrere Eigentümer; aktive Anteile >100 % serverseitig blockiert
-- flexibles PropertyFeature-Modell
-- strukturierte Energiedaten ohne Ersatzwerte
-
-### Vermarktungscheckliste
-- 10 automatisch angelegte Standardpunkte
-- TODO / IN_PROGRESS / DONE / WAIVED
-- `completed_by` und `completed_at` serverseitig verwaltet
-- kein Audit-Spam beim initialen Seeding
-
-### Dokumente
-- Document + append-only DocumentVersion
-- private Storage-Bucket `zm-private-documents`
-- Storage-RLS
-- SHA-256, MIME-Type, Dateigröße, Originaldateiname, Änderungsgrund
-- automatische Versionsnummern
-- Signed Preview und echter Signed Download
-- neue Datei = neue Version; keine Überschreibung
-- CONFIDENTIAL zusätzlich über `document.confidential.read` geschützt
-
-### Medien
-- privater Bucket `zm-property-media`
-- Fotos, Grundrisse, Videos und sonstige freigegebene Typen
-- Sortierung, Titel, Alt-Text, Freigabemarkierung
-- Metadatenbearbeitung mit Optimistic Locking
-- Bucket bleibt privat
-
-### Integration
-- globale Suche über Objektnummer, Titel und Adresse
-- Aufgaben mit `property_id`
-- Objekt- und Child-Audit mit altem/neuem Wert
-- responsive UI für Objektliste, Neuanlage, Objektakte, Dokumente und Medien
-
-### Abnahme Modul 02
-- vollständiger serverseitiger Rollback-Test: PASS
-- sensible Permission-Bypass-Tests: PASS
-- Storage-/Dokument-/Medienintegrität: PASS
-- Security Advisor: nur `Leaked Password Protection Disabled` als externe Auth-Konfiguration
-- Performance Advisor: nur erwartbare `unused index`-Infos im jungen STAGING
-- Browser: Anwendung/Deployment sichtbar
-- Browser-Smoke-Test Objekt bearbeiten: PASS
-- Browser-Smoke-Test Status: PASS
-- Browser-Smoke-Test Signed Download + Dokumentversion: PASS
-- Browser-Smoke-Test Medien-Metadaten: PASS
-- Modul 02 Definition of Done: erfüllt
+- Objektkern, Statusmaschine, Adresse, Eigentümer, Ausstattung und Energiedaten
+- Vermarktungscheckliste
+- private Dokumente mit append-only Versionen, SHA-256 und Signed Download
+- private Medienbibliothek
+- Aufgaben-/Such-/Audit-Integration
+- RLS, sensible Permissions und Optimistic Locking
+- vollständige serverseitige Rollback-/Integritätstests
+- vollständiger Browser-Smoke-Test
+- Definition of Done erfüllt
 
 ## Modul 03 · Eigentümer & Leads – IN ARBEIT
-Zielbild:
-- Verkäufer-Lead-Pipeline: NEW / CONTACTED / QUALIFIED / APPOINTMENT / VALUATION / OFFER / WON / LOST / NURTURE
-- Leadquelle getrennt vom Leadstatus
-- Leads verknüpfen vorhandene CRM-Kontakte; kein zweites Kontaktsystem
-- mehrere Leads je Kontakt möglich
-- Bewertungs-/Eigentümeranfrage mit Objektangaben und Consent
-- Verlustgrund, Wiedervorlage und verantwortlicher Benutzer
-- Activity / Kommentare / @Mentions aus dem bestehenden CRM wiederverwenden
-- Audit, Optimistic Locking, Archivieren statt Löschen
-- atomarer Lead → Immobilie Workflow
+
+### Lead-Kern
+- automatische Leadnummer `ZM-L-######`
+- bestehender CRM-Kontakt als Identität; mehrere Leads pro Kontakt möglich
+- Quellenmodell getrennt vom Bearbeitungsstatus
+- Pipeline: NEW / CONTACTED / QUALIFIED / APPOINTMENT / VALUATION / OFFER / WON / LOST / NURTURE
+- PostgreSQL validiert erlaubte Statusübergänge
+- LOST benötigt Verlustgrund
+- verantwortlicher Benutzer und Wiedervorlage
+- Consent-Dokumentation
+- Archivieren/Wiederherstellen
+- Optimistic Concurrency über `version`
+
+### Objekt- und Bewertungsanfrage
+- Straße, Hausnummer, PLZ, Ort, Ortsteil und Land
+- Immobilientyp
+- Baujahr, Wohnfläche, Grundstücksfläche und Zimmer
+- Zustand und Belegung
+- Verkaufshorizont und Preisvorstellung
+- Nachricht/Hintergrund und interne Notizen
+- Bewertungstermin
+- geschätzter Marktwert als PostgreSQL `numeric`
+- Bewertungsnotiz
+- Angebotszeitpunkt
+- angebotene Provision als PostgreSQL `numeric`
+- Angebotskonditionen
+- Eingaben akzeptieren deutsche Dezimalformate sowie Punkt-Dezimalnotation
+
+### UI
+- `/leads` Verkäufer-Lead-Verzeichnis
+- Pipeline-Übersicht mit Anzahl und überfälligen Wiedervorlagen je Stufe
+- Filter nach Status, Quelle, Verantwortlichem, Wiedervorlage und Archiv
+- Suche nach Leadnummer, Kontakt, Telefon/E-Mail und Objektadresse
+- Pagination
+- `/leads/new` Lead-Neuanlage
+- `/leads/:leadId` zentrale Leadakte
+- serverseitig validierte Statusaktionen statt unsicherem Client-only Drag & Drop
+- Bewertungsdaten, Wiedervorlage, Zuständigkeit, Activity, Kommentare, @Mentions, Audit und Archiv in der Leadakte
+
+### Aufgaben / Suche / Dashboard / Notifications
+- `tasks.lead_id` mit Leadbezug
+- Aufgabe direkt aus Leadakte erzeugbar
+- globale Aufgabenliste zeigt Leadnummer und Rücklink
+- `crm_global_search` findet Leads über Nummer, Kontakt, E-Mail, Telefon/Mobil und Objektadresse
+- Suchergebnisart `LEAD` öffnet die Leadakte
+- CRM-Dashboard zeigt offene/neue/überfällige Verkäufer-Leads und aktuelle Leads
+- @Mention-Notifications öffnen die Leadakte
+
+### Lead → Immobilie
+- RPC `convert_lead_to_property`
+- benötigt `lead.convert` und erforderliche Immobilienberechtigungen
+- nur für nicht archivierte Leads im Status WON
+- erwartete Lead-Version wird geprüft
+- idempotent: bereits konvertierter Lead erzeugt keine zweite Immobilie
+- neue Immobilie erhält die reguläre Objektnummer und startet in DRAFT
+- Kontakt wird als 100%-Eigentümer übernommen
+- vollständige Lead-Adresse wird übernommen
+- relevante Objektwerte und Verantwortlicher werden übernommen
+- Lead erhält `converted_property_id`, `converted_at`, `converted_by`
+- Activity-Eintrag wird erzeugt
+- gesamte Konvertierung läuft atomar in PostgreSQL
+
+### Migrationen Modul 03
+- `20260831060527_lead_core_foundation.sql`
+- `20260831060752_optimize_lead_rls_and_fk_indexes.sql`
+- `20260831064330_complete_lead_workflow_core.sql`
+
+### Verifizierte technische Tests Modul 03
+- Lead-Kernpfad inkl. Statusmaschine / LOST / Archiv / Kommentare / Mentions / Aufgaben / Activity / Audit: PASS
+- Lead→Immobilie inkl. Idempotenz: PASS
+- Übernahme von Immobilie, Adresse und 100%-Eigentümer: PASS
+- Lead-Aufgabenbezug: PASS
+- globale Lead-Suche: PASS
+- `lead.read` ohne `lead.write`: Lesen möglich, Schreiben blockiert
+- `lead.write` ohne `lead.assign`: Zuständigkeitswechsel blockiert
+- ohne `lead.archive`: Archiv/Restore blockiert
+- ohne `lead.convert`: Konvertierung blockiert
+- stale-version / Concurrent Editing: PASS; neuerer Wert wird nicht überschrieben
+- Tests liefen mit Rollback; keine technischen Test-Leads blieben bestehen
+
+### Advisor-Status
+- nach DDL keine neuen RLS-, FK- oder Function-Warnungen
+- Performance Advisor: nur erwartbare `unused index`-Infos im jungen STAGING
+- Security Advisor: weiterhin nur `Leaked Password Protection Disabled` als externe Auth-Konfiguration
+
+## Noch offen für Modul 03 DONE
+1. aktuellen `main`-Stand auf Cloudflare bauen/deployen und im Browser sichtbar bestätigen
+2. Browser-Smoke-Test Lead anlegen und bearbeiten
+3. Status/Wiedervorlage/Aufgabe/Kommentar/@Mention/Notification prüfen
+4. Pipeline, Archiv/Restore und globale Suche prüfen
+5. gewonnenen Lead im Browser zu Immobilie konvertieren
+6. neue Immobilie öffnen und Eigentümer-/Objektübernahme prüfen
+7. Browser-Concurrency-Test mit zwei Tabs/Sessions
+8. danach Modul-03-DoD abschließen
 
 ## Offener externer Security-Punkt
 Supabase Auth meldet weiterhin `Leaked Password Protection Disabled`. Diese Projekt-Auth-Einstellung ist kein Datenmodell-/Modulfehler und muss separat in der Supabase-Projektkonfiguration aktiviert werden, sobald gewünscht/verfügbar.
 
 ## Production
-Nicht angelegt / nicht verändert. Production bleibt bis zur ausdrücklichen Freigabe gesperrt.
+Production wurde nicht verändert und bleibt bis zur ausdrücklichen Freigabe gesperrt.
