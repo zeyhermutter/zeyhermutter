@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/property-media";
+import { AssetPreviewModal, type AssetPreviewKind } from "~/components/asset-preview-modal";
 import { requirePermission } from "~/lib/auth.server";
 
 type ActionResult = { error?: string };
@@ -22,9 +24,18 @@ function mimeAllowedForType(mediaType:string,mimeType:string){
   if(mediaType==="VIDEO") return mimeType==="video/mp4";
   return ALLOWED.has(mimeType);
 }
-
 function text(fd: FormData,key:string){return String(fd.get(key)??"").trim();}
 function safeFilename(name:string){const v=name.normalize("NFKD").replace(/[^a-zA-Z0-9._-]+/g,"-").replace(/-+/g,"-");return v.slice(-140)||"medium";}
+function formatDate(value:string){return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeStyle:"short",timeZone:"Europe/Berlin"}).format(new Date(value));}
+function displayFilename(storagePath:string){const filename=storagePath.split("/").pop()??storagePath;return filename.length>37&&filename[36]==="-"?filename.slice(37):filename;}
+function mediaPreviewKind(mediaType:string,storagePath:string):AssetPreviewKind{
+  const path=storagePath.toLowerCase();
+  if(mediaType==="VIDEO"||path.endsWith(".mp4"))return "video";
+  if(path.endsWith(".pdf"))return "pdf";
+  if(mediaType==="IMAGE"||/\.(jpe?g|png|webp|heic)$/.test(path))return "image";
+  if(mediaType==="FLOOR_PLAN"&& !path.endsWith(".pdf"))return "image";
+  return "file";
+}
 
 export async function loader({request,context,params}:Route.LoaderArgs){
   const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"property.read");
@@ -55,12 +66,7 @@ export async function action({request,context,params}:Route.ActionArgs){
 
     const {data:updated,error}=await supabase
       .from("property_media")
-      .update({
-        title,
-        alt_text:text(fd,"alt_text")||null,
-        sort_order:sortOrder,
-        public_approved:fd.get("public_approved")==="on",
-      })
+      .update({title,alt_text:text(fd,"alt_text")||null,sort_order:sortOrder,public_approved:fd.get("public_approved")==="on"})
       .eq("id",mediaId)
       .eq("property_id",propertyId)
       .eq("version",version)
@@ -97,7 +103,12 @@ export async function action({request,context,params}:Route.ActionArgs){
 }
 
 export default function PropertyMedia(){
-  const {property,media,signedUrls,profile}=useLoaderData<typeof loader>();const result=useActionData<typeof action>();
+  const {property,media,signedUrls,profile}=useLoaderData<typeof loader>();
+  const result=useActionData<typeof action>();
+  const [openIndex,setOpenIndex]=useState<number|null>(null);
+  const activeItem=openIndex===null?null:media[openIndex];
+  const activeUrl=activeItem?signedUrls[activeItem.id]:undefined;
+
   return <main className="editor-shell">
     <header className="editor-header"><div><Link className="back-link" to={`/properties/${property.id}`}>← {property.property_number}</Link><p className="eyebrow">Modul 02 · Medien</p><h1 className="editor-title">Medienbibliothek</h1><p className="editor-meta">{property.internal_title} · private Ablage</p></div><div className="header-user"><span className="badge">STAGING</span><small>{profile.display_name}</small></div></header>
     {result?.error?<div className="form-error">{result.error}</div>:null}
@@ -106,40 +117,15 @@ export default function PropertyMedia(){
       <section className="data-card">
         <div className="card-head"><div><p className="eyebrow">Fotos · Grundrisse · Videos</p><h2>Medien</h2></div><span className="subtle">{media.length}</span></div>
         <div className="media-grid">
-          {media.map(item=><article className="media-card media-editable-card" key={item.id}>
-            {signedUrls[item.id]&&item.media_type==="IMAGE"?
-              <a className="media-preview-link" href={signedUrls[item.id]} target="_blank" rel="noreferrer"><img src={signedUrls[item.id]} alt={item.alt_text??item.title??"Objektbild"}/></a>
-              :signedUrls[item.id]?
-                <a className="media-placeholder" href={signedUrls[item.id]} target="_blank" rel="noreferrer">{mediaTypeLabel(item.media_type)} öffnen</a>
-                :<div className="media-placeholder">Kein Zugriff</div>}
-
-            <details className="media-disclosure owner-card" id={`media-${item.id}`}>
-              <summary className="media-summary">
-                <div className="media-summary-main">
-                  <strong>{item.title??mediaTypeLabel(item.media_type)}</strong>
-                  <small>{mediaTypeLabel(item.media_type)} · Sortierung {item.sort_order}{item.public_approved?" · für Veröffentlichung freigegeben":" · intern"}</small>
-                  {item.alt_text?<span>{item.alt_text}</span>:null}
-                </div>
-                <span className="media-edit-hint owner-edit-hint">Metadaten bearbeiten</span>
-              </summary>
-
-              <div className="media-detail-body">
-                <Form method="post" className="auth-form media-metadata-form owner-edit-form">
-                  <input type="hidden" name="_intent" value="metadata_update"/>
-                  <input type="hidden" name="media_id" value={item.id}/>
-                  <input type="hidden" name="version" value={item.version}/>
-                  <label><span>Titel *</span><input name="title" defaultValue={item.title??mediaTypeLabel(item.media_type)} required/></label>
-                  <label><span>Medientyp</span><input value={mediaTypeLabel(item.media_type)} readOnly aria-readonly="true"/></label>
-                  <label className="media-alt-field"><span>Alt-Text / Beschreibung</span><textarea name="alt_text" rows={3} defaultValue={item.alt_text??""}/></label>
-                  <label><span>Sortierung</span><input name="sort_order" type="number" defaultValue={item.sort_order}/></label>
-                  <label className="checkbox-row media-public-field"><input name="public_approved" type="checkbox" defaultChecked={item.public_approved}/><span>Für spätere Veröffentlichung freigeben</span></label>
-                  <div className="media-metadata-actions owner-edit-actions"><button className="primary-button" type="submit">Metadaten speichern</button></div>
-                </Form>
-                <p className="media-integrity-note subtle">Titel, Alt-Text, Sortierung und Freigabe können geändert werden. Medientyp, Datei und privater Storage-Pfad bleiben an den ursprünglichen Upload gebunden.</p>
-                <Form method="post" className="media-archive-form owner-remove-form"><input type="hidden" name="_intent" value="archive"/><input type="hidden" name="media_id" value={item.id}/><input type="hidden" name="version" value={item.version}/><button className="text-button" type="submit">Medium archivieren</button></Form>
-              </div>
-            </details>
-          </article>)}
+          {media.map((item,index)=>{
+            const kind=mediaPreviewKind(item.media_type,item.storage_path);
+            return <article className="media-card" key={item.id}>
+              <button className="media-preview-trigger" type="button" onClick={()=>setOpenIndex(index)}>
+                {signedUrls[item.id]&&kind==="image"?<img src={signedUrls[item.id]} alt={item.alt_text??item.title??"Objektbild"}/>:<div className="media-placeholder">{signedUrls[item.id]?`${mediaTypeLabel(item.media_type)} ansehen`:"Kein Zugriff"}</div>}
+                <div className="media-preview-caption"><strong>{item.title??mediaTypeLabel(item.media_type)}</strong><small>{mediaTypeLabel(item.media_type)} · Sortierung {item.sort_order}{item.public_approved?" · freigegeben":" · intern"}</small>{item.alt_text?<span>{item.alt_text}</span>:null}</div>
+              </button>
+            </article>;
+          })}
           {media.length===0?<p className="empty-state">Noch keine Medien vorhanden.</p>:null}
         </div>
       </section>
@@ -149,5 +135,41 @@ export default function PropertyMedia(){
         <Form method="post" encType="multipart/form-data" className="auth-form"><input type="hidden" name="_intent" value="upload"/><label><span>Typ</span><select name="media_type" defaultValue="IMAGE"><option value="IMAGE">Foto</option><option value="FLOOR_PLAN">Grundriss</option><option value="VIDEO">Video</option><option value="OTHER">Sonstige</option></select></label><label><span>Titel</span><input name="title"/></label><label><span>Alt-Text / Beschreibung</span><input name="alt_text"/></label><label><span>Sortierung</span><input name="sort_order" type="number" defaultValue="0"/></label><label><span>Datei *</span><input name="file" type="file" required/></label><label className="checkbox-row"><input name="public_approved" type="checkbox"/><span>Für spätere Veröffentlichung freigeben</span></label><button className="primary-button" type="submit">Sicher hochladen</button></Form>
       </section>
     </div>
+
+    {activeItem?<AssetPreviewModal
+      open={true}
+      title={activeItem.title??mediaTypeLabel(activeItem.media_type)}
+      subtitle={`${mediaTypeLabel(activeItem.media_type)} · ${activeItem.public_approved?"für Veröffentlichung freigegeben":"intern"}`}
+      url={activeUrl}
+      downloadName={displayFilename(activeItem.storage_path)}
+      kind={mediaPreviewKind(activeItem.media_type,activeItem.storage_path)}
+      positionLabel={`${(openIndex??0)+1} von ${media.length}`}
+      hasPrevious={(openIndex??0)>0}
+      hasNext={(openIndex??0)<media.length-1}
+      onPrevious={()=>setOpenIndex((index)=>index===null?0:Math.max(0,index-1))}
+      onNext={()=>setOpenIndex((index)=>index===null?0:Math.min(media.length-1,index+1))}
+      onClose={()=>setOpenIndex(null)}
+      metadata={[
+        {label:"Titel",value:activeItem.title??"—"},
+        {label:"Medientyp",value:mediaTypeLabel(activeItem.media_type)},
+        {label:"Beschreibung",value:activeItem.alt_text||"—"},
+        {label:"Sortierung",value:String(activeItem.sort_order)},
+        {label:"Veröffentlichung",value:activeItem.public_approved?"Freigegeben":"Intern"},
+        {label:"Dateiname",value:displayFilename(activeItem.storage_path)},
+        {label:"Angelegt",value:formatDate(activeItem.created_at)},
+      ]}
+      metadataEditor={<Form method="post" className="auth-form">
+        <input type="hidden" name="_intent" value="metadata_update"/>
+        <input type="hidden" name="media_id" value={activeItem.id}/>
+        <input type="hidden" name="version" value={activeItem.version}/>
+        <label><span>Titel *</span><input name="title" defaultValue={activeItem.title??mediaTypeLabel(activeItem.media_type)} required/></label>
+        <label><span>Medientyp</span><input value={mediaTypeLabel(activeItem.media_type)} readOnly aria-readonly="true"/></label>
+        <label><span>Alt-Text / Beschreibung</span><textarea name="alt_text" rows={3} defaultValue={activeItem.alt_text??""}/></label>
+        <label><span>Sortierung</span><input name="sort_order" type="number" defaultValue={activeItem.sort_order}/></label>
+        <label className="checkbox-row"><input name="public_approved" type="checkbox" defaultChecked={activeItem.public_approved}/><span>Für spätere Veröffentlichung freigeben</span></label>
+        <button className="primary-button" type="submit">Metadaten speichern</button>
+      </Form>}
+      moreActions={<Form method="post" onSubmit={(event)=>{if(!window.confirm("Medium wirklich archivieren?"))event.preventDefault();}}><input type="hidden" name="_intent" value="archive"/><input type="hidden" name="media_id" value={activeItem.id}/><input type="hidden" name="version" value={activeItem.version}/><button className="text-button" type="submit">Medium archivieren</button></Form>}
+    />:null}
   </main>;
 }
