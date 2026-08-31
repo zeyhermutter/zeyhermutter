@@ -3,7 +3,7 @@
 Stand: 31.08.2026
 
 ## Aktuelles Ziel
-Phase 4 / Modul 04 Interessenten & Besichtigungen – zunächst Interessenten, Suchprofile und Anfragen als belastbares Fundament für Matching und spätere Besichtigungen.
+Modul 04 bleibt **IN ARBEIT** und wartet vor allem auf Browser-Smoke-Test/DoD. Parallel ist Modul 05 **Website & Exposés – IN ARBEIT** gestartet. Schwerpunkt des ersten Modul-05-Inkrements ist eine kontrollierte Publikationsschicht zwischen interner Objektakte und öffentlicher Website.
 
 ## Infrastruktur
 - separates GitHub-Repository `zeyhermutter/zeyhermutter`
@@ -22,81 +22,62 @@ Kontakte, Organisationen, Beziehungen, Aufgaben, Activity, Kommentare/@Mentions,
 Objektstammdaten, Statusmaschine, Eigentümer, Ausstattung, Energie, Checkliste, private Dokumente/Medien, Aufgaben, Suche, Audit/RLS und Browser-Smoke-Test sind abgeschlossen.
 
 ## Modul 03 · Eigentümer & Leads – DONE
-- vollständige Verkäufer-Lead-Pipeline und Leadakte
-- Bewertungsworkflow und Wiedervorlagen
-- Aufgaben, Activity, Kommentare, @Mentions und Benachrichtigungen
-- globale Suche und CRM-Dashboard
-- atomare/idempotente Lead→Immobilie-Konvertierung
-- Pflichtfeld-/Freigabelogik vor Objektanlage
-- fachliche Sperre nach Konvertierung
-- Browser-Smoke-Test und finale Abnahme erfolgreich
-- Definition of Done erfüllt
+Verkäufer-Pipeline, Bewertungsworkflow, Zusammenarbeit, Pflichtfeld-/Freigabelogik, atomare Lead→Immobilie-Konvertierung und Browser-Abnahme sind abgeschlossen.
 
 ## Modul 04 · Interessenten & Besichtigungen – IN ARBEIT
+Technisch vorhanden sind inzwischen Suchprofile, Anfragen, regelbasiertes Matching, Matchentscheidungen, Besichtigungen, Feedback, Kaufangebote sowie die wesentliche Integration in Suche, Aufgaben, Activity und Collaboration. Serverseitige Rollback-Tests für Kernworkflow und Besichtigungs-/Angebotsworkflow sind grün. Offen bleiben insbesondere der vollständige Browser-Smoke-Test und die finale Definition-of-Done-Abnahme.
 
-### Architekturentscheidung
-Ein Interessent ist kein neues Personenobjekt. Er bleibt ein bestehender CRM-Kontakt. Suchkriterien und einzelne Anfragen werden als eigene fachliche Vorgänge daran gehängt.
+## Modul 05 · Website & Exposés – IN ARBEIT
 
-### Datenmodell bereits umgesetzt
-- `search_profiles` mit automatischer Nummer `ZM-S-######`
-- mehrere Suchprofile je CRM-Kontakt
-- Status ACTIVE / PAUSED / CLOSED
-- BUY / RENT
-- Immobilientypen als Mehrfachauswahl
-- Preisbereich als PostgreSQL `numeric`
-- Wohnflächenbereich, Mindestgrundstück, Mindestzimmer, Mindestbaujahr
-- gewünschter Einzug
-- Finanzierungsstatus
-- gewünschte Merkmale
-- mehrere Suchorte über `search_profile_locations`
-- Ort / PLZ / Ortsteil / Radius
-- `inquiries` mit automatischer Nummer `ZM-A-######`
-- Anfragen können Kontakt, Immobilie und Suchprofil referenzieren
-- Anfragekanal und Bearbeitungsstatus
-- Verantwortlicher Benutzer
-- RLS und granulare Suchprofil-Permissions
-- Archiv-Permissions für Suchprofile und Anfragen
-- Audit-History und Optimistic Concurrency
-- Aufgaben besitzen technisch `inquiry_id` und `search_profile_id`
+### Architektur
+Die öffentliche Website liest nicht direkt aus `properties`. Pro Immobilie gibt es eine separate `property_publications`-Arbeitsakte. Eine Freigabe erzeugt einen unveränderlichen Snapshot in `property_publication_versions`. Nur die aktuelle tatsächlich veröffentlichte Version ist anonym lesbar.
 
-### UI bereits umgesetzt
-- `/search-profiles` als Suchprofil-/Interessenten-Verzeichnis
-- Filter nach Status, Kauf/Miete, Verantwortlichem und Archiv
-- Suche nach Profilnummer, Kontakt und Suchort
-- `/search-profiles/new` für die Suchprofil-Neuanlage
-- atomare Neuanlage über `create_search_profile`
-- `/search-profiles/:searchProfileId` als zentrale Suchprofilakte
-- Bearbeitung von Budget, Flächen, Zimmern, Baujahr, Finanzierung und Merkmalen
-- mehrere Suchorte können hinzugefügt und entfernt werden
-- Archivieren/Wiederherstellen
-- Optimistic-Concurrency-Konflikte werden beim Speichern abgefangen
+Damit gilt:
+- interne Objektänderungen verändern eine Live-Veröffentlichung nicht stillschweigend,
+- neue Inhalte müssen erneut als Version vorbereitet und veröffentlicht werden,
+- private Eigentümer-, Notiz- und Dokumentdaten gelangen nicht in den öffentlichen Snapshot,
+- die öffentliche Adresse wird gemäß `public_address_mode` reduziert,
+- der Freigabeschritt benötigt serverseitig `property.publish`.
 
-### Migrationen Modul 04
-- `20260831091447_module04_inquiries_search_profiles_core.sql`
-- `20260831091802_atomic_search_profile_create.sql`
-- `20260831092122_index_inquiry_responsible_user.sql`
+### Bereits umgesetzt
+- `property_publications`
+- append-only `property_publication_versions`
+- DRAFT / READY / PUBLISHED / UNPUBLISHED Workflow
+- Optimistic Concurrency auf der Veröffentlichungsakte
+- Audit-History
+- anonyme RLS nur für `is_current_public=true`
+- öffentliche RPCs `public_property_listings()` und `public_property_by_slug()` als `SECURITY INVOKER`
+- interne Route `/properties/:propertyId/publication`
+- öffentliche Liste `/immobilien`
+- öffentliche Detailseite `/immobilien/:slug`
+- SEO-Titel/-Beschreibung im Publikationssnapshot
+- Snapshot enthält nur explizit öffentliche Objekt-, Lage-, Ausstattungs-, Energie- und freigegebene Medien-Metadaten; keine Storage-Pfade
 
-### Verifizierte technische Tests
-- Permissions `search_profile.read/write/archive` für Geschäftsführer: PASS
-- atomare Suchprofilanlage inkl. erstem Suchort: PASS
-- initiale Version = 1: PASS
-- Versionsinkrement bei Änderung: PASS
-- stale Update überschreibt neuen Stand nicht: PASS
-- Archivieren mit eigener Permission: PASS
-- Rollback-Test hinterließ 0 technische Suchprofile
-- Security Advisor: keine neuen Datenbank-/RLS-Warnungen
-- Performance Advisor: neuer FK-Index-Fund behoben; danach nur `unused index`-Infos
+### Migrationen Modul 05
+- `20260831100149_module05_publication_versioning_foundation.sql`
+- `20260831100722_module05_fix_publication_foreign_key_indexes.sql`
 
-### Nächste Schritte Modul 04
-1. Suchprofile prominent in CRM-Navigation/Dashboard integrieren
-2. Anfrage-Verzeichnis und Anfrageakte
-3. globale Suche / Aufgaben / Collaboration integrieren
-4. regelbasiertes Matching gegen Immobilien
-5. Besichtigungen, Feedback und Kaufangebote
+### Verifizierte Tests
+- Entwurf ist anonym nicht sichtbar: PASS
+- READY/Freigabeversion ist anonym nicht sichtbar: PASS
+- PUBLISHED ist anonym sichtbar: PASS
+- spätere interne Änderung lässt bisherigen veröffentlichten Snapshot unverändert live: PASS
+- UNPUBLISHED entfernt öffentliche Sichtbarkeit: PASS
+- stale Update wird nicht übernommen: PASS
+- Rollback hinterließ 0 technische Publikationsdaten: PASS
+- Security Advisor: keine neuen Modul-05-RLS/Security-Findings
+- neue FK-Index-Findings wurden migrationsbasiert behoben
+
+### Nächste Schritte Modul 05
+1. kontrollierte öffentliche Bildauslieferung für `public_approved` Medien
+2. Website-Anfrageformular direkt in `inquiries`
+3. Exposé-Generator auf Basis derselben freigegebenen Snapshot-Version
+4. Exposé-Historie/Freigabe und Download
+5. Veröffentlichungsübersicht und bessere Navigation aus der Objektakte
 6. Browser-Smoke-Test und DoD
 
 ## Offener externer Security-Punkt
-Supabase Auth meldet weiterhin `Leaked Password Protection Disabled`. Diese Projekt-Auth-Einstellung ist kein Datenmodell-/Modulfehler und muss separat in der Supabase-Projektkonfiguration aktiviert werden, sobald gewünscht/verfügbar.
+Supabase Auth meldet weiterhin `Leaked Password Protection Disabled`. Remediation: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
 
 ## Production
 Production wurde nicht verändert und bleibt bis zur ausdrücklichen Freigabe gesperrt.
