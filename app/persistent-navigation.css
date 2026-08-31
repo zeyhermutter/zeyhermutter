@@ -1,0 +1,188 @@
+.persistent-app-frame {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 236px minmax(0, 1fr);
+  background: #0e1314;
+}
+
+.persistent-app-main { min-width: 0; }
+
+.persistent-sidebar {
+  position: sticky;
+  top: 0;
+  z-index: 120;
+  height: 100vh;
+  padding: 24px 16px 18px;
+  border-right: 1px solid #283334;
+  background: #121819;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.persistent-nav-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.persistent-brand {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #eef2f3;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  text-decoration: none;
+}
+.persistent-brand > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.persistent-brand .brand-mark { width: 34px; height: 34px; border-radius: 10px; flex: 0 0 auto; }
+
+.persistent-nav-bell {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #334041;
+  border-radius: 10px;
+  color: #9aa7a9;
+  text-decoration: none;
+  background: #151c1d;
+  flex: 0 0 auto;
+}
+.persistent-nav-bell svg { width: 18px; height: 18px; }
+.persistent-nav-bell:hover,
+.persistent-nav-bell.active { color: #fff; border-color: #536164; background: #20292a; }
+
+.persistent-nav-groups {
+  display: grid;
+  gap: 22px;
+  margin-top: 34px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.persistent-nav-group { display: grid; gap: 7px; }
+.persistent-nav-label {
+  padding: 0 10px;
+  color: #637072;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.persistent-nav-links { display: grid; gap: 3px; }
+.persistent-nav-item {
+  display: flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  color: #a8b3b4;
+  font-size: 13px;
+  text-decoration: none;
+  line-height: 1.25;
+}
+.persistent-nav-item:hover { color: #fff; background: #192122; }
+.persistent-nav-item.active { color: #fff; background: #20292a; box-shadow: inset 2px 0 0 #9eaaac; }
+
+.persistent-nav-footer {
+  margin-top: auto;
+  padding: 16px 10px 2px;
+  border-top: 1px solid #263031;
+  display: grid;
+  gap: 9px;
+}
+.persistent-env {
+  color: #687476;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .14em;
+}
+.persistent-logout {
+  width: max-content;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #9da9aa;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+.persistent-logout:hover { color: #fff; }
+
+.persistent-mobile-menu { display: none; }
+
+/* Die bisher nur auf /crm gerenderte Sidebar wird im globalen Frame ausgeblendet. */
+.persistent-app-frame .app-shell {
+  display: block;
+  min-height: 100vh;
+  background: #0e1314;
+}
+.persistent-app-frame .app-shell > .sidebar { display: none; }
+
+/* Immobilien-Kontextnavigation bleibt innerhalb der globalen Hauptnavigation. */
+.persistent-app-main > .property-context-nav { max-width: 1320px; }
+
+@media (max-width: 1120px) {
+  .persistent-app-frame { grid-template-columns: 214px minmax(0, 1fr); }
+  .persistent-sidebar { padding-left: 12px; padding-right: 12px; }
+  .persistent-brand > span:last-child { font-size: 13px; }
+}
+
+@media (max-width: 920px) {
+  .persistent-app-frame { display: block; }
+  .persistent-sidebar {
+    position: sticky;
+    top: 0;
+    height: auto;
+    min-height: 58px;
+    padding: 10px 16px;
+    border-right: 0;
+    border-bottom: 1px solid #283334;
+    flex-direction: row;
+    align-items: center;
+  }
+  .persistent-nav-top { width: 100%; }
+  .persistent-nav-groups:not(.mobile),
+  .persistent-nav-footer { display: none; }
+  .persistent-mobile-menu { display: block; position: relative; margin-left: 2px; }
+  .persistent-mobile-menu summary {
+    list-style: none;
+    min-height: 36px;
+    padding: 8px 12px;
+    border: 1px solid #3a4748;
+    border-radius: 9px;
+    color: #e5ebec;
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+  }
+  .persistent-mobile-menu summary::-webkit-details-marker { display: none; }
+  .persistent-mobile-panel {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 10px);
+    width: min(360px, calc(100vw - 32px));
+    max-height: calc(100vh - 86px);
+    overflow-y: auto;
+    padding: 16px;
+    border: 1px solid #334041;
+    border-radius: 14px;
+    background: #121819;
+    box-shadow: 0 24px 70px #0008;
+  }
+  .persistent-nav-groups.mobile { margin: 0; gap: 18px; overflow: visible; }
+  .persistent-mobile-panel > .persistent-nav-item { margin-top: 14px; border-top: 1px solid #263031; padding-top: 14px; border-radius: 0; }
+  .persistent-mobile-panel form { margin-top: 12px; }
+}
+
+@media (max-width: 520px) {
+  .persistent-sidebar { padding-left: 12px; padding-right: 12px; }
+  .persistent-brand > span:last-child { display: none; }
+  .persistent-nav-bell { margin-left: auto; }
+}
