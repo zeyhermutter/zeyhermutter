@@ -11,12 +11,12 @@ Der Senior Review für Module 01–05 ist technisch auf BETA abgeschlossen. P0-F
 - separates Supabase-BETA in Frankfurt (`zeyhermutteros-staging`)
 - separates Supabase-PROD in Frankfurt (`zeyhermutteros-production`, `vtmtxaaojbqqzwxkodye`)
 - Cloudflare-BETA über `zeyhermutter.playsony.workers.dev`
-- Cloudflare-PROD `zeyhermutter-production` konfiguriert, aber nicht deployed
+- Cloudflare-PROD über `zeyhermutter-production.playsony.workers.dev`
 - getrennte Cloudflare-Builds, Quality Gates und explizite Deploy-Kommandos für BETA und PROD
 - eigenständige ZeyherMutterOS-Infrastruktur
 - Supabase-API-Rollen auf minimale Tabellen-/Sequenz-/RPC-Rechte reduziert
 - reproduzierbarer pnpm-Lockfile sowie getrennte Browser-/Worker-TypeScript-Projekte
-- Supabase-PROD migrationsbasiert aufgebaut; Cloudflare-PROD bleibt bis zur Go-live-/Domainfreigabe nicht ausgerollt
+- Supabase-PROD migrationsbasiert aufgebaut und Cloudflare-PROD aus demselben Anwendungscode wie BETA ausgerollt
 
 ## Phase 0 – DONE
 Architektur, Cloudflare, Supabase, Rollen/Permissions, Audit/Activity, RLS, Optimistic Concurrency und migrationsbasierte Entwicklung sind etabliert.
@@ -127,4 +127,4 @@ Das separate Supabase-Projekt `zeyhermutteros-production` (`vtmtxaaojbqqzwxkodye
 
 Der ausdrücklich freigegebene öffentliche PII-Endpunkt `website-inquiry` ist als Version 1 mit `verify_jwt=false` aktiv. Ein anonymer Honeypot-Smoke-Test lieferte HTTP 200, erzeugte keine Geschäfts- oder Rate-Limit-Daten und zeigte keine Laufzeitfehler. Validierung, Honeypot, Deduplizierung und Rate Limit bleiben serverseitig aktiv.
 
-Noch nicht ausgerollt ist der Cloudflare-Worker `zeyhermutter-production`. Worker-Konfiguration, manueller GitHub-Workflow und Fail-closed-Deploy-Guard sind vorbereitet; der erste Web-Rollout folgt ausschließlich nach Release-PR und ausdrücklicher Go-live-Freigabe.
+Der Cloudflare-Worker `zeyhermutter-production` ist nach ausdrücklicher Go-live-Freigabe unter `https://zeyhermutter-production.playsony.workers.dev` aktiv. Der erste Rollout verwendet Git-SHA `a5287a3` und Cloudflare-Version `8ea58a97-3adb-423e-ba44-cfa5c71f337b`. BETA und PROD basieren auf demselben Anwendungscode; ihre Supabase-Projekte und Daten bleiben strikt getrennt. Der parallele Smoke-Test aller öffentlichen Kernrouten war erfolgreich.

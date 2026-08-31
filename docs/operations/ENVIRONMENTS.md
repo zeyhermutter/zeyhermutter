@@ -8,7 +8,7 @@ Stand: 31.08.2026
 |---|---|---|---|---|
 | Feature-Branch | kurzlebige Prüfung | kein permanenter Worker | optionaler Preview-Branch | Pull Request gegen `develop` |
 | `develop` | BETA | `zeyhermutter` | `zeyhermutteros-staging` (`zqhcxudpfwsfuokencvy`) | nach Quality Gate; Automatik erst nach Secret-Freigabe |
-| `main` | PROD | `zeyhermutter-production` (vorbereitet, nicht deployed) | `zeyhermutteros-production` (`vtmtxaaojbqqzwxkodye`) | ausschließlich manuell aus geschützter GitHub-Environment |
+| `main` | PROD | `zeyhermutter-production` (`zeyhermutter-production.playsony.workers.dev`) | `zeyhermutteros-production` (`vtmtxaaojbqqzwxkodye`) | ausschließlich manuell aus geschützter GitHub-Environment |
 
 `develop` ist der BETA-/Development-Branch. Ein zusätzlicher `beta`-Branch wird bewusst nicht gepflegt, damit keine zwei konkurrierenden Integrationslinien entstehen.
 

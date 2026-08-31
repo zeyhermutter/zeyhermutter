@@ -2,7 +2,7 @@
 
 Stand: 31.08.2026
 
-Das separate Supabase-PROD-Projekt `zeyhermutteros-production` (`vtmtxaaojbqqzwxkodye`, Frankfurt) ist angelegt und mit dem migrationsbasierten Datenbank-/Storage-Grundstand provisioniert. Der Cloudflare-PROD-Worker ist vorbereitet, aber noch nicht deployed. Dieses Runbook bleibt die Freigabecheckliste; keine PROD-Ressource wird aus BETA abgeleitet oder still geteilt.
+Das separate Supabase-PROD-Projekt `zeyhermutteros-production` (`vtmtxaaojbqqzwxkodye`, Frankfurt) ist angelegt und mit dem migrationsbasierten Datenbank-/Storage-Grundstand provisioniert. Der Cloudflare-PROD-Worker ist unter `https://zeyhermutter-production.playsony.workers.dev` live. Dieses Runbook bleibt die Freigabecheckliste; keine PROD-Ressource wird aus BETA abgeleitet oder still geteilt.
 
 Aktueller Aufbauzustand:
 
@@ -12,6 +12,8 @@ Aktueller Aufbauzustand:
 - Edge Function `generate-property-expose` aktiv
 - öffentlicher PII-Endpunkt `website-inquiry` nach gesonderter Freigabe als Version 1 mit `verify_jwt=false` aktiv; anonymer Honeypot-Smoke-Test bestanden
 - keine BETA-Testdaten oder Auth-Nutzer nach PROD übernommen
+- erster Worker-Rollout aus Git-SHA `a5287a3`, Cloudflare-Version `8ea58a97-3adb-423e-ba44-cfa5c71f337b`
+- BETA-/PROD-Spiegeltest für Start, Login, Immobilien, Kontakt, Impressum, Datenschutz, Robots und Sitemap jeweils HTTP 200
 
 Das verbindliche Branch-/Umgebungsmodell steht in `docs/operations/ENVIRONMENTS.md`: `develop` liefert BETA, `main` liefert PROD.
 
