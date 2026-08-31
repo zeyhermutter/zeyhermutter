@@ -48,6 +48,17 @@ function collectContext(): Context {
   };
 }
 
+function isReplanTrigger(button: HTMLButtonElement) {
+  const form = button.closest("form");
+  if (!form) return false;
+  const intent = form.querySelector<HTMLInputElement>('input[name="_intent"]')?.value ?? "";
+  const targetStatus = form.querySelector<HTMLInputElement>('input[name="status"]')?.value ?? "";
+  if (intent !== "status" || targetStatus !== "PLANNED") return false;
+
+  const label = (button.textContent ?? "").trim().toLocaleLowerCase("de-DE");
+  return label.includes("neu") || label.includes("erneut") || label.includes("planen");
+}
+
 export function ViewingReplanModal() {
   const location = useLocation();
   const [open, setOpen] = useState(false);
@@ -58,9 +69,7 @@ export function ViewingReplanModal() {
 
     const onClick = (event: MouseEvent) => {
       const button = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>("button");
-      if (!button) return;
-      const label = (button.textContent ?? "").trim().toLocaleLowerCase("de-DE");
-      if (!label.includes("besichtigung neu planen")) return;
+      if (!button || !isReplanTrigger(button)) return;
       event.preventDefault();
       event.stopPropagation();
       setContext(collectContext());
