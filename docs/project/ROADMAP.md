@@ -94,21 +94,31 @@ ZeyherMutterOS wird als produktionsfähige, sichere und nachvollziehbare Plattfo
 - [x] Interessenten-/Suchprofil-Verzeichnis
 - [x] Suchprofil-Neuanlage und -Bearbeitung
 - [x] mehrere Suchorte je Profil verwalten
-- [ ] CRM-Dashboard/Navigationsintegration für Interessenten
-- [ ] Anfragen-Workflow
-- [ ] Matching Immobilie ↔ Suchprofil
-- [ ] Besichtigungen
-- [ ] Feedback
-- [ ] Kaufangebote
-- [ ] globale Suche / Aufgaben / Activity / Collaboration vollständig integriert
+- [x] CRM-Dashboard/Navigationsintegration für Interessenten
+- [x] Anfragen-Workflow
+- [x] Matching Immobilie ↔ Suchprofil
+- [x] Besichtigungen
+- [x] Feedback
+- [x] Kaufangebote
+- [x] globale Suche / Aufgaben / Activity / Collaboration technisch integriert
 - [ ] Browser-Smoke-Test Modul 04
 - [ ] Modul-04-Abschlussprüfung gegen Definition of Done
 
-### Phase 5 – Website & Exposés
-- [ ] öffentliche Website
-- [ ] Objektpublikation
-- [ ] Exposé-Generator
-- [ ] Versionierung/Freigabe
+### Phase 5 – Website & Exposés — IN ARBEIT
+- [x] getrennte Veröffentlichungsakte je Immobilie
+- [x] unveränderliche Freigabe-/Publikationsversionen
+- [x] öffentliche Daten als sicherer Snapshot statt Live-Zugriff auf interne Objektakte
+- [x] RLS: Entwürfe intern, nur aktuelle veröffentlichte Version anonym lesbar
+- [x] Freigaberechte über `property.publish` serverseitig erzwungen
+- [x] öffentliche Immobilienliste `/immobilien`
+- [x] öffentliche Immobilienseite `/immobilien/:slug`
+- [x] interne Veröffentlichungsakte `/properties/:propertyId/publication`
+- [ ] öffentliche, kontrollierte Bildauslieferung für `public_approved` Medien
+- [ ] Website-Anfrageformular → bestehender Modul-04-Anfrageprozess
+- [ ] Exposé-Generator auf Basis derselben Publikationsversion
+- [ ] Exposé-Versionierung und Freigabe
+- [ ] Veröffentlichungs-/Exposé-Browser-Smoke-Test
+- [ ] Modul-05-Abschlussprüfung gegen Definition of Done
 
 ### Phase 6 – Dashboard & Provisionen
 - [ ] persönliches Dashboard
