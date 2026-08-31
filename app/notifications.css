@@ -1,0 +1,11 @@
+.notifications-header{max-width:1120px;margin-left:auto;margin-right:auto;width:100%}
+.notifications-page-width{max-width:1120px;margin:0 auto;display:grid;gap:14px;width:100%}
+.notifications-list{overflow:visible}
+.notification-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center}
+.notification-row.is-unread{background:rgba(139,160,162,.06)}
+.notification-copy{min-width:0;display:grid;gap:4px}
+.notification-copy strong,.notification-copy small{overflow-wrap:anywhere}
+.notification-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.notification-actions form{margin:0}
+.notification-read-state{display:inline-flex;align-items:center;min-height:34px;padding:0 10px;color:#7f8c8e;font-size:12px}
+@media(max-width:760px){.notification-row{grid-template-columns:1fr}.notification-actions{justify-content:flex-start}.notification-actions .primary-button,.notification-actions .secondary-button{width:100%;justify-content:center}.notification-actions form{flex:1 1 100%}}
