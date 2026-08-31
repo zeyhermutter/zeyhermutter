@@ -1,0 +1,39 @@
+.viewing-status-combined-card{
+  margin-bottom:0!important;
+  border-bottom-left-radius:0!important;
+  border-bottom-right-radius:0!important;
+  border-bottom-color:#2b3739!important;
+}
+
+.viewing-appointment-combined-card{
+  margin-top:calc(-1 * var(--crm-block-gap,18px))!important;
+  border-top:0!important;
+  border-top-left-radius:0!important;
+  border-top-right-radius:0!important;
+  padding-top:22px!important;
+  position:relative;
+}
+
+.viewing-appointment-combined-card::before{
+  content:"";
+  position:absolute;
+  left:22px;
+  right:22px;
+  top:0;
+  height:1px;
+  background:#2b3739;
+}
+
+.inquiry-page input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+.viewing-replan-modal input[type="datetime-local"]::-webkit-calendar-picker-indicator{
+  filter:invert(1) brightness(1.85) contrast(.9);
+  opacity:.92;
+  cursor:pointer;
+}
+
+@media(max-width:760px){
+  .viewing-appointment-combined-card::before{
+    left:16px;
+    right:16px;
+  }
+}
