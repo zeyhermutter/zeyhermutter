@@ -47,8 +47,16 @@ export async function loader({request,context,params}:Route.LoaderArgs){
   if(propertyError||!property)throw new Response("Immobilie nicht gefunden.",{status:404,headers:responseHeaders()});
   if(mediaError)throw new Response("Medien konnten nicht geladen werden.",{status:500,headers:responseHeaders()});
   const signedUrls:Record<string,string>={};
-  await Promise.all((media??[]).map(async(item)=>{const {data:signed}=await supabase.storage.from(item.storage_bucket).createSignedUrl(item.storage_path,600);if(signed?.signedUrl)signedUrls[item.id]=signed.signedUrl;}));
-  return data({property,media:media??[],signedUrls,profile},{headers:responseHeaders()});
+  const downloadUrls:Record<string,string>={};
+  await Promise.all((media??[]).map(async(item)=>{
+    const [previewResult,downloadResult]=await Promise.all([
+      supabase.storage.from(item.storage_bucket).createSignedUrl(item.storage_path,600),
+      supabase.storage.from(item.storage_bucket).createSignedUrl(item.storage_path,600,{download:displayFilename(item.storage_path)}),
+    ]);
+    if(previewResult.data?.signedUrl)signedUrls[item.id]=previewResult.data.signedUrl;
+    if(downloadResult.data?.signedUrl)downloadUrls[item.id]=downloadResult.data.signedUrl;
+  }));
+  return data({property,media:media??[],signedUrls,downloadUrls,profile},{headers:responseHeaders()});
 }
 
 export async function action({request,context,params}:Route.ActionArgs){
@@ -103,11 +111,12 @@ export async function action({request,context,params}:Route.ActionArgs){
 }
 
 export default function PropertyMedia(){
-  const {property,media,signedUrls,profile}=useLoaderData<typeof loader>();
+  const {property,media,signedUrls,downloadUrls,profile}=useLoaderData<typeof loader>();
   const result=useActionData<typeof action>();
   const [openIndex,setOpenIndex]=useState<number|null>(null);
   const activeItem=openIndex===null?null:media[openIndex];
   const activeUrl=activeItem?signedUrls[activeItem.id]:undefined;
+  const activeDownloadUrl=activeItem?downloadUrls[activeItem.id]:undefined;
 
   return <main className="editor-shell">
     <header className="editor-header"><div><Link className="back-link" to={`/properties/${property.id}`}>← {property.property_number}</Link><p className="eyebrow">Modul 02 · Medien</p><h1 className="editor-title">Medienbibliothek</h1><p className="editor-meta">{property.internal_title} · private Ablage</p></div><div className="header-user"><span className="badge">STAGING</span><small>{profile.display_name}</small></div></header>
@@ -141,7 +150,9 @@ export default function PropertyMedia(){
       title={activeItem.title??mediaTypeLabel(activeItem.media_type)}
       subtitle={`${mediaTypeLabel(activeItem.media_type)} · ${activeItem.public_approved?"für Veröffentlichung freigegeben":"intern"}`}
       url={activeUrl}
+      downloadUrl={activeDownloadUrl}
       downloadName={displayFilename(activeItem.storage_path)}
+      editorResetKey={activeItem.version}
       kind={mediaPreviewKind(activeItem.media_type,activeItem.storage_path)}
       positionLabel={`${(openIndex??0)+1} von ${media.length}`}
       hasPrevious={(openIndex??0)>0}
