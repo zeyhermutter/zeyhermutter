@@ -223,3 +223,28 @@ Diese Regel wird in PostgreSQL erzwungen und nicht nur im Frontend dargestellt.
 **Status:** Accepted
 
 Aufgaben werden in Suchprofil-, Anfrage- und Besichtigungskontexten über eine gemeinsame Modal-Komponente geöffnet. Technische Status- und Prioritätswerte werden dort in deutsche Klarnamen übersetzt. Optimistic-Concurrency-Konflikte werden ebenfalls über eine gemeinsame sichtbare Modal-Komponente angezeigt, statt als leicht übersehbare Meldung am Seitenanfang.
+
+## ADR-035 – API-Rollen erhalten nur explizit benötigte Rechte
+**Status:** Accepted
+
+`anon` erhält keinen pauschalen Tabellen-, Sequenz- oder RPC-Zugriff. Anonym lesbar sind nur die freigegebenen Publikations-Snapshots und ausdrücklich öffentliche Listing-RPCs. `authenticated` erhält die fachlich erforderlichen CRUD-Rechte, aber keine pauschalen Rechte wie `TRUNCATE`, `REFERENCES` oder `TRIGGER`. Neue Datenbankobjekte übernehmen diese Defaults.
+
+## ADR-036 – Vermarktungsbereitschaft ist eine Datenbankinvariante
+**Status:** Accepted
+
+Der Übergang einer Immobilie von `PREPARATION` zu `MARKETING` benötigt `property.publish`, einen Verantwortlichen, mindestens einen aktiven Eigentümer, eine vollständige strukturierte Adresse, einen positiven transaktionsspezifischen Preis sowie ausschließlich erledigte oder bewusst erlassene Pflicht-Checklistenpunkte. PostgreSQL erzwingt dies unabhängig vom Client.
+
+## ADR-037 – Öffentliche Medien bleiben privat gespeichert und werden gestreamt
+**Status:** Accepted
+
+Auch freigegebene Website-Medien verbleiben im privaten Supabase-Bucket. Der Worker autorisiert den fachlichen Datensatz über RLS, erstellt eine kurzlebige Signed URL und streamt die Upstream-Antwort. Er lädt große Dateien nicht vollständig in den Worker-Speicher. Cache-, Range-, ETag- und Sicherheitsheader bleiben kontrolliert.
+
+## ADR-038 – Anfrage → Suchprofil ist atomar
+**Status:** Accepted
+
+Die Anlage eines Suchprofils aus einer Anfrage und die Rückverknüpfung der Anfrage erfolgen in einer `SECURITY INVOKER`-RPC. Die Funktion prüft beide Schreibrechte, sperrt die Anfrage, validiert Kontakt, Archivstatus und erwartete Version und rollt bei jedem Fehler vollständig zurück. Ein bereits verknüpfter Datensatz wird nicht still überschrieben.
+
+## ADR-039 – Reproduzierbarer pnpm-Build mit getrennten TypeScript-Kontexten
+**Status:** Accepted
+
+Das Repository pinnt pnpm und enthält einen Lockfile. Browser-/React-Router-Code und Cloudflare-Worker-Code werden in getrennten TypeScript-Projekten geprüft, damit DOM- und Worker-Globals nicht versehentlich vermischt werden. Das zentrale Qualitätsgate umfasst Typgenerierung, striktes TypeScript, Produktions-Build und Wrangler-Dry-Run.

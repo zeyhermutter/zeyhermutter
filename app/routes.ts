@@ -2,6 +2,8 @@ import { type RouteConfig, index, route } from "@react-router/dev/routes";
 
 export default [
   index("routes/home.tsx"),
+  route("robots.txt", "routes/robots.ts"),
+  route("sitemap.xml", "routes/sitemap.ts"),
   route("immobilien", "routes/public-properties.tsx"),
   route("immobilien/medien/:mediaId/:version", "routes/public-media.ts"),
   route("immobilien/:slug", "routes/public-property-detail.tsx"),
@@ -40,6 +42,7 @@ export default [
   route("properties/:propertyId/interests", "routes/property-interests.tsx"),
   route("properties/:propertyId/publication", "routes/property-publication.tsx"),
   route("properties/:propertyId/publication/preview", "routes/property-publication-preview.tsx"),
+  route("properties/:propertyId/exposes", "routes/property-exposes.tsx"),
   route("properties/:propertyId/documents", "routes/property-documents.tsx"),
   route("properties/:propertyId/media", "routes/property-media.tsx"),
   route("api/geocode-address", "routes/api-geocode-address.ts"),

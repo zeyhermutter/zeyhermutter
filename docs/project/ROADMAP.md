@@ -98,6 +98,7 @@ ZeyherMutterOS wird als produktionsfähige, sichere und nachvollziehbare Plattfo
 - [x] PLZ-/Ort-/Radius-Matching inkl. Altbestand-Normalisierung
 - [x] CRM-Dashboard/Navigationsintegration für Interessenten
 - [x] Anfragen-Workflow
+- [x] atomare Anfrage → Suchprofil-Anlage mit Versionskonfliktschutz
 - [x] Matching Suchprofil → Immobilie mit nachvollziehbaren Gründen
 - [x] Reverse Matching Immobilie → passende Interessenten über dieselbe Matching-Engine
 - [x] Besichtigungen inkl. Kontextübernahme und Rückverknüpfungen
@@ -125,7 +126,11 @@ ZeyherMutterOS wird als produktionsfähige, sichere und nachvollziehbare Plattfo
 - [x] kontrollierte Bildauslieferungs-Grundlage für `public_approved` Medien
 - [x] Website-Anfrage-Intake in das bestehende Modul-04-Anfragemodell
 - [x] Exposé-Datenmodell und PDF-Generator-Grundlage auf Basis einer Publikationsversion
-- [ ] Exposé-UI/Route vollständig integrieren und browserseitig abnehmen
+- [x] Exposé-UI/Route vollständig integrieren
+- [x] `robots.txt`, dynamische Sitemap und Canonical-Basis
+- [x] öffentliche Medien ressourcenschonend aus privatem Storage streamen
+- [x] Vermarktungsbereitschaft vor Status `MARKETING` in PostgreSQL erzwingen
+- [ ] Exposé-UI/Route browserseitig abnehmen
 - [ ] Veröffentlichungs-/Exposé-Browser-Smoke-Test
 - [ ] Modul-05-Abschlussprüfung gegen Definition of Done
 

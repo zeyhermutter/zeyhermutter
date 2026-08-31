@@ -9,13 +9,27 @@ export async function loader({request,context,params}:Route.LoaderArgs){
   if(!UUID_RE.test(mediaId)||!Number.isInteger(sourceVersion)||sourceVersion<1)throw new Response("Medium nicht gefunden.",{status:404});
   const {supabase}=createSupabaseServerClient(request,context.cloudflare.env);
   const path=`media/${mediaId}/v${sourceVersion}`;
-  const {data:blob,error}=await supabase.storage.from("zm-public-media").download(path);
-  if(error||!blob)throw new Response("Medium nicht gefunden.",{status:404,headers:{"Cache-Control":"public, max-age=30, s-maxage=30"}});
+  const {data:signed,error}=await supabase.storage.from("zm-public-media").createSignedUrl(path,30);
+  if(error||!signed?.signedUrl)throw new Response("Medium nicht gefunden.",{status:404,headers:{"Cache-Control":"public, max-age=30, s-maxage=30"}});
+
+  const signedUrl=new URL(signed.signedUrl);
+  const supabaseUrl=new URL(context.cloudflare.env.SUPABASE_URL);
+  if(signedUrl.origin!==supabaseUrl.origin||!signedUrl.pathname.startsWith("/storage/v1/object/sign/zm-public-media/")){
+    throw new Response("Medium nicht gefunden.",{status:404});
+  }
+
+  const range=request.headers.get("Range");
+  const upstream=await fetch(signedUrl,{headers:range?{Range:range}:undefined});
+  if(!upstream.ok||!upstream.body)throw new Response("Medium nicht gefunden.",{status:404,headers:{"Cache-Control":"public, max-age=30, s-maxage=30"}});
+
   const headers=new Headers();
-  headers.set("Content-Type",blob.type||"application/octet-stream");
-  headers.set("Content-Length",String(blob.size));
+  for(const name of ["Content-Type","Content-Length","Content-Range","Accept-Ranges","ETag","Last-Modified"]){
+    const value=upstream.headers.get(name);
+    if(value)headers.set(name,value);
+  }
+  if(!headers.has("Content-Type"))headers.set("Content-Type","application/octet-stream");
   headers.set("Cache-Control","public, max-age=60, s-maxage=120, must-revalidate");
   headers.set("X-Content-Type-Options","nosniff");
   headers.set("Content-Security-Policy","default-src 'none'; sandbox");
-  return new Response(blob,{status:200,headers});
+  return new Response(upstream.body,{status:upstream.status,headers});
 }

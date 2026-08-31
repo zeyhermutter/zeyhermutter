@@ -95,7 +95,16 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     const {data:current}=await supabase.from("properties").select("status").eq("id",propertyId).maybeSingle();
     if(target==="ARCHIVED"||current?.status==="ARCHIVED") await requirePermission(request,context.cloudflare.env,"property.archive");
     const {data:updated,error}=await supabase.from("properties").update({status:target}).eq("id",propertyId).eq("version",version).select("id").maybeSingle();
-    if(error)return data<ActionResult>({error:"Dieser Statuswechsel ist fachlich nicht zulässig."},{status:400,headers:responseHeaders()});
+    if(error){
+      if(String(error.message??"").includes("PROPERTY_MARKETING_NOT_READY")){
+        const missing=String(error.details??"").trim();
+        return data<ActionResult>({error:`Vermarktung kann noch nicht gestartet werden.${missing?` Fehlend: ${missing}.`:" Bitte die Vermarktungsreife prüfen."}`},{status:400,headers:responseHeaders()});
+      }
+      if(String(error.message??"").includes("PROPERTY_PUBLISH_REQUIRED")){
+        return data<ActionResult>({error:"Für den Start der Vermarktung fehlt die Berechtigung „Immobilie veröffentlichen“."},{status:403,headers:responseHeaders()});
+      }
+      return data<ActionResult>({error:"Dieser Statuswechsel ist fachlich nicht zulässig."},{status:400,headers:responseHeaders()});
+    }
     if(!updated)return conflict();
     return redirect(`/properties/${propertyId}#status`,{headers:responseHeaders()});
   }

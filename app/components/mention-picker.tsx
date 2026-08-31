@@ -2,8 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 type MentionUser = { user_id: string; display_name: string };
 type PopupPosition = { top: number; left: number; width: number };
+type MentionPickerProps = {
+  users: MentionUser[];
+  intent?: string;
+  submitLabel?: string;
+};
 
-export function MentionPicker({ users }: { users: MentionUser[] }) {
+export function MentionPicker({ users }: MentionPickerProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [query, setQuery] = useState<string | null>(null);

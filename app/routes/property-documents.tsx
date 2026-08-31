@@ -6,6 +6,19 @@ import { requirePermission } from "~/lib/auth.server";
 import "~/property-documents.css";
 
 type ActionResult = { error?: string };
+type DocumentVersionRow = {
+  id: string;
+  document_id: string;
+  version_number: number;
+  storage_bucket: string;
+  storage_path: string;
+  original_filename: string;
+  mime_type: string;
+  file_size_bytes: number;
+  sha256: string;
+  change_reason: string | null;
+  uploaded_at: string;
+};
 
 const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = new Set([
@@ -100,10 +113,11 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   if (documentError) throw new Response("Dokumente konnten nicht geladen werden.", { status: 500, headers: responseHeaders() });
 
   const ids = (documents ?? []).map((document) => document.id);
-  const { data: versions, error: versionError } = ids.length
+  const { data: versionRows, error: versionError } = ids.length
     ? await supabase.from("document_versions").select("id, document_id, version_number, storage_bucket, storage_path, original_filename, mime_type, file_size_bytes, sha256, change_reason, uploaded_at").in("document_id", ids).order("version_number", { ascending: false })
-    : { data: [], error: null };
+    : { data: [] as DocumentVersionRow[], error: null };
   if (versionError) throw new Response("Dokumentversionen konnten nicht geladen werden.", { status: 500, headers: responseHeaders() });
+  const versions: DocumentVersionRow[] = versionRows ?? [];
 
   const signedUrls: Record<string, string> = {};
   await Promise.all((versions ?? []).map(async (version) => {
@@ -111,8 +125,8 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     if (signed?.signedUrl) signedUrls[version.id] = signed.signedUrl;
   }));
 
-  const versionMap: Record<string, typeof versions> = {};
-  for (const version of versions ?? []) {
+  const versionMap: Record<string, DocumentVersionRow[]> = {};
+  for (const version of versions) {
     (versionMap[version.document_id] ??= []).push(version);
   }
 

@@ -3,14 +3,16 @@
 Stand: 31.08.2026
 
 ## Aktuelles Ziel
-Modul 04 bleibt **IN ARBEIT**, ist technisch nach dem Browser-Fixblock aber weitgehend stabilisiert. Offen sind bewusst noch M04-49 (Responsive Browser-Abnahme) und M04-50 (vollständiger End-to-End-Browser-Test) durch den Nutzer sowie danach die finale DoD-Abnahme. Parallel bleibt Modul 05 **Website & Exposés – IN ARBEIT**.
+Der Senior Review für Module 01–05 ist technisch auf STAGING abgeschlossen. P0-Funde bestehen nicht mehr; die gefundenen P1-Funde wurden behoben und geprüft. Modul 04 und Modul 05 bleiben bis zur echten responsiven bzw. vollständigen Browser-Abnahme formal **IN ARBEIT**.
 
 ## Infrastruktur
 - separates GitHub-Repository `zeyhermutter/zeyhermutter`
 - separates Supabase-STAGING in Frankfurt
 - Cloudflare-STAGING über `zeyhermutter.playsony.workers.dev`
 - eigenständige ZeyherMutterOS-Infrastruktur
-- Production nicht verändert
+- Supabase-API-Rollen auf minimale Tabellen-/Sequenz-/RPC-Rechte reduziert
+- reproduzierbarer pnpm-Lockfile sowie getrennte Browser-/Worker-TypeScript-Projekte
+- Production nicht vorhanden und nicht verändert
 
 ## Phase 0 – DONE
 Architektur, Cloudflare, Supabase, Rollen/Permissions, Audit/Activity, RLS, Optimistic Concurrency und migrationsbasierte Entwicklung sind etabliert.
@@ -34,6 +36,7 @@ Verkäufer-Pipeline, Bewertungsworkflow, Zusammenarbeit, Pflichtfeld-/Freigabelo
 - gleiche PLZ wird explizit als Standorttreffer bewertet
 - Reverse Matching Immobilie → passende Interessenten nutzt dieselbe Matching-Engine
 - Anfragen inklusive Statusmaschine und Suchprofil-Verknüpfung
+- Anfrage → neues Suchprofil inklusive Rückverknüpfung atomar in einer Transaktion
 - Besichtigungen mit Kontextübernahme aus Anfrage/Suchprofil/Immobilie/Reverse Match
 - kontrollierter Korrekturpfad für versehentlich „Durchgeführt“
 - Feedback
@@ -56,15 +59,18 @@ Verkäufer-Pipeline, Bewertungsworkflow, Zusammenarbeit, Pflichtfeld-/Freigabelo
 - abgegebenes Kaufangebot nachträglich verändern: blockiert
 - Folgeangebot ersetzt vorheriges aktives Angebot: PASS
 - nach Rollback-Tests bleiben keine technischen Testdatensätze zurück
+- historisch inkonsistente Anfrage `ZM-A-000004` gezielt von `CLOSED` auf `CONTACTED` zurückgesetzt
 
 ### Relevante Migrationen des Browser-Fixblocks
 - `20260831120356_module04_browser_acceptance_fixes_core.sql`
 - `20260831123129_module04_reverse_matching_details.sql`
 - `20260831123907_module04_search_location_postal_normalization.sql`
 - `20260831124952_module04_search_profile_location_commit_guard.sql`
+- `20260831144452_repair_invalid_closed_inquiry_zm_a_000004.sql`
+- `20260831144717_atomic_inquiry_search_profile_create.sql`
 
 ### Advisor
-Security Advisor zeigt keinen neuen kritischen Modul-04-Fund. Die policylose Tabelle `public_form_rate_limits` gehört zum service-only Website-Intake von Modul 05 und ist absichtlich nicht anonym direkt nutzbar. Die bekannte Supabase-Auth-Warnung `Leaked Password Protection Disabled` bleibt extern offen.
+Security Advisor zeigt keinen kritischen Datenbankfund. Die policylose Tabelle `public_form_rate_limits` gehört zum service-only Website-Intake von Modul 05 und ist absichtlich nicht direkt nutzbar. Die bekannte Supabase-Auth-Warnung `Leaked Password Protection Disabled` bleibt als manuelle Projekteinstellung offen.
 
 Performance Advisor zeigt ausschließlich `unused index`-Hinweise im jungen STAGING; diese werden nicht blind entfernt.
 
@@ -99,14 +105,18 @@ Damit gilt:
 - kontrollierte öffentliche Medien-Grundlage
 - Website-Anfrage-Intake in das bestehende CRM-/Inquiry-Modell
 - Exposé-Datenmodell und PDF-Generator-Grundlage auf Basis einer konkreten Publikationsversion
+- Exposé-UI/Route `/properties/:propertyId/exposes` und Immobiliennavigation
+- `robots.txt`, dynamische `sitemap.xml` und Canonical-Link der öffentlichen Detailseite
+- öffentliche Medien werden aus dem privaten Bucket über eine 30-Sekunden-Signed-URL gestreamt und nicht im Worker gepuffert
+- Datenbank erzwingt die Vermarktungsbereitschaft vor `PREPARATION → MARKETING`
 
 ### Noch offen Modul 05
-- Exposé-UI/Route vollständig integrieren
-- vollständiger Browser-Smoke-Test Website/Medien/Anfrage/Exposé
+- vollständiger authentifizierter Browser-Smoke-Test Veröffentlichung/Medien/Anfrage/Exposé
+- Freigabeentscheidung, ob Vier-Augen-Prüfung zwingend von einer anderen Person erfolgen muss
 - Modul-05-DoD
 
 ## Offener externer Security-Punkt
 Supabase Auth meldet weiterhin `Leaked Password Protection Disabled`. Remediation: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
 
 ## Production
-Production wurde nicht verändert und bleibt bis zur ausdrücklichen Freigabe gesperrt.
+Ein Supabase-PRODUCTION-Projekt existiert noch nicht. Deshalb wurden weder Datenbank noch Worker nach PROD ausgerollt. Anlage und erster Rollout folgen ausschließlich dem Produktions-Runbook nach Kosten-, Organisations- und Domainfreigabe.

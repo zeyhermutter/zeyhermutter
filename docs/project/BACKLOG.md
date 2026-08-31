@@ -120,6 +120,7 @@ Priorisierung: **MUST > SHOULD > COULD > LATER**.
 - [x] Aufgabenmodal und deutsche Status-/Prioritätsbezeichnungen
 - [x] negative Permission-/RLS-/API-Bypass-Tests M04-17 / 45 / 46 / 47 / 48
 - [x] Advisor-Prüfung nach dem Browser-Fixblock
+- [x] Anfrage → Suchprofil atomar anlegen und rückverknüpfen
 - [ ] M04-49 Responsive Browser-Abnahme
 - [ ] M04-50 vollständiger End-to-End-Browser-Test
 - [ ] Browser-Smoke-Test Modul 04 final abschließen
@@ -140,9 +141,19 @@ Priorisierung: **MUST > SHOULD > COULD > LATER**.
 - [ ] KYC/GwG-Datenmodell
 
 ## COULD
-- [ ] Approval-/Vier-Augen-Workflow
+- [ ] fachlich entscheiden und erzwingen, ob Website-/Exposé-Freigaben zwingend durch eine andere Person erfolgen müssen
 - [ ] konfigurierbare Dashboards
 - [ ] erweiterte Suchfilter
+
+## P2 – Senior-Review-Folgearbeiten
+- [ ] gemeinsame, wiederverwendbare Adress-Schnelleingabe statt DOM-Enhancer und duplizierter Geocoding-Logik
+- [ ] CRM-Dashboard-Aggregate in eine begrenzte serverseitige Abfrage/RPC zusammenfassen
+- [ ] große Verzeichnisse auf serverseitige Keyset-Pagination umstellen; keine festen 500/1000-Zeilen-Limits mit Clientfilterung
+- [ ] Cloudflare-Worker-Integrationstests mit realistischem Runtime-Testpool ergänzen
+- [ ] verbleibende explizite `any`-Typen abbauen und stark komprimierte Routen in testbare Komponenten zerlegen
+- [ ] strukturierte SEO-Daten, konsistente Canonicals sowie 404/410-Regeln vervollständigen
+- [ ] Supabase Auth „Leaked Password Protection“ in der Projektkonsole aktivieren
+- [ ] dediziertes PROD-Projekt samt Backup-/Restore-Probe und Custom-Domain einrichten
 
 ## LATER
 - [ ] Portalexport

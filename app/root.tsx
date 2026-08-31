@@ -287,32 +287,40 @@ function AddressGeocodingEnhancer() {
     const longitude = form.querySelector<HTMLInputElement>('input[name="longitude"]');
     if (!street || !houseNumber || !postalCode || !city || !latitude || !longitude) return;
 
-    latitude.readOnly = true;
-    longitude.readOnly = true;
-    latitude.setAttribute("aria-readonly", "true");
-    longitude.setAttribute("aria-readonly", "true");
-    latitude.title = "Wird automatisch über OpenStreetMap/Nominatim ermittelt";
-    longitude.title = "Wird automatisch über OpenStreetMap/Nominatim ermittelt";
+    // Keep the DOM lookup result stable for the nested event handlers below.
+    const streetInput = street;
+    const houseNumberInput = houseNumber;
+    const postalCodeInput = postalCode;
+    const cityInput = city;
+    const latitudeInput = latitude;
+    const longitudeInput = longitude;
 
-    const latLabel = latitude.closest("label")?.querySelector("span");
-    const lonLabel = longitude.closest("label")?.querySelector("span");
+    latitudeInput.readOnly = true;
+    longitudeInput.readOnly = true;
+    latitudeInput.setAttribute("aria-readonly", "true");
+    longitudeInput.setAttribute("aria-readonly", "true");
+    latitudeInput.title = "Wird automatisch über OpenStreetMap/Nominatim ermittelt";
+    longitudeInput.title = "Wird automatisch über OpenStreetMap/Nominatim ermittelt";
+
+    const latLabel = latitudeInput.closest("label")?.querySelector("span");
+    const lonLabel = longitudeInput.closest("label")?.querySelector("span");
     if (latLabel) latLabel.textContent = "Breitengrad (automatisch)";
     if (lonLabel) lonLabel.textContent = "Längengrad (automatisch)";
 
     const note = document.createElement("small");
     note.className = "coordinate-auto-note";
-    longitude.closest("label")?.insertAdjacentElement("afterend", note);
+    longitudeInput.closest("label")?.insertAdjacentElement("afterend", note);
 
-    const addressInputs = [street, houseNumber, postalCode, city, country].filter(Boolean) as HTMLInputElement[];
-    let lastGeocodedSignature = latitude.value && longitude.value ? currentSignature() : "";
+    const addressInputs = [streetInput, houseNumberInput, postalCodeInput, cityInput, country].filter(Boolean) as HTMLInputElement[];
+    let lastGeocodedSignature = latitudeInput.value && longitudeInput.value ? currentSignature() : "";
     let running: Promise<boolean> | null = null;
 
     function currentSignature() {
-      return [street.value.trim(), houseNumber.value.trim(), postalCode.value.trim(), city.value.trim(), (country?.value.trim() || "DE").toUpperCase()].join("|");
+      return [streetInput.value.trim(), houseNumberInput.value.trim(), postalCodeInput.value.trim(), cityInput.value.trim(), (country?.value.trim() || "DE").toUpperCase()].join("|");
     }
 
     function isComplete() {
-      return Boolean(street.value.trim() && houseNumber.value.trim() && postalCode.value.trim() && city.value.trim());
+      return Boolean(streetInput.value.trim() && houseNumberInput.value.trim() && postalCodeInput.value.trim() && cityInput.value.trim());
     }
 
     function updateNote(message?: string) {
@@ -320,8 +328,8 @@ function AddressGeocodingEnhancer() {
         note.textContent = message;
         return;
       }
-      if (latitude.value && longitude.value) {
-        note.textContent = `Automatisch ermittelt: ${latitude.value} / ${longitude.value}`;
+      if (latitudeInput.value && longitudeInput.value) {
+        note.textContent = `Automatisch ermittelt: ${latitudeInput.value} / ${longitudeInput.value}`;
       } else {
         note.textContent = "Koordinaten werden aus Straße, Hausnummer, PLZ und Ort automatisch ermittelt.";
       }
@@ -329,15 +337,15 @@ function AddressGeocodingEnhancer() {
 
     async function geocode(force = false) {
       if (!isComplete()) {
-        latitude.value = "";
-        longitude.value = "";
+        latitudeInput.value = "";
+        longitudeInput.value = "";
         lastGeocodedSignature = "";
         updateNote();
         return false;
       }
 
       const signature = currentSignature();
-      if (!force && signature === lastGeocodedSignature && latitude.value && longitude.value) {
+      if (!force && signature === lastGeocodedSignature && latitudeInput.value && longitudeInput.value) {
         updateNote();
         return true;
       }
@@ -353,21 +361,21 @@ function AddressGeocodingEnhancer() {
           });
           const result = await response.json() as { coordinates?: { latitude: number; longitude: number } | null };
           if (!result.coordinates) {
-            latitude.value = "";
-            longitude.value = "";
+            latitudeInput.value = "";
+            longitudeInput.value = "";
             lastGeocodedSignature = "";
             updateNote("Für diese Adresse konnten keine eindeutigen Koordinaten ermittelt werden.");
             return false;
           }
 
-          latitude.value = String(result.coordinates.latitude);
-          longitude.value = String(result.coordinates.longitude);
+          latitudeInput.value = String(result.coordinates.latitude);
+          longitudeInput.value = String(result.coordinates.longitude);
           lastGeocodedSignature = signature;
           updateNote();
           return true;
         } catch {
-          latitude.value = "";
-          longitude.value = "";
+          latitudeInput.value = "";
+          longitudeInput.value = "";
           lastGeocodedSignature = "";
           updateNote("Koordinaten konnten aktuell nicht ermittelt werden. Die Adresse kann trotzdem gespeichert werden.");
           return false;
@@ -381,8 +389,8 @@ function AddressGeocodingEnhancer() {
 
     const handleAddressChange = () => {
       if (currentSignature() === lastGeocodedSignature) return;
-      latitude.value = "";
-      longitude.value = "";
+      latitudeInput.value = "";
+      longitudeInput.value = "";
       updateNote();
       void geocode();
     };
@@ -395,7 +403,7 @@ function AddressGeocodingEnhancer() {
       if (!isComplete()) return;
 
       const signature = currentSignature();
-      if (signature === lastGeocodedSignature && latitude.value && longitude.value) return;
+      if (signature === lastGeocodedSignature && latitudeInput.value && longitudeInput.value) return;
 
       event.preventDefault();
       const submitter = event.submitter as HTMLButtonElement | null;
@@ -409,7 +417,7 @@ function AddressGeocodingEnhancer() {
     addressInputs.forEach((input) => input.addEventListener("change", handleAddressChange));
     form.addEventListener("submit", onSubmit);
     updateNote();
-    if (!latitude.value || !longitude.value) void geocode();
+    if (!latitudeInput.value || !longitudeInput.value) void geocode();
 
     return () => {
       addressInputs.forEach((input) => input.removeEventListener("change", handleAddressChange));
@@ -423,7 +431,7 @@ function AddressGeocodingEnhancer() {
 
 function PropertyContextNavigation() {
   const location = useLocation();
-  const match = location.pathname.match(/^\/properties\/([^/]+)(?:\/(documents|media|interests))?\/?$/);
+  const match = location.pathname.match(/^\/properties\/([^/]+)(?:\/(documents|media|interests|publication|exposes))?(?:\/preview)?\/?$/);
   if (!match) return null;
 
   const propertyId = match[1];
@@ -432,6 +440,8 @@ function PropertyContextNavigation() {
     <nav className="property-context-nav" aria-label="Immobilienakte">
       <Link className={section === "record" ? "active" : ""} to={`/properties/${propertyId}`}>Objektakte</Link>
       <Link className={section === "interests" ? "active" : ""} to={`/properties/${propertyId}/interests`}>Interessenten & Besichtigungen</Link>
+      <Link className={section === "publication" ? "active" : ""} to={`/properties/${propertyId}/publication`}>Vermarktung</Link>
+      <Link className={section === "exposes" ? "active" : ""} to={`/properties/${propertyId}/exposes`}>Exposés</Link>
       <Link className={section === "documents" ? "active" : ""} to={`/properties/${propertyId}/documents`}>Dokumente</Link>
       <Link className={section === "media" ? "active" : ""} to={`/properties/${propertyId}/media`}>Medien</Link>
     </nav>
