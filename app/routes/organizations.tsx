@@ -4,6 +4,11 @@ import { requireActiveUser } from "~/lib/auth.server";
 
 type ActionResult = { error?: string; fields?: Record<string, string> };
 
+const STATUS_LABELS: Record<string, string> = {
+  ACTIVE: "Aktiv",
+  INACTIVE: "Inaktiv",
+};
+
 function text(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
 }
@@ -14,16 +19,58 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     context.cloudflare.env,
   );
 
-  const { data: organizations, error } = await supabase
+  const url = new URL(request.url);
+  const q = (url.searchParams.get("q") ?? "").trim().toLowerCase();
+  const status = url.searchParams.get("status") ?? "ALL";
+  const legalForm = url.searchParams.get("legal_form") ?? "ALL";
+  const city = url.searchParams.get("city") ?? "ALL";
+
+  const { data: rows, error } = await supabase
     .from("organizations")
     .select("id, organization_number, name, legal_form, email, phone, city, status, updated_at")
     .is("archived_at", null)
     .order("updated_at", { ascending: false })
-    .limit(100);
+    .limit(500);
 
   if (error) throw new Response("Organisationen konnten nicht geladen werden.", { status: 500 });
 
-  return data({ organizations: organizations ?? [], profile }, { headers: responseHeaders() });
+  const organizations = rows ?? [];
+  const legalForms = Array.from(new Set(organizations.map((organization) => organization.legal_form).filter(Boolean))).sort((a, b) => String(a).localeCompare(String(b), "de"));
+  const cities = Array.from(new Set(organizations.map((organization) => organization.city).filter(Boolean))).sort((a, b) => String(a).localeCompare(String(b), "de"));
+  const statuses = Array.from(new Set(organizations.map((organization) => organization.status).filter(Boolean))).sort();
+
+  const filtered = organizations.filter((organization) => {
+    if (status !== "ALL" && organization.status !== status) return false;
+    if (legalForm !== "ALL" && organization.legal_form !== legalForm) return false;
+    if (city !== "ALL" && organization.city !== city) return false;
+    if (q) {
+      const haystack = [
+        organization.organization_number,
+        organization.name,
+        organization.legal_form,
+        organization.email,
+        organization.phone,
+        organization.city,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+    return true;
+  });
+
+  return data(
+    {
+      organizations: filtered,
+      legalForms,
+      cities,
+      statuses,
+      filters: { q, status, legalForm, city },
+      profile,
+    },
+    { headers: responseHeaders() },
+  );
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
@@ -83,7 +130,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 }
 
 export default function Organizations() {
-  const { organizations, profile } = useLoaderData<typeof loader>();
+  const { organizations, legalForms, cities, statuses, filters, profile } = useLoaderData<typeof loader>();
   const result = useActionData<typeof action>();
   const fields = result?.fields ?? {};
 
@@ -95,19 +142,51 @@ export default function Organizations() {
       </header>
 
       <div className="dashboard-grid">
-        <section className="data-card">
-          <div className="card-head"><div><p className="eyebrow">Firmen & Partner</p><h2>Verzeichnis</h2></div><span className="subtle">{organizations.length}</span></div>
-          {organizations.length === 0 ? <p className="empty-state">Noch keine Organisationen vorhanden.</p> : (
-            <div className="data-list">
-              {organizations.map((organization) => (
-                <Link className="data-row data-row-link" to={`/crm/organizations/${organization.id}`} key={organization.id}>
-                  <div><strong>{organization.name}</strong><small>{organization.organization_number}{organization.legal_form ? ` · ${organization.legal_form}` : ""}</small></div>
-                  <div className="row-meta"><span>{organization.city ?? organization.email ?? "—"}</span><small>{organization.status}</small></div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
+        <div className="organization-directory-stack">
+          <section className="data-card">
+            <Form method="get" className="organization-filter-grid">
+              <label>
+                <span>Suche</span>
+                <input name="q" defaultValue={filters.q} placeholder="Name, Nummer, E-Mail, Telefon oder Ort" />
+              </label>
+              <label>
+                <span>Status</span>
+                <select name="status" defaultValue={filters.status}>
+                  <option value="ALL">Alle</option>
+                  {statuses.map((value) => <option key={value} value={value}>{STATUS_LABELS[value] ?? value}</option>)}
+                </select>
+              </label>
+              <label>
+                <span>Rechtsform</span>
+                <select name="legal_form" defaultValue={filters.legalForm}>
+                  <option value="ALL">Alle</option>
+                  {legalForms.map((value) => <option key={String(value)} value={String(value)}>{String(value)}</option>)}
+                </select>
+              </label>
+              <label>
+                <span>Ort</span>
+                <select name="city" defaultValue={filters.city}>
+                  <option value="ALL">Alle</option>
+                  {cities.map((value) => <option key={String(value)} value={String(value)}>{String(value)}</option>)}
+                </select>
+              </label>
+            </Form>
+          </section>
+
+          <section className="data-card">
+            <div className="card-head"><div><p className="eyebrow">Firmen & Partner</p><h2>Verzeichnis</h2></div><span className="subtle">{organizations.length}</span></div>
+            {organizations.length === 0 ? <p className="empty-state">Keine Organisationen für diese Filter gefunden.</p> : (
+              <div className="data-list">
+                {organizations.map((organization) => (
+                  <Link className="data-row data-row-link" to={`/crm/organizations/${organization.id}`} key={organization.id}>
+                    <div><strong>{organization.name}</strong><small>{organization.organization_number}{organization.legal_form ? ` · ${organization.legal_form}` : ""}</small></div>
+                    <div className="row-meta"><span>{organization.city ?? organization.email ?? "—"}</span><small>{STATUS_LABELS[organization.status] ?? organization.status}</small></div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
 
         <section className="data-card">
           <div className="card-head"><div><p className="eyebrow">Neu</p><h2>Organisation anlegen</h2></div></div>
