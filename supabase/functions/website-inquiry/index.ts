@@ -1,5 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2.112.4";
 
 const jsonHeaders={"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"};
 const CONSENT_VERSION="website-inquiry-v1-2026-08-31";

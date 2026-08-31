@@ -21,6 +21,8 @@ project_id = "zqhcxudpfwsfuokencvy"
 [remotes.beta.db.seed]
 enabled = false
 
-# Add only after the dedicated project has been created and verified:
-# [remotes.production]
-# project_id = "<production-project-ref>"
+[remotes.production]
+project_id = "vtmtxaaojbqqzwxkodye"
+
+[remotes.production.db.seed]
+enabled = false

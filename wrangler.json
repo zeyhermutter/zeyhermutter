@@ -28,9 +28,9 @@
       "name": "zeyhermutter-production",
       "vars": {
         "APP_ENV": "production",
-        "APP_BASE_URL": "https://SET_PRODUCTION_DOMAIN",
-        "SUPABASE_URL": "https://SET_PRODUCTION_PROJECT_REF.supabase.co",
-        "SUPABASE_PUBLISHABLE_KEY": "SET_PRODUCTION_PUBLISHABLE_KEY"
+        "APP_BASE_URL": "https://zeyhermutter-production.playsony.workers.dev",
+        "SUPABASE_URL": "https://vtmtxaaojbqqzwxkodye.supabase.co",
+        "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_aKJnsv7nAwRSPerPU11vkg_ZsQOCjAl"
       }
     }
   }

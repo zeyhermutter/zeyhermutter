@@ -2,21 +2,30 @@
 
 Stand: 31.08.2026
 
-PROD existiert noch nicht. Dieses Runbook ist die Freigabecheckliste; keine PROD-Ressource wird aus STAGING abgeleitet oder still geteilt.
+Das separate Supabase-PROD-Projekt `zeyhermutteros-production` (`vtmtxaaojbqqzwxkodye`, Frankfurt) ist angelegt und mit dem migrationsbasierten Datenbank-/Storage-Grundstand provisioniert. Der Cloudflare-PROD-Worker ist vorbereitet, aber noch nicht deployed. Dieses Runbook bleibt die Freigabecheckliste; keine PROD-Ressource wird aus BETA abgeleitet oder still geteilt.
+
+Aktueller Aufbauzustand:
+
+- 73 Repository-Migrationen angewandt, Migrationshistorie ohne Drift
+- alle Tabellen im exponierten `public`-Schema mit RLS; Advisor ohne Fehler
+- privater Bucket `zm-public-media` mit kontrolliertem anonymem Lesen aktueller Veröffentlichungen und `property.write`-geschützten Uploads
+- Edge Function `generate-property-expose` aktiv
+- öffentlicher PII-Endpunkt `website-inquiry` bis zur gesonderten Freigabe nicht deployed
+- keine BETA-Testdaten oder Auth-Nutzer nach PROD übernommen
 
 Das verbindliche Branch-/Umgebungsmodell steht in `docs/operations/ENVIRONMENTS.md`: `develop` liefert BETA, `main` liefert PROD.
 
 ## 1. Freigaben vor der Anlage
 
-- Supabase-Organisation und wiederkehrende Kosten ausdrücklich bestätigen.
-- PROD-Region festlegen; für Datenresidenz bevorzugt dieselbe EU-Region wie STAGING.
+- Supabase-Organisation und wiederkehrende Kosten ausdrücklich bestätigen. **Erledigt:** Organisation `czasoirrfhbyimtfudbq`, bestätigt mit 0 monatlich.
+- PROD-Region festlegen. **Erledigt:** `eu-central-1` (Frankfurt), wie BETA.
 - finale Domain/DNS-Zone und Cloudflare-Account bestätigen.
 - Verantwortliche für Deployment, Rollback, Security und Datenschutz benennen.
 - Go-live-Fenster, Akzeptanzkriterien und Kommunikationsweg festlegen.
 
 ## 2. Separate Infrastruktur
 
-- neues Supabase-PRODUCTION-Projekt mit eigener Ref anlegen
+- neues Supabase-PRODUCTION-Projekt mit eigener Ref anlegen. **Erledigt:** `vtmtxaaojbqqzwxkodye`
 - eigene Datenbank, Auth-Nutzer, Storage-Buckets und Edge Functions verwenden
 - eigener Cloudflare-Worker/Environment und eigene Secrets/Vars
 - niemals STAGING-Service-Keys, Buckets oder URLs wiederverwenden
@@ -43,7 +52,7 @@ Das verbindliche Branch-/Umgebungsmodell steht in `docs/operations/ENVIRONMENTS.
 
 1. `pnpm install --frozen-lockfile`
 2. `pnpm run check:production`
-3. PROD-Variablen/Secrets auf eigene Supabase-Ref setzen; keine Secretwerte loggen.
+3. PROD-Variablen auf eigene Supabase-Ref setzen; Runtime-Secrets separat setzen und keine Secretwerte loggen. **Publishable Konfiguration ist eingetragen.**
 4. `DEPLOY_PRODUCTION=YES pnpm run deploy:production` ausschließlich auf sauberem `main` oder den manuellen GitHub-Workflow verwenden.
 5. HTTP-Smoke, Login, Berechtigungsnegative und Kernflows durchführen.
 6. Erst danach Custom Domain aktivieren und DNS kontrolliert umschalten.

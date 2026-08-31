@@ -8,7 +8,7 @@ Stand: 31.08.2026
 |---|---|---|---|---|
 | Feature-Branch | kurzlebige Prüfung | kein permanenter Worker | optionaler Preview-Branch | Pull Request gegen `develop` |
 | `develop` | BETA | `zeyhermutter` | `zeyhermutteros-staging` (`zqhcxudpfwsfuokencvy`) | nach Quality Gate; Automatik erst nach Secret-Freigabe |
-| `main` | PROD | `zeyhermutter-production` | separates Projekt, noch anzulegen | ausschließlich manuell aus geschützter GitHub-Environment |
+| `main` | PROD | `zeyhermutter-production` (vorbereitet, nicht deployed) | `zeyhermutteros-production` (`vtmtxaaojbqqzwxkodye`) | ausschließlich manuell aus geschützter GitHub-Environment |
 
 `develop` ist der BETA-/Development-Branch. Ein zusätzlicher `beta`-Branch wird bewusst nicht gepflegt, damit keine zwei konkurrierenden Integrationslinien entstehen.
 
@@ -50,8 +50,8 @@ Solange nur ein GitHub-Verantwortlicher vorhanden ist, bleibt PROD zusätzlich d
 
 ## Supabase
 
-Das bisherige STAGING-Projekt wird als BETA verwendet. PROD wird als eigenes Projekt angelegt, nicht als gemeinsam genutzte Datenbank. Migrationen, Edge Functions, Auth-Konfiguration, Keys und Storage-Buckets werden getrennt ausgerollt.
+Das bisherige STAGING-Projekt wird als BETA verwendet. PROD ist als eigenes Projekt `zeyhermutteros-production` (`vtmtxaaojbqqzwxkodye`) in `eu-central-1` angelegt und teilt weder Datenbank noch Storage mit BETA. Die 73 versionierten Migrationen und `generate-property-expose` sind ausgerollt; `website-inquiry` bleibt bis zur ausdrücklichen Freigabe des anonymen PII-Endpunkts deaktiviert.
 
 Supabase Preview-Branches sind datenlos und eignen sich für Pull Requests. Ein persistenter Branch verursacht eigene Nutzungskosten; vor seiner Anlage ist eine Kostenbestätigung erforderlich. Neue Tabellen benötigen weiterhin explizite Data-API-Grants und RLS.
 
-Nach Anlage von PROD werden dessen Ref in `supabase/config.toml` und URL/Publishable Key/Domain in `wrangler.json` eingetragen. Secrets werden niemals committed.
+Die PROD-Ref steht in `supabase/config.toml`; URL, Publishable Key und vorbereitete `workers.dev`-Adresse stehen in `wrangler.json`. Publishable Keys sind für Client-Nutzung vorgesehen; Service-Role-Key und sonstige Secrets werden niemals committed.

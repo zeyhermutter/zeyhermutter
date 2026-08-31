@@ -1,4 +1,8 @@
--- Temporary helper used only for the one-time staging demo asset seed.
--- Kept in repository solely to mirror the already-applied Supabase migration history.
+-- Historical marker for the one-time BETA demo asset seed.
+-- Fresh environments must not enable the network-capable HTTP extension.
 
-create extension if not exists http with schema extensions;
+do $$
+begin
+  raise notice 'Skipping historical BETA-only HTTP extension activation';
+end
+$$;

@@ -9,12 +9,14 @@ Der Senior Review für Module 01–05 ist technisch auf BETA abgeschlossen. P0-F
 - separates GitHub-Repository `zeyhermutter/zeyhermutter`
 - `develop` als BETA-Integrationsbranch und `main` als PROD-Releasebranch
 - separates Supabase-BETA in Frankfurt (`zeyhermutteros-staging`)
+- separates Supabase-PROD in Frankfurt (`zeyhermutteros-production`, `vtmtxaaojbqqzwxkodye`)
 - Cloudflare-BETA über `zeyhermutter.playsony.workers.dev`
+- Cloudflare-PROD `zeyhermutter-production` konfiguriert, aber nicht deployed
 - getrennte Cloudflare-Builds, Quality Gates und explizite Deploy-Kommandos für BETA und PROD
 - eigenständige ZeyherMutterOS-Infrastruktur
 - Supabase-API-Rollen auf minimale Tabellen-/Sequenz-/RPC-Rechte reduziert
 - reproduzierbarer pnpm-Lockfile sowie getrennte Browser-/Worker-TypeScript-Projekte
-- Production vorbereitet, aber bis zur Organisations-/Kosten-/Domainfreigabe nicht angelegt oder ausgerollt
+- Supabase-PROD migrationsbasiert aufgebaut; Cloudflare-PROD bleibt bis zur Go-live-/Domainfreigabe nicht ausgerollt
 
 ## Phase 0 – DONE
 Architektur, Cloudflare, Supabase, Rollen/Permissions, Audit/Activity, RLS, Optimistic Concurrency und migrationsbasierte Entwicklung sind etabliert.
@@ -72,7 +74,7 @@ Verkäufer-Pipeline, Bewertungsworkflow, Zusammenarbeit, Pflichtfeld-/Freigabelo
 - `20260831144717_atomic_inquiry_search_profile_create.sql`
 
 ### Advisor
-Security Advisor zeigt keinen kritischen Datenbankfund. Die policylose Tabelle `public_form_rate_limits` gehört zum service-only Website-Intake von Modul 05 und ist absichtlich nicht direkt nutzbar. Die bekannte Supabase-Auth-Warnung `Leaked Password Protection Disabled` bleibt als manuelle Projekteinstellung offen.
+Security Advisor zeigt in BETA und PROD keinen kritischen Datenbankfund. Die policylose Tabelle `public_form_rate_limits` gehört zum service-only Website-Intake von Modul 05 und ist absichtlich nicht direkt nutzbar. Die bekannte Supabase-Auth-Warnung `Leaked Password Protection Disabled` besteht in BETA; PROD meldet diese Warnung nicht.
 
 Performance Advisor zeigt ausschließlich `unused index`-Hinweise im jungen BETA-System; diese werden nicht blind entfernt.
 
@@ -121,4 +123,6 @@ Damit gilt:
 Supabase Auth meldet weiterhin `Leaked Password Protection Disabled`. Remediation: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
 
 ## Production
-Ein Supabase-PRODUCTION-Projekt existiert noch nicht. Deshalb wurden weder Datenbank noch Worker nach PROD ausgerollt. Die getrennte Worker-Konfiguration `zeyhermutter-production`, der manuelle GitHub-Workflow und ein Fail-closed-Deploy-Guard sind vorbereitet. Anlage und erster Rollout folgen ausschließlich dem Produktions-Runbook nach Kosten-, Organisations- und Domainfreigabe.
+Das separate Supabase-Projekt `zeyhermutteros-production` (`vtmtxaaojbqqzwxkodye`, `eu-central-1`) ist aktiv. Alle 73 Repository-Migrationen sind angewandt; das öffentliche Schema hat vollständig aktiviertes RLS, der private Medien-Bucket ist policy-geschützt, und `generate-property-expose` ist aktiv. PROD ist leer und enthält weder BETA-Geschäftsdaten noch übernommene Auth-Nutzer.
+
+Noch nicht ausgerollt sind der öffentliche PII-Endpunkt `website-inquiry` (gesonderte Freigabe erforderlich) und der Cloudflare-Worker `zeyhermutter-production`. Worker-Konfiguration, manueller GitHub-Workflow und Fail-closed-Deploy-Guard sind vorbereitet; der erste Web-Rollout folgt ausschließlich nach Release-PR und ausdrücklicher Go-live-Freigabe.

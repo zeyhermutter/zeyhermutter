@@ -16,7 +16,7 @@ Dieses Repository und seine Infrastruktur sind ausschließlich für ZeyherMutter
 ## Environments
 
 - `develop` → `BETA`: Cloudflare Worker `zeyhermutter` unter `https://zeyhermutter.playsony.workers.dev` + Supabase `zeyhermutteros-staging` (`zqhcxudpfwsfuokencvy`)
-- `main` → `PROD`: separater Worker `zeyhermutter-production` und separates Supabase-Projekt; Ressourcen werden erst nach Kosten-/Organisationsfreigabe aktiviert
+- `main` → `PROD`: vorbereiteter Worker `zeyhermutter-production` + Supabase `zeyhermutteros-production` (`vtmtxaaojbqqzwxkodye`); Worker-Rollout ausschließlich nach expliziter Go-live-Freigabe
 
 ## Befehle
 
