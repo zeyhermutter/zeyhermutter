@@ -37,6 +37,7 @@ export default [
   route("properties", "routes/properties.tsx"),
   route("properties/new", "routes/property-new.tsx"),
   route("properties/:propertyId", "routes/property-detail.tsx"),
+  route("properties/:propertyId/interests", "routes/property-interests.tsx"),
   route("properties/:propertyId/publication", "routes/property-publication.tsx"),
   route("properties/:propertyId/publication/preview", "routes/property-publication-preview.tsx"),
   route("properties/:propertyId/documents", "routes/property-documents.tsx"),
