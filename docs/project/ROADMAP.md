@@ -94,14 +94,23 @@ ZeyherMutterOS wird als produktionsfähige, sichere und nachvollziehbare Plattfo
 - [x] Interessenten-/Suchprofil-Verzeichnis
 - [x] Suchprofil-Neuanlage und -Bearbeitung
 - [x] mehrere Suchorte je Profil verwalten
+- [x] Suchradius mit serverseitiger Validierung und Pflicht-Suchort
+- [x] PLZ-/Ort-/Radius-Matching inkl. Altbestand-Normalisierung
 - [x] CRM-Dashboard/Navigationsintegration für Interessenten
 - [x] Anfragen-Workflow
-- [x] Matching Immobilie ↔ Suchprofil
-- [x] Besichtigungen
+- [x] Matching Suchprofil → Immobilie mit nachvollziehbaren Gründen
+- [x] Reverse Matching Immobilie → passende Interessenten über dieselbe Matching-Engine
+- [x] Besichtigungen inkl. Kontextübernahme und Rückverknüpfungen
+- [x] kontrollierte Korrektur einer versehentlich als durchgeführt markierten Besichtigung
 - [x] Feedback
-- [x] Kaufangebote
+- [x] Kaufangebote mit `ZM-KA-######`, Folgeangeboten und nur einem aktuellen aktiven Angebot je Kontakt/Immobilie
 - [x] globale Suche / Aufgaben / Activity / Collaboration technisch integriert
-- [ ] Browser-Smoke-Test Modul 04
+- [x] Aufgabenmodal und lesbare fachliche Bezüge für Suchprofile/Anfragen/Besichtigungen
+- [x] technische Negativtests M04-17 / M04-45 / M04-46 / M04-47 / M04-48
+- [x] Security-/Performance-Advisor nach Fixblock geprüft
+- [ ] M04-49 Responsive Browser-Abnahme durch Nutzer
+- [ ] M04-50 vollständiger End-to-End-Browser-Test durch Nutzer
+- [ ] vollständiger Browser-Smoke-Test Modul 04
 - [ ] Modul-04-Abschlussprüfung gegen Definition of Done
 
 ### Phase 5 – Website & Exposés — IN ARBEIT
@@ -113,10 +122,10 @@ ZeyherMutterOS wird als produktionsfähige, sichere und nachvollziehbare Plattfo
 - [x] öffentliche Immobilienliste `/immobilien`
 - [x] öffentliche Immobilienseite `/immobilien/:slug`
 - [x] interne Veröffentlichungsakte `/properties/:propertyId/publication`
-- [ ] öffentliche, kontrollierte Bildauslieferung für `public_approved` Medien
-- [ ] Website-Anfrageformular → bestehender Modul-04-Anfrageprozess
-- [ ] Exposé-Generator auf Basis derselben Publikationsversion
-- [ ] Exposé-Versionierung und Freigabe
+- [x] kontrollierte Bildauslieferungs-Grundlage für `public_approved` Medien
+- [x] Website-Anfrage-Intake in das bestehende Modul-04-Anfragemodell
+- [x] Exposé-Datenmodell und PDF-Generator-Grundlage auf Basis einer Publikationsversion
+- [ ] Exposé-UI/Route vollständig integrieren und browserseitig abnehmen
 - [ ] Veröffentlichungs-/Exposé-Browser-Smoke-Test
 - [ ] Modul-05-Abschlussprüfung gegen Definition of Done
 
