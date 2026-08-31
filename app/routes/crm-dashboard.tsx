@@ -8,198 +8,55 @@ import "~/property-map.css";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { supabase, responseHeaders, profile } = await requireActiveUser(request, context.cloudflare.env);
-
+  const now=new Date().toISOString();
   const [
-    { data: contacts, error: contactError },
-    { data: tasks, error: taskError },
-    { count: contactCount, error: contactCountError },
-    { count: organizationCount, error: organizationError },
-    { count: taskCount, error: taskCountError },
-    { count: unreadCount, error: notificationError },
-    { count: propertyCount, error: propertyError },
-    propertyPermission,
+    { data: contacts, error: contactError }, { data: tasks, error: taskError },
+    { count: contactCount, error: contactCountError }, { count: organizationCount, error: organizationError },
+    { count: taskCount, error: taskCountError }, { count: unreadCount, error: notificationError },
+    { count: propertyCount, error: propertyError }, propertyPermission,
+    { count: leadCount, error: leadCountError }, { count: newLeadCount, error: newLeadCountError },
+    { count: overdueLeadCount, error: overdueLeadError }, { data: recentLeads, error: recentLeadError },
   ] = await Promise.all([
     supabase.from("contacts").select("id, contact_number, first_name, last_name, email, mobile, status, updated_at").is("archived_at", null).order("updated_at", { ascending: false }).limit(25),
-    supabase.from("tasks").select("id, task_number, title, status, priority, due_at, contact_id").is("archived_at", null).in("status", ["OPEN", "IN_PROGRESS"]).order("due_at", { ascending: true }).limit(10),
+    supabase.from("tasks").select("id, task_number, title, status, priority, due_at, contact_id,lead_id").is("archived_at", null).in("status", ["OPEN", "IN_PROGRESS"]).order("due_at", { ascending: true }).limit(10),
     supabase.from("contacts").select("id", { count: "exact", head: true }).is("archived_at", null),
     supabase.from("organizations").select("id", { count: "exact", head: true }).is("archived_at", null),
     supabase.from("tasks").select("id", { count: "exact", head: true }).is("archived_at", null).in("status", ["OPEN", "IN_PROGRESS"]),
     supabase.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null),
     supabase.from("properties").select("id", { count: "exact", head: true }).neq("status", "ARCHIVED"),
     supabase.rpc("current_user_has_permission", { p_permission: "property.read" }),
+    supabase.from("leads").select("id",{count:"exact",head:true}).is("archived_at",null),
+    supabase.from("leads").select("id",{count:"exact",head:true}).is("archived_at",null).eq("status","NEW"),
+    supabase.from("leads").select("id",{count:"exact",head:true}).is("archived_at",null).not("follow_up_at","is",null).lt("follow_up_at",now).not("status","in","(WON,LOST)"),
+    supabase.from("leads").select("id,lead_number,status,follow_up_at,property_city,updated_at,contacts!inner(first_name,last_name)").is("archived_at",null).order("updated_at",{ascending:false}).limit(6),
   ]);
+  if (contactError || taskError || contactCountError || organizationError || taskCountError || notificationError || propertyError || leadCountError || newLeadCountError || overdueLeadError || recentLeadError) throw new Response("CRM-Daten konnten nicht geladen werden.", { status: 500 });
 
-  if (contactError || taskError || contactCountError || organizationError || taskCountError || notificationError || propertyError) {
-    throw new Response("CRM-Daten konnten nicht geladen werden.", { status: 500 });
-  }
-
-  let propertyMapPoints: PropertyMapPoint[] = [];
-  let missingCoordinateCount = 0;
+  let propertyMapPoints: PropertyMapPoint[] = []; let missingCoordinateCount = 0;
   if (propertyPermission.data === true) {
     const [{ data: addressRows }, { count: missingCount }] = await Promise.all([
-      supabase
-        .from("property_addresses")
-        .select("property_id, latitude, longitude, street, house_number, postal_code, city, district, properties!inner(id, property_number, internal_title, status, transaction_type)")
-        .not("latitude", "is", null)
-        .not("longitude", "is", null)
-        .neq("properties.status", "ARCHIVED")
-        .order("city"),
-      supabase
-        .from("property_addresses")
-        .select("id, properties!inner(status)", { count: "exact", head: true })
-        .or("latitude.is.null,longitude.is.null")
-        .neq("properties.status", "ARCHIVED"),
+      supabase.from("property_addresses").select("property_id, latitude, longitude, street, house_number, postal_code, city, district, properties!inner(id, property_number, internal_title, status, transaction_type)").not("latitude", "is", null).not("longitude", "is", null).neq("properties.status", "ARCHIVED").order("city"),
+      supabase.from("property_addresses").select("id, properties!inner(status)", { count: "exact", head: true }).or("latitude.is.null,longitude.is.null").neq("properties.status", "ARCHIVED"),
     ]);
-
     missingCoordinateCount = missingCount ?? 0;
-    propertyMapPoints = (addressRows ?? []).flatMap((row: any) => {
-      const property = Array.isArray(row.properties) ? row.properties[0] : row.properties;
-      const latitude = Number(row.latitude);
-      const longitude = Number(row.longitude);
-      if (!property || !Number.isFinite(latitude) || !Number.isFinite(longitude)) return [];
-      return [{
-        id: property.id,
-        propertyNumber: property.property_number,
-        title: property.internal_title,
-        status: property.status,
-        transactionType: property.transaction_type,
-        latitude,
-        longitude,
-        addressLabel: `${row.street} ${row.house_number}, ${row.postal_code} ${row.city}${row.district ? ` · ${row.district}` : ""}`,
-      } satisfies PropertyMapPoint];
-    });
+    propertyMapPoints = (addressRows ?? []).flatMap((row: any) => { const property = Array.isArray(row.properties) ? row.properties[0] : row.properties; const latitude = Number(row.latitude), longitude = Number(row.longitude); if (!property || !Number.isFinite(latitude) || !Number.isFinite(longitude)) return []; return [{ id: property.id, propertyNumber: property.property_number, title: property.internal_title, status: property.status, transactionType: property.transaction_type, latitude, longitude, addressLabel: `${row.street} ${row.house_number}, ${row.postal_code} ${row.city}${row.district ? ` · ${row.district}` : ""}` } satisfies PropertyMapPoint]; });
   }
-
-  return data({ profile, contacts: contacts ?? [], tasks: tasks ?? [], contactCount: contactCount ?? 0, organizationCount: organizationCount ?? 0, taskCount: taskCount ?? 0, unreadCount: unreadCount ?? 0, propertyCount: propertyCount ?? 0, propertyMapPoints, missingCoordinateCount }, { headers: responseHeaders() });
+  return data({ profile, contacts: contacts ?? [], tasks: tasks ?? [], contactCount: contactCount ?? 0, organizationCount: organizationCount ?? 0, taskCount: taskCount ?? 0, unreadCount: unreadCount ?? 0, propertyCount: propertyCount ?? 0, propertyMapPoints, missingCoordinateCount, leadCount:leadCount??0,newLeadCount:newLeadCount??0,overdueLeadCount:overdueLeadCount??0,recentLeads:recentLeads??[] }, { headers: responseHeaders() });
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
-  const { supabase, responseHeaders } = await requirePermission(request, context.cloudflare.env, "property.write");
-  const fd = await request.formData();
-  if (String(fd.get("_intent") ?? "") !== "backfill_geocodes") {
-    return data({ error: "Unbekannte Aktion." }, { status: 400, headers: responseHeaders() });
-  }
-
-  const { data: addresses, error } = await supabase
-    .from("property_addresses")
-    .select("id, version, street, house_number, postal_code, city, district, country, properties!inner(status)")
-    .or("latitude.is.null,longitude.is.null")
-    .neq("properties.status", "ARCHIVED")
-    .limit(5);
-
+  const { supabase, responseHeaders } = await requirePermission(request, context.cloudflare.env, "property.write"); const fd = await request.formData();
+  if (String(fd.get("_intent") ?? "") !== "backfill_geocodes") return data({ error: "Unbekannte Aktion." }, { status: 400, headers: responseHeaders() });
+  const { data: addresses, error } = await supabase.from("property_addresses").select("id, version, street, house_number, postal_code, city, district, country, properties!inner(status)").or("latitude.is.null,longitude.is.null").neq("properties.status", "ARCHIVED").limit(5);
   if (error) return data({ error: "Fehlende Koordinaten konnten nicht ermittelt werden." }, { status: 400, headers: responseHeaders() });
-
-  let geocoded = 0;
-  for (const address of addresses ?? []) {
-    if (!address.street || !address.house_number || !address.postal_code || !address.city) continue;
-    try {
-      const coordinates = await geocodePropertyAddress(supabase, {
-        street: address.street,
-        houseNumber: address.house_number,
-        postalCode: address.postal_code,
-        city: address.city,
-        district: address.district,
-        country: address.country,
-      });
-      if (!coordinates) continue;
-      const { data: updated } = await supabase
-        .from("property_addresses")
-        .update({ latitude: coordinates.latitude, longitude: coordinates.longitude })
-        .eq("id", address.id)
-        .eq("version", address.version)
-        .select("id")
-        .maybeSingle();
-      if (updated) geocoded += 1;
-    } catch {
-      // Einzelne externe Geokodierungsfehler blockieren die übrigen Adressen nicht.
-    }
-  }
-
+  let geocoded = 0; for (const address of addresses ?? []) { if (!address.street || !address.house_number || !address.postal_code || !address.city) continue; try { const coordinates = await geocodePropertyAddress(supabase, { street: address.street, houseNumber: address.house_number, postalCode: address.postal_code, city: address.city, district: address.district, country: address.country }); if (!coordinates) continue; const { data: updated } = await supabase.from("property_addresses").update({ latitude: coordinates.latitude, longitude: coordinates.longitude }).eq("id", address.id).eq("version", address.version).select("id").maybeSingle(); if (updated) geocoded += 1; } catch {} }
   return data({ geocoded }, { headers: responseHeaders() });
 }
 
-function formatDate(value: string | null) {
-  if (!value) return "—";
-  return new Intl.DateTimeFormat("de-DE", { dateStyle: "short", timeZone: "Europe/Berlin" }).format(new Date(value));
-}
-
+function formatDate(value: string | null) { if (!value) return "—"; return new Intl.DateTimeFormat("de-DE", { dateStyle: "short", timeZone: "Europe/Berlin" }).format(new Date(value)); }
+function one(value:any){return Array.isArray(value)?value[0]:value;}
 export default function CrmDashboard() {
-  const { profile, contacts, tasks, contactCount, organizationCount, taskCount, unreadCount, propertyCount, propertyMapPoints, missingCoordinateCount } = useLoaderData<typeof loader>();
-  const geocodeFetcher = useFetcher<typeof action>();
-  const backfillStarted = useRef(false);
-
-  useEffect(() => {
-    if (backfillStarted.current || missingCoordinateCount <= 0 || geocodeFetcher.state !== "idle") return;
-    backfillStarted.current = true;
-    const formData = new FormData();
-    formData.set("_intent", "backfill_geocodes");
-    geocodeFetcher.submit(formData, { method: "post" });
-  }, [missingCoordinateCount, geocodeFetcher]);
-
-  return (
-    <main className="app-shell">
-      <aside className="sidebar">
-        <div className="brand"><span className="brand-mark">ZM</span><span>ZeyherMutterOS</span></div>
-        <nav className="sidebar-nav" aria-label="Hauptnavigation">
-          <Link className="nav-item active" to="/crm">CRM</Link>
-          <Link className="nav-item" to="/crm/search">Suche</Link>
-          <Link className="nav-item" to="/crm/tasks">Aufgaben</Link>
-          <Link className="nav-item" to="/crm/notifications">Benachrichtigungen{unreadCount > 0 ? ` (${unreadCount})` : ""}</Link>
-          <Link className="nav-item" to="/crm/organizations">Organisationen</Link>
-          <Link className="nav-item" to="/crm/history">Systemhistorie</Link>
-          <Link className="nav-item" to="/crm/archive">Archiv</Link>
-          <Link className="nav-item" to="/properties">Immobilien</Link>
-          <span className="nav-item muted">Leads</span>
-          <span className="nav-item muted">Besichtigungen</span>
-          <span className="nav-item muted">Provisionen</span>
-        </nav>
-        <div className="sidebar-footer"><small>STAGING</small><strong>{profile.display_name}</strong><Form method="post" action="/logout"><button className="text-button" type="submit">Abmelden</button></Form></div>
-      </aside>
-
-      <section className="app-content">
-        <header className="app-header">
-          <div><p className="eyebrow">Phase 1 · CRM</p><h1 className="app-title">Guten Tag, {profile.display_name}.</h1></div>
-          <div className="header-actions"><Link className="secondary-button link-button" to="/properties">Immobilien · {propertyCount}</Link><Link className="secondary-button link-button" to="/crm/notifications">Inbox{unreadCount > 0 ? ` · ${unreadCount}` : ""}</Link><Link className="secondary-button link-button" to="/crm/search">Suchen</Link><Link className="primary-button link-button" to="/crm/contacts/new">+ Kontakt</Link><span className="badge">STAGING</span></div>
-        </header>
-
-        <div className="metric-grid">
-          <article className="metric-card"><span>Kontakte</span><strong>{contactCount}</strong><small>aktive Kontakte</small></article>
-          <article className="metric-card"><span>Organisationen</span><strong>{organizationCount}</strong><small>aktive Firmen/Partner</small></article>
-          <article className="metric-card"><span>Offene Aufgaben</span><strong>{taskCount}</strong><small>offen / in Bearbeitung</small></article>
-        </div>
-
-        <section className="data-card property-map-card">
-          <div className="card-head"><div><p className="eyebrow">Immobilien</p><h2>Standorte</h2></div><div><Link className="subtle-link" to="/properties">Alle Immobilien</Link><div className="map-coverage-note">{propertyMapPoints.length} von {propertyCount} lokalisiert{geocodeFetcher.state !== "idle" ? " · Koordinaten werden ergänzt…" : ""}</div></div></div>
-          <PropertyOverviewMap points={propertyMapPoints} />
-        </section>
-
-        <div className="dashboard-grid">
-          <section className="data-card">
-            <div className="card-head"><div><p className="eyebrow">Kontakte</p><h2>Zuletzt bearbeitet</h2></div><Link className="subtle-link" to="/crm/contacts/new">Neu anlegen</Link></div>
-            {contacts.length === 0 ? <p className="empty-state">Noch keine Kontakte vorhanden.</p> : (
-              <div className="data-list">
-                {contacts.map((contact) => (
-                  <div className="data-row" key={contact.id}>
-                    <div><strong>{contact.first_name} {contact.last_name}</strong><small>{contact.contact_number} · {contact.email ?? contact.mobile ?? "—"}</small></div>
-                    <div className="row-meta"><Link className="subtle-link" to={`/crm/contacts/${contact.id}/relations`}>Arbeitsbereich</Link><Link className="subtle-link" to={`/crm/contacts/${contact.id}/collaboration`}>Aktivität & Team</Link><Link className="subtle-link" to={`/crm/contacts/${contact.id}/associations`}>Firma & Adresse</Link><Link className="subtle-link" to={`/crm/contacts/${contact.id}`}>Stammdaten</Link></div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section className="data-card">
-            <div className="card-head"><div><p className="eyebrow">Wiedervorlagen</p><h2>Nächste Aufgaben</h2></div><Link className="subtle-link" to="/crm/tasks">Alle Aufgaben</Link></div>
-            {tasks.length === 0 ? <p className="empty-state">Keine offenen Aufgaben.</p> : (
-              <div className="data-list">
-                {tasks.map((task) => (
-                  <div className="data-row" key={task.id}><div><strong>{task.title}</strong><small>{task.task_number} · {task.priority}</small></div><div className="row-meta"><span>{task.status}</span><small>{formatDate(task.due_at)}</small></div></div>
-                ))}
-              </div>
-            )}
-          </section>
-        </div>
-      </section>
-    </main>
-  );
+  const { profile, contacts, tasks, contactCount, organizationCount, taskCount, unreadCount, propertyCount, propertyMapPoints, missingCoordinateCount,leadCount,newLeadCount,overdueLeadCount,recentLeads } = useLoaderData<typeof loader>(); const geocodeFetcher = useFetcher<typeof action>(); const backfillStarted = useRef(false);
+  useEffect(() => { if (backfillStarted.current || missingCoordinateCount <= 0 || geocodeFetcher.state !== "idle") return; backfillStarted.current = true; const formData = new FormData(); formData.set("_intent", "backfill_geocodes"); geocodeFetcher.submit(formData, { method: "post" }); }, [missingCoordinateCount, geocodeFetcher]);
+  return <main className="app-shell"><aside className="sidebar"><div className="brand"><span className="brand-mark">ZM</span><span>ZeyherMutterOS</span></div><nav className="sidebar-nav" aria-label="Hauptnavigation"><Link className="nav-item active" to="/crm">CRM</Link><Link className="nav-item" to="/crm/search">Suche</Link><Link className="nav-item" to="/crm/tasks">Aufgaben</Link><Link className="nav-item" to="/crm/notifications">Benachrichtigungen{unreadCount > 0 ? ` (${unreadCount})` : ""}</Link><Link className="nav-item" to="/crm/organizations">Organisationen</Link><Link className="nav-item" to="/crm/history">Systemhistorie</Link><Link className="nav-item" to="/crm/archive">Archiv</Link><Link className="nav-item" to="/properties">Immobilien</Link><Link className="nav-item" to="/leads">Leads</Link><span className="nav-item muted">Besichtigungen</span><span className="nav-item muted">Provisionen</span></nav><div className="sidebar-footer"><small>STAGING</small><strong>{profile.display_name}</strong><Form method="post" action="/logout"><button className="text-button" type="submit">Abmelden</button></Form></div></aside><section className="app-content"><header className="app-header"><div><p className="eyebrow">CRM · Immobilien · Verkäufer-Leads</p><h1 className="app-title">Guten Tag, {profile.display_name}.</h1></div><div className="header-actions"><Link className="secondary-button link-button" to="/leads">Leads · {leadCount}</Link><Link className="secondary-button link-button" to="/properties">Immobilien · {propertyCount}</Link><Link className="secondary-button link-button" to="/crm/notifications">Inbox{unreadCount > 0 ? ` · ${unreadCount}` : ""}</Link><Link className="secondary-button link-button" to="/crm/search">Suchen</Link><Link className="primary-button link-button" to="/leads/new">+ Lead</Link><span className="badge">STAGING</span></div></header><div className="metric-grid"><article className="metric-card"><span>Kontakte</span><strong>{contactCount}</strong><small>aktive Kontakte</small></article><article className="metric-card"><span>Verkäufer-Leads</span><strong>{leadCount}</strong><small>{newLeadCount} neu · {overdueLeadCount} überfällig</small></article><article className="metric-card"><span>Organisationen</span><strong>{organizationCount}</strong><small>aktive Firmen/Partner</small></article><article className="metric-card"><span>Offene Aufgaben</span><strong>{taskCount}</strong><small>offen / in Bearbeitung</small></article></div><section className="data-card"><div className="card-head"><div><p className="eyebrow">Modul 03</p><h2>Aktuelle Verkäufer-Leads</h2></div><Link className="subtle-link" to="/leads">Pipeline öffnen</Link></div><div className="data-list">{recentLeads.map((lead:any)=>{const c=one(lead.contacts);const overdue=lead.follow_up_at&&new Date(lead.follow_up_at).getTime()<Date.now();return <Link className="data-row data-row-link" to={`/leads/${lead.id}`} key={lead.id}><div><strong>{c?`${c.first_name} ${c.last_name}`:lead.lead_number}</strong><small>{lead.lead_number} · {lead.status}{lead.property_city?` · ${lead.property_city}`:""}</small></div><div className="row-meta"><span className={overdue?"lead-overdue":""}>{lead.follow_up_at?`Wiedervorlage ${formatDate(lead.follow_up_at)}`:"Keine Wiedervorlage"}</span><small>{formatDate(lead.updated_at)}</small></div></Link>})}{recentLeads.length===0?<p className="empty-state">Noch keine aktiven Verkäufer-Leads.</p>:null}</div></section><section className="data-card property-map-card"><div className="card-head"><div><p className="eyebrow">Immobilien</p><h2>Standorte</h2></div><div><Link className="subtle-link" to="/properties">Alle Immobilien</Link><div className="map-coverage-note">{propertyMapPoints.length} von {propertyCount} lokalisiert{geocodeFetcher.state !== "idle" ? " · Koordinaten werden ergänzt…" : ""}</div></div></div><PropertyOverviewMap points={propertyMapPoints} /></section><div className="dashboard-grid"><section className="data-card"><div className="card-head"><div><p className="eyebrow">Kontakte</p><h2>Zuletzt bearbeitet</h2></div><Link className="subtle-link" to="/crm/contacts/new">Neu anlegen</Link></div>{contacts.length === 0 ? <p className="empty-state">Noch keine Kontakte vorhanden.</p> : <div className="data-list">{contacts.map((contact) => <div className="data-row" key={contact.id}><div><strong>{contact.first_name} {contact.last_name}</strong><small>{contact.contact_number} · {contact.email ?? contact.mobile ?? "—"}</small></div><div className="row-meta"><Link className="subtle-link" to={`/crm/contacts/${contact.id}/relations`}>Arbeitsbereich</Link><Link className="subtle-link" to={`/crm/contacts/${contact.id}`}>Stammdaten</Link></div></div>)}</div>}</section><section className="data-card"><div className="card-head"><div><p className="eyebrow">Wiedervorlagen</p><h2>Nächste Aufgaben</h2></div><Link className="subtle-link" to="/crm/tasks">Alle Aufgaben</Link></div>{tasks.length === 0 ? <p className="empty-state">Keine offenen Aufgaben.</p> : <div className="data-list">{tasks.map((task) => <div className="data-row" key={task.id}><div><strong>{task.title}</strong><small>{task.task_number} · {task.priority}</small></div><div className="row-meta"><span>{task.status}</span><small>{formatDate(task.due_at)}</small>{task.lead_id?<Link className="subtle-link" to={`/leads/${task.lead_id}`}>Lead öffnen</Link>:null}</div></div>)}</div>}</section></div></section></main>;
 }
