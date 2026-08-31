@@ -177,3 +177,129 @@ h1 { max-width: 850px; margin: 0; font-size: clamp(42px, 7vw, 82px); line-height
   .row-meta { text-align: left; }
   .auth-card { padding: 26px; }
 }
+
+/* Beta – responsive data-card sizing and spacing */
+:root {
+  --crm-content-max: 1320px;
+  --crm-card-gap: clamp(14px, 1.25vw, 20px);
+  --crm-card-padding: clamp(18px, 1.45vw, 22px);
+}
+
+/* Arbeitsbereiche nutzen auf Laptopbreite die tatsächlich verfügbare Fläche. */
+body .module04-content,
+body .crm-search-page,
+body .audit-page,
+body .inquiry-page,
+body .search-profile-page,
+body .module04-context-card,
+body .module04-wide-card {
+  width: min(var(--crm-content-max), 100%);
+  max-width: var(--crm-content-max) !important;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.app-shell .app-content > .data-card,
+body .editor-shell > .data-card.property-section,
+body .editor-shell > .property-workflow-section {
+  width: min(var(--crm-content-max), 100%);
+  max-width: var(--crm-content-max) !important;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Keine künstlich schmalere zweite Karte im Objektbestand. */
+body .editor-shell > .data-card.property-section + .data-card.property-section {
+  max-width: var(--crm-content-max) !important;
+}
+
+/* Karten behalten ihr Design, nutzen aber responsive Abstände. */
+.app-content .data-card,
+.editor-shell .data-card {
+  min-width: 0;
+  padding: var(--crm-card-padding);
+  overflow-wrap: anywhere;
+}
+.app-content .data-card > *,
+.editor-shell .data-card > *,
+.data-row > * {
+  min-width: 0;
+}
+.data-card .data-row strong,
+.data-card .data-row small,
+.data-card .row-meta,
+.data-card a {
+  overflow-wrap: anywhere;
+}
+
+/* KPI-Karten: 4 in einer Reihe wenn sinnvoll, sonst 2/2 – niemals 3/1. */
+.metric-grid {
+  max-width: var(--crm-content-max);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--crm-card-gap);
+}
+
+/* Normale Dashboard-Karten brechen anhand ihrer echten Mindestbreite um. */
+.dashboard-grid {
+  max-width: var(--crm-content-max);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+  gap: var(--crm-card-gap);
+}
+
+/* Einheitliche vertikale und horizontale Abstände in den betroffenen Arbeitsbereichen. */
+body .module04-content,
+body .crm-search-page,
+body .audit-page,
+body .inquiry-page,
+body .search-profile-page,
+.tasks-page,
+.dashboard-grid {
+  gap: var(--crm-card-gap);
+}
+
+/* Zwei große Objektkarten bleiben nur nebeneinander, solange sie lesbar sind. */
+.property-summary-grid {
+  max-width: var(--crm-content-max);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+  gap: var(--crm-card-gap);
+}
+
+/* Karteninhalte reagieren auf die Kartenbreite, nicht nur auf den Viewport. */
+.app-content .data-card,
+.editor-shell .data-card {
+  container-type: inline-size;
+}
+@container (max-width: 480px) {
+  .data-card .card-head {
+    flex-wrap: wrap;
+  }
+  .data-card .data-row {
+    display: grid;
+    gap: 8px;
+  }
+  .data-card .row-meta {
+    text-align: left;
+  }
+}
+
+@media (max-width: 1240px) {
+  .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .app-content .data-card,
+  .editor-shell .data-card {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 520px) {
+  .metric-grid {
+    grid-template-columns: 1fr;
+  }
+}
