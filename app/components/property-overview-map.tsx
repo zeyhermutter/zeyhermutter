@@ -18,6 +18,13 @@ type PointCluster = { id: string; points: PositionedPoint[]; x: number; y: numbe
 
 const TILE_SIZE = 256;
 const CLUSTER_RADIUS_PX = 46;
+const DASHBOARD_LAYOUT_CSS = `
+.app-content .metric-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.app-content>.metric-grid+.data-card{width:100%;max-width:1320px!important;margin:12px auto 0}
+@media(max-width:1180px){.app-content .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:720px){.app-content .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.app-content .metric-grid{grid-template-columns:1fr}}
+`;
 
 function clampLatitude(latitude: number) {
   return Math.max(-85.05112878, Math.min(85.05112878, latitude));
@@ -96,9 +103,10 @@ function clusterPoints(points: PositionedPoint[]): PointCluster[] {
 
 export function PropertyOverviewMap({ points }: { points: PropertyMapPoint[] }) {
   const [selectedClusterId, setSelectedClusterId] = useState<string | null>(null);
+  const layoutRules = <style>{DASHBOARD_LAYOUT_CSS}</style>;
 
   if (points.length === 0) {
-    return <p className="empty-state">Noch keine Immobilie mit Koordinaten vorhanden.</p>;
+    return <>{layoutRules}<p className="empty-state">Noch keine Immobilie mit Koordinaten vorhanden.</p></>;
   }
 
   const zoom = chooseZoom(points);
@@ -137,83 +145,86 @@ export function PropertyOverviewMap({ points }: { points: PropertyMapPoint[] }) 
   }
 
   return (
-    <div className="property-map" aria-label="Karte der Immobilienangebote">
-      <div className="property-map-tiles" aria-hidden="true">
-        {tiles.map((tile) => (
-          <img
-            alt=""
-            draggable={false}
-            key={tile.key}
-            loading="lazy"
-            src={tile.src}
-            style={{ left: `calc(50% + ${tile.left}px)`, top: `calc(50% + ${tile.top}px)` }}
-          />
-        ))}
-      </div>
-
-      {clusters.map((cluster) => {
-        const left = `calc(50% + ${cluster.x - center.x}px)`;
-        const top = `calc(50% + ${cluster.y - center.y}px)`;
-
-        if (cluster.points.length === 1) {
-          const point = cluster.points[0].point;
-          return (
-            <Link
-              className={`property-map-marker status-${point.status.toLowerCase().replaceAll("_", "-")}`}
-              key={cluster.id}
-              style={{ left, top }}
-              title={`${point.propertyNumber} · ${point.title} · ${point.addressLabel}`}
-              to={`/properties/${point.id}`}
-            >
-              <span>{point.transactionType === "SALE" ? "V" : "M"}</span>
-            </Link>
-          );
-        }
-
-        const active = selectedCluster?.id === cluster.id;
-        return (
-          <button
-            aria-expanded={active}
-            aria-label={`${cluster.points.length} Immobilien in diesem Bereich anzeigen`}
-            className={`property-map-cluster${active ? " active" : ""}`}
-            key={cluster.id}
-            onClick={() => setSelectedClusterId(active ? null : cluster.id)}
-            style={{ left, top }}
-            type="button"
-          >
-            {cluster.points.length}
-          </button>
-        );
-      })}
-
-      {selectedCluster ? (
-        <div className="property-map-popup" role="dialog" aria-label="Immobilien an diesem Standort">
-          <div className="property-map-popup-head">
-            <div>
-              <strong>{selectedCluster.points.length} Immobilien</strong>
-              <small>an diesem Standort bzw. in unmittelbarer Nähe</small>
-            </div>
-            <button aria-label="Übersicht schließen" onClick={() => setSelectedClusterId(null)} type="button">×</button>
-          </div>
-          <div className="property-map-popup-list">
-            {selectedCluster.points.map(({ point }) => (
-              <Link key={point.id} to={`/properties/${point.id}`} className="property-map-popup-item">
-                <span className={`property-map-popup-marker status-${point.status.toLowerCase().replaceAll("_", "-")}`}>
-                  {point.transactionType === "SALE" ? "V" : "M"}
-                </span>
-                <span>
-                  <strong>{point.propertyNumber} · {point.title}</strong>
-                  <small>{statusLabel(point.status)} · {point.addressLabel}</small>
-                </span>
-              </Link>
-            ))}
-          </div>
+    <>
+      {layoutRules}
+      <div className="property-map" aria-label="Karte der Immobilienangebote">
+        <div className="property-map-tiles" aria-hidden="true">
+          {tiles.map((tile) => (
+            <img
+              alt=""
+              draggable={false}
+              key={tile.key}
+              loading="lazy"
+              src={tile.src}
+              style={{ left: `calc(50% + ${tile.left}px)`, top: `calc(50% + ${tile.top}px)` }}
+            />
+          ))}
         </div>
-      ) : null}
 
-      <div className="property-map-attribution">
-        © <a href="https://www.openstreetmap.org/copyright" rel="noreferrer" target="_blank">OpenStreetMap-Mitwirkende</a>
+        {clusters.map((cluster) => {
+          const left = `calc(50% + ${cluster.x - center.x}px)`;
+          const top = `calc(50% + ${cluster.y - center.y}px)`;
+
+          if (cluster.points.length === 1) {
+            const point = cluster.points[0].point;
+            return (
+              <Link
+                className={`property-map-marker status-${point.status.toLowerCase().replaceAll("_", "-")}`}
+                key={cluster.id}
+                style={{ left, top }}
+                title={`${point.propertyNumber} · ${point.title} · ${point.addressLabel}`}
+                to={`/properties/${point.id}`}
+              >
+                <span>{point.transactionType === "SALE" ? "V" : "M"}</span>
+              </Link>
+            );
+          }
+
+          const active = selectedCluster?.id === cluster.id;
+          return (
+            <button
+              aria-expanded={active}
+              aria-label={`${cluster.points.length} Immobilien in diesem Bereich anzeigen`}
+              className={`property-map-cluster${active ? " active" : ""}`}
+              key={cluster.id}
+              onClick={() => setSelectedClusterId(active ? null : cluster.id)}
+              style={{ left, top }}
+              type="button"
+            >
+              {cluster.points.length}
+            </button>
+          );
+        })}
+
+        {selectedCluster ? (
+          <div className="property-map-popup" role="dialog" aria-label="Immobilien an diesem Standort">
+            <div className="property-map-popup-head">
+              <div>
+                <strong>{selectedCluster.points.length} Immobilien</strong>
+                <small>an diesem Standort bzw. in unmittelbarer Nähe</small>
+              </div>
+              <button aria-label="Übersicht schließen" onClick={() => setSelectedClusterId(null)} type="button">×</button>
+            </div>
+            <div className="property-map-popup-list">
+              {selectedCluster.points.map(({ point }) => (
+                <Link key={point.id} to={`/properties/${point.id}`} className="property-map-popup-item">
+                  <span className={`property-map-popup-marker status-${point.status.toLowerCase().replaceAll("_", "-")}`}>
+                    {point.transactionType === "SALE" ? "V" : "M"}
+                  </span>
+                  <span>
+                    <strong>{point.propertyNumber} · {point.title}</strong>
+                    <small>{statusLabel(point.status)} · {point.addressLabel}</small>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        <div className="property-map-attribution">
+          © <a href="https://www.openstreetmap.org/copyright" rel="noreferrer" target="_blank">OpenStreetMap-Mitwirkende</a>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
