@@ -66,7 +66,7 @@ ZeyherMutterOS wird als produktionsfähige, sichere und nachvollziehbare Plattfo
 - [x] Browser-Smoke-Test Medien-Metadaten und Uploadpfad
 - [x] Modul-02-Abschlussprüfung gegen Definition of Done
 
-### Phase 3 – Eigentümer & Leads — IN ARBEIT
+### Phase 3 – Eigentümer & Leads — DONE
 - [x] Verkäufer-Lead-Datenmodell und automatische `ZM-L-######` Nummer
 - [x] serverseitige Lead-Statusmaschine
 - [x] Leadquellen/Attribution getrennt vom Status
@@ -83,17 +83,24 @@ ZeyherMutterOS wird als produktionsfähige, sichere und nachvollziehbare Plattfo
 - [x] CRM-Dashboard integriert Verkäufer-Leads
 - [x] atomarer und idempotenter Lead → Immobilie Workflow
 - [x] serverseitige Permission-, Conversion-, Integritäts- und Concurrency-Tests
-- [ ] aktueller Modul-03-UI-Stand erfolgreich auf Cloudflare sichtbar
-- [ ] vollständiger Browser-Smoke-Test Modul 03
-- [ ] Modul-03-Abschlussprüfung gegen Definition of Done
+- [x] aktueller Modul-03-UI-Stand erfolgreich auf Cloudflare sichtbar
+- [x] vollständiger Browser-Smoke-Test Modul 03
+- [x] Modul-03-Abschlussprüfung gegen Definition of Done
 
-### Phase 4 – Interessenten & Besichtigungen
-- [ ] Anfragen
-- [ ] Suchprofile
-- [ ] Matching
+### Phase 4 – Interessenten & Besichtigungen — IN ARBEIT
+- [x] Kern-Datenmodell für Anfragen
+- [x] Kern-Datenmodell für mehrere Suchprofile je CRM-Kontakt
+- [x] RLS/Permissions/Audit/Optimistic Concurrency für Suchprofile und Anfragen
+- [ ] Interessenten-/Suchprofil-Verzeichnis
+- [ ] Suchprofil-Neuanlage und -Bearbeitung
+- [ ] Anfragen-Workflow
+- [ ] Matching Immobilie ↔ Suchprofil
 - [ ] Besichtigungen
 - [ ] Feedback
 - [ ] Kaufangebote
+- [ ] globale Suche / Aufgaben / Activity / Collaboration vollständig integriert
+- [ ] Browser-Smoke-Test Modul 04
+- [ ] Modul-04-Abschlussprüfung gegen Definition of Done
 
 ### Phase 5 – Website & Exposés
 - [ ] öffentliche Website
