@@ -18,30 +18,36 @@ type Context = {
 
 function hrefId(selector: string, prefix: string) {
   const link = document.querySelector<HTMLAnchorElement>(selector);
-  if (!link) return { id: "", label: "—" };
+  if (!link) return "";
   const path = new URL(link.href, window.location.origin).pathname;
-  return { id: path.startsWith(prefix) ? path.slice(prefix.length).split("/")[0] : "", label: link.textContent?.trim() || "—" };
+  return path.startsWith(prefix) ? path.slice(prefix.length).split("/")[0] : "";
+}
+
+function summaryValue(label: string) {
+  const rows = Array.from(document.querySelectorAll<HTMLElement>(".inquiry-summary > div"));
+  const row = rows.find((item) => item.querySelector("span")?.textContent?.trim() === label);
+  return row?.querySelector("strong")?.textContent?.trim() || "—";
 }
 
 function collectContext(): Context {
-  const property = hrefId('a[href^="/properties/"]', "/properties/");
-  const contact = hrefId('a[href^="/crm/contacts/"]', "/crm/contacts/");
-  const searchProfile = hrefId('a[href^="/search-profiles/"]', "/search-profiles/");
-  const inquiry = hrefId('a[href^="/inquiries/"]', "/inquiries/");
+  const propertyId = hrefId('a[href^="/properties/"]', "/properties/");
+  const contactId = hrefId('a[href^="/crm/contacts/"]', "/crm/contacts/");
+  const searchProfileId = hrefId('a[href^="/search-profiles/"]', "/search-profiles/");
+  const inquiryId = hrefId('a[href^="/inquiries/"]', "/inquiries/");
   const meetingPoint = document.querySelector<HTMLInputElement>('input[name="meeting_point"]')?.value ?? "";
   const responsible = document.querySelector<HTMLSelectElement>('select[name="primary_responsible_user"]');
   const responsibleOptions = responsible
     ? Array.from(responsible.options).map((option) => ({ value: option.value, label: option.textContent?.trim() || option.value }))
     : [];
   return {
-    propertyId: property.id,
-    propertyLabel: property.label,
-    contactId: contact.id,
-    contactLabel: contact.label,
-    searchProfileId: searchProfile.id,
-    searchProfileLabel: searchProfile.label,
-    inquiryId: inquiry.id,
-    inquiryLabel: inquiry.label,
+    propertyId,
+    propertyLabel: summaryValue("Immobilie"),
+    contactId,
+    contactLabel: summaryValue("Interessent"),
+    searchProfileId,
+    searchProfileLabel: summaryValue("Suchprofil"),
+    inquiryId,
+    inquiryLabel: summaryValue("Anfrage"),
     meetingPoint,
     responsibleUser: responsible?.value ?? "",
     responsibleOptions,
@@ -54,15 +60,26 @@ function isReplanTrigger(button: HTMLButtonElement) {
   const intent = form.querySelector<HTMLInputElement>('input[name="_intent"]')?.value ?? "";
   const targetStatus = form.querySelector<HTMLInputElement>('input[name="status"]')?.value ?? "";
   if (intent !== "status" || targetStatus !== "PLANNED") return false;
-
   const label = (button.textContent ?? "").trim().toLocaleLowerCase("de-DE");
   return label.includes("neu") || label.includes("erneut") || label.includes("planen");
+}
+
+function plusOneHour(value: string) {
+  if (!value) return "";
+  const date = new Date(`${value}:00`);
+  if (Number.isNaN(date.getTime())) return "";
+  date.setHours(date.getHours() + 1);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 export function ViewingReplanModal() {
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [context, setContext] = useState<Context | null>(null);
+  const [startsAt, setStartsAt] = useState("");
+  const [endsAt, setEndsAt] = useState("");
+  const [endEdited, setEndEdited] = useState(false);
 
   useEffect(() => {
     if (!/^\/viewings\/[^/]+\/?$/.test(location.pathname)) return;
@@ -73,12 +90,31 @@ export function ViewingReplanModal() {
       event.preventDefault();
       event.stopPropagation();
       setContext(collectContext());
+      setStartsAt("");
+      setEndsAt("");
+      setEndEdited(false);
       setOpen(true);
     };
 
     document.addEventListener("click", onClick, true);
     return () => document.removeEventListener("click", onClick, true);
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (!open || !context?.propertyId) return;
+    let cancelled = false;
+    fetch(`/properties/${context.propertyId}`, { credentials: "same-origin" })
+      .then((response) => response.ok ? response.text() : "")
+      .then((html) => {
+        if (!html || cancelled) return;
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        const title = doc.querySelector(".property-title-row .editor-title, h1.editor-title")?.textContent?.trim();
+        if (!title) return;
+        setContext((current) => current ? { ...current, propertyLabel: current.propertyLabel && current.propertyLabel !== "—" ? `${current.propertyLabel} · ${title}` : title } : current);
+      })
+      .catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [open, context?.propertyId]);
 
   useEffect(() => {
     if (!open) return;
@@ -117,8 +153,8 @@ export function ViewingReplanModal() {
           <input type="hidden" name="inquiry_id" value={context.inquiryId}/>
 
           <div className="form-grid">
-            <label className="form-field"><span>Beginn *</span><input name="starts_at" type="datetime-local" required autoFocus/></label>
-            <label className="form-field"><span>Ende</span><input name="ends_at" type="datetime-local"/></label>
+            <label className="form-field"><span>Beginn *</span><input name="starts_at" type="datetime-local" required autoFocus value={startsAt} onChange={(event) => { const value = event.currentTarget.value; setStartsAt(value); if (!endEdited) setEndsAt(plusOneHour(value)); }}/></label>
+            <label className="form-field"><span>Ende</span><input name="ends_at" type="datetime-local" value={endsAt} onChange={(event) => { setEndEdited(true); setEndsAt(event.currentTarget.value); }}/></label>
             <label className="form-field"><span>Treffpunkt</span><input name="meeting_point" defaultValue={context.meetingPoint}/></label>
             <label className="form-field"><span>Verantwortlich</span><select name="primary_responsible_user" defaultValue={context.responsibleUser}>{context.responsibleOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
           </div>
