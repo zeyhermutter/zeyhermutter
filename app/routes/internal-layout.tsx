@@ -1,4 +1,5 @@
 import { Link, Outlet, useLocation } from "react-router";
+import { LiveListFilters } from "~/components/live-list-filters";
 import { PersistentNavigation } from "~/components/persistent-navigation";
 
 function PropertyContextNavigation() {
@@ -25,6 +26,7 @@ export default function InternalLayout() {
     <div className="persistent-app-frame">
       <PersistentNavigation />
       <div className="persistent-app-main">
+        <LiveListFilters />
         <PropertyContextNavigation />
         <Outlet />
       </div>
