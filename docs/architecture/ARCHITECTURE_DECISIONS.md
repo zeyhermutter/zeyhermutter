@@ -154,3 +154,19 @@ Die Funktion benötigt `lead.convert` und die erforderlichen Immobilienberechtig
 **Status:** Accepted
 
 Bewertungstermin, geschätzter Marktwert, Bewertungsnotiz, Angebotszeitpunkt, angebotene Provision und Angebotskonditionen werden während der Akquise am Lead geführt. Finanzwerte werden als PostgreSQL `numeric` gespeichert. Bei der Konvertierung werden nur fachlich passende Werte in die Immobilienakte übernommen; der Lead bleibt als Herkunfts- und Prozessnachweis bestehen.
+
+## ADR-026 – Interessenten bleiben CRM-Kontakte
+**Status:** Accepted
+
+Ein Kauf- oder Mietinteressent erhält kein zweites Personen-Stammdatenobjekt. Identität, Kontaktwege, Beziehungen und Duplikaterkennung bleiben im bestehenden CRM-Kontakt. Ein Kontakt kann beliebig viele fachlich getrennte Suchprofile besitzen.
+
+**Warum:** Eine Person kann gleichzeitig mehrere Suchwünsche haben, ohne mehrfach im CRM angelegt zu werden. Historie und Kommunikation bleiben an einer Identität konsistent.
+
+## ADR-027 – Suchprofile sind versionierte Geschäftsvorgänge mit normalisierten Suchorten
+**Status:** Accepted
+
+Suchprofile speichern Kauf-/Mietart, Immobilientypen, Budget, Flächen, Zimmer, Grundstück, Baujahr, Einzugswunsch, Finanzierung und gewünschte Merkmale. Mehrere Zielregionen werden in `search_profile_locations` separat gespeichert statt als unstrukturierter Freitext.
+
+Suchprofile verwenden RLS, granulare Permissions, Audit-History, Archivieren/Wiederherstellen und Optimistic Concurrency. Die atomare Neuanlage eines Profils mit erstem Suchort erfolgt über `create_search_profile` als `SECURITY INVOKER`.
+
+**Warum:** Das spätere Immobilien-Matching muss Kriterien und Regionen nachvollziehbar bewerten können. Normalisierte Suchorte erlauben später PLZ-/Ort-/Radius-Matching ohne Migration von Freitextdaten.
