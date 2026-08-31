@@ -1,0 +1,5 @@
+type Props={open:boolean;message?:string};
+export function ConcurrencyConflictModal({open,message}:Props){
+ if(!open)return null;
+ return <div className="module04-modal-backdrop" role="presentation"><section className="module04-modal concurrency-dialog" role="alertdialog" aria-modal="true" aria-labelledby="concurrency-title"><div className="module04-modal-head"><div><p className="eyebrow">Änderungskonflikt</p><h2 id="concurrency-title">Dieser Datensatz wurde zwischenzeitlich geändert.</h2></div></div><div className="module04-modal-description">{message||"Bitte lade den aktuellen Stand neu. Deine Änderung wurde nicht überschrieben."}</div><div className="module04-modal-actions"><button className="secondary-button" type="button" onClick={()=>history.back()}>Schließen</button><button className="primary-button" type="button" onClick={()=>window.location.reload()}>Aktuellen Stand laden</button></div></section></div>;
+}
