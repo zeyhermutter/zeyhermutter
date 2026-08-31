@@ -5,6 +5,7 @@ import { requireActiveUser } from "~/lib/auth.server";
 type ActionResult = { error?: string };
 function text(formData: FormData, key: string) { return String(formData.get(key) ?? "").trim(); }
 function formatDate(value: string) { return new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Berlin" }).format(new Date(value)); }
+function safeRedirectTarget(value: string) { return value.startsWith("/") && !value.startsWith("//") ? value : "/crm/notifications"; }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { supabase, responseHeaders, profile } = await requireActiveUser(request, context.cloudflare.env);
@@ -15,7 +16,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 export async function action({ request, context }: Route.ActionArgs) {
   const { supabase, responseHeaders } = await requireActiveUser(request, context.cloudflare.env); const formData = await request.formData(); const intent = text(formData, "_intent");
-  if (intent === "read") { const notificationId = text(formData, "notification_id"); const { error } = await supabase.from("notifications").update({ read_at: new Date().toISOString() }).eq("id", notificationId); if (error) return data<ActionResult>({ error: "Benachrichtigung konnte nicht aktualisiert werden." }, { status: 400, headers: responseHeaders() }); return redirect("/crm/notifications", { headers: responseHeaders() }); }
+  if (intent === "read") { const notificationId = text(formData, "notification_id"); const redirectTo = safeRedirectTarget(text(formData, "redirect_to")); const { error } = await supabase.from("notifications").update({ read_at: new Date().toISOString() }).eq("id", notificationId); if (error) return data<ActionResult>({ error: "Benachrichtigung konnte nicht aktualisiert werden." }, { status: 400, headers: responseHeaders() }); return redirect(redirectTo, { headers: responseHeaders() }); }
   if (intent === "read_all") { const { error } = await supabase.from("notifications").update({ read_at: new Date().toISOString() }).is("read_at", null); if (error) return data<ActionResult>({ error: "Benachrichtigungen konnten nicht aktualisiert werden." }, { status: 400, headers: responseHeaders() }); return redirect("/crm/notifications", { headers: responseHeaders() }); }
   return data<ActionResult>({ error: "Unbekannte Aktion." }, { status: 400, headers: responseHeaders() });
 }
@@ -25,6 +26,7 @@ function entityTarget(entityType: string | null, entityId: string | null) {
   if (entityType === "ORGANIZATION" && entityId) return `/crm/organizations/${entityId}`;
   if (entityType === "LEAD" && entityId) return `/leads/${entityId}`;
   if (entityType === "PROPERTY" && entityId) return `/properties/${entityId}`;
+  if (entityType === "TASK") return "/crm/tasks";
   return "/crm";
 }
 
