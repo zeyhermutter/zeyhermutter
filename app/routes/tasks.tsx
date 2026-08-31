@@ -3,177 +3,41 @@ import type { Route } from "./+types/tasks";
 import { requireActiveUser } from "~/lib/auth.server";
 
 type ActionResult = { error?: string };
-
-function text(formData: FormData, key: string) {
-  return String(formData.get(key) ?? "").trim();
-}
-
-function formatDate(value: string | null) {
-  if (!value) return "—";
-  return new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeZone: "Europe/Berlin" }).format(new Date(value));
-}
+function text(formData: FormData, key: string) { return String(formData.get(key) ?? "").trim(); }
+function formatDate(value: string | null) { if (!value) return "—"; return new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeZone: "Europe/Berlin" }).format(new Date(value)); }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { supabase, responseHeaders, profile } = await requireActiveUser(request, context.cloudflare.env);
-  const url = new URL(request.url);
-  const status = url.searchParams.get("status") ?? "OPEN";
-
-  let query = supabase
-    .from("tasks")
-    .select("id, task_number, title, description, status, priority, due_at, contact_id, property_id, responsible_user, version")
-    .is("archived_at", null)
-    .order("due_at", { ascending: true })
-    .limit(200);
-
-  if (status === "OPEN") query = query.in("status", ["OPEN", "IN_PROGRESS"]);
-  else if (status !== "ALL") query = query.eq("status", status);
-
-  const [
-    { data: tasks, error: taskError },
-    { data: contacts, error: contactError },
-    { data: profiles, error: profileError },
-    { data: properties, error: propertyError },
-  ] = await Promise.all([
+  const url = new URL(request.url); const status = url.searchParams.get("status") ?? "OPEN";
+  let query = supabase.from("tasks").select("id, task_number, title, description, status, priority, due_at, contact_id, property_id, lead_id, responsible_user, version").is("archived_at", null).order("due_at", { ascending: true }).limit(200);
+  if (status === "OPEN") query = query.in("status", ["OPEN", "IN_PROGRESS"]); else if (status !== "ALL") query = query.eq("status", status);
+  const [{ data: tasks, error: taskError }, { data: contacts, error: contactError }, { data: profiles, error: profileError }, { data: properties, error: propertyError }, { data: leads, error: leadError }] = await Promise.all([
     query,
     supabase.from("contacts").select("id, contact_number, first_name, last_name").is("archived_at", null).order("last_name").limit(500),
     supabase.from("profiles").select("user_id, display_name, status").eq("status", "ACTIVE").order("display_name"),
     supabase.from("properties").select("id, property_number, internal_title, status").neq("status", "ARCHIVED").order("updated_at", { ascending: false }).limit(500),
+    supabase.from("leads").select("id,lead_number,status,contact_id,property_city,contacts!inner(first_name,last_name)").is("archived_at",null).order("updated_at",{ascending:false}).limit(500),
   ]);
-
-  if (taskError || contactError || profileError || propertyError) throw new Response("Aufgaben konnten nicht geladen werden.", { status: 500 });
-  const contactMap = Object.fromEntries((contacts ?? []).map((item) => [item.id, item]));
-  const profileMap = Object.fromEntries((profiles ?? []).map((item) => [item.user_id, item.display_name]));
-  const propertyMap = Object.fromEntries((properties ?? []).map((item) => [item.id, item]));
-
-  return data({ tasks: tasks ?? [], contacts: contacts ?? [], profiles: profiles ?? [], properties: properties ?? [], contactMap, profileMap, propertyMap, profile, status }, { headers: responseHeaders() });
+  if (taskError || contactError || profileError || propertyError || leadError) throw new Response("Aufgaben konnten nicht geladen werden.", { status: 500 });
+  const contactMap = Object.fromEntries((contacts ?? []).map((item) => [item.id, item])); const profileMap = Object.fromEntries((profiles ?? []).map((item) => [item.user_id, item.display_name])); const propertyMap = Object.fromEntries((properties ?? []).map((item) => [item.id, item])); const leadMap=Object.fromEntries((leads??[]).map((item:any)=>[item.id,item]));
+  return data({ tasks: tasks ?? [], contacts: contacts ?? [], profiles: profiles ?? [], properties: properties ?? [], leads:leads??[], contactMap, profileMap, propertyMap, leadMap, profile, status }, { headers: responseHeaders() });
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
-  const { supabase, responseHeaders, userId } = await requireActiveUser(request, context.cloudflare.env);
-  const formData = await request.formData();
-  const intent = text(formData, "_intent");
-
-  async function validAssignee(candidate: string) {
-    const target = candidate || userId;
-    const { data: assignee } = await supabase.from("profiles").select("user_id").eq("user_id", target).eq("status", "ACTIVE").maybeSingle();
-    return assignee?.user_id ?? null;
-  }
-
+  const { supabase, responseHeaders, userId } = await requireActiveUser(request, context.cloudflare.env); const formData = await request.formData(); const intent = text(formData, "_intent");
+  async function validAssignee(candidate: string) { const target = candidate || userId; const { data: assignee } = await supabase.from("profiles").select("user_id").eq("user_id", target).eq("status", "ACTIVE").maybeSingle(); return assignee?.user_id ?? null; }
   if (intent === "create") {
-    const title = text(formData, "title");
-    const description = text(formData, "description");
-    const priority = text(formData, "priority") || "NORMAL";
-    const dueDate = text(formData, "due_date");
-    const contactId = text(formData, "contact_id");
-    const propertyId = text(formData, "property_id");
-    const responsibleUser = await validAssignee(text(formData, "responsible_user"));
-    if (!title || !dueDate) return data<ActionResult>({ error: "Titel und Fälligkeitsdatum sind erforderlich." }, { status: 400, headers: responseHeaders() });
-    if (!responsibleUser) return data<ActionResult>({ error: "Der ausgewählte Verantwortliche ist nicht aktiv." }, { status: 400, headers: responseHeaders() });
-
-    const { error } = await supabase.from("tasks").insert({
-      title,
-      description: description || null,
-      priority,
-      due_at: `${dueDate}T12:00:00.000Z`,
-      responsible_user: responsibleUser,
-      contact_id: contactId || null,
-      property_id: propertyId || null,
-      created_by: userId,
-      updated_by: userId,
-    });
-    if (error) return data<ActionResult>({ error: "Aufgabe konnte nicht gespeichert werden." }, { status: 400, headers: responseHeaders() });
-    return redirect("/crm/tasks", { headers: responseHeaders() });
+    const title = text(formData, "title"), description = text(formData, "description"), priority = text(formData, "priority") || "NORMAL", dueDate = text(formData, "due_date"), contactId = text(formData, "contact_id"), propertyId = text(formData, "property_id"), leadId=text(formData,"lead_id"), responsibleUser = await validAssignee(text(formData, "responsible_user"));
+    if (!title || !dueDate) return data<ActionResult>({ error: "Titel und Fälligkeitsdatum sind erforderlich." }, { status: 400, headers: responseHeaders() }); if (!responsibleUser) return data<ActionResult>({ error: "Der ausgewählte Verantwortliche ist nicht aktiv." }, { status: 400, headers: responseHeaders() });
+    const { error } = await supabase.from("tasks").insert({ title, description: description || null, priority, due_at: `${dueDate}T12:00:00.000Z`, responsible_user: responsibleUser, contact_id: contactId || null, property_id: propertyId || null, lead_id:leadId||null, created_by: userId, updated_by: userId });
+    if (error) return data<ActionResult>({ error: "Aufgabe konnte nicht gespeichert werden." }, { status: 400, headers: responseHeaders() }); return redirect("/crm/tasks", { headers: responseHeaders() });
   }
-
-  if (intent === "assign") {
-    const taskId = text(formData, "task_id");
-    const version = Number(text(formData, "version"));
-    const responsibleUser = await validAssignee(text(formData, "responsible_user"));
-    if (!responsibleUser) return data<ActionResult>({ error: "Der ausgewählte Verantwortliche ist nicht aktiv." }, { status: 400, headers: responseHeaders() });
-    const { data: updated, error } = await supabase.from("tasks").update({ responsible_user: responsibleUser }).eq("id", taskId).eq("version", version).select("id").maybeSingle();
-    if (error) return data<ActionResult>({ error: "Aufgabe konnte nicht neu zugewiesen werden." }, { status: 400, headers: responseHeaders() });
-    if (!updated) return data<ActionResult>({ error: "Die Aufgabe wurde zwischenzeitlich geändert. Bitte neu laden." }, { status: 409, headers: responseHeaders() });
-    return redirect("/crm/tasks", { headers: responseHeaders() });
-  }
-
-  if (["start", "complete", "cancel", "reopen", "archive"].includes(intent)) {
-    const taskId = text(formData, "task_id");
-    const version = Number(text(formData, "version"));
-    const update: Record<string, unknown> = {};
-    if (intent === "start") update.status = "IN_PROGRESS";
-    if (intent === "complete") { update.status = "DONE"; update.completed_at = new Date().toISOString(); }
-    if (intent === "cancel") update.status = "CANCELLED";
-    if (intent === "reopen") { update.status = "OPEN"; update.completed_at = null; }
-    if (intent === "archive") update.archived_at = new Date().toISOString();
-
-    const { data: updated, error } = await supabase.from("tasks").update(update).eq("id", taskId).eq("version", version).select("id").maybeSingle();
-    if (error) return data<ActionResult>({ error: intent === "archive" ? "Aufgabe darf nicht archiviert werden oder konnte nicht gespeichert werden." : "Aufgabe konnte nicht aktualisiert werden." }, { status: 400, headers: responseHeaders() });
-    if (!updated) return data<ActionResult>({ error: "Die Aufgabe wurde zwischenzeitlich geändert. Bitte neu laden." }, { status: 409, headers: responseHeaders() });
-    return redirect("/crm/tasks", { headers: responseHeaders() });
-  }
-
+  if (intent === "assign") { const taskId = text(formData, "task_id"); const version = Number(text(formData, "version")); const responsibleUser = await validAssignee(text(formData, "responsible_user")); if (!responsibleUser) return data<ActionResult>({ error: "Der ausgewählte Verantwortliche ist nicht aktiv." }, { status: 400, headers: responseHeaders() }); const { data: updated, error } = await supabase.from("tasks").update({ responsible_user: responsibleUser }).eq("id", taskId).eq("version", version).select("id").maybeSingle(); if (error) return data<ActionResult>({ error: "Aufgabe konnte nicht neu zugewiesen werden." }, { status: 400, headers: responseHeaders() }); if (!updated) return data<ActionResult>({ error: "Die Aufgabe wurde zwischenzeitlich geändert. Bitte neu laden." }, { status: 409, headers: responseHeaders() }); return redirect("/crm/tasks", { headers: responseHeaders() }); }
+  if (["start", "complete", "cancel", "reopen", "archive"].includes(intent)) { const taskId = text(formData, "task_id"); const version = Number(text(formData, "version")); const update: Record<string, unknown> = {}; if (intent === "start") update.status = "IN_PROGRESS"; if (intent === "complete") { update.status = "DONE"; update.completed_at = new Date().toISOString(); } if (intent === "cancel") update.status = "CANCELLED"; if (intent === "reopen") { update.status = "OPEN"; update.completed_at = null; } if (intent === "archive") update.archived_at = new Date().toISOString(); const { data: updated, error } = await supabase.from("tasks").update(update).eq("id", taskId).eq("version", version).select("id").maybeSingle(); if (error) return data<ActionResult>({ error: intent === "archive" ? "Aufgabe darf nicht archiviert werden oder konnte nicht gespeichert werden." : "Aufgabe konnte nicht aktualisiert werden." }, { status: 400, headers: responseHeaders() }); if (!updated) return data<ActionResult>({ error: "Die Aufgabe wurde zwischenzeitlich geändert. Bitte neu laden." }, { status: 409, headers: responseHeaders() }); return redirect("/crm/tasks", { headers: responseHeaders() }); }
   return data<ActionResult>({ error: "Unbekannte Aktion." }, { status: 400, headers: responseHeaders() });
 }
 
 export default function Tasks() {
-  const { tasks, contacts, profiles, properties, contactMap, profileMap, propertyMap, profile, status } = useLoaderData<typeof loader>();
-  const result = useActionData<typeof action>();
-
-  return (
-    <main className="editor-shell">
-      <header className="editor-header">
-        <div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">Modul 01 · CRM</p><h1 className="editor-title">Aufgaben & Wiedervorlagen</h1></div>
-        <div className="header-user"><span className="badge">STAGING</span><small>{profile.display_name}</small></div>
-      </header>
-
-      {result?.error ? <div className="form-error">{result.error}</div> : null}
-
-      <div className="dashboard-grid">
-        <section className="data-card">
-          <div className="card-head"><div><p className="eyebrow">Wiedervorlagen</p><h2>Aufgaben</h2></div><Form method="get"><select name="status" defaultValue={status} onChange={(event) => event.currentTarget.form?.submit()}><option value="OPEN">Offen</option><option value="ALL">Alle</option><option value="DONE">Erledigt</option><option value="CANCELLED">Abgebrochen</option></select></Form></div>
-          <div className="data-list">
-            {tasks.map((task) => {
-              const contact = task.contact_id ? contactMap[task.contact_id] : null;
-              const property = task.property_id ? propertyMap[task.property_id] : null;
-              const overdue = ["OPEN", "IN_PROGRESS"].includes(task.status) && task.due_at && new Date(task.due_at).getTime() < Date.now();
-              return (
-                <div className="data-row" key={task.id}>
-                  <div><strong>{task.title}</strong><small>{task.task_number} · {task.priority} · {overdue ? "ÜBERFÄLLIG · " : ""}fällig {formatDate(task.due_at)}{contact ? ` · ${contact.first_name} ${contact.last_name}` : ""}{property ? ` · ${property.property_number}` : ""} · verantwortlich: {task.responsible_user ? (profileMap[task.responsible_user] ?? "Benutzer") : "—"}</small>{property ? <Link className="subtle-link" to={`/properties/${property.id}`}>{property.internal_title}</Link> : null}</div>
-                  <div className="row-meta">
-                    <span>{task.status}</span>
-                    <Form method="post" className="inline-actions">
-                      <input type="hidden" name="task_id" value={task.id} /><input type="hidden" name="version" value={task.version} />
-                      <select name="responsible_user" defaultValue={task.responsible_user ?? ""}>{profiles.map((item) => <option key={item.user_id} value={item.user_id}>{item.display_name}</option>)}</select>
-                      <button className="text-button" name="_intent" value="assign" type="submit">Zuordnen</button>
-                      {task.status === "OPEN" ? <button className="text-button" name="_intent" value="start" type="submit">Starten</button> : null}
-                      {task.status === "OPEN" || task.status === "IN_PROGRESS" ? <button className="text-button" name="_intent" value="complete" type="submit">Erledigt</button> : null}
-                      {task.status === "OPEN" || task.status === "IN_PROGRESS" ? <button className="text-button" name="_intent" value="cancel" type="submit">Abbrechen</button> : null}
-                      {task.status === "DONE" || task.status === "CANCELLED" ? <button className="text-button" name="_intent" value="reopen" type="submit">Wieder öffnen</button> : null}
-                      {task.status === "DONE" || task.status === "CANCELLED" ? <button className="text-button" name="_intent" value="archive" type="submit">Archivieren</button> : null}
-                    </Form>
-                  </div>
-                </div>
-              );
-            })}
-            {tasks.length === 0 ? <p className="empty-state">Keine Aufgaben in dieser Ansicht.</p> : null}
-          </div>
-        </section>
-
-        <section className="data-card">
-          <div className="card-head"><div><p className="eyebrow">Neu</p><h2>Aufgabe anlegen</h2></div></div>
-          <Form method="post" className="auth-form">
-            <input type="hidden" name="_intent" value="create" />
-            <label><span>Titel *</span><input name="title" required /></label>
-            <label><span>Beschreibung</span><textarea name="description" rows={4} /></label>
-            <label><span>Priorität</span><select name="priority" defaultValue="NORMAL"><option value="LOW">Niedrig</option><option value="NORMAL">Normal</option><option value="HIGH">Hoch</option><option value="URGENT">Dringend</option></select></label>
-            <label><span>Fällig *</span><input name="due_date" type="date" required /></label>
-            <label><span>Verantwortlich</span><select name="responsible_user" defaultValue={profile.user_id}>{profiles.map((item) => <option key={item.user_id} value={item.user_id}>{item.display_name}</option>)}</select></label>
-            <label><span>Kontakt</span><select name="contact_id" defaultValue=""><option value="">Ohne Kontaktbezug</option>{contacts.map((contact) => <option key={contact.id} value={contact.id}>{contact.last_name}, {contact.first_name} · {contact.contact_number}</option>)}</select></label>
-            <label><span>Immobilie</span><select name="property_id" defaultValue=""><option value="">Ohne Objektbezug</option>{properties.map((property) => <option key={property.id} value={property.id}>{property.property_number} · {property.internal_title}</option>)}</select></label>
-            <button className="primary-button" type="submit">Aufgabe speichern</button>
-          </Form>
-        </section>
-      </div>
-    </main>
-  );
+  const { tasks, contacts, profiles, properties, leads, contactMap, profileMap, propertyMap, leadMap, profile, status } = useLoaderData<typeof loader>(); const result = useActionData<typeof action>();
+  return <main className="editor-shell"><header className="editor-header"><div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">CRM</p><h1 className="editor-title">Aufgaben & Wiedervorlagen</h1></div><div className="header-user"><span className="badge">STAGING</span><small>{profile.display_name}</small></div></header>{result?.error ? <div className="form-error">{result.error}</div> : null}<div className="dashboard-grid"><section className="data-card"><div className="card-head"><div><p className="eyebrow">Wiedervorlagen</p><h2>Aufgaben</h2></div><Form method="get"><select name="status" defaultValue={status} onChange={(event) => event.currentTarget.form?.submit()}><option value="OPEN">Offen</option><option value="ALL">Alle</option><option value="DONE">Erledigt</option><option value="CANCELLED">Abgebrochen</option></select></Form></div><div className="data-list">{tasks.map((task:any)=>{const contact=task.contact_id?contactMap[task.contact_id]:null,property=task.property_id?propertyMap[task.property_id]:null,lead=task.lead_id?leadMap[task.lead_id]:null,overdue=["OPEN","IN_PROGRESS"].includes(task.status)&&task.due_at&&new Date(task.due_at).getTime()<Date.now();return <div className="data-row" key={task.id}><div><strong>{task.title}</strong><small>{task.task_number} · {task.priority} · {overdue?"ÜBERFÄLLIG · ":""}fällig {formatDate(task.due_at)}{contact?` · ${contact.first_name} ${contact.last_name}`:""}{property?` · ${property.property_number}`:""}{lead?` · ${lead.lead_number}`:""} · verantwortlich: {task.responsible_user?(profileMap[task.responsible_user]??"Benutzer"):"—"}</small><div className="inline-actions">{property?<Link className="subtle-link" to={`/properties/${property.id}`}>{property.internal_title}</Link>:null}{lead?<Link className="subtle-link" to={`/leads/${lead.id}`}>{lead.lead_number} öffnen</Link>:null}</div></div><div className="row-meta"><span>{task.status}</span><Form method="post" className="inline-actions"><input type="hidden" name="task_id" value={task.id}/><input type="hidden" name="version" value={task.version}/><select name="responsible_user" defaultValue={task.responsible_user??""}>{profiles.map((item:any)=><option key={item.user_id} value={item.user_id}>{item.display_name}</option>)}</select><button className="text-button" name="_intent" value="assign" type="submit">Zuordnen</button>{task.status==="OPEN"?<button className="text-button" name="_intent" value="start" type="submit">Starten</button>:null}{["OPEN","IN_PROGRESS"].includes(task.status)?<button className="text-button" name="_intent" value="complete" type="submit">Erledigt</button>:null}{["OPEN","IN_PROGRESS"].includes(task.status)?<button className="text-button" name="_intent" value="cancel" type="submit">Abbrechen</button>:null}{["DONE","CANCELLED"].includes(task.status)?<button className="text-button" name="_intent" value="reopen" type="submit">Wieder öffnen</button>:null}{["DONE","CANCELLED"].includes(task.status)?<button className="text-button" name="_intent" value="archive" type="submit">Archivieren</button>:null}</Form></div></div>})}{tasks.length===0?<p className="empty-state">Keine Aufgaben in dieser Ansicht.</p>:null}</div></section><section className="data-card"><div className="card-head"><div><p className="eyebrow">Neu</p><h2>Aufgabe anlegen</h2></div></div><Form method="post" className="auth-form"><input type="hidden" name="_intent" value="create"/><label><span>Titel *</span><input name="title" required/></label><label><span>Beschreibung</span><textarea name="description" rows={4}/></label><label><span>Priorität</span><select name="priority" defaultValue="NORMAL"><option value="LOW">Niedrig</option><option value="NORMAL">Normal</option><option value="HIGH">Hoch</option><option value="URGENT">Dringend</option></select></label><label><span>Fällig *</span><input name="due_date" type="date" required/></label><label><span>Verantwortlich</span><select name="responsible_user" defaultValue={profile.user_id}>{profiles.map((item:any)=><option key={item.user_id} value={item.user_id}>{item.display_name}</option>)}</select></label><label><span>Kontakt</span><select name="contact_id" defaultValue=""><option value="">Ohne Kontaktbezug</option>{contacts.map((contact:any)=><option key={contact.id} value={contact.id}>{contact.last_name}, {contact.first_name} · {contact.contact_number}</option>)}</select></label><label><span>Lead</span><select name="lead_id" defaultValue=""><option value="">Ohne Leadbezug</option>{leads.map((lead:any)=>{const c=Array.isArray(lead.contacts)?lead.contacts[0]:lead.contacts;return <option key={lead.id} value={lead.id}>{lead.lead_number} · {c?`${c.first_name} ${c.last_name}`:"Lead"}</option>})}</select></label><label><span>Immobilie</span><select name="property_id" defaultValue=""><option value="">Ohne Objektbezug</option>{properties.map((property:any)=><option key={property.id} value={property.id}>{property.property_number} · {property.internal_title}</option>)}</select></label><button className="primary-button" type="submit">Aufgabe speichern</button></Form></section></div></main>;
 }
