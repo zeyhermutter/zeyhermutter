@@ -10,6 +10,7 @@ import {
   useLocation,
 } from "react-router";
 import type { Route } from "./+types/root";
+import { PropertyLeadOnboarding } from "~/components/property-lead-onboarding";
 import "./styles.css";
 import "./crm.css";
 import "./property-context-nav.css";
@@ -251,6 +252,7 @@ export default function App() {
       <OwnerAddDisclosureEnhancer />
       <AddressGeocodingEnhancer />
       <PropertyContextNavigation />
+      <PropertyLeadOnboarding />
       <Outlet />
     </>
   );
