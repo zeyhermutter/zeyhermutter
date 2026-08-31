@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useLocation } from "react-router";
 import "~/live-list-filters.css";
 
-const FILTER_FORM_SELECTOR = ".search-profile-filter-grid, .inquiry-filter-grid";
+const FILTER_FORM_SELECTOR = ".search-profile-filter-grid, .inquiry-filter-grid, .organization-filter-grid";
 const SEARCH_DEBOUNCE_MS = 350;
 
 export function LiveListFilters() {
