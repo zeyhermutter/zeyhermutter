@@ -169,4 +169,57 @@ Suchprofile speichern Kauf-/Mietart, Immobilientypen, Budget, Flächen, Zimmer, 
 
 Suchprofile verwenden RLS, granulare Permissions, Audit-History, Archivieren/Wiederherstellen und Optimistic Concurrency. Die atomare Neuanlage eines Profils mit erstem Suchort erfolgt über `create_search_profile` als `SECURITY INVOKER`.
 
-**Warum:** Das spätere Immobilien-Matching muss Kriterien und Regionen nachvollziehbar bewerten können. Normalisierte Suchorte erlauben später PLZ-/Ort-/Radius-Matching ohne Migration von Freitextdaten.
+**Warum:** Das spätere Immobilien-Matching muss Kriterien und Regionen nachvollziehbar bewerten können. Normalisierte Suchorte erlauben PLZ-/Ort-/Radius-Matching ohne Migration von Freitextdaten.
+
+## ADR-028 – Suchprofil braucht mindestens einen gültigen Suchort mit Radius
+**Status:** Accepted
+
+Neue Suchprofile dürfen fachlich nicht ohne Suchgebiet existieren. Ein Suchgebiet benötigt mindestens PLZ oder Ort sowie einen positiven Radius bis zum definierten Maximalwert. Die normale Anlage bleibt atomar; zusätzlich erzwingt ein deferred Datenbank-Guard am Transaktionsende, dass ein neu angelegtes Suchprofil mindestens einen gültigen Suchort besitzt.
+
+Reine fünfstellige Werte, die im Altbestand irrtümlich als Ort gespeichert wurden, werden migrationsbasiert als PLZ normalisiert. Die Normalisierung greift auch bei neuen direkten Tabellenänderungen.
+
+## ADR-029 – Standortmatching priorisiert eindeutige Treffer vor Distanzberechnung
+**Status:** Accepted
+
+Die Standortbewertung folgt einer nachvollziehbaren Reihenfolge:
+
+1. exakt gleiche PLZ,
+2. passender Ortsteil,
+3. exakt gleicher Ort,
+4. Distanzberechnung anhand vorhandener Koordinaten und Radius,
+5. andernfalls nachvollziehbarer Nicht-Treffer.
+
+Ein exakter PLZ- oder Ortstreffer darf nicht wegen fehlender Koordinaten als außerhalb des Suchgebiets bewertet werden. Match-Gründe werden als fachliche Texte zurückgegeben.
+
+## ADR-030 – Reverse Matching verwendet dieselbe Matching-Engine
+**Status:** Accepted
+
+Die Immobilienakte zeigt passende Interessenten über `match_search_profiles_for_property`, das intern dieselbe Berechnungslogik wie Suchprofil → Immobilie verwendet. Es gibt keine zweite, separat gepflegte Reverse-Matching-Formel.
+
+**Warum:** Ein Match muss unabhängig von der Einstiegsrichtung denselben Score und dieselben Gründe liefern. Dadurch bleibt die Berechnung testbar und fachlich konsistent.
+
+## ADR-031 – Besichtigungsstatus darf kontrolliert korrigiert werden
+**Status:** Accepted
+
+`COMPLETED` ist kein irreversibler Bedienfehler. Eine durchgeführte Besichtigung darf bewusst und auditierbar zurück auf `CONFIRMED` oder `PLANNED` korrigiert werden. Die UI verlangt eine Bestätigung; vorhandenes Feedback oder vorhandene Kaufangebote werden niemals automatisch gelöscht oder verändert.
+
+Alle übrigen Statuswechsel bleiben durch die serverseitige State Machine begrenzt.
+
+## ADR-032 – Kaufangebote sind historische Preisstände, nicht überschreibbare Einzelzeilen
+**Status:** Accepted
+
+Kaufangebote verwenden das eindeutige fachliche Präfix `ZM-KA-######`. Ein `DRAFT` ist bearbeitbar. Nach Abgabe sind Betrag und wesentliche Angebotsdaten unveränderlich; Änderungen erfolgen über ein neues Folgeangebot mit Referenz auf den vorherigen Preisstand.
+
+Wird ein neues Folgeangebot abgegeben, wird das vorherige aktive Angebot als `REPLACED` markiert. Pro Kontakt + Immobilie darf höchstens ein aktives abgegebenes Angebot existieren. Alte Angebote bleiben als Historie erhalten.
+
+## ADR-033 – Allgemeine und objektbezogene Anfragen unterscheiden sich beim Abschluss
+**Status:** Accepted
+
+Eine objektbezogene Interessentenanfrage darf nicht auf `CLOSED` gesetzt werden, solange keine Immobilie verknüpft ist. Allgemeine Website-Kontaktanfragen aus Modul 05 dürfen dagegen ohne Objektbezug abgeschlossen werden.
+
+Diese Regel wird in PostgreSQL erzwungen und nicht nur im Frontend dargestellt.
+
+## ADR-034 – Wiederverwendbare Aufgaben- und Konfliktmodals
+**Status:** Accepted
+
+Aufgaben werden in Suchprofil-, Anfrage- und Besichtigungskontexten über eine gemeinsame Modal-Komponente geöffnet. Technische Status- und Prioritätswerte werden dort in deutsche Klarnamen übersetzt. Optimistic-Concurrency-Konflikte werden ebenfalls über eine gemeinsame sichtbare Modal-Komponente angezeigt, statt als leicht übersehbare Meldung am Seitenanfang.
