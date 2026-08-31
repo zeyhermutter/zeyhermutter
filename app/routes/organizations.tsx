@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/organizations";
 import { requireActiveUser } from "~/lib/auth.server";
@@ -133,75 +134,101 @@ export default function Organizations() {
   const { organizations, legalForms, cities, statuses, filters, profile } = useLoaderData<typeof loader>();
   const result = useActionData<typeof action>();
   const fields = result?.fields ?? {};
+  const [createOpen, setCreateOpen] = useState(Boolean(result?.error));
+
+  useEffect(() => {
+    if (result?.error) setCreateOpen(true);
+  }, [result?.error]);
+
+  useEffect(() => {
+    if (!createOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setCreateOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [createOpen]);
 
   return (
     <main className="editor-shell">
       <header className="editor-header">
         <div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">Modul 01 · CRM</p><h1 className="editor-title">Organisationen</h1></div>
-        <div className="header-user"><span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div>
+        <div className="header-user">
+          <button className="primary-button" type="button" onClick={() => setCreateOpen(true)}>+ Neue Organisation</button>
+          <span className="badge">{__APP_ENV_LABEL__}</span>
+          <small>{profile.display_name}</small>
+        </div>
       </header>
 
-      <div className="dashboard-grid">
-        <div className="organization-directory-stack">
-          <section className="data-card">
-            <Form method="get" className="organization-filter-grid">
-              <label>
-                <span>Suche</span>
-                <input name="q" defaultValue={filters.q} placeholder="Name, Nummer, E-Mail, Telefon oder Ort" />
-              </label>
-              <label>
-                <span>Status</span>
-                <select name="status" defaultValue={filters.status}>
-                  <option value="ALL">Alle</option>
-                  {statuses.map((value) => <option key={value} value={value}>{STATUS_LABELS[value] ?? value}</option>)}
-                </select>
-              </label>
-              <label>
-                <span>Rechtsform</span>
-                <select name="legal_form" defaultValue={filters.legalForm}>
-                  <option value="ALL">Alle</option>
-                  {legalForms.map((value) => <option key={String(value)} value={String(value)}>{String(value)}</option>)}
-                </select>
-              </label>
-              <label>
-                <span>Ort</span>
-                <select name="city" defaultValue={filters.city}>
-                  <option value="ALL">Alle</option>
-                  {cities.map((value) => <option key={String(value)} value={String(value)}>{String(value)}</option>)}
-                </select>
-              </label>
-            </Form>
-          </section>
-
-          <section className="data-card">
-            <div className="card-head"><div><p className="eyebrow">Firmen & Partner</p><h2>Verzeichnis</h2></div><span className="subtle">{organizations.length}</span></div>
-            {organizations.length === 0 ? <p className="empty-state">Keine Organisationen für diese Filter gefunden.</p> : (
-              <div className="data-list">
-                {organizations.map((organization) => (
-                  <Link className="data-row data-row-link" to={`/crm/organizations/${organization.id}`} key={organization.id}>
-                    <div><strong>{organization.name}</strong><small>{organization.organization_number}{organization.legal_form ? ` · ${organization.legal_form}` : ""}</small></div>
-                    <div className="row-meta"><span>{organization.city ?? organization.email ?? "—"}</span><small>{STATUS_LABELS[organization.status] ?? organization.status}</small></div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </section>
-        </div>
-
+      <div className="organization-page">
         <section className="data-card">
-          <div className="card-head"><div><p className="eyebrow">Neu</p><h2>Organisation anlegen</h2></div></div>
-          <Form method="post" className="auth-form">
-            {result?.error ? <div className="form-error">{result.error}</div> : null}
-            <label><span>Name *</span><input name="name" defaultValue={fields.name} required /></label>
-            <label><span>Rechtsform</span><input name="legal_form" defaultValue={fields.legal_form} placeholder="z. B. GmbH" /></label>
-            <label><span>E-Mail</span><input name="email" type="email" defaultValue={fields.email} /></label>
-            <label><span>Telefon</span><input name="phone" type="tel" defaultValue={fields.phone} /></label>
-            <label><span>Website</span><input name="website" type="url" defaultValue={fields.website} /></label>
-            <label><span>Ort</span><input name="city" defaultValue={fields.city} /></label>
-            <button className="primary-button" type="submit">Organisation speichern</button>
+          <Form method="get" className="organization-filter-grid">
+            <label>
+              <span>Suche</span>
+              <input name="q" defaultValue={filters.q} placeholder="Name, Nummer, E-Mail, Telefon oder Ort" />
+            </label>
+            <label>
+              <span>Status</span>
+              <select name="status" defaultValue={filters.status}>
+                <option value="ALL">Alle</option>
+                {statuses.map((value) => <option key={value} value={value}>{STATUS_LABELS[value] ?? value}</option>)}
+              </select>
+            </label>
+            <label>
+              <span>Rechtsform</span>
+              <select name="legal_form" defaultValue={filters.legalForm}>
+                <option value="ALL">Alle</option>
+                {legalForms.map((value) => <option key={String(value)} value={String(value)}>{String(value)}</option>)}
+              </select>
+            </label>
+            <label>
+              <span>Ort</span>
+              <select name="city" defaultValue={filters.city}>
+                <option value="ALL">Alle</option>
+                {cities.map((value) => <option key={String(value)} value={String(value)}>{String(value)}</option>)}
+              </select>
+            </label>
           </Form>
         </section>
+
+        <section className="data-card">
+          <div className="card-head"><div><p className="eyebrow">Firmen & Partner</p><h2>Verzeichnis</h2></div><span className="subtle">{organizations.length}</span></div>
+          {organizations.length === 0 ? <p className="empty-state">Keine Organisationen für diese Filter gefunden.</p> : (
+            <div className="data-list">
+              {organizations.map((organization) => (
+                <Link className="data-row data-row-link" to={`/crm/organizations/${organization.id}`} key={organization.id}>
+                  <div><strong>{organization.name}</strong><small>{organization.organization_number}{organization.legal_form ? ` · ${organization.legal_form}` : ""}</small></div>
+                  <div className="row-meta"><span>{organization.city ?? organization.email ?? "—"}</span><small>{STATUS_LABELS[organization.status] ?? organization.status}</small></div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
+
+      {createOpen ? (
+        <div className="organization-create-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setCreateOpen(false); }}>
+          <section className="organization-create-modal" role="dialog" aria-modal="true" aria-labelledby="organization-create-title">
+            <div className="organization-create-head">
+              <div><p className="eyebrow">Neu</p><h2 id="organization-create-title">Organisation anlegen</h2></div>
+              <button className="organization-create-close" type="button" aria-label="Modal schließen" onClick={() => setCreateOpen(false)}>×</button>
+            </div>
+            <Form method="post" className="auth-form">
+              {result?.error ? <div className="form-error">{result.error}</div> : null}
+              <label><span>Name *</span><input name="name" defaultValue={fields.name} required autoFocus /></label>
+              <label><span>Rechtsform</span><input name="legal_form" defaultValue={fields.legal_form} placeholder="z. B. GmbH" /></label>
+              <label><span>E-Mail</span><input name="email" type="email" defaultValue={fields.email} /></label>
+              <label><span>Telefon</span><input name="phone" type="tel" defaultValue={fields.phone} /></label>
+              <label><span>Website</span><input name="website" type="url" defaultValue={fields.website} /></label>
+              <label><span>Ort</span><input name="city" defaultValue={fields.city} /></label>
+              <div className="organization-create-actions">
+                <button className="secondary-button" type="button" onClick={() => setCreateOpen(false)}>Abbrechen</button>
+                <button className="primary-button" type="submit">Organisation speichern</button>
+              </div>
+            </Form>
+          </section>
+        </div>
+      ) : null}
     </main>
   );
 }
