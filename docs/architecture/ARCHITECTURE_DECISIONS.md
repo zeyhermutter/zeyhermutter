@@ -17,7 +17,7 @@ React-basierte Webanwendung auf Cloudflare Workers/Static Assets. STAGING zunäc
 ## ADR-003 – Supabase als Datenplattform
 **Status:** Accepted
 
-Supabase PostgreSQL, Auth, Storage und Realtime. Eigenes Projekt für ZeyherMutterOS-STAGING; SeasonCrew-Ressourcen werden niemals geteilt.
+Supabase PostgreSQL, Auth, Storage und Realtime. ZeyherMutterOS verwendet ein eigenes STAGING-Projekt und eigenständige Ressourcen.
 
 ## ADR-004 – PostgreSQL/RLS als Sicherheitsgrenze
 **Status:** Accepted
@@ -54,10 +54,10 @@ DDL wird über versionierte Migrationen ausgeführt und im Repository gespiegelt
 
 Alle Änderungen zuerst in STAGING. Production wird nur nach ausdrücklicher Freigabe verändert.
 
-## ADR-010 – Keine gemeinsame SeasonCrew-Infrastruktur
+## ADR-010 – Projektinfrastruktur bleibt eigenständig
 **Status:** Accepted
 
-Keine gemeinsamen Supabase-Projekte, Tabellen, Buckets, Worker, Secrets oder Deployment-Routen. Bei unklarer Ressourcenzuordnung gilt fail closed.
+ZeyherMutterOS teilt keine Datenbanktabellen, Storage-Buckets, Worker-Secrets oder Deployment-Routen mit fachlich fremden Projekten. Bei unklarer Ressourcenzuordnung gilt fail closed.
 
 ## ADR-011 – Kein zusätzliches ORM zum Start
 **Status:** Accepted
@@ -72,7 +72,7 @@ Provisionen und andere Geldwerte werden nicht mit ungeeigneten Floating-Point-Da
 ## ADR-013 – Atomare Domain-Aktionen über eng begrenzte RPCs
 **Status:** Accepted
 
-Vorgänge, die mehrere Tabellen konsistent verändern müssen, werden bei Bedarf als kleine PostgreSQL-Funktion umgesetzt. Beispiele: Kontakt + Primäradresse und Kommentar + Mentions.
+Vorgänge, die mehrere Tabellen konsistent verändern müssen, werden bei Bedarf als kleine PostgreSQL-Funktion umgesetzt. Beispiele: Kontakt + Primäradresse, Kommentar + Mentions und Lead → Immobilie.
 
 **Regel:** Standard ist `SECURITY INVOKER`, damit RLS erhalten bleibt. `SECURITY DEFINER` ist nur für private Trigger/Helfer zulässig, nicht als allgemeine öffentliche Abkürzung für Berechtigungen.
 
@@ -132,7 +132,25 @@ Der Bearbeitungsstatus eines Leads und seine Herkunft werden separat gespeichert
 
 Die Verkäufer-Lead-Pipeline verwendet definierte Übergänge zwischen `NEW`, `CONTACTED`, `QUALIFIED`, `APPOINTMENT`, `VALUATION`, `OFFER`, `WON`, `LOST` und `NURTURE`. PostgreSQL blockiert unzulässige direkte Sprünge. Archivieren/Wiederherstellen ist davon getrennt und erfolgt mit eigener Permission.
 
-## ADR-024 – Lead → Immobilie ist ein atomarer, idempotenter Workflow
+Die erste UI verwendet explizite Statusaktionen statt Drag & Drop. Dadurch bleiben State Machine und Optimistic Concurrency sichtbar und zuverlässig; Drag & Drop kann später ergänzt werden, darf diese Regeln aber niemals umgehen.
+
+## ADR-024 – Lead → Immobilie ist atomar und idempotent
 **Status:** Accepted
 
-Ein gewonnener Verkäufer-Lead wird nicht durch lose UI-Schritte in eine Immobilie überführt. Der spätere Konvertierungsworkflow muss in einer Transaktion mindestens Immobilie, Adresse, Eigentümerrelation, Lead-Verknüpfung, Verantwortlichkeit und Audit konsistent erzeugen. Eine bereits konvertierte Lead-ID darf nicht ein zweites Objekt erzeugen.
+Ein gewonnener Verkäufer-Lead wird über die PostgreSQL-Funktion `convert_lead_to_property` in eine Immobilie überführt. Der Workflow läuft vollständig in einer Transaktion und erzeugt bzw. verknüpft mindestens:
+
+- neue Immobilie im regulären Anfangsstatus `DRAFT`
+- reguläre automatische Objektnummer
+- Objektadresse, sofern die Lead-Adresse vollständig ist
+- CRM-Kontakt als 100%-Eigentümer
+- relevante Objekt-/Bewertungswerte
+- primär verantwortlichen Benutzer
+- Lead-Konvertierungsmetadaten
+- Activity-Eintrag
+
+Die Funktion benötigt `lead.convert` und die erforderlichen Immobilienberechtigungen, sperrt den Lead während der Konvertierung und prüft die erwartete Lead-Version. Ist ein Lead bereits konvertiert, wird die vorhandene Immobilien-ID zurückgegeben; ein Retry erzeugt keine zweite Immobilie.
+
+## ADR-025 – Verkäufer-Bewertungswerte bleiben bis zur Objektübernahme Lead-Daten
+**Status:** Accepted
+
+Bewertungstermin, geschätzter Marktwert, Bewertungsnotiz, Angebotszeitpunkt, angebotene Provision und Angebotskonditionen werden während der Akquise am Lead geführt. Finanzwerte werden als PostgreSQL `numeric` gespeichert. Bei der Konvertierung werden nur fachlich passende Werte in die Immobilienakte übernommen; der Lead bleibt als Herkunfts- und Prozessnachweis bestehen.
