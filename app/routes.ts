@@ -2,6 +2,8 @@ import { type RouteConfig, index, route } from "@react-router/dev/routes";
 
 export default [
   index("routes/home.tsx"),
+  route("immobilien", "routes/public-properties.tsx"),
+  route("immobilien/:slug", "routes/public-property-detail.tsx"),
   route("login", "routes/login.tsx"),
   route("crm", "routes/crm-dashboard.tsx"),
   route("crm/search", "routes/crm-search.tsx"),
@@ -31,6 +33,7 @@ export default [
   route("properties", "routes/properties.tsx"),
   route("properties/new", "routes/property-new.tsx"),
   route("properties/:propertyId", "routes/property-detail.tsx"),
+  route("properties/:propertyId/publication", "routes/property-publication.tsx"),
   route("properties/:propertyId/documents", "routes/property-documents.tsx"),
   route("properties/:propertyId/media", "routes/property-media.tsx"),
   route("api/geocode-address", "routes/api-geocode-address.ts"),
