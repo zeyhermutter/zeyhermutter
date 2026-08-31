@@ -5,6 +5,24 @@ export function PropertyLeadOnboarding() {
   const location = useLocation();
 
   useEffect(() => {
+    const inputs = Array.from(document.querySelectorAll<HTMLInputElement>('input[type="date"], input[type="datetime-local"], input[type="time"]'));
+    const allowManualEditing = (event: Event) => {
+      event.stopImmediatePropagation();
+    };
+
+    inputs.forEach((input) => {
+      input.title = input.type === "date"
+        ? "Datum direkt eingeben oder Kalender-Symbol verwenden"
+        : input.type === "time"
+          ? "Uhrzeit direkt eingeben oder Auswahl verwenden"
+          : "Datum und Uhrzeit direkt eingeben oder Kalender-Symbol verwenden";
+      input.addEventListener("click", allowManualEditing, true);
+    });
+
+    return () => inputs.forEach((input) => input.removeEventListener("click", allowManualEditing, true));
+  }, [location.key, location.pathname]);
+
+  useEffect(() => {
     const leadMatch = location.pathname.match(/^\/leads\/([^/]+)\/?$/);
     if (!leadMatch) return;
     const converted = document.querySelector<HTMLElement>(".lead-conversion-success");
