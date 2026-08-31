@@ -1,14 +1,15 @@
-/* Beta – gemeinsame horizontale Fluchtlinien und responsive data-card-Abstände */
+/* Beta – gemeinsame Fluchtlinien und responsive data-card-Abstände */
 :root {
   --crm-content-max: 1320px;
   --crm-page-gutter: clamp(18px, 2.1vw, 36px);
   --crm-section-gap: clamp(14px, 1.25vw, 20px);
+  --crm-block-gap: clamp(16px, 1.35vw, 22px);
   --crm-card-padding-x: clamp(18px, 1.45vw, 22px);
 }
 
 /*
  * Außenabstand: Auf Laptopbreite weniger Fläche verschenken, auf großen
- * Monitoren weiterhin ruhige Ränder. Vertikale Abstände bleiben unverändert.
+ * Monitoren weiterhin ruhige Ränder.
  */
 .app-content {
   padding-left: var(--crm-page-gutter);
@@ -52,6 +53,43 @@
 .property-map-card {
   width: 100%;
   max-width: var(--crm-content-max) !important;
+}
+
+/*
+ * Eigenständige Hauptblöcke erhalten überall denselben vertikalen Abstand.
+ * Dadurch kleben z. B. Modul 04, Modul 03 und Immobilien auf /crm nicht
+ * aneinander. Listenzeilen innerhalb einer Karte bleiben davon unberührt.
+ */
+.app-content > .metric-grid + .data-card,
+.app-content > .data-card + .data-card,
+.app-content > .data-card + .dashboard-grid,
+.app-content > .dashboard-grid + .data-card,
+.editor-shell > .editor-header + .data-card,
+.editor-shell > .data-card + .data-card,
+.editor-shell > .property-section + .property-section,
+.editor-shell > .property-summary-grid + .property-section,
+.editor-shell > .property-section + .property-summary-grid,
+.editor-shell > .property-workflow-section + .property-section,
+.editor-shell > .property-section + .property-workflow-section {
+  margin-top: var(--crm-block-gap);
+}
+
+/* Seiten-Wrapper mit mehreren eigenständigen Karten bekommen denselben Rhythmus. */
+.tasks-page,
+.crm-search-page,
+.audit-page,
+.inquiry-page,
+.search-profile-page,
+.module04-content {
+  row-gap: var(--crm-block-gap);
+}
+.tasks-page > .data-card + .data-card,
+.crm-search-page > .data-card + .data-card,
+.audit-page > .data-card + .data-card,
+.inquiry-page > .data-card + .data-card,
+.search-profile-page > .data-card + .data-card,
+.module04-content > .data-card + .data-card {
+  margin-top: var(--crm-block-gap);
 }
 
 /* Konsistente horizontale Abstände in Karten und zwischen Karten. */
@@ -136,6 +174,7 @@
     --crm-page-gutter: 16px;
     --crm-card-padding-x: 16px;
     --crm-section-gap: 14px;
+    --crm-block-gap: 14px;
   }
   .metric-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
