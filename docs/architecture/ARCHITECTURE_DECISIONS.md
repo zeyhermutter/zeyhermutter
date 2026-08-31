@@ -114,3 +114,25 @@ Eine spätere öffentliche Website erhält eine separate, kontrollierte Publikat
 **Status:** Accepted
 
 Neue Dateistände erzeugen immer eine neue `DocumentVersion` mit eigener Storage-Adresse, fortlaufender Versionsnummer, SHA-256, MIME-Type, Größe, Originaldateiname, Benutzer und Änderungsgrund. Upsert/Überschreiben bestehender Dokumentdateien ist nicht Teil des Workflows.
+
+## ADR-021 – Leads erweitern das CRM, sie ersetzen es nicht
+**Status:** Accepted
+
+Ein Lead ist ein eigener fachlicher Vorgang, aber kein zweites Kontaktsystem. Verkäufer-Leads referenzieren vorhandene CRM-Kontakte; mehrere Leads je Kontakt sind ausdrücklich zulässig. Neue Personen werden über die vorhandene CRM-Kontaktanlage und Duplikaterkennung erzeugt.
+
+**Warum:** Kontaktidentität, Adressen, Beziehungen, Aktivitäten und Duplikaterkennung bleiben an einer Stelle konsistent.
+
+## ADR-022 – Leadstatus und Leadquelle sind orthogonal
+**Status:** Accepted
+
+Der Bearbeitungsstatus eines Leads und seine Herkunft werden separat gespeichert. Ein Statuswechsel verändert niemals rückwirkend die Attribution. Verlustgründe werden nur bei `LOST` fachlich relevant und bleiben für Auswertungen erhalten.
+
+## ADR-023 – Lead-Pipeline als serverseitige State Machine
+**Status:** Accepted
+
+Die Verkäufer-Lead-Pipeline verwendet definierte Übergänge zwischen `NEW`, `CONTACTED`, `QUALIFIED`, `APPOINTMENT`, `VALUATION`, `OFFER`, `WON`, `LOST` und `NURTURE`. PostgreSQL blockiert unzulässige direkte Sprünge. Archivieren/Wiederherstellen ist davon getrennt und erfolgt mit eigener Permission.
+
+## ADR-024 – Lead → Immobilie ist ein atomarer, idempotenter Workflow
+**Status:** Accepted
+
+Ein gewonnener Verkäufer-Lead wird nicht durch lose UI-Schritte in eine Immobilie überführt. Der spätere Konvertierungsworkflow muss in einer Transaktion mindestens Immobilie, Adresse, Eigentümerrelation, Lead-Verknüpfung, Verantwortlichkeit und Audit konsistent erzeugen. Eine bereits konvertierte Lead-ID darf nicht ein zweites Objekt erzeugen.
