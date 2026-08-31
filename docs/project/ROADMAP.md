@@ -91,8 +91,10 @@ ZeyherMutterOS wird als produktionsfähige, sichere und nachvollziehbare Plattfo
 - [x] Kern-Datenmodell für Anfragen
 - [x] Kern-Datenmodell für mehrere Suchprofile je CRM-Kontakt
 - [x] RLS/Permissions/Audit/Optimistic Concurrency für Suchprofile und Anfragen
-- [ ] Interessenten-/Suchprofil-Verzeichnis
-- [ ] Suchprofil-Neuanlage und -Bearbeitung
+- [x] Interessenten-/Suchprofil-Verzeichnis
+- [x] Suchprofil-Neuanlage und -Bearbeitung
+- [x] mehrere Suchorte je Profil verwalten
+- [ ] CRM-Dashboard/Navigationsintegration für Interessenten
 - [ ] Anfragen-Workflow
 - [ ] Matching Immobilie ↔ Suchprofil
 - [ ] Besichtigungen
