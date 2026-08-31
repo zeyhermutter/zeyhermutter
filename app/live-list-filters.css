@@ -1,0 +1,54 @@
+/* Beta – einheitliche Live-Suche für Modul-04-Listen */
+.live-filter-form {
+  align-items: end;
+}
+
+.live-filter-form > button[type="submit"] {
+  display: none !important;
+}
+
+.live-search-field {
+  position: relative;
+  min-width: min(100%, 280px);
+}
+
+.live-search-field::before {
+  content: "";
+  position: absolute;
+  left: 13px;
+  bottom: 13px;
+  width: 17px;
+  height: 17px;
+  pointer-events: none;
+  opacity: .72;
+  background: currentColor;
+  color: #9ba8aa;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Ccircle cx='11' cy='11' r='6.5' stroke='black' stroke-width='1.8'/%3E%3Cpath d='m16 16 4 4' stroke='black' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Ccircle cx='11' cy='11' r='6.5' stroke='black' stroke-width='1.8'/%3E%3Cpath d='m16 16 4 4' stroke='black' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.live-search-field .live-search-input {
+  min-height: 46px;
+  padding-left: 40px !important;
+  border-color: #435052;
+  border-radius: 12px;
+  background: #101617;
+  transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+
+.live-search-field .live-search-input:hover {
+  border-color: #566466;
+  background: #12191a;
+}
+
+.live-search-field .live-search-input:focus {
+  border-color: #879496;
+  background: #111819;
+  box-shadow: 0 0 0 3px #8796981c;
+}
+
+@media (max-width: 760px) {
+  .live-search-field {
+    min-width: 100%;
+  }
+}
