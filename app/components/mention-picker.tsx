@@ -7,16 +7,28 @@ export function MentionPicker({ users }: { users: MentionUser[] }) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [query, setQuery] = useState<string | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
+  const [resolvedUsers, setResolvedUsers] = useState<MentionUser[]>(users);
+
+  useEffect(() => {
+    const byId = new Map(users.map((user) => [user.user_id, user]));
+    const options = Array.from(document.querySelectorAll<HTMLOptionElement>('select[name="primary_responsible_user"] option, select[name="responsible_user"] option'));
+    for (const option of options) {
+      const userId = option.value.trim();
+      const displayName = option.textContent?.trim() ?? "";
+      if (userId && displayName) byId.set(userId, { user_id: userId, display_name: displayName });
+    }
+    setResolvedUsers(Array.from(byId.values()).filter((user) => user.display_name === "Sebastian" || user.display_name === "Jochen"));
+  }, [users]);
 
   const normalized = (query ?? "").trim().toLocaleLowerCase("de-DE");
   const suggestions = useMemo(
     () => query === null
       ? []
-      : users
+      : resolvedUsers
           .filter((user) => !selected.includes(user.user_id))
           .filter((user) => !normalized || user.display_name.toLocaleLowerCase("de-DE").includes(normalized))
           .slice(0, 6),
-    [users, selected, normalized, query],
+    [resolvedUsers, selected, normalized, query],
   );
 
   function activeMention(value: string, cursor: number) {
@@ -31,7 +43,7 @@ export function MentionPicker({ users }: { users: MentionUser[] }) {
     const cursor = textarea.selectionStart ?? textarea.value.length;
     setQuery(activeMention(textarea.value, cursor));
     setSelected((current) => current.filter((id) => {
-      const user = users.find((item) => item.user_id === id);
+      const user = resolvedUsers.find((item) => item.user_id === id);
       return Boolean(user && textarea.value.includes(`@${user.display_name}`));
     }));
   }
@@ -52,7 +64,7 @@ export function MentionPicker({ users }: { users: MentionUser[] }) {
       textarea.removeEventListener("keyup", syncFromTextarea);
       textareaRef.current = null;
     };
-  }, [users]);
+  }, [resolvedUsers]);
 
   function add(user: MentionUser) {
     const textarea = textareaRef.current;
@@ -77,7 +89,7 @@ export function MentionPicker({ users }: { users: MentionUser[] }) {
   }
 
   function remove(userId: string) {
-    const user = users.find((item) => item.user_id === userId);
+    const user = resolvedUsers.find((item) => item.user_id === userId);
     const textarea = textareaRef.current;
     if (user && textarea) {
       textarea.value = textarea.value.replace(new RegExp(`@${user.display_name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*`, "g"), "");
@@ -101,7 +113,7 @@ export function MentionPicker({ users }: { users: MentionUser[] }) {
       {selected.length ? (
         <div className="mention-selected">
           {selected.map((id) => {
-            const user = users.find((item) => item.user_id === id);
+            const user = resolvedUsers.find((item) => item.user_id === id);
             return user ? <button key={id} className="mention-chip selected" type="button" onClick={() => remove(id)}>@{user.display_name} ×</button> : null;
           })}
         </div>
