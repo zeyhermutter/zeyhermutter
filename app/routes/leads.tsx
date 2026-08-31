@@ -2,6 +2,7 @@ import { data, Form, Link, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/leads";
 import { requirePermission } from "~/lib/auth.server";
 import "~/lead.css";
+import "~/lead-workflow.css";
 
 const STATUS_ORDER=["NEW","CONTACTED","QUALIFIED","APPOINTMENT","VALUATION","OFFER","WON","NURTURE","LOST"] as const;
 const STATUS_LABELS:Record<string,string>={NEW:"Neu",CONTACTED:"Kontaktiert",QUALIFIED:"Qualifiziert",APPOINTMENT:"Termin",VALUATION:"Bewertung",OFFER:"Angebot",WON:"Gewonnen",NURTURE:"Nurture",LOST:"Verloren"};
