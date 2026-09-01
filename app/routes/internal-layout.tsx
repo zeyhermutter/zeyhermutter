@@ -51,6 +51,31 @@ function SmartBackNavigation() {
   return null;
 }
 
+function SalesReadinessLeadEntryEnhancer() {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!/^\/leads\/[^/]+\/?$/.test(location.pathname)) return;
+
+    const state = document.querySelector<HTMLElement>(".lead-readiness-state");
+    const link = document.querySelector<HTMLAnchorElement>('.lead-readiness-entry a[href$="/sales-readiness"]');
+    if (!state && !link) return;
+
+    const previousState = state?.textContent ?? "";
+    const previousLink = link?.textContent ?? "";
+
+    if (state) state.textContent = "Aktiver Workflow · vollständig mit Supabase verbunden";
+    if (link) link.textContent = "Verkaufsfertig-Check öffnen →";
+
+    return () => {
+      if (state) state.textContent = previousState;
+      if (link) link.textContent = previousLink;
+    };
+  }, [location.key, location.pathname]);
+
+  return null;
+}
+
 function PropertyContextNavigation() {
   const location = useLocation();
   const match = location.pathname.match(/^\/properties\/([^/]+)(?:\/(documents|media|interests|publication|exposes))?(?:\/preview)?\/?$/);
@@ -74,6 +99,7 @@ export default function InternalLayout() {
   return (
     <div className="persistent-app-frame">
       <SmartBackNavigation />
+      <SalesReadinessLeadEntryEnhancer />
       <PersistentNavigation />
       <div className="persistent-app-main">
         <LiveListFilters />
