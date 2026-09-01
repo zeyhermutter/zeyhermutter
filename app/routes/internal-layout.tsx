@@ -96,6 +96,8 @@ function PropertyContextNavigation() {
       <Link className={section === "exposes" ? "active" : ""} to={`/properties/${propertyId}/exposes`}>Exposés</Link>
       <Link className={section === "documents" ? "active" : ""} to={`/properties/${propertyId}/documents`}>Dokumente</Link>
       <Link className={section === "media" ? "active" : ""} to={`/properties/${propertyId}/media`}>Medien</Link>
+      <Link to={`/purchase-offers?property_id=${encodeURIComponent(propertyId)}`}>Kaufangebote</Link>
+      <Link to={`/closings?property_id=${encodeURIComponent(propertyId)}`}>Abschluss & Notar</Link>
       <Link to={`/commissions?property_id=${encodeURIComponent(propertyId)}`}>Provisionen</Link>
     </nav>
   );
