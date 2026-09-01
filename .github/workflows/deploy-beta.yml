@@ -14,7 +14,9 @@ concurrency:
 
 jobs:
   deploy:
+    if: vars.CLOUDFLARE_DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
+    environment: beta
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
