@@ -7,9 +7,6 @@ on:
         description: Type DEPLOY_PRODUCTION to confirm the release
         required: true
         type: string
-  push:
-    branches: [main]
-    paths: [.github/workflows/deploy-production.yml]
 
 permissions:
   contents: read
@@ -20,15 +17,11 @@ concurrency:
 
 jobs:
   deploy:
-    if: >-
-      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.release_confirmation == 'DEPLOY_PRODUCTION') ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main' && github.event.head_commit.message == 'ops: deploy develop to production once')
+    if: github.ref == 'refs/heads/main' && inputs.release_confirmation == 'DEPLOY_PRODUCTION'
     runs-on: ubuntu-latest
     environment: production
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          ref: ${{ github.event_name == 'push' && '74c45a64a4cb665c31dce9ffe774482216b02dd7' || github.ref }}
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with:
           run_install: false
