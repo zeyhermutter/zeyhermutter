@@ -61,6 +61,7 @@ export default [
     route("properties/:propertyId/exposes", "routes/property-exposes.tsx"),
     route("properties/:propertyId/exposes/:exposeId", "routes/property-expose-detail.tsx"),
     route("properties/:propertyId/exposes/:exposeId/preview", "routes/property-expose-preview.tsx"),
+    route("properties/:propertyId/marketing", "routes/property-marketing.tsx"),
     route("properties/:propertyId/documents", "routes/property-documents.tsx"),
     route("properties/:propertyId/media", "routes/property-media.tsx"),
   ]),
