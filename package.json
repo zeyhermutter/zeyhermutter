@@ -16,7 +16,8 @@
     "cf-typegen": "wrangler types --include-runtime=false",
     "typecheck": "react-router typegen && tsc -b",
     "check": "pnpm run check:beta",
-    "check:beta": "pnpm run typecheck && pnpm run build:beta && wrangler deploy --dry-run",
+    "check:brand-logo": "node scripts/check-brand-logo.mjs",
+    "check:beta": "pnpm run check:brand-logo && pnpm run typecheck && pnpm run build:beta && wrangler deploy --dry-run",
     "check:production": "pnpm run typecheck && pnpm run build:production && wrangler deploy --dry-run"
   },
   "dependencies": {
