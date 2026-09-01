@@ -39,7 +39,21 @@ const GROUPS: NavGroup[] = [
   },
 ];
 
+function isSalesReadinessDetail(pathname: string) {
+  return /^\/leads\/[^/]+\/sales-readiness(?:\/|$)/.test(pathname);
+}
+
 function isActive(pathname: string, item: NavItem) {
+  const readinessDetail = isSalesReadinessDetail(pathname);
+
+  if (item.to === "/crm/sales-readiness") {
+    return pathname === item.to || pathname.startsWith(`${item.to}/`) || readinessDetail;
+  }
+
+  if (item.to === "/leads" && readinessDetail) {
+    return false;
+  }
+
   if (item.exact) return pathname === item.to;
   return pathname === item.to || pathname.startsWith(`${item.to}/`);
 }
