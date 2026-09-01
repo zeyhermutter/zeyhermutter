@@ -12,6 +12,7 @@ export function meta() {
     { name: "robots", content: "noindex, nofollow, noarchive" },
   ];
 }
+
 export async function loader({ request }: Route.LoaderArgs) {
   const hostname = new URL(request.url).hostname;
   if (!LOCAL_HOSTNAMES.has(hostname)) throw new Response("Nicht gefunden.", { status: 404 });
@@ -34,7 +35,7 @@ export default function SalesReadinessPreview() {
         </div>
         <div className="header-user"><span className="badge">LOCAL PREVIEW</span></div>
       </header>
-      <SalesReadinessWorkspace viewModel={viewModel} preview />
+      <SalesReadinessWorkspace viewModel={viewModel} canWrite={false} canFinalize={false} canTask={false} />
     </main>
   );
 }
