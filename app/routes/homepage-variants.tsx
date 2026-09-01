@@ -4,6 +4,7 @@ import { PublicFooter, PublicHeader } from "~/components/public-shell";
 import { homepageVariants } from "~/lib/homepage-variants";
 import "~/public-website.css";
 import "~/homepage-variants.css";
+import "~/homepage-variants-image.css";
 
 export function meta() {
   return [{ title: "Homepage-Varianten · BETA · ZeyherMutter" }];
@@ -20,9 +21,9 @@ export default function HomepageVariants() {
       <PublicHeader />
       <section className="hv-overview-hero">
         <p className="public-eyebrow">BETA · Homepage-Auswahl</p>
-        <h1>Fünf Richtungen für die neue Startseite.</h1>
+        <h1>Sieben Richtungen für die neue Startseite.</h1>
         <p>Alle Varianten transportieren dasselbe Ziel: Verkaufspotenzial vor dem Marktstart sinnvoll prüfen, nur wirtschaftlich sinnvolle Maßnahmen umsetzen und anschließend Vermarktung und Verkauf aus einer Hand übernehmen.</p>
-        <div className="hv-overview-note"><strong>Die aktuelle Homepage bleibt unverändert.</strong><span>Diese Seiten sind reine BETA-Vorschauen zum direkten Vergleich.</span></div>
+        <div className="hv-overview-note"><strong>Die aktuelle Homepage bleibt unverändert.</strong><span>Diese Seiten sind reine BETA-Vorschauen zum direkten Vergleich. Version 6 und 7 arbeiten zusätzlich mit Hero-Bildern und neuen Farbwelten.</span></div>
       </section>
 
       <section className="hv-overview-grid" aria-label="Homepage-Varianten">
