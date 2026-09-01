@@ -1,0 +1,177 @@
+.communication-shell {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 34px 0 56px;
+}
+
+.communication-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.communication-header h1 {
+  margin: 4px 0 8px;
+  font-size: clamp(1.8rem, 2.8vw, 2.55rem);
+  color: #1d2a2b;
+}
+
+.communication-header p {
+  margin: 0;
+  color: #647273;
+  max-width: 760px;
+}
+
+.communication-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(300px, .65fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.communication-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.communication-status {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.communication-status > div,
+.communication-context-summary > div {
+  border: 1px solid #d8e0de;
+  border-radius: 10px;
+  background: #f8faf9;
+  padding: 13px 14px;
+}
+
+.communication-status span,
+.communication-context-summary span {
+  display: block;
+  color: #738080;
+  font-size: .78rem;
+  margin-bottom: 4px;
+}
+
+.communication-status strong,
+.communication-context-summary strong {
+  color: #263536;
+  font-size: .93rem;
+}
+
+.communication-context-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.communication-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.communication-note {
+  margin: 12px 0 0;
+  color: #687778;
+  font-size: .88rem;
+  line-height: 1.45;
+}
+
+.communication-history {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.communication-history article {
+  border: 1px solid #d8e0de;
+  border-radius: 10px;
+  background: #fff;
+  padding: 13px 14px;
+}
+
+.communication-history-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.communication-history-head strong {
+  color: #263536;
+}
+
+.communication-history-head small,
+.communication-history article p {
+  color: #6c797a;
+}
+
+.communication-history article p {
+  margin: 7px 0 0;
+  line-height: 1.45;
+}
+
+.communication-direction {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-top: 8px;
+  border: 1px solid #cfd9d7;
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: .76rem;
+  color: #536364;
+  background: #f6f9f8;
+}
+
+.communication-empty-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+@media (max-width: 900px) {
+  .communication-shell {
+    width: min(100% - 24px, 760px);
+    padding-top: 24px;
+  }
+
+  .communication-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .communication-header {
+    display: block;
+  }
+
+  .communication-header .badge {
+    display: inline-flex;
+    margin-top: 12px;
+  }
+
+  .communication-status,
+  .communication-context-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .communication-history-head {
+    display: block;
+  }
+
+  .communication-history-head small {
+    display: block;
+    margin-top: 4px;
+  }
+}
