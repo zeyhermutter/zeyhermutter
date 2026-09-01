@@ -2,6 +2,7 @@ import { data, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/sales-readiness-overview";
 import { requirePermission } from "~/lib/auth.server";
 import { requireSalesReadinessBackend } from "~/lib/sales-readiness.server";
+import "~/lead.css";
 
 const CHECK_STATUS: Record<string, string> = {
   DRAFT: "Entwurf",
@@ -9,8 +10,14 @@ const CHECK_STATUS: Record<string, string> = {
   FINALIZED: "Finalisiert",
 };
 
+const CHECK_STATUS_CLASS: Record<string, string> = {
+  DRAFT: "status-draft",
+  READY_FOR_REVIEW: "status-marketing",
+  FINALIZED: "status-sold",
+};
+
 const OWNER_DECISION: Record<string, string> = {
-  OPEN: "Eigentümerentscheidung offen",
+  OPEN: "Entscheidung offen",
   ACCEPTED: "Empfehlung angenommen",
   PARTIALLY_ACCEPTED: "Teilweise angenommen",
   DECLINED: "Empfehlung abgelehnt",
@@ -37,7 +44,7 @@ export function meta() {
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   requireSalesReadinessBackend(context.cloudflare.env);
-  const { supabase, responseHeaders } = await requirePermission(
+  const { supabase, responseHeaders, profile } = await requirePermission(
     request,
     context.cloudflare.env,
     "sales_readiness.read",
@@ -78,6 +85,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   return data(
     {
+      profile,
       leads,
       checkByLead,
       summary: {
@@ -93,64 +101,109 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export default function SalesReadinessOverview() {
-  const { leads, checkByLead, summary } = useLoaderData<typeof loader>();
+  const { profile, leads, checkByLead, summary } = useLoaderData<typeof loader>();
 
   return (
-    <main className="editor-shell">
+    <main className="editor-shell lead-shell">
       <header className="editor-header">
         <div>
           <Link className="back-link" to="/crm">← CRM</Link>
-          <p className="eyebrow">Verkäufer · Verkaufsstrategie</p>
+          <p className="eyebrow">Modul 03 · Eigentümer & Leads</p>
           <h1 className="editor-title">Verkaufsfertig-Checks</h1>
-          <p className="editor-meta">Aktiver CRM-Workflow von der Objektanalyse bis zur finalisierten Maßnahmenentscheidung.</p>
+          <p className="editor-meta">Vom ersten Objektbild bis zur abgestimmten Entscheidung für den Marktstart.</p>
         </div>
-        <div className="header-actions">
-          <span className="badge">{summary.started} gestartet</span>
+        <div className="header-user">
           <Link className="secondary-button link-button" to="/leads">Verkäufer-Leads</Link>
+          <span className="badge">{__APP_ENV_LABEL__}</span>
+          <small>{profile.display_name}</small>
         </div>
       </header>
 
-      <section className="metric-grid">
-        <article className="metric-card"><span>Verkäufer-Leads</span><strong>{summary.total}</strong><small>aktive Leads</small></article>
-        <article className="metric-card"><span>Entwürfe</span><strong>{summary.drafts}</strong><small>in Bearbeitung</small></article>
-        <article className="metric-card"><span>Prüfbereit</span><strong>{summary.ready}</strong><small>zur Entscheidung</small></article>
-        <article className="metric-card"><span>Finalisiert</span><strong>{summary.finalized}</strong><small>abgeschlossene aktuelle Revisionen</small></article>
-      </section>
-
-      <section className="data-card">
-        <div className="card-head">
-          <div>
-            <p className="eyebrow">Arbeitsliste</p>
-            <h2>Verkaufsfertig-Status je Verkäufer-Lead</h2>
+      <div className="lead-page-width">
+        <section className="data-card">
+          <div className="card-head">
+            <div>
+              <p className="eyebrow">Verkaufsstrategie</p>
+              <h2>Verkaufsfertig vor dem Marktstart</h2>
+            </div>
           </div>
-          <span className="subtle">{summary.started} / {summary.total} gestartet</span>
-        </div>
-        <div className="data-list">
-          {leads.map((lead: any) => {
-            const contact = one(lead.contacts);
-            const check = checkByLead[lead.id];
-            const state = check ? (CHECK_STATUS[check.status] ?? check.status) : "Noch nicht gestartet";
-            const detail = check
-              ? `Revision ${check.revision_no} · ${OWNER_DECISION[check.owner_decision] ?? check.owner_decision ?? "Eigentümerentscheidung offen"}`
-              : "Arbeitsbereich öffnen und Entwurf anlegen";
-            const date = check?.finalized_at ?? check?.updated_at ?? lead.updated_at;
+          <p className="lead-explainer">
+            <strong>Der Check ist Teil der Verkäufer-Akte.</strong> Ausgangslage, drei Verkaufsszenarien,
+            Maßnahmen und Eigentümerentscheidung werden strukturiert vorbereitet und anschließend direkt
+            mit dem Lead weitergeführt.
+          </p>
+        </section>
 
-            return (
-              <Link className="data-row data-row-link" to={`/leads/${lead.id}/sales-readiness`} key={lead.id}>
-                <div>
-                  <strong>{contact ? `${contact.first_name} ${contact.last_name}` : lead.lead_number}</strong>
-                  <small>{lead.lead_number}{lead.property_city ? ` · ${lead.property_city}` : ""} · Lead-Status {lead.status}</small>
-                </div>
-                <div className="row-meta">
-                  <span>{state}</span>
-                  <small>{detail} · {formatDate(date)}</small>
-                </div>
-              </Link>
-            );
-          })}
-          {leads.length === 0 ? <p className="empty-state">Keine aktiven Verkäufer-Leads vorhanden.</p> : null}
-        </div>
-      </section>
+        <section className="metric-grid">
+          <article className="metric-card">
+            <span>Verkäufer-Leads</span>
+            <strong>{summary.total}</strong>
+            <small>aktive Leads</small>
+          </article>
+          <article className="metric-card">
+            <span>Entwürfe</span>
+            <strong>{summary.drafts}</strong>
+            <small>in Bearbeitung</small>
+          </article>
+          <article className="metric-card">
+            <span>Prüfbereit</span>
+            <strong>{summary.ready}</strong>
+            <small>zur Entscheidung</small>
+          </article>
+          <article className="metric-card">
+            <span>Finalisiert</span>
+            <strong>{summary.finalized}</strong>
+            <small>aktuelle Revisionen</small>
+          </article>
+        </section>
+
+        <section className="data-card">
+          <div className="card-head">
+            <div>
+              <p className="eyebrow">Arbeitsliste</p>
+              <h2>Verkäufer-Leads & Check-Status</h2>
+            </div>
+            <span className="subtle">{summary.started} von {summary.total} gestartet</span>
+          </div>
+
+          <div className="data-list">
+            {leads.map((lead: any) => {
+              const contact = one(lead.contacts);
+              const check = checkByLead[lead.id];
+              const date = check?.finalized_at ?? check?.updated_at ?? lead.updated_at;
+
+              return (
+                <Link className="data-row data-row-link lead-list-row" to={`/leads/${lead.id}/sales-readiness`} key={lead.id}>
+                  <div>
+                    <strong>{contact ? `${contact.first_name} ${contact.last_name}` : lead.lead_number}</strong>
+                    <small>{lead.lead_number}{lead.property_city ? ` · ${lead.property_city}` : ""}</small>
+                  </div>
+
+                  <div>
+                    <span className={`lead-status-pill ${check ? CHECK_STATUS_CLASS[check.status] ?? "status-draft" : "status-archived"}`}>
+                      {check ? CHECK_STATUS[check.status] ?? check.status : "Nicht gestartet"}
+                    </span>
+                    <small>{check ? `Revision ${check.revision_no}` : "Entwurf anlegen"}</small>
+                  </div>
+
+                  <div className="lead-row-secondary">
+                    <strong>{check ? OWNER_DECISION[check.owner_decision] ?? check.owner_decision ?? "Entscheidung offen" : "Noch kein Check"}</strong>
+                    <small>Lead-Status {lead.status}</small>
+                  </div>
+
+                  <div className="row-meta lead-row-secondary">
+                    <span>{formatDate(date)}</span>
+                    <small>{check?.finalized_at ? "finalisiert" : check ? "zuletzt bearbeitet" : "Lead aktualisiert"}</small>
+                  </div>
+
+                  <span className="subtle-link">Öffnen →</span>
+                </Link>
+              );
+            })}
+            {leads.length === 0 ? <p className="empty-state">Keine aktiven Verkäufer-Leads vorhanden.</p> : null}
+          </div>
+        </section>
+      </div>
     </main>
   );
 }
