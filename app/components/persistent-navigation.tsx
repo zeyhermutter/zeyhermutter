@@ -37,6 +37,7 @@ const GROUPS: NavGroup[] = [
     label: "Verwaltung",
     items: [
       { label: "Organisationen", to: "/crm/organizations" },
+      { label: "Benutzer & Rollen", to: "/crm/users" },
       { label: "Archiv", to: "/crm/archive" },
       { label: "Systemhistorie", to: "/crm/history" },
     ],

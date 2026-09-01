@@ -24,6 +24,7 @@ export default [
     route("crm/sales-readiness", "routes/sales-readiness-overview.tsx"),
     route("crm/notifications", "routes/notifications.tsx"),
     route("crm/history", "routes/audit-history.tsx"),
+    route("crm/users", "routes/user-admin.tsx"),
     route("crm/archive", "routes/crm-archive.tsx"),
     route("crm/contacts/new", "routes/contact-new.tsx"),
     route("crm/contacts/:contactId", "routes/contact-detail.tsx"),
