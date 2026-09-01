@@ -16,7 +16,31 @@ const MEASURE_TITLES: Record<string, string> = {
 
 const AUTO_MEASURE_TITLES = new Set(Object.values(MEASURE_TITLES));
 
+const ACTIONABLE_DECISIONS = new Set([
+  "URGENTLY_RECOMMENDED",
+  "RECOMMENDED",
+  "OPTIONAL",
+]);
+const NON_ACTIONABLE_DECISIONS = new Set(["NOT_RECOMMENDED", "NOT_REQUIRED"]);
+const OPEN_DECISION_STATUSES = new Set([
+  "PROPOSED",
+  "QUOTE_REQUIRED",
+  "QUOTE_REQUESTED",
+  "QUOTE_RECEIVED",
+]);
+const NON_ACTIONABLE_STATUSES = new Set(["PROPOSED", "DISMISSED"]);
+const OWNER_APPROVAL_REQUIRED_STATUSES = new Set([
+  "APPROVED",
+  "COMMISSIONED",
+  "PLANNED",
+  "IN_PROGRESS",
+  "DONE",
+  "CHECKED",
+]);
+const OWNER_APPROVAL_OK = new Set(["APPROVED", "NOT_REQUIRED"]);
+
 type RangeNames = { minName: string; maxName: string };
+type SelectOption = { value: string; label: string };
 
 function rangeNames(name: string): RangeNames | null {
   const suffixMin = name.match(/^(.*)_min$/i);
@@ -135,6 +159,85 @@ function selectedLabel(select: HTMLSelectElement | null) {
   return select?.selectedOptions[0]?.textContent?.trim() || "—";
 }
 
+function selectOptions(select: HTMLSelectElement): SelectOption[] {
+  return Array.from(select.options).map((option) => ({
+    value: option.value,
+    label: option.textContent || option.value,
+  }));
+}
+
+function filterSelect(
+  select: HTMLSelectElement,
+  options: SelectOption[],
+  allowed: Set<string>,
+) {
+  const selected = select.value;
+  const nextOptions = options.filter((option) => allowed.has(option.value));
+  select.replaceChildren(
+    ...nextOptions.map((option) => {
+      const element = document.createElement("option");
+      element.value = option.value;
+      element.textContent = option.label;
+      return element;
+    }),
+  );
+
+  if (nextOptions.some((option) => option.value === selected)) {
+    select.value = selected;
+  } else if (nextOptions.length > 0) {
+    select.value = nextOptions[0].value;
+  }
+}
+
+function allowedDecisions(status: string) {
+  const allowed = new Set<string>(ACTIONABLE_DECISIONS);
+  if (OPEN_DECISION_STATUSES.has(status)) allowed.add("OPEN");
+  if (NON_ACTIONABLE_STATUSES.has(status)) {
+    allowed.add("NOT_RECOMMENDED");
+    allowed.add("NOT_REQUIRED");
+  }
+  return allowed;
+}
+
+function allowedOwnerApprovals(status: string) {
+  if (OWNER_APPROVAL_REQUIRED_STATUSES.has(status)) {
+    return new Set(["APPROVED", "NOT_REQUIRED"]);
+  }
+  return new Set(["NOT_REQUESTED", "PENDING", "APPROVED", "REJECTED", "NOT_REQUIRED"]);
+}
+
+function allowedStatuses(input: {
+  decision: string;
+  ownerApproval: string;
+  hasQuotePrice: boolean;
+}) {
+  const { decision, ownerApproval, hasQuotePrice } = input;
+
+  if (NON_ACTIONABLE_DECISIONS.has(decision)) {
+    return new Set(["PROPOSED", "DISMISSED"]);
+  }
+
+  if (decision === "OPEN") {
+    const allowed = new Set(["PROPOSED", "QUOTE_REQUIRED", "QUOTE_REQUESTED"]);
+    if (hasQuotePrice) allowed.add("QUOTE_RECEIVED");
+    return allowed;
+  }
+
+  const allowed = new Set([
+    "PROPOSED",
+    "QUOTE_REQUIRED",
+    "QUOTE_REQUESTED",
+    "WAITING_OWNER",
+    "BLOCKED",
+    "DISMISSED",
+  ]);
+  if (hasQuotePrice) allowed.add("QUOTE_RECEIVED");
+  if (OWNER_APPROVAL_OK.has(ownerApproval)) {
+    for (const status of OWNER_APPROVAL_REQUIRED_STATUSES) allowed.add(status);
+  }
+  return allowed;
+}
+
 function enhanceMeasureForm(form: HTMLFormElement) {
   if (form.dataset.measureEnhanced === "true") return;
   form.dataset.measureEnhanced = "true";
@@ -156,8 +259,50 @@ function enhanceMeasureForm(form: HTMLFormElement) {
   };
 
   if (!title.value.trim()) applyAutomaticTitle();
-
   category.addEventListener("change", applyAutomaticTitle);
+
+  const decision = form.elements.namedItem("decision");
+  const status = form.elements.namedItem("status");
+  const ownerApproval = form.elements.namedItem("owner_approval_status");
+  const quotePrice = form.elements.namedItem("quote_price");
+
+  if (
+    decision instanceof HTMLSelectElement
+    && status instanceof HTMLSelectElement
+    && ownerApproval instanceof HTMLSelectElement
+  ) {
+    const allDecisionOptions = selectOptions(decision);
+    const allStatusOptions = selectOptions(status);
+    const allOwnerApprovalOptions = selectOptions(ownerApproval);
+
+    const syncChoices = () => {
+      filterSelect(decision, allDecisionOptions, allowedDecisions(status.value));
+      filterSelect(ownerApproval, allOwnerApprovalOptions, allowedOwnerApprovals(status.value));
+      filterSelect(
+        status,
+        allStatusOptions,
+        allowedStatuses({
+          decision: decision.value,
+          ownerApproval: ownerApproval.value,
+          hasQuotePrice: quotePrice instanceof HTMLInputElement && quotePrice.value.trim() !== "",
+        }),
+      );
+
+      // Re-run the dependent filters once after status adjustment so all three
+      // selects always describe a combination accepted by the backend rules.
+      filterSelect(decision, allDecisionOptions, allowedDecisions(status.value));
+      filterSelect(ownerApproval, allOwnerApprovalOptions, allowedOwnerApprovals(status.value));
+    };
+
+    decision.addEventListener("change", syncChoices);
+    status.addEventListener("change", syncChoices);
+    ownerApproval.addEventListener("change", syncChoices);
+    if (quotePrice instanceof HTMLInputElement) {
+      quotePrice.addEventListener("input", syncChoices);
+      quotePrice.addEventListener("change", syncChoices);
+    }
+    syncChoices();
+  }
 
   if (form.classList.contains("new-measure")) return;
 
@@ -197,16 +342,16 @@ function enhanceMeasureForm(form: HTMLFormElement) {
   else form.prepend(summary);
 
   const refreshSummary = () => {
-    const decision = form.elements.namedItem("decision");
-    const status = form.elements.namedItem("status");
+    const currentDecision = form.elements.namedItem("decision");
+    const currentStatus = form.elements.namedItem("status");
     const costMin = form.elements.namedItem("cost_min");
     const costMax = form.elements.namedItem("cost_max");
     const expanded = !form.classList.contains("is-collapsed");
 
     categoryText.textContent = selectedLabel(category);
     titleText.textContent = title.value.trim() || "Maßnahme ohne Titel";
-    decisionText.textContent = decision instanceof HTMLSelectElement ? selectedLabel(decision) : "—";
-    statusText.textContent = status instanceof HTMLSelectElement ? selectedLabel(status) : "—";
+    decisionText.textContent = currentDecision instanceof HTMLSelectElement ? selectedLabel(currentDecision) : "—";
+    statusText.textContent = currentStatus instanceof HTMLSelectElement ? selectedLabel(currentStatus) : "—";
 
     const min = costMin instanceof HTMLInputElement ? euroFromInput(costMin.value) : "";
     const max = costMax instanceof HTMLInputElement ? euroFromInput(costMax.value) : "";
@@ -215,12 +360,18 @@ function enhanceMeasureForm(form: HTMLFormElement) {
     toggle.setAttribute("aria-expanded", String(expanded));
   };
 
+  const collapse = () => {
+    form.classList.add("is-collapsed");
+    refreshSummary();
+  };
+
   toggle.addEventListener("click", () => {
     form.classList.toggle("is-collapsed");
     refreshSummary();
   });
   form.addEventListener("input", refreshSummary);
   form.addEventListener("change", refreshSummary);
+  form.addEventListener("readiness:collapse", collapse);
   refreshSummary();
 }
 
@@ -237,10 +388,36 @@ function scanRanges(root: ParentNode = document) {
   for (const form of forms) validateFormRanges(form);
 }
 
+function submittedIntent(event: SubmitEvent, form: HTMLFormElement) {
+  const submitter = event.submitter;
+  if (submitter instanceof HTMLButtonElement && submitter.name === "_intent") return submitter.value;
+  const field = form.elements.namedItem("_intent");
+  return field instanceof HTMLInputElement ? field.value : "";
+}
+
 export function CrmFormGuardrails() {
   useEffect(() => {
+    let pendingSavedMeasureId = "";
+
     scanRanges();
     enhanceMeasureForms();
+
+    const collapseSavedMeasure = () => {
+      if (!pendingSavedMeasureId) return;
+      const success = Array.from(document.querySelectorAll<HTMLElement>(".success-banner.readiness-feedback"))
+        .some((element) => element.textContent?.includes("Maßnahme gespeichert."));
+      if (!success) return;
+
+      const form = Array.from(document.querySelectorAll<HTMLFormElement>("form.readiness-measure-editor"))
+        .find((candidate) => {
+          const input = candidate.elements.namedItem("measure_id");
+          return input instanceof HTMLInputElement && input.value === pendingSavedMeasureId;
+        });
+      if (!form) return;
+
+      form.dispatchEvent(new Event("readiness:collapse"));
+      pendingSavedMeasureId = "";
+    };
 
     const onInput = (event: Event) => {
       const input = event.target;
@@ -252,14 +429,25 @@ export function CrmFormGuardrails() {
     const onSubmit = (event: Event) => {
       const form = event.target;
       if (!(form instanceof HTMLFormElement)) return;
-      if (validateFormRanges(form)) return;
+      if (!validateFormRanges(form)) {
+        event.preventDefault();
+        event.stopPropagation();
+        form.classList.remove("is-collapsed");
+        const invalid = form.querySelector<HTMLInputElement>(".crm-range-invalid");
+        invalid?.focus();
+        form.reportValidity();
+        return;
+      }
 
-      event.preventDefault();
-      event.stopPropagation();
-      form.classList.remove("is-collapsed");
-      const invalid = form.querySelector<HTMLInputElement>(".crm-range-invalid");
-      invalid?.focus();
-      form.reportValidity();
+      const submitEvent = event as SubmitEvent;
+      if (
+        submittedIntent(submitEvent, form) === "save_measure"
+        && form.classList.contains("readiness-measure-editor")
+        && !form.classList.contains("new-measure")
+      ) {
+        const measureId = form.elements.namedItem("measure_id");
+        pendingSavedMeasureId = measureId instanceof HTMLInputElement ? measureId.value : "";
+      }
     };
 
     const onDateClick = (event: MouseEvent) => {
@@ -289,6 +477,7 @@ export function CrmFormGuardrails() {
           enhanceMeasureForms(node);
         }
       }
+      collapseSavedMeasure();
     });
     observer.observe(document.body, { childList: true, subtree: true });
 
