@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import "~/brand-identity.css";
+import "~/brand-logo.css";
 
 function BrandLogo() {
   return (
