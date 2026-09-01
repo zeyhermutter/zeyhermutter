@@ -1,10 +1,17 @@
 import { Link } from "react-router";
+import "~/brand-identity.css";
 
 export function PublicHeader() {
   return (
     <header className="public-header">
-      <Link className="public-brand" to="/" aria-label="ZeyherMutter Startseite">
-        <span aria-hidden="true">ZM</span><strong>ZeyherMutter</strong>
+      <Link className="public-brand" to="/" aria-label="Zeyher & Mutter Immobilien – Startseite">
+        <img
+          className="public-brand-logo"
+          src="/zeyher-mutter-immobilien.svg"
+          alt="Zeyher & Mutter Immobilien"
+          width="1460"
+          height="320"
+        />
       </Link>
       <nav className="public-nav" aria-label="Hauptnavigation">
         <Link to="/verkaufsfertig-check">Verkaufsstrategie-Check</Link>
@@ -17,7 +24,7 @@ export function PublicHeader() {
 export function PublicFooter() {
   return (
     <footer className="public-footer">
-      <span>ZeyherMutter · Immobilienvermittlung</span>
+      <span>Zeyher & Mutter · Immobilien</span>
       <div>
         <Link to="/verkaufsfertig-check">Verkaufsstrategie-Check</Link>
         <Link to="/impressum">Impressum</Link>
