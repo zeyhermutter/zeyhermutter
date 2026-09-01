@@ -1,6 +1,7 @@
 import { data, Link, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/lead-sales-readiness";
 import { SalesReadinessWorkspace } from "~/components/sales-readiness-workspace";
+import { SalesReadinessAiPanel } from "~/components/sales-readiness-ai-panel";
 import { requirePermission } from "~/lib/auth.server";
 import { loadSalesReadiness, requireSalesReadinessBackend } from "~/lib/sales-readiness.server";
 import "~/sales-readiness.css";
@@ -119,6 +120,9 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
       canWrite: canWrite === true,
       canFinalize: canFinalize === true,
       canTask: canTask === true,
+      aiConfigured:
+        context.cloudflare.env.SALES_READINESS_AI_ENABLED === "true" &&
+        Boolean(context.cloudflare.env.OPENAI_API_KEY),
     },
     { headers: responseHeaders() },
   );
@@ -449,7 +453,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 }
 
 export default function LeadSalesReadiness() {
-  const { viewModel, profile, canWrite, canFinalize, canTask } = useLoaderData<typeof loader>();
+  const { viewModel, profile, canWrite, canFinalize, canTask, aiConfigured } = useLoaderData<typeof loader>();
   const result = useActionData<typeof action>();
 
   return (
@@ -469,6 +473,15 @@ export default function LeadSalesReadiness() {
 
       {result?.error ? <div className="form-error readiness-feedback">{result.error}</div> : null}
       {result?.ok ? <div className="success-banner readiness-feedback">{result.ok}</div> : null}
+
+      {viewModel.check.id ? (
+        <SalesReadinessAiPanel
+          leadId={viewModel.lead.id}
+          scenarios={viewModel.scenarios.map(({ id, kind, title }) => ({ id, kind, title }))}
+          canWrite={canWrite && viewModel.check.status !== "FINALIZED"}
+          configured={aiConfigured}
+        />
+      ) : null}
 
       <SalesReadinessWorkspace
         viewModel={viewModel}
