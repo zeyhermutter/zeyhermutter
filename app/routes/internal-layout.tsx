@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
+import { CrmFormGuardrails } from "~/components/crm-form-guardrails";
 import { LiveListFilters } from "~/components/live-list-filters";
 import { PersistentNavigation } from "~/components/persistent-navigation";
+import "~/crm-form-guardrails.css";
 import "~/responsive-data-card.css";
 
 const NAV_STACK_KEY = "zm_internal_navigation_stack";
@@ -98,6 +100,7 @@ function PropertyContextNavigation() {
 export default function InternalLayout() {
   return (
     <div className="persistent-app-frame">
+      <CrmFormGuardrails />
       <SmartBackNavigation />
       <SalesReadinessLeadEntryEnhancer />
       <PersistentNavigation />
