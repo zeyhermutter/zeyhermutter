@@ -54,6 +54,7 @@ export default [
     route("properties/:propertyId/media", "routes/property-media.tsx"),
   ]),
   route("__preview/sales-readiness", "routes/sales-readiness-preview.tsx"),
+  route("api/sales-readiness-ai", "routes/api-sales-readiness-ai.ts"),
   route("api/geocode-address", "routes/api-geocode-address.ts"),
   route("logout", "routes/logout.tsx"),
 ] satisfies RouteConfig;
