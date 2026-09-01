@@ -1,15 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Montserrat:wght@400;500;600;700&display=swap');
 
 .public-site{
-  --brand-navy:#0A223A;
-  --brand-navy-2:#173650;
-  --brand-gold:#B58A45;
-  --brand-gold-dark:#966D31;
-  --brand-ivory:#F8F6F1;
-  --brand-sand:#EAE2D3;
-  --brand-line:#D8D0C2;
-  --brand-muted:#67737D;
-  --brand-white:#FFFDF9;
+  --brand-navy:#071E32;
+  --brand-navy-2:#102C46;
+  --brand-gold:#A98953;
+  --brand-gold-dark:#896B3E;
+  --brand-gold-light:#C9AD79;
+  --brand-ivory:#F7F3EA;
+  --brand-sand:#E9DFCD;
+  --brand-line:#D6C9B2;
+  --brand-muted:#687684;
+  --brand-white:#FFFCF6;
   font-family:"Montserrat",Arial,sans-serif;
   background:var(--brand-ivory);
   color:var(--brand-navy);
@@ -44,30 +45,41 @@
 }
 
 .public-site .public-header{
-  width:min(1180px,calc(100% - 40px));
-  padding:18px 0;
-  border-bottom-color:var(--brand-line);
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  box-sizing:border-box;
+  padding:10px max(20px,calc((100vw - 1180px)/2));
+  background:var(--brand-navy)!important;
+  border-bottom:1px solid rgba(169,137,83,.45);
 }
 
 .public-site .public-brand{
   min-width:0;
   text-decoration:none;
+  line-height:0;
 }
 
 .public-site .public-brand-logo{
   display:block;
-  width:clamp(235px,27vw,365px);
+  width:clamp(190px,18vw,250px);
   height:auto;
+  object-fit:contain;
 }
 
 .public-site .public-nav{
   align-items:center;
 }
 
-.public-site .public-nav a,
+.public-site .public-nav a{
+  color:var(--brand-ivory)!important;
+  font-family:"Montserrat",Arial,sans-serif;
+  font-weight:600;
+  letter-spacing:.015em;
+}
+
 .public-site .public-back,
 .public-site .public-footer a{
-  color:var(--brand-navy);
   font-family:"Montserrat",Arial,sans-serif;
   font-weight:600;
 }
@@ -75,7 +87,7 @@
 .public-site .public-nav a:hover,
 .public-site .public-back:hover,
 .public-site .public-footer a:hover{
-  color:var(--brand-gold-dark);
+  color:var(--brand-gold-light)!important;
 }
 
 .public-site .public-eyebrow{
@@ -86,9 +98,16 @@
 }
 
 .public-site .public-footer{
-  border-top-color:var(--brand-line);
-  color:var(--brand-muted);
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  box-sizing:border-box;
+  padding:26px max(20px,calc((100vw - 1180px)/2)) 38px;
+  background:var(--brand-navy);
+  border-top:1px solid rgba(169,137,83,.45);
+  color:#C5CED6;
 }
+.public-site .public-footer a{color:var(--brand-ivory)}
 
 .public-site .public-primary-button.dark{
   background:var(--brand-navy);
@@ -97,7 +116,7 @@
 .public-site .public-primary-button.dark:hover{background:var(--brand-navy-2)}
 .public-site :focus-visible{outline-color:var(--brand-gold)}
 
-/* Homepage / Verkaufsstrategie: CI-Farben aus Logo */
+/* Homepage / Verkaufsstrategie: CI-Farben aus dem neuen Navy-Gold-Logo */
 .public-site.hv7r-site,
 .public-site.sales-check-page{
   background:var(--brand-ivory);
@@ -111,20 +130,13 @@
   --hv7-muted:var(--brand-muted);
 }
 
-.public-site.hv7r-site .public-header,
-.public-site.sales-check-page .public-header{background:var(--brand-ivory)}
-.public-site.hv7r-site .public-brand,
-.public-site.hv7r-site .public-nav a,
-.public-site.sales-check-page .public-brand,
-.public-site.sales-check-page .public-nav a{color:var(--brand-navy)}
-
 .public-site.hv7r-site .hv7r-hero:after{
-  background:linear-gradient(90deg,rgba(5,24,43,.96) 0%,rgba(8,31,53,.88) 43%,rgba(8,31,53,.34) 74%,rgba(8,31,53,.10) 100%);
+  background:linear-gradient(90deg,rgba(3,17,30,.97) 0%,rgba(7,30,50,.91) 43%,rgba(7,30,50,.40) 74%,rgba(7,30,50,.13) 100%);
 }
-.public-site.hv7r-site .hv7r-hero-copy .public-eyebrow{color:#D9BC7B}
+.public-site.hv7r-site .hv7r-hero-copy .public-eyebrow{color:var(--brand-gold-light)}
 .public-site.hv7r-site .hv7r-lead{color:#E8EDF1}
-.public-site.hv7r-site .hv7r-primary{background:var(--brand-gold);border-color:var(--brand-gold);color:#071A2B}
-.public-site.hv7r-site .hv7r-photo-credit{background:rgba(255,253,249,.9);color:var(--brand-navy)}
+.public-site.hv7r-site .hv7r-primary{background:var(--brand-gold);border-color:var(--brand-gold);color:var(--brand-navy)}
+.public-site.hv7r-site .hv7r-photo-credit{background:rgba(255,252,246,.92);color:var(--brand-navy)}
 .public-site.hv7r-site .hv7r-choice-head h2,
 .public-site.hv7r-site .hv7r-services-head h2{color:var(--brand-navy)}
 .public-site.hv7r-site .hv7r-choice-head>p:last-child{color:var(--brand-muted)}
@@ -132,31 +144,31 @@
 .public-site.hv7r-site .hv7r-choice-grid article.primary{background:var(--brand-white);color:var(--brand-navy)}
 .public-site.hv7r-site .hv7r-choice-grid article.secondary{background:var(--brand-navy);color:#fff;border-color:var(--brand-navy)}
 .public-site.hv7r-site .hv7r-choice-grid a{color:var(--brand-gold-dark)}
-.public-site.hv7r-site .hv7r-choice-grid .secondary a{color:#D9BC7B}
+.public-site.hv7r-site .hv7r-choice-grid .secondary a{color:var(--brand-gold-light)}
 .public-site.hv7r-site .hv7r-services{border-top-color:var(--brand-line)}
 .public-site.hv7r-site .hv7r-service-grid article{background:var(--brand-sand)}
 .public-site.hv7r-site .hv7r-service-grid article:nth-child(2){background:var(--brand-navy-2);color:#fff}
 .public-site.hv7r-site .hv7r-service-grid article:nth-child(3){background:var(--brand-navy);color:#fff}
 .public-site.hv7r-site .hv7r-check-band{background:var(--brand-sand);color:var(--brand-navy)}
 .public-site.hv7r-site .hv7r-check-band>div>p:last-child{color:var(--brand-muted)}
-.public-site.hv7r-site .hv7r-check-points>div{background:rgba(255,253,249,.7);border-color:rgba(10,34,58,.1)}
+.public-site.hv7r-site .hv7r-check-points>div{background:rgba(255,252,246,.76);border-color:rgba(7,30,50,.11)}
 .public-site.hv7r-site .hv7r-check-points span{background:var(--brand-gold);color:var(--brand-navy)}
 .public-site.hv7r-site .hv7r-check-points a{color:var(--brand-navy)}
 .public-site.hv7r-site .hv7r-trust blockquote,
 .public-site.hv7r-site .hv7r-trust strong{color:var(--brand-navy)}
 .public-site.hv7r-site .hv7r-trust div{color:var(--brand-muted)}
 .public-site.hv7r-site .hv7r-cta{background:var(--brand-navy);color:#fff}
-.public-site.hv7r-site .hv7r-cta .public-eyebrow{color:#D9BC7B}
+.public-site.hv7r-site .hv7r-cta .public-eyebrow{color:var(--brand-gold-light)}
 
 .public-site.sales-check-page .public-eyebrow{color:var(--brand-gold-dark)}
 .public-site.sales-check-page .sales-check-hero:before{
-  background:linear-gradient(90deg,rgba(5,24,43,.96) 0%,rgba(8,31,53,.89) 47%,rgba(8,31,53,.38) 100%);
+  background:linear-gradient(90deg,rgba(3,17,30,.97) 0%,rgba(7,30,50,.92) 47%,rgba(7,30,50,.43) 100%);
 }
-.public-site.sales-check-page .sales-check-hero .public-eyebrow{color:#D9BC7B}
+.public-site.sales-check-page .sales-check-hero .public-eyebrow{color:var(--brand-gold-light)}
 .public-site.sales-check-page .sales-check-hero p{color:#E8EDF1}
 .public-site.sales-check-page .sales-check-hero .public-primary-button.dark{background:var(--brand-gold);border-color:var(--brand-gold);color:var(--brand-navy)}
-.public-site.sales-check-page .sales-check-hero aside{background:rgba(10,34,58,.76)}
-.public-site.sales-check-page .sales-check-hero aside span{color:#D9BC7B}
+.public-site.sales-check-page .sales-check-hero aside{background:rgba(7,30,50,.82)}
+.public-site.sales-check-page .sales-check-hero aside span{color:var(--brand-gold-light)}
 .public-site.sales-check-page .sales-check-benefits h2,
 .public-site.sales-check-page .sales-check-scenarios h2,
 .public-site.sales-check-page .sales-check-process h2,
@@ -170,31 +182,32 @@
 .public-site.sales-check-page .sales-check-scenario-grid article:nth-child(2){background:var(--brand-navy-2);color:#fff;border-color:var(--brand-navy-2)}
 .public-site.sales-check-page .sales-check-scenario-grid article:nth-child(2) p{color:#E1E7EC}
 .public-site.sales-check-page .sales-check-scenario-grid article>span{color:var(--brand-gold-dark)}
-.public-site.sales-check-page .sales-check-scenario-grid article:nth-child(2)>span{color:#D9BC7B}
-.public-site.sales-check-page .sales-check-estimate-note{background:var(--brand-sand);border-color:#D7C5A5;color:var(--brand-muted)}
+.public-site.sales-check-page .sales-check-scenario-grid article:nth-child(2)>span{color:var(--brand-gold-light)}
+.public-site.sales-check-page .sales-check-estimate-note{background:var(--brand-sand);border-color:#D4C2A4;color:var(--brand-muted)}
 .public-site.sales-check-page .sales-check-process{background:var(--brand-navy);color:#fff}
-.public-site.sales-check-page .sales-check-process .public-eyebrow{color:#D9BC7B}
+.public-site.sales-check-page .sales-check-process .public-eyebrow{color:var(--brand-gold-light)}
 .public-site.sales-check-page .sales-check-process li>span{background:var(--brand-gold);color:var(--brand-navy)}
-.public-site.sales-check-page .sales-check-measures ul li{background:#EEE8DD;border-color:var(--brand-line);color:var(--brand-navy)}
+.public-site.sales-check-page .sales-check-measures ul li{background:#EFE8DA;border-color:var(--brand-line);color:var(--brand-navy)}
 .public-site.sales-check-page .sales-check-measures ul li span{color:var(--brand-gold-dark)}
-.public-site.sales-check-page .sales-check-form-section{background:var(--brand-sand);border-color:#D7C5A5}
-.public-site.sales-check-page .public-contact-form-card{background:var(--brand-white);border-color:var(--brand-line);box-shadow:0 24px 60px rgba(10,34,58,.09)}
+.public-site.sales-check-page .sales-check-form-section{background:var(--brand-sand);border-color:#D4C2A4}
+.public-site.sales-check-page .public-contact-form-card{background:var(--brand-white);border-color:var(--brand-line);box-shadow:0 24px 60px rgba(7,30,50,.10)}
 .public-site.sales-check-page .public-inquiry-form input,
 .public-site.sales-check-page .public-inquiry-form select,
-.public-site.sales-check-page .public-inquiry-form textarea{border-color:#D6CFC2;background:#FFFDF9;color:var(--brand-navy)}
+.public-site.sales-check-page .public-inquiry-form textarea{border-color:#D6CFC2;background:var(--brand-white);color:var(--brand-navy)}
 .public-site.sales-check-page .public-inquiry-form input:focus,
 .public-site.sales-check-page .public-inquiry-form select:focus,
 .public-site.sales-check-page .public-inquiry-form textarea:focus{border-color:var(--brand-gold);outline-color:var(--brand-gold)}
 .public-site.sales-check-page .public-inquiry-form .public-primary-button.dark{background:var(--brand-gold);border-color:var(--brand-gold);color:var(--brand-navy)}
 
 @media(max-width:760px){
-  .public-site .public-header{align-items:flex-start;flex-wrap:wrap;gap:14px}
-  .public-site .public-brand-logo{width:min(285px,78vw)}
+  .public-site .public-header{align-items:flex-start;flex-wrap:wrap;gap:10px;padding-top:8px;padding-bottom:12px}
+  .public-site .public-brand-logo{width:min(220px,62vw)}
   .public-site .public-nav{width:100%;justify-content:flex-start;gap:14px;flex-wrap:wrap}
 }
 
 @media(max-width:520px){
-  .public-site .public-header{width:min(100% - 24px,1180px);padding:14px 0}
-  .public-site .public-brand-logo{width:min(255px,82vw)}
+  .public-site .public-header{padding-left:12px;padding-right:12px}
+  .public-site .public-brand-logo{width:min(205px,68vw)}
   .public-site .public-nav a{font-size:12px}
+  .public-site .public-footer{padding-left:12px;padding-right:12px}
 }
