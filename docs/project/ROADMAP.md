@@ -134,11 +134,15 @@ ZeyherMutterOS wird als produktionsfähige, sichere und nachvollziehbare Plattfo
 - [ ] Veröffentlichungs-/Exposé-Browser-Smoke-Test
 - [ ] Modul-05-Abschlussprüfung gegen Definition of Done
 
-### Phase 6 – Dashboard & Provisionen
-- [ ] persönliches Dashboard
-- [ ] Unternehmensdashboard
-- [ ] Provisionslogik
-- [ ] interne Provisionszuordnung
+### Phase 6 – Dashboard & Provisionen — IN ARBEIT
+- [x] persönliches Dashboard
+- [x] Unternehmensdashboard
+- [x] zentrale serverseitige Reporting-Aggregation
+- [x] rollenbasierter Zugriff auf Unternehmenskennzahlen
+- [x] Provisionslogik
+- [x] interne Provisionszuordnung
+- [ ] Dashboard-/Reporting-Browser-Smoke-Test
+- [ ] Phase-06-Abschlussprüfung gegen Definition of Done
 
 ### Phase 7+
 - [ ] Portalexport/OpenImmo
