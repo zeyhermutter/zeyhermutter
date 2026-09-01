@@ -4,6 +4,7 @@ import { PublicFooter, PublicHeader } from "~/components/public-shell";
 import { getHomepageVariant, homepageVariants } from "~/lib/homepage-variants";
 import "~/public-website.css";
 import "~/homepage-variants.css";
+import "~/homepage-variants-image.css";
 
 export function meta({ params }: Route.MetaArgs) {
   const variant = getHomepageVariant(params.variant);
@@ -84,7 +85,42 @@ function VariantFive() {
   </>;
 }
 
+function VariantSix() {
+  return <>
+    <section className="hv6-hero">
+      <div className="hv6-copy"><p className="public-eyebrow">Substanz erkennen. Potenzial richtig einsetzen.</p><h1>Eine gute Vermarktung beginnt mit dem richtigen Blick auf die Immobilie.</h1><p className="hv-lead">Wir verbinden Immobilienverständnis mit einer wirtschaftlichen Entscheidung: Was sollte vor dem Verkauf noch passieren – und was darf bewusst so bleiben?</p><Actions /></div>
+      <div className="hv6-image"><img src="/immobilien/medien/6ad2dd39-1216-4810-9a8d-d7978b607694/1" alt="Hausansicht als BETA-Demobild für die Homepage-Vorschau"/><div className="hv6-image-note"><small>Verkaufsfertig-Check</small><strong>Die Immobilie zuerst verstehen. Dann den Marktauftritt planen.</strong></div></div>
+    </section>
+    <section className="hv6-principle"><div><p className="public-eyebrow">Unser Ansatz</p><h2>Vorbereitung mit Maß statt Renovierung nach Bauchgefühl.</h2><p>Wir bewerten die vorhandene Substanz, vergleichen realistische Verkaufswege und empfehlen nur Maßnahmen, deren Aufwand sich nachvollziehbar begründen lässt.</p></div><div className="hv6-decisions"><article><span>01</span><div><h3>Substanz & Zustand</h3><p>Was ist vorhanden, was fällt auf und was beeinflusst die Präsentation tatsächlich?</p></div></article><article><span>02</span><div><h3>Aufwand & Wirkung</h3><p>Welche Maßnahmen haben einen sinnvollen Hebel – und welche kosten vor allem Zeit und Geld?</p></div></article><article><span>03</span><div><h3>Positionierung & Verkauf</h3><p>Aus der Entscheidung entsteht ein klarer Marktauftritt, den wir anschließend selbst umsetzen.</p></div></article></div></section>
+    <section className="hv6-band"><div><p className="public-eyebrow">Nicht jede Immobilie braucht dasselbe.</p><h2>Der richtige Verkaufsweg entsteht aus der Immobilie – nicht aus einer Standardliste.</h2><p>Vom direkten Verkauf im Ist-Zustand bis zur gezielten Aufbereitung: Wir machen die Optionen vergleichbar und halten Kosten, Zeit und Ziel zusammen.</p></div><ul><li><span>✓</span>Ist-Zustand als echte Option</li><li><span>✓</span>Gezielte Maßnahmen mit nachvollziehbarem Nutzen</li><li><span>✓</span>Vermarktung und Verkauf ohne Übergabebruch</li></ul></section>
+    <section className="hv-wide-cta"><div><p className="public-eyebrow">Vor dem Inserat</p><h2>Prüfen wir, wie Ihre Immobilie am stärksten in den Markt geht.</h2></div><Link className="public-primary-button dark" to="/verkaufsfertig-check">Verkaufspotenzial prüfen</Link></section>
+  </>;
+}
+
+function VariantSeven() {
+  return <>
+    <section className="hv7-hero"><img src="/immobilien/medien/09beef0e-7669-4ce4-9652-6fad4b6c549c/1" alt="Wohnbereich als BETA-Demobild für die Homepage-Vorschau"/><div className="hv7-copy"><div><p className="public-eyebrow">Jede Immobilie bringt ihre eigene Geschichte mit.</p><h1>Wir machen daraus einen klaren Verkaufsweg.</h1><p className="hv-lead">Bevor eine Immobilie auf den Markt kommt, klären wir gemeinsam, was bleiben darf, was sinnvoll verbessert werden sollte und wie daraus eine überzeugende Positionierung entsteht.</p><Actions /></div></div><div className="hv7-image-label">BETA · Demobild</div></section>
+    <section className="hv7-intro"><div><p className="public-eyebrow">Die entscheidenden Fragen</p><h2>Nicht alles neu. Sondern das Richtige sichtbar machen.</h2><p>Gerade bei älteren, geerbten oder lange bewohnten Immobilien ist die Versuchung groß, vor dem Verkauf zu viel zu tun. Unser Check schafft eine ruhigere Entscheidungsgrundlage.</p></div><div className="hv7-questions"><article><small>Frage 01</small><strong>Was lohnt sich noch?</strong><p>Maßnahmen nach Aufwand, Zeit und erwarteter Wirkung abwägen.</p></article><article><small>Frage 02</small><strong>Was darf so bleiben?</strong><p>Auch bewusst nichts zu verändern kann der richtige Verkaufsweg sein.</p></article><article><small>Frage 03</small><strong>Wie erzählen wir die Immobilie?</strong><p>Stärken, Charakter und Zielgruppe zu einer klaren Positionierung verbinden.</p></article><article><small>Ergebnis</small><strong>Verkaufsfertig statt perfekt.</strong><p>Ein abgestimmter Weg, der zur Immobilie und zu Ihren Zielen passt.</p></article></div></section>
+    <section className="hv7-path"><article><span>01</span><h3>Verstehen</h3><p>Immobilie, Situation, Zeitrahmen und Verkaufsziel gemeinsam einordnen.</p></article><article><span>02</span><h3>Entscheiden</h3><p>Ist-Zustand, gezielte Vorbereitung und größere Maßnahmen fundiert vergleichen.</p></article><article><span>03</span><h3>Vermarkten</h3><p>Den gewählten Weg umsetzen und anschließend Positionierung und Verkauf übernehmen.</p></article></section>
+    <section className="hv7-quote"><blockquote>„Was braucht dieses Haus wirklich, bevor wir es verkaufen?“</blockquote><div><p>Genau darauf gibt der Verkaufsfertig-Check eine konkrete Antwort.</p><p>Ohne pauschale Renovierungsempfehlung, aber mit einer klaren Einschätzung und einem Maklerprozess, der danach direkt weitergeht.</p></div></section>
+    <section className="hv-wide-cta"><div><p className="public-eyebrow">In Ruhe entscheiden</p><h2>Finden wir den Verkaufsweg, der zu Ihrer Immobilie passt.</h2></div><Link className="public-primary-button" to="/verkaufsfertig-check">Verkaufsfertig-Check starten</Link></section>
+  </>;
+}
+
+function VariantContent({ id }: { id: string }) {
+  switch (id) {
+    case "1": return <VariantOne/>;
+    case "2": return <VariantTwo/>;
+    case "3": return <VariantThree/>;
+    case "4": return <VariantFour/>;
+    case "5": return <VariantFive/>;
+    case "6": return <VariantSix/>;
+    case "7": return <VariantSeven/>;
+    default: return null;
+  }
+}
+
 export default function HomepageVariantPreview({ loaderData }: Route.ComponentProps) {
   const { variant } = loaderData;
-  return <main className={`public-site hv-site hv-version hv-version-${variant.id}`}><PreviewBar id={variant.id} name={variant.name}/><PublicHeader />{variant.id === "1" ? <VariantOne/> : variant.id === "2" ? <VariantTwo/> : variant.id === "3" ? <VariantThree/> : variant.id === "4" ? <VariantFour/> : <VariantFive/>}<PublicFooter /></main>;
+  return <main className={`public-site hv-site hv-version hv-version-${variant.id}`}><PreviewBar id={variant.id} name={variant.name}/><PublicHeader /><VariantContent id={variant.id}/><PublicFooter /></main>;
 }
