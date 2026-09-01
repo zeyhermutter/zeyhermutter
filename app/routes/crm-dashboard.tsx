@@ -7,50 +7,48 @@ import { requireActiveUser, requirePermission } from "~/lib/auth.server";
 import { geocodePropertyAddress } from "~/lib/geocoding.server";
 import "~/property-map.css";
 
+function berlinToday() {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
+  const get = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
+  return `${get("year")}-${get("month")}-${get("day")}`;
+}
+
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { supabase, responseHeaders, profile } = await requireActiveUser(request, context.cloudflare.env);
   const now = new Date().toISOString();
+  const today = berlinToday();
+  const monthStart = `${today.slice(0, 7)}-01`;
   const [
-    { data: contacts, error: contactError },
+    { data: contacts, count: contactCount, error: contactError },
     { data: tasks, error: taskError },
-    { count: contactCount, error: contactCountError },
     { count: organizationCount, error: organizationError },
-    { count: taskCount, error: taskCountError },
     { count: unreadCount, error: notificationError },
     { data: headerNotifications, error: headerNotificationError },
     { count: propertyCount, error: propertyError },
     propertyPermission,
-    { count: leadCount, error: leadCountError },
-    { count: newLeadCount, error: newLeadCountError },
-    { count: overdueLeadCount, error: overdueLeadError },
     { data: recentLeads, error: recentLeadError },
-    { count: searchProfileCount, error: searchProfileCountError },
-    { count: openInquiryCount, error: openInquiryCountError },
     { data: recentInquiries, error: recentInquiryError },
-    { count: upcomingViewingCount, error: viewingCountError },
+    { data: dashboardSummary, error: dashboardSummaryError },
   ] = await Promise.all([
-    supabase.from("contacts").select("id,contact_number,first_name,last_name,email,mobile,status,updated_at").is("archived_at", null).order("updated_at", { ascending: false }).limit(25),
+    supabase.from("contacts").select("id,contact_number,first_name,last_name,email,mobile,status,updated_at", { count: "exact" }).is("archived_at", null).order("updated_at", { ascending: false }).limit(25),
     supabase.from("tasks").select("id,task_number,title,status,priority,due_at,contact_id,lead_id,inquiry_id,search_profile_id,viewing_id").is("archived_at", null).in("status", ["OPEN", "IN_PROGRESS"]).order("due_at", { ascending: true }).limit(10),
-    supabase.from("contacts").select("id", { count: "exact", head: true }).is("archived_at", null),
     supabase.from("organizations").select("id", { count: "exact", head: true }).is("archived_at", null),
-    supabase.from("tasks").select("id", { count: "exact", head: true }).is("archived_at", null).in("status", ["OPEN", "IN_PROGRESS"]),
     supabase.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null),
     supabase.from("notifications").select("id,type,title,message,entity_type,entity_id,created_at,read_at").order("created_at", { ascending: false }).limit(8),
     supabase.from("properties").select("id", { count: "exact", head: true }).neq("status", "ARCHIVED"),
     supabase.rpc("current_user_has_permission", { p_permission: "property.read" }),
-    supabase.from("leads").select("id", { count: "exact", head: true }).is("archived_at", null),
-    supabase.from("leads").select("id", { count: "exact", head: true }).is("archived_at", null).eq("status", "NEW"),
-    supabase.from("leads").select("id", { count: "exact", head: true }).is("archived_at", null).not("follow_up_at", "is", null).lt("follow_up_at", now).not("status", "in", "(WON,LOST)"),
     supabase.from("leads").select("id,lead_number,status,follow_up_at,property_city,updated_at,contacts!inner(first_name,last_name)").is("archived_at", null).order("updated_at", { ascending: false }).limit(6),
-    supabase.from("search_profiles").select("id", { count: "exact", head: true }).is("archived_at", null).eq("status", "ACTIVE"),
-    supabase.from("inquiries").select("id", { count: "exact", head: true }).is("archived_at", null).not("status", "in", "(CLOSED,LOST)"),
     supabase.from("inquiries").select("id,inquiry_number,status,channel,received_at,contacts!inner(first_name,last_name),properties(property_number),search_profiles(search_profile_number)").is("archived_at", null).order("received_at", { ascending: false }).limit(5),
-    supabase.from("viewings").select("id", { count: "exact", head: true }).is("archived_at", null).gte("starts_at", now).in("status", ["PLANNED", "CONFIRMED"]),
+    supabase.rpc("crm_dashboard_summary", { p_scope: "mine", p_from: monthStart, p_to: today }),
   ]);
 
-  if (contactError || taskError || contactCountError || organizationError || taskCountError || notificationError || headerNotificationError || propertyError || leadCountError || newLeadCountError || overdueLeadError || recentLeadError || searchProfileCountError || openInquiryCountError || recentInquiryError || viewingCountError) {
-    throw new Response("CRM-Daten konnten nicht geladen werden.", { status: 500 });
+  if (contactError || taskError || organizationError || notificationError || headerNotificationError || propertyError || recentLeadError || recentInquiryError || dashboardSummaryError || !dashboardSummary) {
+    throw new Response("CRM-Daten konnten nicht geladen werden.", { status: 500, headers: responseHeaders() });
   }
+
+  const summary = dashboardSummary as any;
+  const snapshot = summary.snapshot ?? {};
+  const period = summary.period ?? {};
 
   let propertyMapPoints: PropertyMapPoint[] = [];
   let missingCoordinateCount = 0;
@@ -68,7 +66,27 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     });
   }
 
-  return data({ profile, contacts: contacts ?? [], tasks: tasks ?? [], contactCount: contactCount ?? 0, organizationCount: organizationCount ?? 0, taskCount: taskCount ?? 0, unreadCount: unreadCount ?? 0, headerNotifications: (headerNotifications ?? []) as HeaderNotification[], propertyCount: propertyCount ?? 0, propertyMapPoints, missingCoordinateCount, leadCount: leadCount ?? 0, newLeadCount: newLeadCount ?? 0, overdueLeadCount: overdueLeadCount ?? 0, recentLeads: recentLeads ?? [], searchProfileCount: searchProfileCount ?? 0, openInquiryCount: openInquiryCount ?? 0, recentInquiries: recentInquiries ?? [], upcomingViewingCount: upcomingViewingCount ?? 0 }, { headers: responseHeaders() });
+  return data({
+    profile,
+    contacts: contacts ?? [],
+    tasks: tasks ?? [],
+    contactCount: contactCount ?? 0,
+    organizationCount: organizationCount ?? 0,
+    taskCount: Number(snapshot.open_tasks ?? 0),
+    unreadCount: unreadCount ?? 0,
+    headerNotifications: (headerNotifications ?? []) as HeaderNotification[],
+    propertyCount: propertyCount ?? 0,
+    propertyMapPoints,
+    missingCoordinateCount,
+    leadCount: Number(snapshot.active_leads ?? 0),
+    newLeadCount: Number(period.leads_created ?? 0),
+    overdueLeadCount: Number(snapshot.overdue_lead_followups ?? 0),
+    recentLeads: recentLeads ?? [],
+    searchProfileCount: Number(snapshot.active_search_profiles ?? 0),
+    openInquiryCount: Number(snapshot.open_inquiries ?? 0),
+    recentInquiries: recentInquiries ?? [],
+    upcomingViewingCount: Number(snapshot.upcoming_viewings ?? 0),
+  }, { headers: responseHeaders() });
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
@@ -109,6 +127,7 @@ export default function CrmDashboard() {
       <div className="brand"><span className="brand-mark">ZM</span><span>ZeyherMutterOS</span></div>
       <nav className="sidebar-nav" aria-label="Hauptnavigation">
         <Link className="nav-item active" to="/crm">CRM</Link>
+        <Link className="nav-item" to="/reports">Dashboard & Auswertung</Link>
         <Link className="nav-item" to="/crm/search">Suche</Link>
         <Link className="nav-item" to="/crm/tasks">Aufgaben</Link>
         <Link className="nav-item" to="/crm/notifications">Benachrichtigungen{unreadCount > 0 ? ` (${unreadCount})` : ""}</Link>
@@ -120,7 +139,7 @@ export default function CrmDashboard() {
         <Link className="nav-item" to="/viewings">Besichtigungen</Link>
         <Link className="nav-item" to="/crm/history">Systemhistorie</Link>
         <Link className="nav-item" to="/crm/archive">Archiv</Link>
-        <span className="nav-item muted">Provisionen</span>
+        <Link className="nav-item" to="/commissions">Provisionen</Link>
       </nav>
       <div className="sidebar-footer"><small>{__APP_ENV_LABEL__}</small><strong>{profile.display_name}</strong><Form method="post" action="/logout"><button className="text-button" type="submit">Abmelden</button></Form></div>
     </aside>
@@ -128,10 +147,10 @@ export default function CrmDashboard() {
     <section className="app-content">
       <header className="app-header">
         <div><p className="eyebrow">CRM · Immobilien · Verkäufer · Interessenten</p><div className="dashboard-greeting-row"><h1 className="app-title">Guten Tag, {profile.display_name}.</h1><NotificationBell notifications={headerNotifications} unreadCount={unreadCount}/></div></div>
-        <div className="header-actions"><Link className="secondary-button link-button" to="/search-profiles">Interessenten · {searchProfileCount}</Link><Link className="secondary-button link-button" to="/inquiries">Anfragen · {openInquiryCount}</Link><Link className="secondary-button link-button" to="/viewings">Besichtigungen · {upcomingViewingCount}</Link><Link className="secondary-button link-button" to="/crm/search">Suchen</Link><Link className="primary-button link-button" to="/inquiries/new">+ Anfrage</Link><span className="badge">{__APP_ENV_LABEL__}</span></div>
+        <div className="header-actions"><Link className="secondary-button link-button" to="/reports">Auswertung</Link><Link className="secondary-button link-button" to="/search-profiles">Interessenten · {searchProfileCount}</Link><Link className="secondary-button link-button" to="/inquiries">Anfragen · {openInquiryCount}</Link><Link className="secondary-button link-button" to="/viewings">Besichtigungen · {upcomingViewingCount}</Link><Link className="secondary-button link-button" to="/crm/search">Suchen</Link><Link className="primary-button link-button" to="/inquiries/new">+ Anfrage</Link><span className="badge">{__APP_ENV_LABEL__}</span></div>
       </header>
 
-      <div className="metric-grid"><article className="metric-card"><span>Kontakte</span><strong>{contactCount}</strong><small>aktive Kontakte</small></article><article className="metric-card"><span>Verkäufer-Leads</span><strong>{leadCount}</strong><small>{newLeadCount} neu · {overdueLeadCount} überfällig</small></article><article className="metric-card"><span>Organisationen</span><strong>{organizationCount}</strong><small>aktive Firmen/Partner</small></article><article className="metric-card"><span>Offene Aufgaben</span><strong>{taskCount}</strong><small>offen / in Bearbeitung</small></article></div>
+      <div className="metric-grid"><article className="metric-card"><span>Kontakte</span><strong>{contactCount}</strong><small>aktive Kontakte</small></article><article className="metric-card"><span>Aktive Verkäufer-Leads</span><strong>{leadCount}</strong><small>{newLeadCount} im Monat neu · {overdueLeadCount} überfällig</small></article><article className="metric-card"><span>Organisationen</span><strong>{organizationCount}</strong><small>aktive Firmen/Partner</small></article><article className="metric-card"><span>Offene Aufgaben</span><strong>{taskCount}</strong><small>offen / in Bearbeitung</small></article></div>
 
       <section className="data-card"><div className="card-head"><div><p className="eyebrow">Modul 04</p><h2>Interessenten & Anfragen</h2></div><div className="inline-actions"><Link className="subtle-link" to="/search-profiles">{searchProfileCount} aktive Suchprofile</Link><Link className="subtle-link" to="/inquiries">{openInquiryCount} offene Anfragen</Link><Link className="subtle-link" to="/viewings">{upcomingViewingCount} anstehende Besichtigungen</Link></div></div><div className="data-list">{recentInquiries.map((inq: any) => { const contact = one(inq.contacts), property = one(inq.properties), sp = one(inq.search_profiles); return <Link className="data-row data-row-link" to={`/inquiries/${inq.id}`} key={inq.id}><div><strong>{contact ? `${contact.first_name} ${contact.last_name}` : inq.inquiry_number}</strong><small>{inq.inquiry_number} · {inq.channel}{property?.property_number ? ` · ${property.property_number}` : sp?.search_profile_number ? ` · ${sp.search_profile_number}` : ""}</small></div><div className="row-meta"><span>{inq.status}</span><small>{formatDate(inq.received_at)}</small></div></Link>; })}{recentInquiries.length === 0 ? <p className="empty-state">Noch keine Anfragen vorhanden.</p> : null}</div></section>
 
