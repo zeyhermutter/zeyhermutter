@@ -5,6 +5,7 @@ import { LiveListFilters } from "~/components/live-list-filters";
 import { PersistentNavigation } from "~/components/persistent-navigation";
 import "~/crm-form-guardrails.css";
 import "~/responsive-data-card.css";
+import "~/crm-light-theme.css";
 
 const NAV_STACK_KEY = "zm_internal_navigation_stack";
 
