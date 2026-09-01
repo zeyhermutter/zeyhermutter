@@ -12,21 +12,17 @@ type IntakeKind = "GENERAL" | "PROPERTY" | "SELLER_CHECK";
 function response(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: jsonHeaders });
 }
-
 function clean(value: unknown, max: number) {
   return String(value ?? "").trim().replace(/\s+/g, " ").slice(0, max);
 }
-
 function validEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && value.length <= 254;
 }
-
 async function sha256(value: string) {
   const bytes = new TextEncoder().encode(value);
   const hash = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(hash)).map((value) => value.toString(16).padStart(2, "0")).join("");
+  return Array.from(new Uint8Array(hash)).map((item) => item.toString(16).padStart(2, "0")).join("");
 }
-
 function processingFailed(stage: string, error?: { code?: string } | null) {
   console.error("website-inquiry processing failed", { stage, code: error?.code ?? "UNKNOWN" });
   return response({ ok: false, error: "PROCESSING_FAILED" }, 500);
@@ -46,19 +42,11 @@ Deno.serve(async (request: Request) => {
     return response({ ok: false, error: "INVALID_REQUEST" }, 400);
   }
 
-  // Property detail requests historically omitted `kind`; preserve that
-  // contract while requiring explicit values for every other intake type.
   const rawKind = clean(body.kind, 40) || "PROPERTY";
   if (!new Set(["GENERAL", "PROPERTY", "SELLER_CHECK"]).has(rawKind)) {
     return response({ ok: false, error: "INVALID_INPUT" }, 400);
   }
   const kind = rawKind as IntakeKind;
-
-  // The prepared source must remain inert until the database migration and
-  // routing have both been approved for the target backend.
-  if (kind === "SELLER_CHECK" && Deno.env.get("SELLER_CHECK_INTAKE_ENABLED") !== "true") {
-    return response({ ok: false, error: "SELLER_CHECK_NOT_ENABLED" }, 503);
-  }
 
   const firstName = clean(body.first_name, 100);
   const lastName = clean(body.last_name, 100);
@@ -74,12 +62,8 @@ Deno.serve(async (request: Request) => {
   if (!firstName || !lastName || !validEmail(email) || !submissionKey || body.consent !== true) {
     return response({ ok: false, error: "INVALID_INPUT" }, 400);
   }
-  if (kind !== "SELLER_CHECK" && message.length < 10) {
-    return response({ ok: false, error: "INVALID_INPUT" }, 400);
-  }
-  if (kind === "PROPERTY" && !slug) {
-    return response({ ok: false, error: "INVALID_INPUT" }, 400);
-  }
+  if (kind !== "SELLER_CHECK" && message.length < 10) return response({ ok: false, error: "INVALID_INPUT" }, 400);
+  if (kind === "PROPERTY" && !slug) return response({ ok: false, error: "INVALID_INPUT" }, 400);
 
   const postalCode = clean(body.postal_code, 5);
   const city = clean(body.city, 120);
@@ -89,6 +73,7 @@ Deno.serve(async (request: Request) => {
   const requestedSupport = Array.isArray(body.requested_support)
     ? [...new Set(body.requested_support.map((value) => clean(value, 40)).filter((value) => SELLER_CHECK_SUPPORT.has(value)))]
     : [];
+
   if (kind === "SELLER_CHECK" && (
     !/^\d{5}$/.test(postalCode)
     || city.length < 2
@@ -96,9 +81,7 @@ Deno.serve(async (request: Request) => {
     || propertyCondition.length < 2
     || saleTimeframe.length < 2
     || requestedSupport.length === 0
-  )) {
-    return response({ ok: false, error: "INVALID_INPUT" }, 400);
-  }
+  )) return response({ ok: false, error: "INVALID_INPUT" }, 400);
 
   const db = createClient(supabaseUrl, serviceRole, { auth: { persistSession: false, autoRefreshToken: false } });
   let propertyId: string | null = null;
@@ -127,15 +110,24 @@ Deno.serve(async (request: Request) => {
   }
 
   if (kind === "SELLER_CHECK") {
-    responsibleUser = clean(Deno.env.get("SELLER_CHECK_RESPONSIBLE_USER_ID"), 36) || null;
-    if (!responsibleUser) return response({ ok: false, error: "SELLER_CHECK_ROUTING_NOT_CONFIGURED" }, 503);
+    const { data: config, error: configError } = await db
+      .from("sales_readiness_public_intake_config")
+      .select("enabled,responsible_user")
+      .eq("id", "SELLER_CHECK")
+      .maybeSingle();
+    if (configError || !config?.enabled || !config.responsible_user) {
+      return response({ ok: false, error: "SELLER_CHECK_NOT_ENABLED" }, 503);
+    }
+    responsibleUser = String(config.responsible_user);
     const { data: responsibleProfile, error: responsibleError } = await db
       .from("profiles")
       .select("user_id,status")
       .eq("user_id", responsibleUser)
       .eq("status", "ACTIVE")
       .maybeSingle();
-    if (responsibleError || !responsibleProfile) return response({ ok: false, error: "SELLER_CHECK_ROUTING_NOT_CONFIGURED" }, 503);
+    if (responsibleError || !responsibleProfile) {
+      return response({ ok: false, error: "SELLER_CHECK_ROUTING_NOT_CONFIGURED" }, 503);
+    }
   }
 
   if (kind === "SELLER_CHECK") {
@@ -196,13 +188,12 @@ Deno.serve(async (request: Request) => {
   }
 
   if (kind === "SELLER_CHECK") {
-    const supportLabel = requestedSupport.join(", ");
     const sellerMessage = [
       message || "Keine zusätzliche Nachricht.",
       `Immobilie: ${propertyType} · ${postalCode} ${city}`,
       `Zustand: ${propertyCondition}`,
       `Verkaufszeitraum: ${saleTimeframe}`,
-      `Gewünschte Unterstützung: ${supportLabel}`,
+      `Gewünschte Unterstützung: ${requestedSupport.join(", ")}`,
     ].join("\n");
     const { data: result, error: leadError } = await db.rpc("create_public_seller_check_lead", {
       p_contact_id: contactId,
@@ -272,6 +263,7 @@ Deno.serve(async (request: Request) => {
     inquiry_id: inquiry.id,
     metadata: { source: "PUBLIC_WEBSITE", kind, consent_version: INQUIRY_CONSENT_VERSION },
   });
+
   let notificationUsers: string[] = [];
   if (responsibleUser) notificationUsers = [responsibleUser];
   else {
