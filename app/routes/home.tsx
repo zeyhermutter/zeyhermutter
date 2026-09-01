@@ -74,7 +74,7 @@ export default function Home() {
           <div><span>A</span><strong>Im Ist-Zustand verkaufen</strong></div>
           <div><span>B</span><strong>Gezielt aufbereiten</strong></div>
           <div><span>C</span><strong>Erweiterte Maßnahmen prüfen</strong></div>
-          <Link to="/verkaufsfertig-check">Check im gleichen Design öffnen →</Link>
+          <Link to="/verkaufsfertig-check">Verkaufsstrategie-Check öffnen →</Link>
         </div>
       </section>
 
