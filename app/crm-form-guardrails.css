@@ -1,0 +1,172 @@
+/* CRM-wide form guardrails */
+.persistent-app-frame input.crm-range-invalid,
+.persistent-app-frame input.crm-range-invalid:focus{
+  border-color:#c46f6f!important;
+  box-shadow:0 0 0 3px rgba(196,111,111,.16)!important;
+}
+
+/* Sales-readiness placeholders: clearly readable, still distinct from real values. */
+.readiness-workspace .readiness-form-grid input::placeholder,
+.readiness-workspace .readiness-form-grid textarea::placeholder,
+.readiness-workspace .readiness-scenario input::placeholder,
+.readiness-workspace .readiness-scenario textarea::placeholder{
+  color:#aebabc!important;
+  opacity:1!important;
+  font-weight:500;
+}
+
+/* Compact measure list. Existing measures are collapsed into scan-friendly rows. */
+.readiness-measure-editor.readiness-measure-collapsible{
+  display:grid;
+  gap:0;
+  padding:0;
+  overflow:hidden;
+  background:#111718;
+}
+
+.readiness-measure-summary{
+  display:block;
+  width:100%;
+}
+
+.readiness-measure-summary-button{
+  width:100%;
+  min-height:0!important;
+  display:grid;
+  grid-template-columns:minmax(240px,1fr) auto;
+  gap:18px;
+  align-items:center;
+  padding:14px 16px;
+  border:0;
+  background:transparent;
+  color:#eef2f3;
+  text-align:left;
+  cursor:pointer;
+}
+
+.readiness-measure-summary-button:hover{
+  background:#151d1e;
+}
+
+.readiness-measure-summary-button:focus-visible{
+  outline:2px solid #879496;
+  outline-offset:-3px;
+}
+
+.readiness-measure-summary-main{
+  min-width:0;
+  display:grid;
+  gap:4px;
+}
+
+.readiness-measure-summary-main small{
+  color:#9ca9ab;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+.readiness-measure-summary-main strong{
+  min-width:0;
+  color:#eef2f3;
+  font-size:14px;
+  line-height:1.35;
+  overflow-wrap:anywhere;
+}
+
+.readiness-measure-summary-meta{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.readiness-measure-summary-pill{
+  display:inline-flex;
+  align-items:center;
+  min-height:26px;
+  padding:4px 8px;
+  border:1px solid #344143;
+  border-radius:999px;
+  background:#172021;
+  color:#cbd4d5;
+  font-size:10px;
+  font-weight:700;
+  white-space:nowrap;
+}
+
+.readiness-measure-summary-cost{
+  color:#aebabc;
+  font-size:11px;
+  font-weight:700;
+  white-space:nowrap;
+}
+
+.readiness-measure-summary-toggle{
+  color:#9fb0b2;
+  font-size:11px;
+  font-weight:800;
+  white-space:nowrap;
+}
+
+.readiness-measure-editor.readiness-measure-collapsible:not(.is-collapsed) .readiness-measure-summary{
+  border-bottom:1px solid #293536;
+}
+
+.readiness-measure-editor.readiness-measure-collapsible.is-collapsed > .readiness-form-grid,
+.readiness-measure-editor.readiness-measure-collapsible.is-collapsed > .readiness-form-actions{
+  display:none!important;
+}
+
+.readiness-measure-editor.readiness-measure-collapsible > .readiness-form-grid{
+  padding:16px;
+}
+
+.readiness-measure-editor.readiness-measure-collapsible > .readiness-form-actions{
+  padding:0 16px 16px;
+}
+
+.readiness-measure-editor.new-measure{
+  gap:14px;
+}
+
+.readiness-measure-editor.new-measure::before{
+  content:"Neue Maßnahme";
+  color:#aebabc;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+@media(max-width:900px){
+  .readiness-measure-summary-button{
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+  .readiness-measure-summary-meta{
+    justify-content:flex-start;
+  }
+}
+
+@media(max-width:700px){
+  .readiness-measure-summary-button{
+    padding:14px;
+  }
+  .readiness-measure-summary-meta{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .readiness-measure-summary-cost,
+  .readiness-measure-summary-toggle{
+    white-space:normal;
+  }
+  .readiness-measure-editor.readiness-measure-collapsible > .readiness-form-grid{
+    padding:14px;
+  }
+  .readiness-measure-editor.readiness-measure-collapsible > .readiness-form-actions{
+    padding:0 14px 14px;
+  }
+}
