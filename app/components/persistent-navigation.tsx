@@ -9,6 +9,7 @@ const GROUPS: NavGroup[] = [
     label: "Arbeitsplatz",
     items: [
       { label: "Übersicht", to: "/crm", exact: true },
+      { label: "Dashboard & Auswertung", to: "/reports" },
       { label: "Suche", to: "/crm/search" },
       { label: "Aufgaben", to: "/crm/tasks" },
     ],
@@ -116,5 +117,5 @@ export function PersistentNavigation() {
 }
 
 export function isInternalAppPath(pathname: string) {
-  return pathname === "/crm" || pathname.startsWith("/crm/") || pathname === "/properties" || pathname.startsWith("/properties/") || pathname === "/leads" || pathname.startsWith("/leads/") || pathname === "/commissions" || pathname.startsWith("/commissions/") || pathname === "/purchase-offers" || pathname.startsWith("/purchase-offers/") || pathname === "/closings" || pathname.startsWith("/closings/") || pathname === "/search-profiles" || pathname.startsWith("/search-profiles/") || pathname === "/inquiries" || pathname.startsWith("/inquiries/") || pathname === "/viewings" || pathname.startsWith("/viewings/");
+  return pathname === "/crm" || pathname.startsWith("/crm/") || pathname === "/reports" || pathname.startsWith("/reports/") || pathname === "/properties" || pathname.startsWith("/properties/") || pathname === "/leads" || pathname.startsWith("/leads/") || pathname === "/commissions" || pathname.startsWith("/commissions/") || pathname === "/purchase-offers" || pathname.startsWith("/purchase-offers/") || pathname === "/closings" || pathname.startsWith("/closings/") || pathname === "/search-profiles" || pathname.startsWith("/search-profiles/") || pathname === "/inquiries" || pathname.startsWith("/inquiries/") || pathname === "/viewings" || pathname.startsWith("/viewings/");
 }
