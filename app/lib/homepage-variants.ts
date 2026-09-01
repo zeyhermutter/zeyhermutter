@@ -51,10 +51,10 @@ export const homepageVariants: HomepageVariant[] = [
   },
   {
     id: "7",
-    name: "Warm & Charaktervoll",
-    kicker: "Hero-Bild · Pflaume · Terrakotta · Creme",
-    description: "Eine emotionalere Bildvariante mit vollflächigem Interior-Hero, warmen Farbtönen und stärkerem Fokus auf die Geschichte und den Charakter einer Immobilie.",
-    traits: ["immersives Hero-Bild", "wärmere Farbwelt", "emotional und persönlich"],
+    name: "Makler & Verkaufsfertig",
+    kicker: "Makler zuerst · Verkaufsfertig als Option",
+    description: "Klassische Immobilienvermittlung steht klar im Vordergrund. Der Verkaufsfertig-Check wird als zusätzliche Option vor der Vermarktung angeboten und nutzt dieselbe warme Pflaume-/Terrakotta-/Creme-Gestaltung.",
+    traits: ["klassischer Maklerauftritt", "zwei klare Einstiege", "einheitliches Design mit Check"],
   },
 ];
 
