@@ -163,6 +163,7 @@ export async function generateSalesReadinessAiDraft(input: {
       input: promptFor(input.target, context),
       reasoning: { effort: "low" },
       max_output_tokens: input.target === "scenario" ? 1100 : 700,
+      store: false,
     }),
   });
 
