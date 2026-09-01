@@ -9,6 +9,12 @@ for (let index = 1; index <= 8; index += 1) {
   parts.push(match[1]);
 }
 
+const expectedPartLengths = [9000, 9000, 9000, 9000, 9000, 9000, 9000, 6216];
+const actualPartLengths = parts.map((part) => part.length);
+if (actualPartLengths.some((length, index) => length !== expectedPartLengths[index])) {
+  throw new Error(`Unexpected brand logo part lengths: ${actualPartLengths.join(",")}`);
+}
+
 const base64 = parts.join("");
 if (base64.length !== 69216) throw new Error(`Unexpected brand logo base64 length: ${base64.length}`);
 
