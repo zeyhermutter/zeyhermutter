@@ -179,8 +179,9 @@ function formatDate(value: string) {
   return `${String(day).padStart(2, "0")}.${String(month).padStart(2, "0")}.${year}`;
 }
 
-function reportUrl(scope: "mine" | "company", preset: PeriodPreset, from?: string, to?: string) {
-  const params = new URLSearchParams({ scope, period: preset });
+function reportUrl(scope: string, preset: PeriodPreset, from?: string, to?: string) {
+  const normalizedScope = scope === "company" ? "company" : "mine";
+  const params = new URLSearchParams({ scope: normalizedScope, period: preset });
   if (preset === "custom" && from && to) {
     params.set("from", from);
     params.set("to", to);
