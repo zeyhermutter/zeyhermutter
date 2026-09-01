@@ -6,6 +6,8 @@ export default [
   route("favicon.svg", "routes/favicon.ts"),
   route("sitemap.xml", "routes/sitemap.ts"),
   route("verkaufsfertig-check", "routes/public-sales-readiness.tsx"),
+  route("homepage-varianten", "routes/homepage-variants.tsx"),
+  route("homepage-varianten/:variant", "routes/homepage-variant.tsx"),
   route("immobilien", "routes/public-properties.tsx"),
   route("immobilien/medien/:mediaId/:version", "routes/public-media.ts"),
   route("immobilien/:slug", "routes/public-property-detail.tsx"),
