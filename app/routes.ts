@@ -18,6 +18,7 @@ export default [
   route("login", "routes/login.tsx"),
   layout("routes/internal-layout.tsx", [
     route("crm", "routes/crm-dashboard.tsx"),
+    route("reports", "routes/reports.tsx"),
     route("crm/search", "routes/crm-search.tsx"),
     route("crm/tasks", "routes/tasks.tsx"),
     route("crm/sales-readiness", "routes/sales-readiness-overview.tsx"),
