@@ -12,7 +12,9 @@
     "SUPABASE_URL": "https://zqhcxudpfwsfuokencvy.supabase.co",
     "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_9KqTRvRzAYxDAPWAzMDRTA_9QhasRgx",
     "SALES_READINESS_BACKEND_ENABLED": "true",
-    "SELLER_CHECK_PUBLIC_ENABLED": "true"
+    "SELLER_CHECK_PUBLIC_ENABLED": "true",
+    "SALES_READINESS_AI_ENABLED": "true",
+    "SALES_READINESS_AI_MODEL": "gpt-5.6-terra"
   },
   "env": {
     "beta": {
@@ -23,7 +25,9 @@
         "SUPABASE_URL": "https://zqhcxudpfwsfuokencvy.supabase.co",
         "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_9KqTRvRzAYxDAPWAzMDRTA_9QhasRgx",
         "SALES_READINESS_BACKEND_ENABLED": "true",
-        "SELLER_CHECK_PUBLIC_ENABLED": "true"
+        "SELLER_CHECK_PUBLIC_ENABLED": "true",
+        "SALES_READINESS_AI_ENABLED": "true",
+        "SALES_READINESS_AI_MODEL": "gpt-5.6-terra"
       }
     },
     "production": {
@@ -34,7 +38,9 @@
         "SUPABASE_URL": "https://vtmtxaaojbqqzwxkodye.supabase.co",
         "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_aKJnsv7nAwRSPerPU11vkg_ZsQOCjAl",
         "SALES_READINESS_BACKEND_ENABLED": "false",
-        "SELLER_CHECK_PUBLIC_ENABLED": "false"
+        "SELLER_CHECK_PUBLIC_ENABLED": "false",
+        "SALES_READINESS_AI_ENABLED": "false",
+        "SALES_READINESS_AI_MODEL": "gpt-5.6-terra"
       }
     }
   }
