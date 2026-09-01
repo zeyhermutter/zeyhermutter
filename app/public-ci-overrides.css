@@ -1,0 +1,194 @@
+.public-site {
+  background: var(--brand-ivory) !important;
+  color: var(--brand-navy) !important;
+}
+
+.public-site .public-hero,
+.public-site .public-detail-hero,
+.public-site .public-home-hero,
+.public-site .public-home-featured,
+.public-site .public-contact-page,
+.public-site .public-legal {
+  color: var(--brand-navy);
+}
+
+.public-site .public-hero > p:last-child,
+.public-site .public-home-hero p:not(.public-eyebrow),
+.public-site .public-detail-lead,
+.public-site .public-price span,
+.public-site .public-property-card-body > p:not(.public-eyebrow),
+.public-site .public-property-facts span,
+.public-site .public-prose p,
+.public-site .public-side-card p,
+.public-site .public-definition-list dt,
+.public-site .public-home-services p,
+.public-site .public-contact-page > div:first-child p:last-child,
+.public-site .public-legal-notice p,
+.public-site .public-legal-note p {
+  color: var(--brand-muted) !important;
+}
+
+.public-site .public-subtitle,
+.public-site .public-secondary-link,
+.public-site .public-section-head > a {
+  color: var(--brand-navy-2) !important;
+}
+
+.public-site .public-secondary-link:hover,
+.public-site .public-section-head > a:hover {
+  color: var(--brand-gold-dark) !important;
+}
+
+.public-site .public-property-card,
+.public-site .public-side-card,
+.public-site .public-contact-form-card,
+.public-site .public-legal-notice,
+.public-site .public-legal-note {
+  background: var(--brand-white) !important;
+  border-color: var(--brand-line) !important;
+  color: var(--brand-navy) !important;
+  box-shadow: 0 16px 42px rgba(7, 30, 50, .055);
+}
+
+.public-site .public-property-card:hover {
+  border-color: var(--brand-gold) !important;
+  box-shadow: 0 20px 48px rgba(7, 30, 50, .09);
+}
+
+.public-site .public-property-image-wrap,
+.public-site .public-property-placeholder,
+.public-site .public-gallery figure {
+  background: linear-gradient(135deg, var(--brand-sand), #d7c7aa) !important;
+}
+
+.public-site .public-property-image-wrap > span,
+.public-site .public-property-placeholder span,
+.public-site .public-gallery figcaption {
+  background: rgba(7, 30, 50, .88) !important;
+  color: var(--brand-ivory) !important;
+  border: 1px solid rgba(169, 137, 83, .45);
+}
+
+.public-site .public-property-facts,
+.public-site .public-fact-grid,
+.public-site .public-definition-list > div,
+.public-site .public-home-services,
+.public-site .public-home-services article,
+.public-site .public-empty {
+  border-color: var(--brand-line) !important;
+}
+
+.public-site .public-fact-grid > div {
+  border-color: var(--brand-line) !important;
+}
+
+.public-site .public-fact-grid span,
+.public-site .public-home-services span {
+  color: var(--brand-gold-dark) !important;
+}
+
+.public-site .public-price strong,
+.public-site .public-fact-grid strong,
+.public-site .public-definition-list dd,
+.public-site .public-side-card h3,
+.public-site .public-property-card-body h2 {
+  color: var(--brand-navy) !important;
+}
+
+.public-site .public-contact-cta {
+  background: var(--brand-navy) !important;
+  color: var(--brand-white) !important;
+  border: 1px solid rgba(169, 137, 83, .45);
+  box-shadow: 0 24px 60px rgba(7, 30, 50, .14);
+}
+
+.public-site .public-contact-cta > p,
+.public-site .public-contact-cta .public-consent {
+  color: #dce3e8 !important;
+}
+
+.public-site .public-primary-button {
+  background: var(--brand-gold) !important;
+  color: var(--brand-navy) !important;
+  border: 1px solid var(--brand-gold) !important;
+  transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
+}
+
+.public-site .public-primary-button:hover {
+  background: var(--brand-gold-light) !important;
+  border-color: var(--brand-gold-light) !important;
+  transform: translateY(-1px);
+}
+
+.public-site .public-primary-button.dark {
+  background: var(--brand-navy) !important;
+  color: var(--brand-white) !important;
+  border-color: var(--brand-navy) !important;
+}
+
+.public-site .public-primary-button.dark:hover {
+  background: var(--brand-navy-2) !important;
+  border-color: var(--brand-gold) !important;
+}
+
+.public-site .public-inquiry-form input,
+.public-site .public-inquiry-form select,
+.public-site .public-inquiry-form textarea {
+  background: var(--brand-white) !important;
+  color: var(--brand-navy) !important;
+  border-color: var(--brand-line) !important;
+}
+
+.public-site .public-inquiry-form input:focus,
+.public-site .public-inquiry-form select:focus,
+.public-site .public-inquiry-form textarea:focus {
+  border-color: var(--brand-gold) !important;
+  outline-color: var(--brand-gold) !important;
+  box-shadow: 0 0 0 3px rgba(169, 137, 83, .12);
+}
+
+.public-site .public-consent.light {
+  color: var(--brand-muted) !important;
+}
+
+.public-site .public-form-message {
+  background: #f4ead7 !important;
+  color: #654d26 !important;
+  border: 1px solid #d8c29b;
+}
+
+.public-site .public-form-success {
+  background: #e8efe9 !important;
+  color: #244433 !important;
+  border: 1px solid #bacdbf;
+}
+
+.public-site .public-home-services article {
+  background: transparent;
+}
+
+.public-site .public-home-services article:nth-child(2) {
+  background: rgba(233, 223, 205, .52);
+}
+
+.public-site .public-home-cta {
+  background: var(--brand-sand) !important;
+  color: var(--brand-navy) !important;
+  border: 1px solid var(--brand-line);
+}
+
+.public-site .public-home-mark {
+  background: var(--brand-navy) !important;
+  color: var(--brand-gold-light) !important;
+  border: 1px solid rgba(169, 137, 83, .55);
+}
+
+.public-site .public-preview-banner {
+  background: var(--brand-gold) !important;
+  color: var(--brand-navy) !important;
+}
+
+.public-site ::selection {
+  background: var(--brand-gold-light);
+  color: var(--brand-navy);
+}
