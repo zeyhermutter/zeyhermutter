@@ -1,0 +1,630 @@
+name: Apply Sales Readiness AI
+
+on:
+  push:
+    branches: [codex/verkaufsfertig-positionierung]
+    paths: [.github/workflows/apply-ai-sales-readiness.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    environment: beta
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 2
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+        with:
+          run_install: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Sync OpenAI key to BETA when configured
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "${OPENAI_API_KEY:-}" ]; then
+            echo "OPENAI_API_KEY_PRESENT=false"
+            exit 0
+          fi
+          pnpm install --frozen-lockfile
+          printf '%s' "$OPENAI_API_KEY" | pnpm exec wrangler secret put OPENAI_API_KEY
+          echo "OPENAI_API_KEY_PRESENT=true"
+
+      - name: Apply AI integration
+        run: |
+          python <<'PY'
+          from pathlib import Path
+          import json
+
+          branch_workflow = Path('.github/workflows/apply-ai-sales-readiness.yml')
+
+          # routes.ts
+          path = Path('app/routes.ts')
+          s = path.read_text()
+          anchor = '  route("api/geocode-address", "routes/api-geocode-address.ts"),\n'
+          addition = '  route("api/sales-readiness-ai", "routes/api-sales-readiness-ai.ts"),\n'
+          if addition not in s:
+              if anchor not in s:
+                  raise SystemExit('routes.ts anchor missing')
+              s = s.replace(anchor, addition + anchor)
+          path.write_text(s)
+
+          # Cloudflare env typing: secrets are runtime bindings and are not represented in wrangler vars.
+          path = Path('app/cloudflare-context.d.ts')
+          s = path.read_text()
+          old = 'type AppEnv = typeof workerConfig.vars;'
+          new = 'type AppEnv = typeof workerConfig.vars & { OPENAI_API_KEY?: string };'
+          if old in s:
+              s = s.replace(old, new)
+          elif new not in s:
+              raise SystemExit('cloudflare-context typing anchor missing')
+          path.write_text(s)
+
+          # BETA-only feature flag/model. Production stays explicitly disabled.
+          path = Path('wrangler.json')
+          cfg = json.loads(path.read_text())
+          cfg['vars']['SALES_READINESS_AI_ENABLED'] = 'true'
+          cfg['vars']['SALES_READINESS_AI_MODEL'] = 'gpt-5.6-terra'
+          cfg['env']['beta']['vars']['SALES_READINESS_AI_ENABLED'] = 'true'
+          cfg['env']['beta']['vars']['SALES_READINESS_AI_MODEL'] = 'gpt-5.6-terra'
+          cfg['env']['production']['vars']['SALES_READINESS_AI_ENABLED'] = 'false'
+          cfg['env']['production']['vars']['SALES_READINESS_AI_MODEL'] = 'gpt-5.6-terra'
+          path.write_text(json.dumps(cfg, indent=2, ensure_ascii=False) + '\n')
+
+          # Server helper for OpenAI Responses API.
+          Path('app/lib/sales-readiness-ai.server.ts').write_text(r'''import type { SalesReadinessViewModel } from "~/lib/sales-readiness";
+
+export type SalesReadinessAiTarget =
+  | "starting_situation"
+  | "sale_objective"
+  | "overall_assessment"
+  | "scenario";
+
+type FormSnapshot = Record<string, string | number | boolean | null | undefined>;
+
+function clean(value: unknown, max = 2400) {
+  const text = String(value ?? "").trim();
+  return text.length > max ? `${text.slice(0, max)}…` : text;
+}
+
+function compactObject(input: FormSnapshot | undefined) {
+  if (!input) return {};
+  return Object.fromEntries(
+    Object.entries(input)
+      .filter(([, value]) => value !== "" && value !== null && value !== undefined)
+      .map(([key, value]) => [key, typeof value === "string" ? clean(value) : value]),
+  );
+}
+
+function extractOutputText(payload: any) {
+  if (typeof payload?.output_text === "string" && payload.output_text.trim()) {
+    return payload.output_text.trim();
+  }
+  for (const item of Array.isArray(payload?.output) ? payload.output : []) {
+    for (const part of Array.isArray(item?.content) ? item.content : []) {
+      if (part?.type === "output_text" && typeof part?.text === "string" && part.text.trim()) {
+        return part.text.trim();
+      }
+    }
+  }
+  return "";
+}
+
+function parseJsonText(text: string) {
+  const stripped = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+  return JSON.parse(stripped);
+}
+
+function euro(value: number | null | undefined) {
+  if (value === null || value === undefined) return null;
+  return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
+}
+
+function scenarioContext(viewModel: SalesReadinessViewModel, scenarioId?: string) {
+  const scenario = viewModel.scenarios.find((item) => item.id === scenarioId);
+  if (!scenario) return null;
+  return {
+    kind: scenario.kind,
+    title: scenario.title,
+    description: scenario.description,
+    assumptions: scenario.assumptions,
+    internalAssessment: scenario.internalAssessment,
+    recommendationRationale: scenario.recommendationRationale,
+    confidence: scenario.confidence,
+    recommended: scenario.recommended,
+    investmentMin: euro(scenario.investmentMin),
+    investmentMax: euro(scenario.investmentMax),
+    estimatedSalePriceMin: euro(scenario.estimatedSalePriceMin),
+    estimatedSalePriceMax: euro(scenario.estimatedSalePriceMax),
+    durationWeeksMin: scenario.durationWeeksMin,
+    durationWeeksMax: scenario.durationWeeksMax,
+    estimatedUpliftMin: euro(scenario.estimatedUpliftMin),
+    estimatedUpliftMax: euro(scenario.estimatedUpliftMax),
+    economicAdvantageMin: euro(scenario.economicAdvantageMin),
+    economicAdvantageMax: euro(scenario.economicAdvantageMax),
+  };
+}
+
+function buildContext(viewModel: SalesReadinessViewModel, form?: FormSnapshot, scenarioId?: string) {
+  return {
+    property: clean(viewModel.lead.propertyLabel, 600),
+    check: {
+      inspectionAt: viewModel.check.inspectionAt,
+      startingSituation: viewModel.check.startingSituation,
+      saleObjective: viewModel.check.saleObjective,
+      desiredTimeframe: viewModel.check.desiredTimeframe,
+      overallAssessment: viewModel.check.overallAssessment,
+      assumptionsAndUncertainties: viewModel.check.assumptionsAndUncertainties,
+    },
+    currentForm: compactObject(form),
+    scenario: scenarioContext(viewModel, scenarioId),
+    measures: viewModel.measures.slice(0, 20).map((measure) => ({
+      category: measure.category,
+      title: clean(measure.title, 220),
+      description: clean(measure.description, 800),
+      decision: measure.decision,
+      rationale: clean(measure.rationale, 800),
+      costMin: euro(measure.costMin),
+      costMax: euro(measure.costMax),
+      status: measure.status,
+    })),
+  };
+}
+
+const SYSTEM_INSTRUCTIONS = `Du bist der interne KI-Schreibassistent eines deutschen Immobilienmaklers. Du formulierst ausschließlich Arbeitsentwürfe für einen Verkaufsfertig-Check.
+
+Verbindliche Regeln:
+- Schreibe professionelles, klares Deutsch ohne Werbeübertreibung.
+- Nutze ausschließlich die gelieferten Informationen. Erfinde keine Fakten, Zahlen, Zustände, Termine, Mängel oder Eigentümerwünsche.
+- Verändere oder ergänze keine Preis-, Kosten-, Dauer- oder Mehrerlöswerte. Zahlen dürfen nur aufgegriffen werden, wenn sie im Kontext vorhanden sind.
+- Wenn Informationen fehlen oder unsicher sind, benenne die Unsicherheit sachlich statt etwas zu erfinden.
+- Triff keine Eigentümerentscheidung und setze keinen Workflow-Status. Formuliere keine Rechts-, Steuer- oder Garantieaussagen.
+- Gib nur den angeforderten Text bzw. das angeforderte JSON aus, ohne Vorrede und ohne Markdown-Codeblock.
+- Personenbezogene Informationen sind für die Aufgabe nicht erforderlich und dürfen nicht ergänzt werden.`;
+
+function promptFor(target: SalesReadinessAiTarget, context: unknown) {
+  const source = JSON.stringify(context, null, 2);
+  if (target === "starting_situation") {
+    return `Formuliere die Ausgangssituation für den internen Verkaufsfertig-Check in etwa 90–150 Wörtern. Beschreibe den bekannten Ist-Zustand, den Anlass und erkennbare Rahmenbedingungen neutral und konkret. Keine Empfehlung vorwegnehmen.\n\nKONTEXT:\n${source}`;
+  }
+  if (target === "sale_objective") {
+    return `Formuliere das Verkaufsziel in etwa 60–110 Wörtern. Stelle Zeitrahmen, Zielrichtung und relevante Rahmenbedingungen klar dar. Fehlende Informationen nicht erfinden.\n\nKONTEXT:\n${source}`;
+  }
+  if (target === "overall_assessment") {
+    return `Formuliere eine fachliche Gesamtbeurteilung in etwa 120–180 Wörtern. Ordne bekannte Chancen, Hemmnisse, Verkaufsaufbereitung und Unsicherheiten abgewogen ein. Keine Verkaufspreisgarantie und keine neuen Zahlen.\n\nKONTEXT:\n${source}`;
+  }
+  return `Erstelle für das angegebene Verkaufsszenario vier interne Textbausteine. Antworte ausschließlich als valides JSON mit exakt diesen Schlüsseln: {"description":"...","assumptions":"...","internal_assessment":"...","recommendation_rationale":"..."}.
+- description: 70–120 Wörter, was dieses Szenario praktisch bedeutet.
+- assumptions: 45–90 Wörter, nur vorhandene Annahmen/Unsicherheiten.
+- internal_assessment: 70–120 Wörter, Chancen/Risiken und fachliche Einordnung.
+- recommendation_rationale: 50–100 Wörter nur wenn das Szenario im Kontext als empfohlen markiert ist; sonst leerer String.
+Keine neuen Zahlen erfinden oder vorhandene verändern.\n\nKONTEXT:\n${source}`;
+}
+
+export async function generateSalesReadinessAiDraft(input: {
+  env: Env;
+  viewModel: SalesReadinessViewModel;
+  target: SalesReadinessAiTarget;
+  scenarioId?: string;
+  form?: FormSnapshot;
+}) {
+  if (input.env.SALES_READINESS_AI_ENABLED !== "true") {
+    throw new Error("AI_DISABLED");
+  }
+  const apiKey = input.env.OPENAI_API_KEY?.trim();
+  if (!apiKey) {
+    throw new Error("AI_NOT_CONFIGURED");
+  }
+  const model = input.env.SALES_READINESS_AI_MODEL || "gpt-5.6-terra";
+  const context = buildContext(input.viewModel, input.form, input.scenarioId);
+  if (input.target === "scenario" && !scenarioContext(input.viewModel, input.scenarioId)) {
+    throw new Error("SCENARIO_NOT_FOUND");
+  }
+
+  const response = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${apiKey}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      instructions: SYSTEM_INSTRUCTIONS,
+      input: promptFor(input.target, context),
+      reasoning: { effort: "low" },
+      max_output_tokens: input.target === "scenario" ? 1100 : 700,
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    console.error("sales-readiness-ai OpenAI error", response.status, body.slice(0, 600));
+    throw new Error(`AI_PROVIDER_${response.status}`);
+  }
+
+  const payload = await response.json();
+  const output = extractOutputText(payload);
+  if (!output) throw new Error("AI_EMPTY_RESPONSE");
+
+  if (input.target === "scenario") {
+    const parsed = parseJsonText(output) as Record<string, unknown>;
+    return {
+      description: clean(parsed.description, 3000),
+      assumptions: clean(parsed.assumptions, 3000),
+      internal_assessment: clean(parsed.internal_assessment, 3000),
+      recommendation_rationale: clean(parsed.recommendation_rationale, 3000),
+    };
+  }
+
+  return { [input.target]: clean(output, 5000) };
+}
+''')
+
+          # Authenticated JSON endpoint.
+          Path('app/routes/api-sales-readiness-ai.ts').write_text(r'''import { data } from "react-router";
+import type { Route } from "./+types/api-sales-readiness-ai";
+import { requirePermission } from "~/lib/auth.server";
+import { generateSalesReadinessAiDraft, type SalesReadinessAiTarget } from "~/lib/sales-readiness-ai.server";
+import { loadSalesReadiness, requireSalesReadinessBackend } from "~/lib/sales-readiness.server";
+
+const TARGETS = new Set<SalesReadinessAiTarget>([
+  "starting_situation",
+  "sale_objective",
+  "overall_assessment",
+  "scenario",
+]);
+
+function sameOrigin(request: Request, baseUrl: string) {
+  const origin = request.headers.get("origin");
+  if (!origin) return true;
+  try {
+    return origin === new URL(baseUrl).origin;
+  } catch {
+    return false;
+  }
+}
+
+export async function loader() {
+  throw new Response("Method Not Allowed", { status: 405 });
+}
+
+export async function action({ request, context }: Route.ActionArgs) {
+  requireSalesReadinessBackend(context.cloudflare.env);
+  if (request.method !== "POST") throw new Response("Method Not Allowed", { status: 405 });
+  if (!sameOrigin(request, context.cloudflare.env.APP_BASE_URL)) {
+    throw new Response("Forbidden", { status: 403 });
+  }
+
+  const { supabase, responseHeaders } = await requirePermission(
+    request,
+    context.cloudflare.env,
+    "sales_readiness.write",
+  );
+
+  let payload: any;
+  try {
+    payload = await request.json();
+  } catch {
+    return data({ ok: false, error: "Ungültige KI-Anfrage." }, { status: 400, headers: responseHeaders() });
+  }
+
+  const leadId = String(payload?.leadId ?? "").trim();
+  const target = String(payload?.target ?? "").trim() as SalesReadinessAiTarget;
+  const scenarioId = String(payload?.scenarioId ?? "").trim() || undefined;
+  const form = payload?.form && typeof payload.form === "object" && !Array.isArray(payload.form)
+    ? payload.form
+    : undefined;
+
+  if (!leadId || !TARGETS.has(target)) {
+    return data({ ok: false, error: "Ungültiger KI-Baustein." }, { status: 400, headers: responseHeaders() });
+  }
+
+  const { data: canReadLead } = await supabase.rpc("current_user_has_permission", {
+    p_permission: "lead.read",
+  });
+  if (canReadLead !== true) {
+    return data({ ok: false, error: "Keine Berechtigung für diesen Lead." }, { status: 403, headers: responseHeaders() });
+  }
+
+  const viewModel = await loadSalesReadiness(supabase, leadId);
+  if (!viewModel.check.id) {
+    return data({ ok: false, error: "Bitte zuerst einen Verkaufsfertig-Check anlegen." }, { status: 409, headers: responseHeaders() });
+  }
+  if (viewModel.check.status === "FINALIZED") {
+    return data({ ok: false, error: "Finalisierte Checks sind unveränderlich. Bitte zuerst eine Revision anlegen." }, { status: 409, headers: responseHeaders() });
+  }
+
+  try {
+    const fields = await generateSalesReadinessAiDraft({
+      env: context.cloudflare.env,
+      viewModel,
+      target,
+      scenarioId,
+      form,
+    });
+    return data({ ok: true, fields }, { headers: responseHeaders() });
+  } catch (error: any) {
+    const message = String(error?.message ?? "");
+    if (message === "AI_NOT_CONFIGURED") {
+      return data({ ok: false, error: "ChatGPT ist für BETA noch nicht mit einem OpenAI API-Key verbunden." }, { status: 503, headers: responseHeaders() });
+    }
+    if (message === "AI_DISABLED") {
+      return data({ ok: false, error: "Die KI-Bausteine sind in dieser Umgebung deaktiviert." }, { status: 503, headers: responseHeaders() });
+    }
+    if (message === "SCENARIO_NOT_FOUND") {
+      return data({ ok: false, error: "Das Verkaufsszenario wurde nicht gefunden." }, { status: 404, headers: responseHeaders() });
+    }
+    console.error("sales-readiness-ai generation failed", error);
+    return data({ ok: false, error: "Der KI-Entwurf konnte gerade nicht erstellt werden. Bitte erneut versuchen." }, { status: 502, headers: responseHeaders() });
+  }
+}
+''')
+
+          # Client-side writing-block panel. It only fills fields; it never submits/saves them.
+          Path('app/components/sales-readiness-ai-panel.tsx').write_text(r'''import { useState } from "react";
+
+interface ScenarioOption {
+  id: string;
+  kind: "AS_IS" | "RECOMMENDED_PREPARATION" | "EXTENDED_MEASURES";
+  title: string;
+}
+
+const KIND_LABELS: Record<ScenarioOption["kind"], string> = {
+  AS_IS: "Szenario A · Ist-Zustand",
+  RECOMMENDED_PREPARATION: "Szenario B · Aufbereitung",
+  EXTENDED_MEASURES: "Szenario C · größere Maßnahmen",
+};
+
+function fieldValue(root: ParentNode, name: string) {
+  const element = root.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(`[name="${name}"]`);
+  if (!element) return "";
+  if (element instanceof HTMLInputElement && element.type === "checkbox") return element.checked;
+  return element.value;
+}
+
+function basicSnapshot() {
+  const root = document.querySelector(".readiness-workspace") ?? document;
+  return {
+    inspection_date: fieldValue(root, "inspection_date"),
+    desired_timeframe: fieldValue(root, "desired_timeframe"),
+    starting_situation: fieldValue(root, "starting_situation"),
+    sale_objective: fieldValue(root, "sale_objective"),
+    overall_assessment: fieldValue(root, "overall_assessment"),
+    assumptions_and_uncertainties: fieldValue(root, "assumptions_and_uncertainties"),
+  };
+}
+
+function scenarioForm(scenarioId: string) {
+  const idInput = Array.from(document.querySelectorAll<HTMLInputElement>('input[name="scenario_id"]'))
+    .find((input) => input.value === scenarioId);
+  return idInput?.closest("form") ?? null;
+}
+
+function scenarioSnapshot(scenarioId: string) {
+  const form = scenarioForm(scenarioId);
+  if (!form) return {};
+  return {
+    title: fieldValue(form, "title"),
+    description: fieldValue(form, "description"),
+    assumptions: fieldValue(form, "assumptions"),
+    internal_assessment: fieldValue(form, "internal_assessment"),
+    recommendation_rationale: fieldValue(form, "recommendation_rationale"),
+    confidence: fieldValue(form, "confidence"),
+    investment_min: fieldValue(form, "investment_min"),
+    investment_max: fieldValue(form, "investment_max"),
+    estimated_sale_price_min: fieldValue(form, "estimated_sale_price_min"),
+    estimated_sale_price_max: fieldValue(form, "estimated_sale_price_max"),
+    duration_weeks_min: fieldValue(form, "duration_weeks_min"),
+    duration_weeks_max: fieldValue(form, "duration_weeks_max"),
+    is_recommended: fieldValue(form, "is_recommended"),
+  };
+}
+
+function setNativeValue(element: HTMLInputElement | HTMLTextAreaElement, value: string) {
+  const prototype = element instanceof HTMLTextAreaElement
+    ? HTMLTextAreaElement.prototype
+    : HTMLInputElement.prototype;
+  const setter = Object.getOwnPropertyDescriptor(prototype, "value")?.set;
+  setter?.call(element, value);
+  element.dispatchEvent(new Event("input", { bubbles: true }));
+  element.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+function applyBasicField(name: string, value: string) {
+  const element = document.querySelector<HTMLInputElement | HTMLTextAreaElement>(`.readiness-workspace [name="${name}"]`);
+  if (element) setNativeValue(element, value);
+}
+
+function applyScenarioFields(scenarioId: string, fields: Record<string, string>) {
+  const form = scenarioForm(scenarioId);
+  if (!form) return;
+  for (const [name, value] of Object.entries(fields)) {
+    const element = form.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name="${name}"]`);
+    if (element) setNativeValue(element, value);
+  }
+}
+
+export function SalesReadinessAiPanel({
+  leadId,
+  scenarios,
+  canWrite,
+  configured,
+}: {
+  leadId: string;
+  scenarios: ScenarioOption[];
+  canWrite: boolean;
+  configured: boolean;
+}) {
+  const [loading, setLoading] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function generate(target: "starting_situation" | "sale_objective" | "overall_assessment" | "scenario", scenarioId?: string) {
+    const key = scenarioId ? `scenario:${scenarioId}` : target;
+    setLoading(key);
+    setMessage(null);
+    setError(null);
+    try {
+      const form = target === "scenario" && scenarioId
+        ? { ...basicSnapshot(), ...scenarioSnapshot(scenarioId) }
+        : basicSnapshot();
+      const response = await fetch("/api/sales-readiness-ai", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ leadId, target, scenarioId, form }),
+      });
+      const result = await response.json() as { ok?: boolean; error?: string; fields?: Record<string, string> };
+      if (!response.ok || !result.ok || !result.fields) {
+        throw new Error(result.error || "KI-Entwurf konnte nicht erstellt werden.");
+      }
+      if (target === "scenario" && scenarioId) {
+        applyScenarioFields(scenarioId, result.fields);
+      } else {
+        const value = result.fields[target];
+        if (value) applyBasicField(target, value);
+      }
+      setMessage("KI-Entwurf eingefügt. Bitte fachlich prüfen und anschließend normal speichern.");
+    } catch (err: any) {
+      setError(String(err?.message ?? "KI-Entwurf konnte nicht erstellt werden."));
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  if (!canWrite) return null;
+
+  return (
+    <section className="data-card readiness-ai-card" aria-labelledby="readiness-ai-title">
+      <div className="card-head readiness-ai-head">
+        <div>
+          <p className="eyebrow">KI-Bausteine</p>
+          <h2 id="readiness-ai-title">Mit ChatGPT formulieren</h2>
+          <p className="lead-card-caption">
+            Erstellt ausschließlich Textentwürfe aus dem vorhandenen Check. Preise, Status, Eigentümerentscheidung und Finalisierung bleiben unverändert.
+          </p>
+        </div>
+        <span className="readiness-ai-badge">ChatGPT</span>
+      </div>
+
+      {!configured ? (
+        <div className="form-warning readiness-ai-warning">
+          Die KI-Funktion ist eingebaut, aber der OpenAI API-Key ist in BETA noch nicht verbunden.
+        </div>
+      ) : null}
+
+      <div className="readiness-ai-groups">
+        <div className="readiness-ai-group">
+          <strong>Check-Grunddaten</strong>
+          <div className="readiness-ai-actions">
+            <button className="secondary-button" type="button" disabled={!configured || Boolean(loading)} onClick={() => generate("starting_situation")}>
+              {loading === "starting_situation" ? "Formuliert …" : "Ausgangslage formulieren"}
+            </button>
+            <button className="secondary-button" type="button" disabled={!configured || Boolean(loading)} onClick={() => generate("sale_objective")}>
+              {loading === "sale_objective" ? "Formuliert …" : "Verkaufsziel formulieren"}
+            </button>
+            <button className="secondary-button" type="button" disabled={!configured || Boolean(loading)} onClick={() => generate("overall_assessment")}>
+              {loading === "overall_assessment" ? "Formuliert …" : "Gesamtbeurteilung formulieren"}
+            </button>
+          </div>
+        </div>
+
+        {scenarios.length ? (
+          <div className="readiness-ai-group">
+            <strong>Verkaufsszenarien</strong>
+            <div className="readiness-ai-actions">
+              {scenarios.map((scenario) => {
+                const key = `scenario:${scenario.id}`;
+                return (
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    key={scenario.id}
+                    disabled={!configured || Boolean(loading)}
+                    onClick={() => generate("scenario", scenario.id)}
+                    title={scenario.title}
+                  >
+                    {loading === key ? "Formuliert …" : KIND_LABELS[scenario.kind]}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      {message ? <div className="form-success readiness-ai-feedback">{message}</div> : null}
+      {error ? <div className="form-error readiness-ai-feedback">{error}</div> : null}
+      <small className="readiness-ai-note">
+        Die erzeugten Texte werden nicht automatisch gespeichert. Vor dem Speichern immer fachlich prüfen. Für die Textgenerierung werden nur die für den Check benötigten Objekt- und Check-Inhalte an OpenAI übertragen; Kontaktnamen werden nicht an den KI-Prompt übergeben.
+      </small>
+    </section>
+  );
+}
+''')
+
+          # Integrate the panel into the existing detail route without changing business actions.
+          path = Path('app/routes/lead-sales-readiness.tsx')
+          s = path.read_text()
+          import_anchor = 'import { SalesReadinessWorkspace } from "~/components/sales-readiness-workspace";\n'
+          ai_import = 'import { SalesReadinessAiPanel } from "~/components/sales-readiness-ai-panel";\n'
+          if ai_import not in s:
+              if import_anchor not in s:
+                  raise SystemExit('lead-sales-readiness import anchor missing')
+              s = s.replace(import_anchor, import_anchor + ai_import)
+
+          loader_anchor = '      canTask: canTask === true,\n'
+          loader_add = '      canTask: canTask === true,\n      aiConfigured:\n        context.cloudflare.env.SALES_READINESS_AI_ENABLED === "true" &&\n        Boolean(context.cloudflare.env.OPENAI_API_KEY),\n'
+          if 'aiConfigured:' not in s:
+              if loader_anchor not in s:
+                  raise SystemExit('lead-sales-readiness loader anchor missing')
+              s = s.replace(loader_anchor, loader_add, 1)
+
+          old = '  const { viewModel, profile, canWrite, canFinalize, canTask } = useLoaderData<typeof loader>();'
+          new = '  const { viewModel, profile, canWrite, canFinalize, canTask, aiConfigured } = useLoaderData<typeof loader>();'
+          if old in s:
+              s = s.replace(old, new, 1)
+          elif new not in s:
+              raise SystemExit('lead-sales-readiness destructuring anchor missing')
+
+          workspace_anchor = '      <SalesReadinessWorkspace\n        viewModel={viewModel}\n'
+          panel = '''      {viewModel.check.id ? (\n        <SalesReadinessAiPanel\n          leadId={viewModel.lead.id}\n          scenarios={viewModel.scenarios.map(({ id, kind, title }) => ({ id, kind, title }))}\n          canWrite={canWrite && viewModel.check.status !== "FINALIZED"}\n          configured={aiConfigured}\n        />\n      ) : null}\n\n'''
+          if '<SalesReadinessAiPanel' not in s:
+              if workspace_anchor not in s:
+                  raise SystemExit('lead-sales-readiness workspace anchor missing')
+              s = s.replace(workspace_anchor, panel + workspace_anchor, 1)
+          path.write_text(s)
+
+          # CRM-consistent styling for the AI card.
+          path = Path('app/sales-readiness-editor.css')
+          s = path.read_text()
+          marker = '/* Sales readiness AI writing blocks */'
+          if marker not in s:
+              s += r'''
+
+/* Sales readiness AI writing blocks */
+.readiness-ai-card{width:min(1320px,calc(100% - 40px));margin:0 auto 22px;display:grid;gap:18px;padding:22px;background:#141a1b;border:1px solid #293536;border-radius:18px;color:#eef2f3}.readiness-ai-head{align-items:flex-start}.readiness-ai-head h2{margin:3px 0 7px;color:#eef2f3}.readiness-ai-badge{display:inline-flex;align-items:center;min-height:30px;padding:6px 10px;border:1px solid #3f5960;border-radius:999px;background:#172327;color:#bfe0e7;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}.readiness-ai-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.readiness-ai-group{display:grid;gap:10px;padding:15px;border:1px solid #293536;border-radius:13px;background:#111718}.readiness-ai-group>strong{font-size:12px;color:#cbd4d5}.readiness-ai-actions{display:flex;gap:8px;flex-wrap:wrap}.readiness-ai-actions .secondary-button{min-height:38px;padding:8px 11px;font-size:12px}.readiness-ai-actions button:disabled{cursor:not-allowed;opacity:.5}.readiness-ai-warning,.readiness-ai-feedback{margin:0}.readiness-ai-note{color:#778587;line-height:1.55}.readiness-ai-note::before{content:"Hinweis · ";color:#9fabad;font-weight:700}@media(max-width:900px){.readiness-ai-groups{grid-template-columns:1fr}}@media(max-width:700px){.readiness-ai-card{width:min(100% - 24px,1320px);padding:18px}.readiness-ai-actions{display:grid}.readiness-ai-actions .secondary-button{width:100%;min-height:44px}}
+'''
+          path.write_text(s)
+
+          # Remove this one-time patch workflow from the resulting feature commit.
+          if branch_workflow.exists():
+              branch_workflow.unlink()
+          PY
+
+      - name: Commit integration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "Beta: add ChatGPT writing blocks to sales readiness"
+          git push origin HEAD:codex/verkaufsfertig-positionierung
