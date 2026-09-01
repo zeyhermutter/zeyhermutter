@@ -1,5 +1,10 @@
-import { Link } from "react-router";
+import { data, useLoaderData } from "react-router";
+import type { Route } from "./+types/public-privacy";
+import { PublicLegalSection } from "~/components/public-page-sections";
+import { PublicFooter, PublicHeader } from "~/components/public-shell";
+import { loadPublicWebsitePage } from "~/lib/website-content.server";
 import "~/public-website.css";
 
-export function meta(){return[{title:"Datenschutz · ZeyherMutter"},{name:"robots",content:"noindex,follow"}]}
-export default function PublicPrivacy(){return <main className="public-site"><header className="public-header"><Link className="public-brand" to="/"><span>ZM</span><strong>ZeyherMutter</strong></Link><nav className="public-nav"><Link to="/immobilien">Immobilien</Link><Link to="/kontakt">Kontakt</Link></nav></header><section className="public-legal"><p className="public-eyebrow">Rechtliches</p><h1>Datenschutz</h1><div className="public-legal-notice"><strong>Finaler Datenschutztext noch zu hinterlegen.</strong><p>Die Seite ist technisch vorbereitet. Der endgültige Text muss die tatsächlich eingesetzten Dienste, Verantwortlichen, Rechtsgrundlagen, Speicherfristen und Betroffenenrechte korrekt abbilden. Bis diese Angaben verbindlich vorliegen, werden keine juristischen Inhalte erfunden.</p></div><div className="public-legal-note"><h2>Kontaktformulare in {__APP_ENV_LABEL__}</h2><p>Formulare sind technisch an das bestehende CRM-Anfragesystem angebunden. Die endgültige Datenschutzerklärung muss diesen Verarbeitungsvorgang vor einer produktiven Veröffentlichung ausdrücklich beschreiben.</p></div></section><footer className="public-footer"><span>ZeyherMutter · Immobilienvermittlung</span><div><Link to="/impressum">Impressum</Link><Link to="/datenschutz">Datenschutz</Link></div></footer></main>}
+export function meta({data:loaderData}:Route.MetaArgs){return[{title:loaderData?.seoTitle??"Datenschutz · ZeyherMutter"},{name:"robots",content:"noindex,follow"}]}
+export async function loader({request,context}:Route.LoaderArgs){const page=await loadPublicWebsitePage(request,context.cloudflare.env,"PRIVACY");return data(page,{headers:{"Cache-Control":"public, max-age=60, stale-while-revalidate=300"}});}
+export default function PublicPrivacy(){const {content}=useLoaderData<typeof loader>();return <main className="public-site"><PublicHeader/><PublicLegalSection content={content} privacy/><PublicFooter/></main>}
