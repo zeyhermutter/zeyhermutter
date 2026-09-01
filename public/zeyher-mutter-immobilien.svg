@@ -3,19 +3,20 @@
   <desc id="desc">Geometrisches Hausmonogramm in Navy und Gold mit dem Schriftzug Zeyher &amp; Mutter Immobilien.</desc>
   <defs>
     <style>
-      .navy{fill:#0A223A;stroke:#0A223A}
-      .gold{fill:#B58A45;stroke:#B58A45}
+      .navy-stroke{fill:none;stroke:#0A223A}
+      .gold-stroke{fill:none;stroke:#B58A45}
+      .gold-fill{fill:#B58A45;stroke:none}
       .wordmark{font-family:"Cormorant Garamond",Georgia,"Times New Roman",serif;font-weight:600;letter-spacing:4px}
       .descriptor{font-family:Montserrat,Arial,sans-serif;font-weight:500;letter-spacing:13px}
     </style>
   </defs>
 
-  <g transform="translate(24 18)" fill="none" stroke-width="10" stroke-linecap="square" stroke-linejoin="miter">
-    <path class="navy" d="M32 236V96L139 25L181 54"/>
-    <path class="gold" d="M181 54L196 64V46H220V82L251 102V236"/>
-    <path class="navy" d="M66 116H159L70 224H162"/>
-    <path class="gold" d="M165 137L201 183L237 137V224"/>
-    <g class="gold" stroke="none">
+  <g transform="translate(24 18)" stroke-width="10" stroke-linecap="square" stroke-linejoin="miter">
+    <path class="navy-stroke" d="M32 236V96L139 25L181 54"/>
+    <path class="gold-stroke" d="M181 54L196 64V46H220V82L251 102V236"/>
+    <path class="navy-stroke" d="M66 116H159L70 224H162"/>
+    <path class="gold-stroke" d="M165 137L201 183L237 137V224"/>
+    <g class="gold-fill">
       <rect x="132" y="182" width="15" height="15"/>
       <rect x="153" y="182" width="15" height="15"/>
       <rect x="132" y="203" width="15" height="15"/>
