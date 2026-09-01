@@ -4,15 +4,15 @@
   "main": "./workers/app.ts",
   "compatibility_date": "2026-08-29",
   "compatibility_flags": ["nodejs_compat"],
-  "observability": {
-    "enabled": true
-  },
+  "observability": { "enabled": true },
   "upload_source_maps": true,
   "vars": {
     "APP_ENV": "beta",
     "APP_BASE_URL": "https://zeyhermutter.playsony.workers.dev",
     "SUPABASE_URL": "https://zqhcxudpfwsfuokencvy.supabase.co",
-    "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_9KqTRvRzAYxDAPWAzMDRTA_9QhasRgx"
+    "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_9KqTRvRzAYxDAPWAzMDRTA_9QhasRgx",
+    "SALES_READINESS_BACKEND_ENABLED": "true",
+    "SELLER_CHECK_PUBLIC_ENABLED": "true"
   },
   "env": {
     "beta": {
@@ -21,7 +21,9 @@
         "APP_ENV": "beta",
         "APP_BASE_URL": "https://zeyhermutter.playsony.workers.dev",
         "SUPABASE_URL": "https://zqhcxudpfwsfuokencvy.supabase.co",
-        "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_9KqTRvRzAYxDAPWAzMDRTA_9QhasRgx"
+        "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_9KqTRvRzAYxDAPWAzMDRTA_9QhasRgx",
+        "SALES_READINESS_BACKEND_ENABLED": "true",
+        "SELLER_CHECK_PUBLIC_ENABLED": "true"
       }
     },
     "production": {
@@ -30,7 +32,9 @@
         "APP_ENV": "production",
         "APP_BASE_URL": "https://zeyhermutter-production.playsony.workers.dev",
         "SUPABASE_URL": "https://vtmtxaaojbqqzwxkodye.supabase.co",
-        "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_aKJnsv7nAwRSPerPU11vkg_ZsQOCjAl"
+        "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_aKJnsv7nAwRSPerPU11vkg_ZsQOCjAl",
+        "SALES_READINESS_BACKEND_ENABLED": "false",
+        "SELLER_CHECK_PUBLIC_ENABLED": "false"
       }
     }
   }
