@@ -192,3 +192,47 @@
   background: var(--brand-gold-light);
   color: var(--brand-navy);
 }
+
+/* Header logo: preserve the uploaded logo's 378:185 aspect ratio and prevent generic image rules from flattening it. */
+.public-site .public-header {
+  min-height: 142px;
+  align-items: center !important;
+  gap: 28px;
+}
+
+.public-site .public-brand {
+  flex: 0 0 auto;
+  min-width: 0;
+  overflow: visible !important;
+}
+
+.public-site .public-brand-logo {
+  display: block !important;
+  width: clamp(270px, 32vw, 330px) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  max-width: min(42vw, 330px) !important;
+  object-fit: contain !important;
+  object-position: left center !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  flex: none !important;
+}
+
+.public-site .public-nav {
+  margin-left: auto;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 760px) {
+  .public-site .public-header {
+    min-height: 0;
+  }
+
+  .public-site .public-brand-logo {
+    width: min(240px, 72vw) !important;
+    max-width: 72vw !important;
+  }
+}
