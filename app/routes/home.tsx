@@ -6,8 +6,8 @@ import "~/homepage-v7-realtor.css";
 
 export function meta() {
   return [
-    { title: "Immobilien verkaufen · ZeyherMutter Immobilienvermittlung" },
-    { name: "description", content: "ZeyherMutter begleitet Eigentümer beim Immobilienverkauf von der Positionierung über die Vermarktung bis zum Abschluss. Der Verkaufsstrategie-Check ergänzt die Maklerleistung bei offenen Fragen vor dem Marktstart." },
+    { title: "Immobilien verkaufen · Zeyher & Mutter Immobilien" },
+    { name: "description", content: "Zeyher & Mutter begleitet Eigentümer beim Immobilienverkauf von der Positionierung über die Vermarktung bis zum Abschluss. Der Verkaufsstrategie-Check ergänzt die Maklerleistung bei offenen Fragen vor dem Marktstart." },
   ];
 }
 
@@ -18,7 +18,7 @@ export default function Home() {
 
       <section className="hv7r-hero">
         <div className="hv7r-hero-copy">
-          <p className="public-eyebrow">ZeyherMutter · Immobilienvermittlung</p>
+          <p className="public-eyebrow">Zeyher & Mutter · Immobilien</p>
           <h1>Immobilien verkaufen. Persönlich begleitet, professionell vermarktet.</h1>
           <p className="hv7r-lead">Wir begleiten Eigentümer vom ersten Gespräch bis zum erfolgreichen Abschluss: mit realistischer Einordnung, klarer Positionierung, hochwertiger Vermarktung und persönlicher Betreuung.</p>
           <div className="hv7r-actions">
@@ -80,7 +80,7 @@ export default function Home() {
 
       <section className="hv7r-trust">
         <blockquote>„Eine gute Vermarktung beginnt mit einem klaren Blick auf die Immobilie – und mit einem Makler, der den gesamten Weg weiterführt.“</blockquote>
-        <div><strong>ZeyherMutter Immobilienvermittlung</strong><p>Klassischer Immobilienverkauf als Kernleistung. Verkaufsstrategie-Check als zusätzliche Entscheidungshilfe, wenn vor dem Marktstart noch Klärungsbedarf besteht.</p></div>
+        <div><strong>Zeyher & Mutter Immobilien</strong><p>Klassischer Immobilienverkauf als Kernleistung. Verkaufsstrategie-Check als zusätzliche Entscheidungshilfe, wenn vor dem Marktstart noch Klärungsbedarf besteht.</p></div>
       </section>
 
       <section className="hv7r-cta">
