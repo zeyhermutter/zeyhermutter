@@ -7,6 +7,7 @@ export default [
   route("sitemap.xml", "routes/sitemap.ts"),
   route("verkaufsfertig-check", "routes/public-sales-readiness.tsx"),
   route("homepage-varianten", "routes/homepage-variants.tsx"),
+  route("homepage-varianten/7", "routes/homepage-variant-seven.tsx"),
   route("homepage-varianten/:variant", "routes/homepage-variant.tsx"),
   route("immobilien", "routes/public-properties.tsx"),
   route("immobilien/medien/:mediaId/:version", "routes/public-media.ts"),
