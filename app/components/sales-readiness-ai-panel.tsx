@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface ScenarioOption {
   id: string;
@@ -13,11 +14,23 @@ interface SalesReadinessPromptPanelProps {
   configured: boolean;
 }
 
+type BasicTarget = "starting_situation" | "sale_objective" | "overall_assessment";
+
+type PromptMount =
+  | { id: string; element: HTMLElement; target: BasicTarget; scenario?: never }
+  | { id: string; element: HTMLElement; target: "scenario"; scenario: ScenarioOption };
+
 const KIND_LABELS: Record<ScenarioOption["kind"], string> = {
   AS_IS: "Szenario A · Ist-Zustand",
   RECOMMENDED_PREPARATION: "Szenario B · Aufbereitung",
   EXTENDED_MEASURES: "Szenario C · größere Maßnahmen",
 };
+
+const BASIC_TARGETS: Array<{ target: BasicTarget; fieldName: string }> = [
+  { target: "starting_situation", fieldName: "starting_situation" },
+  { target: "sale_objective", fieldName: "sale_objective" },
+  { target: "overall_assessment", fieldName: "overall_assessment" },
+];
 
 function fieldValue(root: ParentNode, name: string) {
   const element = root.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(`[name="${name}"]`);
@@ -108,7 +121,7 @@ Verbindliche Regeln:
 - Bestehende Zahlen dürfen sprachlich eingeordnet, aber nicht verändert werden.
 - Antworte nur mit dem angeforderten Textbaustein, ohne Vorrede.`;
 
-function promptForBasic(target: "starting_situation" | "sale_objective" | "overall_assessment") {
+function promptForBasic(target: BasicTarget) {
   const context = compact({
     check: basicSnapshot(),
     measures: measureSnapshots(),
@@ -151,92 +164,97 @@ async function copyText(text: string) {
   textarea.remove();
 }
 
-export function SalesReadinessAiPanel(props: SalesReadinessPromptPanelProps) {
-  const [preview, setPreview] = useState("");
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+function PromptCopyButton({ target, scenario }: { target: BasicTarget | "scenario"; scenario?: ScenarioOption }) {
+  const [state, setState] = useState<"idle" | "copied" | "error">("idle");
 
-  if (!props.canWrite) return null;
+  async function handleCopy() {
+    const prompt = target === "scenario" && scenario
+      ? promptForScenario(scenario)
+      : promptForBasic(target as BasicTarget);
 
-  async function prepare(label: string, prompt: string) {
-    setPreview(prompt);
-    setMessage(null);
-    setError(null);
     try {
       await copyText(prompt);
-      setMessage(`${label} kopiert. Jetzt im ChatGPT-Browser einfügen.`);
+      setState("copied");
+      window.setTimeout(() => setState("idle"), 2200);
     } catch {
-      setError("Automatisches Kopieren war nicht möglich. Der Textbaustein steht unten zum manuellen Kopieren bereit.");
+      setState("error");
+      window.setTimeout(() => setState("idle"), 3000);
     }
   }
 
   return (
-    <section className="data-card readiness-ai-card" aria-labelledby="readiness-ai-title">
-      <div className="card-head readiness-ai-head">
-        <div>
-          <p className="eyebrow">ChatGPT-Textbausteine</p>
-          <h2 id="readiness-ai-title">Prompt kopieren und in ChatGPT einfügen</h2>
-          <p className="lead-card-caption">
-            Die Bausteine übernehmen die aktuell sichtbaren Check-Eingaben und geben ChatGPT klare Regeln für die Formulierung. Es wird nichts automatisch gespeichert oder an eine API übertragen.
-          </p>
-        </div>
-        <span className="readiness-ai-badge">Kopieren</span>
-      </div>
+    <span className="readiness-inline-prompt-control">
+      <button
+        className="secondary-button readiness-inline-prompt-button"
+        type="button"
+        onClick={handleCopy}
+        title="Aktuelle Check-Daten als vorbereiteten Prompt in die Zwischenablage kopieren"
+      >
+        {state === "copied" ? "Kopiert ✓" : state === "error" ? "Kopieren fehlgeschlagen" : "ChatGPT-Prompt kopieren"}
+      </button>
+      <span className="sr-only" aria-live="polite">
+        {state === "copied" ? "ChatGPT-Prompt wurde kopiert." : state === "error" ? "Prompt konnte nicht kopiert werden." : ""}
+      </span>
+    </span>
+  );
+}
 
-      <div className="readiness-ai-groups">
-        <div className="readiness-ai-group">
-          <strong>Check-Grunddaten</strong>
-          <div className="readiness-ai-actions">
-            <button className="secondary-button" type="button" onClick={() => prepare("Ausgangslage-Prompt", promptForBasic("starting_situation"))}>
-              Ausgangslage kopieren
-            </button>
-            <button className="secondary-button" type="button" onClick={() => prepare("Verkaufsziel-Prompt", promptForBasic("sale_objective"))}>
-              Verkaufsziel kopieren
-            </button>
-            <button className="secondary-button" type="button" onClick={() => prepare("Gesamtbeurteilung-Prompt", promptForBasic("overall_assessment"))}>
-              Gesamtbeurteilung kopieren
-            </button>
-          </div>
-        </div>
+export function SalesReadinessAiPanel(props: SalesReadinessPromptPanelProps) {
+  const [mounts, setMounts] = useState<PromptMount[]>([]);
 
-        {props.scenarios.length ? (
-          <div className="readiness-ai-group">
-            <strong>Verkaufsszenarien</strong>
-            <div className="readiness-ai-actions">
-              {props.scenarios.map((scenario) => (
-                <button
-                  className="secondary-button"
-                  type="button"
-                  key={scenario.id}
-                  onClick={() => prepare(`${KIND_LABELS[scenario.kind]}-Prompt`, promptForScenario(scenario))}
-                  title={scenario.title}
-                >
-                  {KIND_LABELS[scenario.kind]} kopieren
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : null}
-      </div>
+  useEffect(() => {
+    if (!props.canWrite) {
+      setMounts([]);
+      return;
+    }
 
-      {message ? <div className="form-success readiness-ai-feedback">{message}</div> : null}
-      {error ? <div className="form-error readiness-ai-feedback">{error}</div> : null}
+    const created: HTMLElement[] = [];
+    const next: PromptMount[] = [];
 
-      {preview ? (
-        <div className="readiness-ai-preview-wrap">
-          <div className="readiness-ai-preview-head">
-            <strong>Zuletzt erzeugter Textbaustein</strong>
-            <button className="secondary-button" type="button" onClick={() => prepare("Textbaustein", preview)}>
-              Erneut kopieren
-            </button>
-          </div>
-          <textarea className="readiness-ai-preview" readOnly value={preview} rows={12} aria-label="ChatGPT-Textbaustein" />
-        </div>
-      ) : null}
+    for (const { target, fieldName } of BASIC_TARGETS) {
+      const field = document.querySelector<HTMLElement>(`.readiness-workspace [name="${fieldName}"]`);
+      const label = field?.closest("label");
+      if (!field || !label) continue;
 
-      <small className="readiness-ai-note">
-        Erst beim Einfügen in ChatGPT verlässt der Text deinen Browser. Prüfe vor dem Einfügen, ob du alle enthaltenen CRM-Angaben wirklich mitsenden möchtest. Die Antwort anschließend fachlich prüfen und manuell in die passenden CRM-Felder übernehmen.
-      </small>
-    </section>
+      const mount = document.createElement("span");
+      mount.className = "readiness-inline-prompt-mount";
+      mount.dataset.readinessPromptMount = target;
+      label.insertBefore(mount, field);
+      created.push(mount);
+      next.push({ id: `basic:${target}`, element: mount, target });
+    }
+
+    for (const scenario of props.scenarios) {
+      const form = scenarioForm(scenario.id);
+      const head = form?.querySelector<HTMLElement>(".readiness-scenario-head");
+      if (!head) continue;
+
+      const mount = document.createElement("span");
+      mount.className = "readiness-scenario-prompt-mount";
+      mount.dataset.readinessPromptMount = `scenario:${scenario.id}`;
+      head.appendChild(mount);
+      created.push(mount);
+      next.push({ id: `scenario:${scenario.id}`, element: mount, target: "scenario", scenario });
+    }
+
+    setMounts(next);
+
+    return () => {
+      for (const element of created) element.remove();
+    };
+  }, [props.canWrite, props.scenarios]);
+
+  if (!props.canWrite) return null;
+
+  return (
+    <>
+      {mounts.map((mount) => createPortal(
+        mount.target === "scenario"
+          ? <PromptCopyButton target="scenario" scenario={mount.scenario} />
+          : <PromptCopyButton target={mount.target} />,
+        mount.element,
+        mount.id,
+      ))}
+    </>
   );
 }
