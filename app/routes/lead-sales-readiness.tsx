@@ -81,7 +81,7 @@ function errorMessage(error: any, fallback: string) {
 
 export function meta() {
   return [
-    { title: "Verkaufsfertig-Check · ZeyherMutterOS" },
+    { title: "Verkaufsstrategie-Check · ZeyherMutterOS" },
     { name: "robots", content: "noindex, nofollow" },
   ];
 }
@@ -165,7 +165,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       );
     }
     return data<ActionResult>(
-      { ok: "Verkaufsfertig-Check angelegt." },
+      { ok: "Verkaufsstrategie-Check angelegt." },
       { headers: responseHeaders() },
     );
   }
@@ -462,7 +462,7 @@ export default function LeadSalesReadiness() {
         <div>
           <Link className="back-link" to={`/leads/${viewModel.lead.id}`}>← Lead-Detail</Link>
           <p className="eyebrow">Modul 03 · Verkaufsfertig</p>
-          <h1 className="editor-title">Verkaufsfertig-Check</h1>
+          <h1 className="editor-title">Verkaufsstrategie-Check</h1>
           <p className="editor-meta">Szenarien vergleichen, Eigentümerentscheidung dokumentieren und die Verkaufsaufbereitung steuern.</p>
         </div>
         <div className="header-user">

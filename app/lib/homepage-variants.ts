@@ -53,7 +53,7 @@ export const homepageVariants: HomepageVariant[] = [
     id: "7",
     name: "Makler & Verkaufsfertig",
     kicker: "Makler zuerst · Verkaufsfertig als Option",
-    description: "Klassische Immobilienvermittlung steht klar im Vordergrund. Der Verkaufsfertig-Check wird als zusätzliche Option vor der Vermarktung angeboten und nutzt dieselbe warme Pflaume-/Terrakotta-/Creme-Gestaltung.",
+    description: "Klassische Immobilienvermittlung steht klar im Vordergrund. Der Verkaufsstrategie-Check wird als zusätzliche Option vor der Vermarktung angeboten und nutzt dieselbe warme Pflaume-/Terrakotta-/Creme-Gestaltung.",
     traits: ["klassischer Maklerauftritt", "zwei klare Einstiege", "einheitliches Design mit Check"],
   },
 ];

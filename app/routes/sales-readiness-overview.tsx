@@ -37,7 +37,7 @@ function formatDate(value: string | null) {
 
 export function meta() {
   return [
-    { title: "Verkaufsfertig-Checks · ZeyherMutterOS" },
+    { title: "Verkaufsstrategie-Checks · ZeyherMutterOS" },
     { name: "robots", content: "noindex, nofollow" },
   ];
 }
@@ -76,7 +76,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   ]);
 
   if (leadResult.error || checkResult.error) {
-    throw new Response("Verkaufsfertig-Checks konnten nicht geladen werden.", { status: 500 });
+    throw new Response("Verkaufsstrategie-Checks konnten nicht geladen werden.", { status: 500 });
   }
 
   const leads = leadResult.data ?? [];
@@ -109,7 +109,7 @@ export default function SalesReadinessOverview() {
         <div>
           <Link className="back-link" to="/crm">← CRM</Link>
           <p className="eyebrow">Modul 03 · Eigentümer & Leads</p>
-          <h1 className="editor-title">Verkaufsfertig-Checks</h1>
+          <h1 className="editor-title">Verkaufsstrategie-Checks</h1>
           <p className="editor-meta">Vom ersten Objektbild bis zur abgestimmten Entscheidung für den Marktstart.</p>
         </div>
         <div className="header-user">

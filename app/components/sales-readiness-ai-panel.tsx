@@ -160,7 +160,7 @@ function compact(value: unknown): unknown {
   return value;
 }
 
-const BASE_INSTRUCTIONS = `Du unterstützt mich bei einem internen Verkaufsfertig-Check für eine Immobilie.
+const BASE_INSTRUCTIONS = `Du unterstützt mich bei einem internen Verkaufsstrategie-Check für eine Immobilie.
 
 Verbindliche Regeln:
 - Formuliere professionelles, klares Deutsch ohne Werbeübertreibung.

@@ -67,7 +67,7 @@ export function SalesReadinessWorkspace({
       <div className="readiness-workspace">
         <section className="readiness-mode-banner preview">
           <strong>BETA-Backend aktiv</strong>
-          <span>Noch kein Verkaufsfertig-Check für diesen Lead vorhanden.</span>
+          <span>Noch kein Verkaufsstrategie-Check für diesen Lead vorhanden.</span>
         </section>
         <section className="data-card readiness-empty-start">
           <p className="eyebrow">{viewModel.lead.number}</p>
@@ -76,7 +76,7 @@ export function SalesReadinessWorkspace({
           {canWrite ? (
             <Form method="post">
               <button className="primary-button" type="submit" name="_intent" value="create">
-                Verkaufsfertig-Check starten
+                Verkaufsstrategie-Check starten
               </button>
             </Form>
           ) : (
@@ -98,7 +98,7 @@ export function SalesReadinessWorkspace({
 
       <section className="readiness-overview data-card">
         <div className="readiness-overview-copy">
-          <p className="eyebrow">{viewModel.lead.number} · Verkaufsfertig-Check</p>
+          <p className="eyebrow">{viewModel.lead.number} · Verkaufsstrategie-Check</p>
           <div className="readiness-title-row">
             <h2>{viewModel.lead.propertyLabel}</h2>
             <span className={`readiness-status status-${check.status.toLowerCase()}`}>

@@ -67,7 +67,7 @@ function SalesReadinessLeadEntryEnhancer() {
     const previousLink = link?.textContent ?? "";
 
     if (state) state.textContent = "Aktiver Workflow · vollständig mit Supabase verbunden";
-    if (link) link.textContent = "Verkaufsfertig-Check öffnen →";
+    if (link) link.textContent = "Verkaufsstrategie-Check öffnen →";
 
     return () => {
       if (state) state.textContent = previousState;

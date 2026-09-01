@@ -174,7 +174,7 @@ export async function loadSalesReadiness(
     .maybeSingle();
 
   if (checkError) {
-    throw new Response("Verkaufsfertig-Check konnte nicht geladen werden.", { status: 500 });
+    throw new Response("Verkaufsstrategie-Check konnte nicht geladen werden.", { status: 500 });
   }
 
   if (!check) return base;

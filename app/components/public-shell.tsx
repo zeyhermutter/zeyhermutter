@@ -7,7 +7,7 @@ export function PublicHeader() {
         <span aria-hidden="true">ZM</span><strong>ZeyherMutter</strong>
       </Link>
       <nav className="public-nav" aria-label="Hauptnavigation">
-        <Link to="/verkaufsfertig-check">Verkaufsfertig-Check</Link>
+        <Link to="/verkaufsfertig-check">Verkaufsstrategie-Check</Link>
         <Link to="/immobilien">Immobilien</Link>
         <Link to="/kontakt">Kontakt</Link>
       </nav>
@@ -19,7 +19,7 @@ export function PublicFooter() {
     <footer className="public-footer">
       <span>ZeyherMutter · Immobilienvermittlung</span>
       <div>
-        <Link to="/verkaufsfertig-check">Verkaufsfertig-Check</Link>
+        <Link to="/verkaufsfertig-check">Verkaufsstrategie-Check</Link>
         <Link to="/impressum">Impressum</Link>
         <Link to="/datenschutz">Datenschutz</Link>
         <Link className="public-internal-link" to="/login">Intern</Link>

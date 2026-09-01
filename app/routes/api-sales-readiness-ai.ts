@@ -65,7 +65,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 
   const viewModel = await loadSalesReadiness(supabase, leadId);
   if (!viewModel.check.id) {
-    return data({ ok: false, error: "Bitte zuerst einen Verkaufsfertig-Check anlegen." }, { status: 409, headers: responseHeaders() });
+    return data({ ok: false, error: "Bitte zuerst einen Verkaufsstrategie-Check anlegen." }, { status: 409, headers: responseHeaders() });
   }
   if (viewModel.check.status === "FINALIZED") {
     return data({ ok: false, error: "Finalisierte Checks sind unveränderlich. Bitte zuerst eine Revision anlegen." }, { status: 409, headers: responseHeaders() });

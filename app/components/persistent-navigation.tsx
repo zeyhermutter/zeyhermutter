@@ -18,7 +18,7 @@ const GROUPS: NavGroup[] = [
     items: [
       { label: "Immobilien", to: "/properties" },
       { label: "Verkäufer-Leads", to: "/leads" },
-      { label: "Verkaufsfertig-Check", to: "/crm/sales-readiness" },
+      { label: "Verkaufsstrategie-Check", to: "/crm/sales-readiness" },
     ],
   },
   {

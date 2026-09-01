@@ -64,7 +64,7 @@
 .hv7r-cta h2{font-size:clamp(36px,4vw,54px);margin:5px 0;max-width:760px}
 .hv7r-cta>div:last-child{display:flex;gap:12px;flex-wrap:wrap;justify-content:flex-end}
 
-/* Öffentlicher Verkaufsfertig-Check im gleichen Design wie Version 7 */
+/* Öffentlicher Verkaufsstrategie-Check im gleichen Design wie Version 7 */
 .sales-check-page{background:#fbf3ee;color:#40273d}
 .sales-check-page .public-eyebrow{color:#b65d4d}
 .sales-check-page .sales-check-hero{position:relative;width:100%!important;max-width:none!important;min-height:610px;margin:0!important;padding:96px max(20px,calc((100vw - 1180px)/2));box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);gap:66px;align-items:end;color:#fff;background-image:url('https://images.unsplash.com/photo-1773754532196-014342510e64?auto=format&fit=crop&fm=jpg&q=82&w=2200');background-size:cover;background-position:center;overflow:hidden}

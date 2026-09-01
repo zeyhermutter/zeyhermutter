@@ -207,8 +207,8 @@ export function emptySalesReadinessViewModel(input: {
     workflow: {
       reviewable: false,
       finalizable: false,
-      missingForReview: ["Verkaufsfertig-Check anlegen"],
-      nextAction: "Verkaufsfertig-Check starten",
+      missingForReview: ["Verkaufsstrategie-Check anlegen"],
+      nextAction: "Verkaufsstrategie-Check starten",
     },
     summary: {
       estimatedCostMin: 0,

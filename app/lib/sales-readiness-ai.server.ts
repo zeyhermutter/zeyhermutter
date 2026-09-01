@@ -101,7 +101,7 @@ function buildContext(viewModel: SalesReadinessViewModel, form?: FormSnapshot, s
   };
 }
 
-const SYSTEM_INSTRUCTIONS = `Du bist der interne KI-Schreibassistent eines deutschen Immobilienmaklers. Du formulierst ausschließlich Arbeitsentwürfe für einen Verkaufsfertig-Check.
+const SYSTEM_INSTRUCTIONS = `Du bist der interne KI-Schreibassistent eines deutschen Immobilienmaklers. Du formulierst ausschließlich Arbeitsentwürfe für einen Verkaufsstrategie-Check.
 
 Verbindliche Regeln:
 - Schreibe professionelles, klares Deutsch ohne Werbeübertreibung.
@@ -115,7 +115,7 @@ Verbindliche Regeln:
 function promptFor(target: SalesReadinessAiTarget, context: unknown) {
   const source = JSON.stringify(context, null, 2);
   if (target === "starting_situation") {
-    return `Formuliere die Ausgangssituation für den internen Verkaufsfertig-Check in etwa 90–150 Wörtern. Beschreibe den bekannten Ist-Zustand, den Anlass und erkennbare Rahmenbedingungen neutral und konkret. Keine Empfehlung vorwegnehmen.\n\nKONTEXT:\n${source}`;
+    return `Formuliere die Ausgangssituation für den internen Verkaufsstrategie-Check in etwa 90–150 Wörtern. Beschreibe den bekannten Ist-Zustand, den Anlass und erkennbare Rahmenbedingungen neutral und konkret. Keine Empfehlung vorwegnehmen.\n\nKONTEXT:\n${source}`;
   }
   if (target === "sale_objective") {
     return `Formuliere das Verkaufsziel in etwa 60–110 Wörtern. Stelle Zeitrahmen, Zielrichtung und relevante Rahmenbedingungen klar dar. Fehlende Informationen nicht erfinden.\n\nKONTEXT:\n${source}`;

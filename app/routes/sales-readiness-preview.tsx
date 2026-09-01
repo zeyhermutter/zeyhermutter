@@ -8,7 +8,7 @@ const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "::1"]);
 
 export function meta() {
   return [
-    { title: "Lokale CRM-Vorschau · Verkaufsfertig-Check" },
+    { title: "Lokale CRM-Vorschau · Verkaufsstrategie-Check" },
     { name: "robots", content: "noindex, nofollow, noarchive" },
   ];
 }

@@ -7,7 +7,7 @@ import "~/homepage-v7-realtor.css";
 export function meta() {
   return [
     { title: "Immobilien verkaufen · ZeyherMutter Immobilienvermittlung" },
-    { name: "description", content: "ZeyherMutter begleitet Eigentümer beim Immobilienverkauf von der Positionierung über die Vermarktung bis zum Abschluss. Der Verkaufsfertig-Check ergänzt die Maklerleistung bei offenen Fragen vor dem Marktstart." },
+    { name: "description", content: "ZeyherMutter begleitet Eigentümer beim Immobilienverkauf von der Positionierung über die Vermarktung bis zum Abschluss. Der Verkaufsstrategie-Check ergänzt die Maklerleistung bei offenen Fragen vor dem Marktstart." },
   ];
 }
 
@@ -23,7 +23,7 @@ export default function Home() {
           <p className="hv7r-lead">Wir begleiten Eigentümer vom ersten Gespräch bis zum erfolgreichen Abschluss: mit realistischer Einordnung, klarer Positionierung, hochwertiger Vermarktung und persönlicher Betreuung.</p>
           <div className="hv7r-actions">
             <Link className="hv7r-primary" to="/kontakt">Immobilie verkaufen</Link>
-            <Link className="hv7r-secondary" to="/verkaufsfertig-check">Verkaufsfertig-Check</Link>
+            <Link className="hv7r-secondary" to="/verkaufsfertig-check">Verkaufsstrategie-Check</Link>
             <Link className="hv7r-text" to="/immobilien">Immobilien ansehen →</Link>
           </div>
         </div>
@@ -34,7 +34,7 @@ export default function Home() {
         <div className="hv7r-choice-head">
           <p className="public-eyebrow">Zwei Wege zu uns</p>
           <h2>Sie möchten verkaufen. Wir steigen dort ein, wo Sie gerade stehen.</h2>
-          <p>Für die meisten Eigentümer beginnt die Zusammenarbeit klassisch mit der Immobilienvermittlung. Wenn vor dem Marktstart noch offen ist, ob und welche Vorbereitung sinnvoll ist, ergänzt der Verkaufsfertig-Check unseren Maklerprozess.</p>
+          <p>Für die meisten Eigentümer beginnt die Zusammenarbeit klassisch mit der Immobilienvermittlung. Wenn vor dem Marktstart noch offen ist, ob und welche Vorbereitung sinnvoll ist, ergänzt der Verkaufsstrategie-Check unseren Maklerprozess.</p>
         </div>
         <div className="hv7r-choice-grid">
           <article className="primary">
@@ -45,9 +45,9 @@ export default function Home() {
           </article>
           <article className="secondary">
             <span>02 · Option vor der Vermarktung</span>
-            <h3>Verkaufsfertig-Check</h3>
+            <h3>Verkaufsstrategie-Check</h3>
             <p>Wenn Zustand, Maßnahmen oder Investitionen vor dem Verkauf unklar sind, vergleichen wir Ist-Zustand, gezielte Aufbereitung und größere Maßnahmen.</p>
-            <Link to="/verkaufsfertig-check">Verkaufsfertig-Check ansehen →</Link>
+            <Link to="/verkaufsfertig-check">Verkaufsstrategie-Check ansehen →</Link>
           </article>
         </div>
       </section>
@@ -68,7 +68,7 @@ export default function Home() {
         <div>
           <p className="public-eyebrow">Wenn vor dem Verkauf noch Fragen offen sind</p>
           <h2>Erst klären, was die Immobilie braucht. Dann klassisch vermarkten.</h2>
-          <p>Der Verkaufsfertig-Check ist kein Ersatz für unsere Maklerleistung, sondern eine zusätzliche Option davor. Er hilft bei der Entscheidung, ob die Immobilie direkt in den Markt gehen sollte oder ob ausgewählte Maßnahmen sinnvoll erscheinen.</p>
+          <p>Der Verkaufsstrategie-Check ist kein Ersatz für unsere Maklerleistung, sondern eine zusätzliche Option davor. Er hilft bei der Entscheidung, ob die Immobilie direkt in den Markt gehen sollte oder ob ausgewählte Maßnahmen sinnvoll erscheinen.</p>
         </div>
         <div className="hv7r-check-points">
           <div><span>A</span><strong>Im Ist-Zustand verkaufen</strong></div>
@@ -80,12 +80,12 @@ export default function Home() {
 
       <section className="hv7r-trust">
         <blockquote>„Eine gute Vermarktung beginnt mit einem klaren Blick auf die Immobilie – und mit einem Makler, der den gesamten Weg weiterführt.“</blockquote>
-        <div><strong>ZeyherMutter Immobilienvermittlung</strong><p>Klassischer Immobilienverkauf als Kernleistung. Verkaufsfertig-Check als zusätzliche Entscheidungshilfe, wenn vor dem Marktstart noch Klärungsbedarf besteht.</p></div>
+        <div><strong>ZeyherMutter Immobilienvermittlung</strong><p>Klassischer Immobilienverkauf als Kernleistung. Verkaufsstrategie-Check als zusätzliche Entscheidungshilfe, wenn vor dem Marktstart noch Klärungsbedarf besteht.</p></div>
       </section>
 
       <section className="hv7r-cta">
         <div><p className="public-eyebrow">Wie möchten Sie starten?</p><h2>Direkt verkaufen oder vorher den Verkaufsweg prüfen.</h2></div>
-        <div><Link className="hv7r-primary" to="/kontakt">Immobilie verkaufen</Link><Link className="hv7r-secondary light" to="/verkaufsfertig-check">Verkaufsfertig-Check</Link></div>
+        <div><Link className="hv7r-primary" to="/kontakt">Immobilie verkaufen</Link><Link className="hv7r-secondary light" to="/verkaufsfertig-check">Verkaufsstrategie-Check</Link></div>
       </section>
 
       <PublicFooter />

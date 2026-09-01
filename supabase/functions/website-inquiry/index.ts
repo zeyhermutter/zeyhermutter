@@ -213,7 +213,7 @@ Deno.serve(async (request: Request) => {
     if (!lead.out_deduplicated) {
       await db.from("activity_events").insert({
         activity_type: "WEBSITE_SELLER_CHECK",
-        title: "Verkaufsfertig-Check angefragt",
+        title: "Verkaufsstrategie-Check angefragt",
         description: `Neue Website-Anfrage aus ${postalCode} ${city}`,
         actor_user_id: null,
         contact_id: contactId,
@@ -223,7 +223,7 @@ Deno.serve(async (request: Request) => {
       await db.from("notifications").insert({
         user_id: responsibleUser,
         type: "WEBSITE_SELLER_CHECK",
-        title: "Neuer Verkaufsfertig-Check",
+        title: "Neuer Verkaufsstrategie-Check",
         message: `Neue Anfrage ${lead.out_lead_number} aus ${postalCode} ${city}`,
         entity_type: "LEAD",
         entity_id: lead.out_lead_id,
