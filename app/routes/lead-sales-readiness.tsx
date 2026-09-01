@@ -2,12 +2,21 @@ import { data, Link, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/lead-sales-readiness";
 import { SalesReadinessWorkspace } from "~/components/sales-readiness-workspace";
 import { SalesReadinessAiPanel } from "~/components/sales-readiness-ai-panel";
+import {
+  SalesReadinessMediaPanel,
+  type SalesReadinessMediaItem,
+  type SalesReadinessMediaSource,
+} from "~/components/sales-readiness-media-panel";
 import { requirePermission } from "~/lib/auth.server";
 import { loadSalesReadiness, requireSalesReadinessBackend } from "~/lib/sales-readiness.server";
 import "~/sales-readiness.css";
 import "~/sales-readiness-editor.css";
+import "~/sales-readiness-media.css";
 
 type ActionResult = { error?: string; ok?: string };
+
+const MEDIA_AREAS = new Set(["CURRENT_STATE", "DETAIL", "MEASURE_EVIDENCE", "MEASURE_DOCUMENTATION", "OTHER"]);
+const MEDIA_STAGES = new Set(["BEFORE", "DURING", "AFTER"]);
 
 function text(fd: FormData, key: string) {
   return String(fd.get(key) ?? "").trim();
@@ -36,6 +45,31 @@ function inspectionIso(value: string) {
   return value ? `${value}T12:00:00.000Z` : null;
 }
 
+function mediaKind(path: string, mimeType = "", mediaType = ""): "image" | "video" | "pdf" | "file" {
+  const normalizedPath = path.toLowerCase();
+  const normalizedMime = mimeType.toLowerCase();
+  if (mediaType === "VIDEO" || normalizedMime.startsWith("video/") || normalizedPath.endsWith(".mp4")) return "video";
+  if (normalizedMime === "application/pdf" || normalizedPath.endsWith(".pdf")) return "pdf";
+  if (mediaType === "IMAGE" || mediaType === "FLOOR_PLAN" || normalizedMime.startsWith("image/") || /\.(jpe?g|png|webp|heic)$/.test(normalizedPath)) return "image";
+  return "file";
+}
+
+function mediaRef(bucket: string, path: string) {
+  return `${bucket}::${path}`;
+}
+
+function parseMediaRef(value: string) {
+  const separator = value.indexOf("::");
+  if (separator <= 0) return null;
+  const bucket = value.slice(0, separator).trim();
+  const path = value.slice(separator + 2).trim();
+  return bucket && path ? { bucket, path } : null;
+}
+
+function fileName(path: string) {
+  return path.split("/").pop() || path;
+}
+
 function errorMessage(error: any, fallback: string) {
   const message = String(error?.message ?? "");
 
@@ -44,6 +78,18 @@ function errorMessage(error: any, fallback: string) {
   }
   if (message.includes("FINALIZED_SALES_READINESS")) {
     return "Finalisierte Checks sind unveränderlich. Bitte eine Revision anlegen.";
+  }
+  if (message.includes("SALES_READINESS_MEDIA_PROPERTY_REQUIRED")) {
+    return "Medien und Nachweise können erst zugeordnet werden, wenn der Check mit einer Immobilie verbunden ist.";
+  }
+  if (message.includes("SALES_READINESS_MEDIA_SOURCE_INVALID")) {
+    return "Die gewählte Quelle gehört nicht mehr zur aktuellen Immobilienakte. Bitte neu laden und erneut auswählen.";
+  }
+  if (message.includes("SALES_READINESS_MEDIA_MEASURE_MISMATCH")) {
+    return "Die ausgewählte Maßnahme gehört nicht zu diesem Check.";
+  }
+  if (message.includes("lead_sales_readiness_media_check_storage_unique") || message.includes("duplicate key")) {
+    return "Dieses Medium bzw. dieser Nachweis ist in dieser Revision bereits zugeordnet.";
   }
   if (message.includes("COMPLETE_CHECK_BASICS")) {
     return "Für die Prüfbereitschaft fehlen Pflichtangaben: Besichtigung, Ausgangssituation, Verkaufsziel, Gesamtbeurteilung oder Annahmen/Unsicherheiten.";
@@ -113,6 +159,128 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   ]);
 
   const viewModel = await loadSalesReadiness(supabase, params.leadId);
+  let salesReadinessPropertyId: string | null = null;
+  let salesReadinessMedia: SalesReadinessMediaItem[] = [];
+  let salesReadinessMediaSources: SalesReadinessMediaSource[] = [];
+
+  if (viewModel.check.id) {
+    const [{ data: checkContext, error: checkContextError }, { data: associations, error: associationsError }] = await Promise.all([
+      supabase.from("lead_sales_readiness_checks").select("property_id").eq("id", viewModel.check.id).maybeSingle(),
+      supabase
+        .from("lead_sales_readiness_media")
+        .select("id,measure_id,area_key,stage,storage_bucket,storage_object_path,internal_note,version,created_at")
+        .eq("check_id", viewModel.check.id)
+        .order("created_at"),
+    ]);
+
+    if (checkContextError || associationsError) {
+      throw new Response("Medien und Nachweise konnten nicht geladen werden.", { status: 500, headers: responseHeaders() });
+    }
+
+    salesReadinessPropertyId = checkContext?.property_id ?? null;
+    const sourceMap = new Map<string, SalesReadinessMediaSource>();
+
+    if (salesReadinessPropertyId) {
+      const [{ data: propertyMedia, error: propertyMediaError }, { data: documents, error: documentsError }] = await Promise.all([
+        supabase
+          .from("property_media")
+          .select("media_type,storage_bucket,storage_path,title,alt_text,sort_order")
+          .eq("property_id", salesReadinessPropertyId)
+          .is("archived_at", null)
+          .order("sort_order")
+          .order("created_at"),
+        supabase
+          .from("documents")
+          .select("id,title,category,current_version")
+          .eq("property_id", salesReadinessPropertyId)
+          .is("archived_at", null)
+          .order("created_at"),
+      ]);
+
+      if (propertyMediaError || documentsError) {
+        throw new Response("Quellen der Immobilienakte konnten nicht geladen werden.", { status: 500, headers: responseHeaders() });
+      }
+
+      for (const item of propertyMedia ?? []) {
+        const key = mediaRef(item.storage_bucket, item.storage_path);
+        sourceMap.set(key, {
+          key,
+          bucket: item.storage_bucket,
+          path: item.storage_path,
+          title: item.title || fileName(item.storage_path),
+          subtitle: item.alt_text ? `Objektmedium · ${item.alt_text}` : `Objektmedium · ${item.media_type}`,
+          kind: mediaKind(item.storage_path, "", item.media_type),
+          signedUrl: null,
+        });
+      }
+
+      const documentIds = (documents ?? []).map((document) => document.id);
+      if (documentIds.length) {
+        const { data: versions, error: versionsError } = await supabase
+          .from("document_versions")
+          .select("document_id,version_number,storage_bucket,storage_path,original_filename,mime_type")
+          .in("document_id", documentIds);
+        if (versionsError) {
+          throw new Response("Dokumentversionen konnten nicht geladen werden.", { status: 500, headers: responseHeaders() });
+        }
+        const documentById = new Map((documents ?? []).map((document) => [document.id, document]));
+        for (const version of versions ?? []) {
+          const document = documentById.get(version.document_id);
+          if (!document || version.version_number !== document.current_version) continue;
+          const key = mediaRef(version.storage_bucket, version.storage_path);
+          sourceMap.set(key, {
+            key,
+            bucket: version.storage_bucket,
+            path: version.storage_path,
+            title: document.title || version.original_filename,
+            subtitle: `${document.category} · ${version.original_filename}`,
+            kind: mediaKind(version.storage_path, version.mime_type),
+            signedUrl: null,
+          });
+        }
+      }
+    }
+
+    const allReferences = new Map<string, { bucket: string; path: string }>();
+    for (const source of sourceMap.values()) allReferences.set(source.key, { bucket: source.bucket, path: source.path });
+    for (const association of associations ?? []) {
+      allReferences.set(mediaRef(association.storage_bucket, association.storage_object_path), {
+        bucket: association.storage_bucket,
+        path: association.storage_object_path,
+      });
+    }
+
+    const signedUrls = new Map<string, string>();
+    await Promise.all([...allReferences.entries()].map(async ([key, ref]) => {
+      const { data: signed } = await supabase.storage.from(ref.bucket).createSignedUrl(ref.path, 600);
+      if (signed?.signedUrl) signedUrls.set(key, signed.signedUrl);
+    }));
+
+    const measureTitleById = new Map(viewModel.measures.map((measure) => [measure.id, measure.title]));
+    salesReadinessMedia = (associations ?? []).map((association) => {
+      const key = mediaRef(association.storage_bucket, association.storage_object_path);
+      const source = sourceMap.get(key);
+      return {
+        id: association.id,
+        measureId: association.measure_id,
+        measureTitle: association.measure_id ? measureTitleById.get(association.measure_id) ?? null : null,
+        areaKey: association.area_key,
+        stage: association.stage,
+        internalNote: association.internal_note,
+        version: association.version,
+        title: source?.title ?? fileName(association.storage_object_path),
+        subtitle: source?.subtitle ?? "Historisch zugeordnete Quelle",
+        kind: source?.kind ?? mediaKind(association.storage_object_path),
+        signedUrl: signedUrls.get(key) ?? null,
+      };
+    });
+
+    const associatedKeys = new Set((associations ?? []).map((association) => mediaRef(association.storage_bucket, association.storage_object_path)));
+    salesReadinessMediaSources = [...sourceMap.values()]
+      .filter((source) => !associatedKeys.has(source.key))
+      .map((source) => ({ ...source, signedUrl: signedUrls.get(source.key) ?? null }));
+  }
+
   return data(
     {
       viewModel,
@@ -120,6 +288,9 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
       canWrite: canWrite === true,
       canFinalize: canFinalize === true,
       canTask: canTask === true,
+      salesReadinessPropertyId,
+      salesReadinessMedia,
+      salesReadinessMediaSources,
       aiConfigured:
         context.cloudflare.env.SALES_READINESS_AI_ENABLED === "true" &&
         Boolean(context.cloudflare.env.OPENAI_API_KEY),
@@ -359,6 +530,66 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     );
   }
 
+  if (intent === "save_media") {
+    const mediaId = text(fd, "media_id") || null;
+    const areaKey = text(fd, "area_key") || "CURRENT_STATE";
+    const stage = text(fd, "stage") || "BEFORE";
+    const measureId = text(fd, "measure_id") || null;
+    if (!MEDIA_AREAS.has(areaKey) || !MEDIA_STAGES.has(stage)) {
+      return data<ActionResult>({ error: "Ungültige Medienzuordnung." }, { status: 400, headers: responseHeaders() });
+    }
+
+    let bucket = "";
+    let path = "";
+    if (!mediaId) {
+      const source = parseMediaRef(text(fd, "source_ref"));
+      if (!source) {
+        return data<ActionResult>({ error: "Bitte eine vorhandene Quelle auswählen." }, { status: 400, headers: responseHeaders() });
+      }
+      bucket = source.bucket;
+      path = source.path;
+    }
+
+    const { error } = await supabase.rpc("save_lead_sales_readiness_media", {
+      p_check_id: checkId,
+      p_media_id: mediaId,
+      p_expected_check_version: expectedVersion,
+      p_measure_id: measureId,
+      p_area_key: areaKey,
+      p_stage: stage,
+      p_storage_bucket: bucket,
+      p_storage_object_path: path,
+      p_internal_note: text(fd, "internal_note"),
+    });
+    if (error) {
+      return data<ActionResult>(
+        { error: errorMessage(error, "Medium oder Nachweis konnte nicht zugeordnet werden.") },
+        { status: 400, headers: responseHeaders() },
+      );
+    }
+    return data<ActionResult>(
+      { ok: mediaId ? "Medienzuordnung gespeichert." : "Medium oder Nachweis dem Check zugeordnet." },
+      { headers: responseHeaders() },
+    );
+  }
+
+  if (intent === "delete_media") {
+    const mediaId = text(fd, "media_id");
+    if (!mediaId) return data<ActionResult>({ error: "Medienzuordnung fehlt." }, { status: 400, headers: responseHeaders() });
+    const { error } = await supabase.rpc("delete_lead_sales_readiness_media", {
+      p_check_id: checkId,
+      p_media_id: mediaId,
+      p_expected_check_version: expectedVersion,
+    });
+    if (error) {
+      return data<ActionResult>(
+        { error: errorMessage(error, "Medienzuordnung konnte nicht entfernt werden.") },
+        { status: 400, headers: responseHeaders() },
+      );
+    }
+    return data<ActionResult>({ ok: "Medienzuordnung entfernt. Die Originaldatei bleibt in der Immobilienakte erhalten." }, { headers: responseHeaders() });
+  }
+
   if (intent === "ready") {
     const { error } = await supabase.rpc("mark_lead_sales_readiness_ready", {
       p_check_id: checkId,
@@ -405,7 +636,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       );
     }
     return data<ActionResult>(
-      { ok: "Neue Revision angelegt. Die Eigentümerentscheidung wird bewusst neu eingeholt." },
+      { ok: "Neue Revision angelegt. Medien und Nachweise wurden revisionsfest übernommen; die Eigentümerentscheidung wird bewusst neu eingeholt." },
       { headers: responseHeaders() },
     );
   }
@@ -453,7 +684,17 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 }
 
 export default function LeadSalesReadiness() {
-  const { viewModel, profile, canWrite, canFinalize, canTask, aiConfigured } = useLoaderData<typeof loader>();
+  const {
+    viewModel,
+    profile,
+    canWrite,
+    canFinalize,
+    canTask,
+    aiConfigured,
+    salesReadinessPropertyId,
+    salesReadinessMedia,
+    salesReadinessMediaSources,
+  } = useLoaderData<typeof loader>();
   const result = useActionData<typeof action>();
 
   return (
@@ -488,6 +729,17 @@ export default function LeadSalesReadiness() {
         canWrite={canWrite}
         canFinalize={canFinalize}
         canTask={canTask}
+      />
+
+      <SalesReadinessMediaPanel
+        checkId={viewModel.check.id}
+        checkVersion={viewModel.check.version}
+        checkStatus={viewModel.check.status}
+        propertyId={salesReadinessPropertyId}
+        media={salesReadinessMedia}
+        sources={salesReadinessMediaSources}
+        measures={viewModel.measures.map(({ id, title }) => ({ id, title }))}
+        canWrite={canWrite}
       />
     </main>
   );
