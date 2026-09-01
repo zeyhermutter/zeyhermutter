@@ -1,0 +1,188 @@
+/* Beta – gemeinsame Fluchtlinien und responsive data-card-Abstände */
+:root {
+  --crm-content-max: 1320px;
+  --crm-page-gutter: clamp(18px, 2.1vw, 36px);
+  --crm-section-gap: clamp(14px, 1.25vw, 20px);
+  --crm-block-gap: clamp(16px, 1.35vw, 22px);
+  --crm-card-padding-x: clamp(18px, 1.45vw, 22px);
+}
+
+/*
+ * Außenabstand: Auf Laptopbreite weniger Fläche verschenken, auf großen
+ * Monitoren weiterhin ruhige Ränder.
+ */
+.app-content {
+  padding-left: var(--crm-page-gutter);
+  padding-right: var(--crm-page-gutter);
+  container-type: inline-size;
+  container-name: crm-main;
+}
+.editor-shell {
+  padding-left: var(--crm-page-gutter);
+  padding-right: var(--crm-page-gutter);
+}
+
+/* Alle wesentlichen Arbeitsbereiche liegen auf exakt denselben Fluchtlinien. */
+.app-header,
+.editor-header,
+.metric-grid,
+.dashboard-grid,
+.app-content > .data-card,
+.editor-shell > .data-card,
+.editor-shell > .property-section,
+.editor-shell > .property-summary-grid,
+.editor-shell > .property-workflow-section,
+.module04-content,
+.crm-search-page,
+.audit-page,
+.inquiry-page,
+.search-profile-page,
+.module04-context-card,
+.module04-wide-card,
+.tasks-page {
+  width: 100%;
+  max-width: var(--crm-content-max) !important;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Alte Sonderbreiten dürfen einzelne Karten nicht wieder schmaler machen. */
+.editor-shell > .data-card.property-section,
+.editor-shell > .data-card.property-section + .data-card.property-section,
+.app-content > .metric-grid + .data-card,
+.property-map-card {
+  width: 100%;
+  max-width: var(--crm-content-max) !important;
+}
+
+/*
+ * Eigenständige Hauptblöcke erhalten überall denselben vertikalen Abstand.
+ * Dadurch kleben z. B. Modul 04, Modul 03 und Immobilien auf /crm nicht
+ * aneinander. Listenzeilen innerhalb einer Karte bleiben davon unberührt.
+ */
+.app-content > .metric-grid + .data-card,
+.app-content > .data-card + .data-card,
+.app-content > .data-card + .dashboard-grid,
+.app-content > .dashboard-grid + .data-card,
+.editor-shell > .editor-header + .data-card,
+.editor-shell > .data-card + .data-card,
+.editor-shell > .property-section + .property-section,
+.editor-shell > .property-summary-grid + .property-section,
+.editor-shell > .property-section + .property-summary-grid,
+.editor-shell > .property-workflow-section + .property-section,
+.editor-shell > .property-section + .property-workflow-section {
+  margin-top: var(--crm-block-gap);
+}
+
+/* Seiten-Wrapper mit mehreren eigenständigen Karten bekommen denselben Rhythmus. */
+.tasks-page,
+.crm-search-page,
+.audit-page,
+.inquiry-page,
+.search-profile-page,
+.module04-content {
+  row-gap: var(--crm-block-gap);
+}
+.tasks-page > .data-card + .data-card,
+.crm-search-page > .data-card + .data-card,
+.audit-page > .data-card + .data-card,
+.inquiry-page > .data-card + .data-card,
+.search-profile-page > .data-card + .data-card,
+.module04-content > .data-card + .data-card {
+  margin-top: var(--crm-block-gap);
+}
+
+/* Konsistente horizontale Abstände in Karten und zwischen Karten. */
+.app-content .data-card,
+.editor-shell .data-card {
+  padding-left: var(--crm-card-padding-x);
+  padding-right: var(--crm-card-padding-x);
+  min-width: 0;
+}
+.metric-grid,
+.dashboard-grid,
+.property-summary-grid,
+.module04-content,
+.crm-search-page,
+.audit-page,
+.inquiry-page,
+.search-profile-page,
+.tasks-page {
+  column-gap: var(--crm-section-gap);
+}
+
+/* Header darf bei knapper Breite nicht den eigentlichen Inhalt zusammendrücken. */
+.app-header,
+.editor-header {
+  min-width: 0;
+}
+.app-header > *,
+.editor-header > * {
+  min-width: 0;
+}
+.app-header .header-actions,
+.editor-header .header-actions,
+.editor-header .header-user {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  column-gap: 10px;
+  row-gap: 10px;
+}
+
+/* Lange Werte bleiben innerhalb ihrer Karte und erzwingen keine Überbreite. */
+.data-card .data-row > *,
+.data-card .card-head > *,
+.data-card .inline-actions > * {
+  min-width: 0;
+}
+.data-card strong,
+.data-card small,
+.data-card .row-meta,
+.data-card .subtle-link {
+  overflow-wrap: anywhere;
+}
+
+/* Dashboard: vier KPIs nur, wenn die reale Contentbreite dafür reicht. */
+@container crm-main (max-width: 1100px) {
+  .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Normale Mehrspaltenkarten: Lesbarkeit vor maximaler Spaltenzahl. */
+.dashboard-grid,
+.property-summary-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+}
+
+@media (max-width: 980px) {
+  .app-header,
+  .editor-header {
+    flex-wrap: wrap;
+    row-gap: 18px;
+  }
+  .app-header .header-actions,
+  .editor-header .header-actions,
+  .editor-header .header-user {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 760px) {
+  :root {
+    --crm-page-gutter: 16px;
+    --crm-card-padding-x: 16px;
+    --crm-section-gap: 14px;
+    --crm-block-gap: 14px;
+  }
+  .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .metric-grid {
+    grid-template-columns: 1fr;
+  }
+}

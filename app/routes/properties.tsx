@@ -77,6 +77,7 @@ function statusClass(status:string){return `status-${status.toLowerCase().replac
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { supabase, responseHeaders, profile } = await requirePermission(request, context.cloudflare.env, "property.read");
   const url = new URL(request.url);
+  const q = (url.searchParams.get("q") ?? "").trim();
   const status = (url.searchParams.get("status") ?? "ACTIVE").trim();
   const transaction = (url.searchParams.get("transaction") ?? "").trim();
   const propertyType = (url.searchParams.get("type") ?? "").trim();
@@ -94,6 +95,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   else if (status !== "ALL") query = query.neq("status", "ARCHIVED");
   if (transaction) query = query.eq("transaction_type", transaction);
   if (propertyType) query = query.eq("property_type", propertyType);
+  if (q) {
+    const safeQ = q.replace(/[,%()]/g, " ").trim();
+    if (safeQ) query = query.or(`property_number.ilike.%${safeQ}%,internal_title.ilike.%${safeQ}%`);
+  }
 
   const [{ data: properties, count, error }, { data: transitions, error: transitionError }] = await Promise.all([
     query,
@@ -109,7 +114,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   if (addressError) throw new Response("Objektadressen konnten nicht geladen werden.", { status: 500 });
   const addressMap = Object.fromEntries((addresses ?? []).map((address) => [address.property_id, address]));
 
-  return data({ properties: properties ?? [], addressMap, transitions: transitions ?? [], total: count ?? 0, page, pageCount: Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE)), filters: { status, transaction, propertyType }, profile }, { headers: responseHeaders() });
+  return data({ properties: properties ?? [], addressMap, transitions: transitions ?? [], total: count ?? 0, page, pageCount: Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE)), filters: { q, status, transaction, propertyType }, profile }, { headers: responseHeaders() });
 }
 
 export default function Properties() {
@@ -118,6 +123,7 @@ export default function Properties() {
   const transitionsByStatus = Object.fromEntries(Object.keys(STATUS_LABELS).map((status) => [status, transitions.filter((transition) => transition.from_status === status)]));
   const allowedTransitions=transitionsByStatus[selectedStatus]??[];
   const preferred=PREFERRED_NEXT[selectedStatus];
+  const pageHref=(nextPage:number)=>{const p=new URLSearchParams();if(filters.q)p.set("q",filters.q);p.set("status",filters.status);if(filters.transaction)p.set("transaction",filters.transaction);if(filters.propertyType)p.set("type",filters.propertyType);p.set("page",String(nextPage));return `?${p.toString()}`;};
 
   return (
     <main className="editor-shell">
@@ -127,7 +133,8 @@ export default function Properties() {
       </header>
 
       <section className="data-card property-section">
-        <Form method="get" className="filter-grid">
+        <Form method="get" className="filter-grid property-filter-grid">
+          <label><span>Suche</span><input name="q" defaultValue={filters.q} placeholder="Objektnummer oder Titel"/></label>
           <label><span>Status</span><select name="status" defaultValue={filters.status}><option value="ACTIVE">Aktive</option><option value="ALL">Alle</option><option value="ARCHIVED">Archiv</option></select></label>
           <label><span>Transaktion</span><select name="transaction" defaultValue={filters.transaction}><option value="">Alle</option><option value="SALE">Verkauf</option><option value="RENT">Vermietung</option></select></label>
           <label><span>Typ</span><select name="type" defaultValue={filters.propertyType}><option value="">Alle</option>{Object.entries(TYPE_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
@@ -147,7 +154,7 @@ export default function Properties() {
           })}
           {properties.length === 0 ? <p className="empty-state">Keine Immobilien in dieser Ansicht.</p> : null}
         </div>
-        {pageCount > 1 ? <div className="pagination">{page > 1 ? <Link className="secondary-button link-button" to={`?status=${filters.status}&transaction=${filters.transaction}&type=${filters.propertyType}&page=${page - 1}`}>← Zurück</Link> : <span />}{page < pageCount ? <Link className="secondary-button link-button" to={`?status=${filters.status}&transaction=${filters.transaction}&type=${filters.propertyType}&page=${page + 1}`}>Weiter →</Link> : null}</div> : null}
+        {pageCount > 1 ? <div className="pagination">{page > 1 ? <Link className="secondary-button link-button" to={pageHref(page - 1)}>← Zurück</Link> : <span />}{page < pageCount ? <Link className="secondary-button link-button" to={pageHref(page + 1)}>Weiter →</Link> : null}</div> : null}
       </section>
 
       <section className="data-card property-workflow-section" id="status-workflow">
