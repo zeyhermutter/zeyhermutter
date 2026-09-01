@@ -39,11 +39,24 @@
 .search-profile-page,
 .module04-context-card,
 .module04-wide-card,
-.tasks-page {
+.tasks-page,
+.sales-readiness-overview-width {
   width: 100%;
   max-width: var(--crm-content-max) !important;
   margin-left: auto;
   margin-right: auto;
+}
+
+/* Verkaufsfertig-Übersicht: gleiche Flucht wie der CRM-Header, kein 1120px-Sondereinzug. */
+.sales-readiness-overview-width {
+  display: grid;
+  gap: var(--crm-block-gap);
+}
+.sales-readiness-overview-width > .data-card,
+.sales-readiness-overview-width > .metric-grid {
+  width: 100%;
+  max-width: none !important;
+  margin: 0;
 }
 
 /* Alte Sonderbreiten dürfen einzelne Karten nicht wieder schmaler machen. */
