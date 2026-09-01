@@ -16,7 +16,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   if (error) throw new Response("Sitemap konnte nicht erstellt werden.", { status: 503 });
 
   const origin = new URL(request.url).origin;
-  const staticPaths = ["/", "/immobilien", "/kontakt"];
+  const staticPaths = ["/", "/verkaufsfertig-check", "/immobilien", "/kontakt"];
   const entries = staticPaths.map((path) => ({
     location: new URL(path, origin).toString(),
     lastModified: null as string | null,

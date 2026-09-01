@@ -17,6 +17,10 @@ import "./property-context-nav.css";
 
 declare const __BUILD_COMMIT__: string;
 
+export function links() {
+  return [{ rel: "icon", href: "/favicon.svg", type: "image/svg+xml" }];
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="de">

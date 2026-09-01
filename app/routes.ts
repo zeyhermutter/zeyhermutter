@@ -3,7 +3,9 @@ import { type RouteConfig, index, route } from "@react-router/dev/routes";
 export default [
   index("routes/home.tsx"),
   route("robots.txt", "routes/robots.ts"),
+  route("favicon.svg", "routes/favicon.ts"),
   route("sitemap.xml", "routes/sitemap.ts"),
+  route("verkaufsfertig-check", "routes/public-sales-readiness.tsx"),
   route("immobilien", "routes/public-properties.tsx"),
   route("immobilien/medien/:mediaId/:version", "routes/public-media.ts"),
   route("immobilien/:slug", "routes/public-property-detail.tsx"),
@@ -27,6 +29,8 @@ export default [
   route("leads", "routes/leads.tsx"),
   route("leads/new", "routes/lead-new.tsx"),
   route("leads/:leadId", "routes/lead-detail.tsx"),
+  route("leads/:leadId/sales-readiness", "routes/lead-sales-readiness.tsx"),
+  route("__preview/sales-readiness", "routes/sales-readiness-preview.tsx"),
   route("search-profiles", "routes/search-profiles.tsx"),
   route("search-profiles/new", "routes/search-profile-new.tsx"),
   route("search-profiles/:searchProfileId", "routes/search-profile-detail.tsx"),
