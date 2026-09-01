@@ -23,7 +23,7 @@ Priorisierung: **MUST > SHOULD > COULD > LATER**.
 - [x] ContactRole
 - [x] ContactRelationship
 - [x] ContactOrganizationRelationship
-- [x] Aufgaben inkl. Benutzerzuweisung/Wiedervorlage
+- [x] Aufgaben inkl. Benutzerzuweisung/Wiedervorlagen
 - [x] Aktivitätsfeed
 - [x] Kommentare/@Mentions
 - [x] Benachrichtigungs-Inbox für Mentions
@@ -147,7 +147,7 @@ Priorisierung: **MUST > SHOULD > COULD > LATER**.
 
 ## P2 – Senior-Review-Folgearbeiten
 - [ ] gemeinsame, wiederverwendbare Adress-Schnelleingabe statt DOM-Enhancer und duplizierter Geocoding-Logik
-- [ ] CRM-Dashboard-Aggregate in eine begrenzte serverseitige Abfrage/RPC zusammenfassen
+- [x] CRM-Dashboard-Aggregate in eine begrenzte serverseitige Abfrage/RPC zusammenfassen
 - [ ] große Verzeichnisse auf serverseitige Keyset-Pagination umstellen; keine festen 500/1000-Zeilen-Limits mit Clientfilterung
 - [ ] Cloudflare-Worker-Integrationstests mit realistischem Runtime-Testpool ergänzen
 - [ ] verbleibende explizite `any`-Typen abbauen und stark komprimierte Routen in testbare Komponenten zerlegen
