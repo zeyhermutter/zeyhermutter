@@ -53,8 +53,37 @@ export default function Home() {
           <p>Bevor Ihre Immobilie auf den Markt kommt, prüfen wir, welche Maßnahmen Präsentation, Nachfrage und Verkaufsperspektive voraussichtlich verbessern können. Wir empfehlen nur, was zu Ihrem Ziel passt – und übernehmen anschließend Vermarktung und Verkauf.</p>
           <div className="public-home-actions"><Link className="public-primary-button dark" to="/verkaufsfertig-check">Verkaufspotenzial prüfen lassen</Link><Link className="public-secondary-link" to="/immobilien">Immobilien ansehen →</Link></div>
         </div>
-        <div className="public-hero-comparison" aria-label="Von der ungeprüften Ausgangslage zur verkaufsfertigen Immobilie">
-          <div><span>Vorher</span><strong>Ungeprüft in den Markt</strong><small>Mögliche Hebel bleiben ungenutzt.</small></div><i aria-hidden="true">→</i><div><span>Verkaufsfertig</span><strong>Gezielt vorbereitet</strong><small>Klare Positionierung. Klarer Verkaufsweg.</small></div>
+        <div
+          className="public-hero-comparison"
+          aria-label="Vom Ist-Zustand zum passenden Verkaufsweg"
+          style={{
+            minHeight: "auto",
+            display: "grid",
+            gridTemplateRows: "none",
+            gap: 12,
+            padding: 18,
+            borderRadius: 24,
+            background: "linear-gradient(145deg, #edf2ed, #dfe7e1)",
+            color: "#182122",
+            border: "1px solid #d1d9d3",
+            boxShadow: "0 24px 60px rgba(29, 43, 41, 0.10)",
+          }}
+        >
+          <div style={{ display: "grid", gap: 6, padding: 20, borderRadius: 16, background: "#ffffff", color: "#182122", border: "1px solid #d9dfda" }}>
+            <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase", color: "#73807b" }}>01 · Ausgangslage</span>
+            <strong style={{ fontSize: 20 }}>Was ist wirklich nötig?</strong>
+            <small style={{ fontSize: 14, lineHeight: 1.5, color: "#66736f" }}>Zustand, Ziel, Zeit und mögliche Hebel zuerst sauber einordnen.</small>
+          </div>
+          <div style={{ display: "grid", gap: 6, padding: 20, borderRadius: 16, background: "#253331", color: "#ffffff", border: "1px solid #253331" }}>
+            <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase", color: "#b8c7c0" }}>02 · Entscheidung</span>
+            <strong style={{ fontSize: 20 }}>Den sinnvollsten Verkaufsweg wählen.</strong>
+            <small style={{ fontSize: 14, lineHeight: 1.5, color: "#d7dfdb" }}>Ist-Zustand, gezielte Aufbereitung und Aufwand nachvollziehbar vergleichen.</small>
+          </div>
+          <div style={{ display: "grid", gap: 6, padding: 20, borderRadius: 16, background: "#d7e4db", color: "#182122", border: "1px solid #c4d4c8" }}>
+            <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase", color: "#597063" }}>03 · Verkaufsfertig</span>
+            <strong style={{ fontSize: 20 }}>Klar positioniert in den Markt.</strong>
+            <small style={{ fontSize: 14, lineHeight: 1.5, color: "#52665b" }}>Nur sinnvolle Schritte umsetzen – danach professionell vermarkten und verkaufen.</small>
+          </div>
         </div>
       </section>
 
