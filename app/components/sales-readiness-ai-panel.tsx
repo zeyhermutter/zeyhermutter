@@ -6,6 +6,13 @@ interface ScenarioOption {
   title: string;
 }
 
+interface SalesReadinessPromptPanelProps {
+  leadId: string;
+  scenarios: ScenarioOption[];
+  canWrite: boolean;
+  configured: boolean;
+}
+
 const KIND_LABELS: Record<ScenarioOption["kind"], string> = {
   AS_IS: "Szenario A · Ist-Zustand",
   RECOMMENDED_PREPARATION: "Szenario B · Aufbereitung",
@@ -57,141 +64,156 @@ function scenarioSnapshot(scenarioId: string) {
   };
 }
 
-function setNativeValue(element: HTMLInputElement | HTMLTextAreaElement, value: string) {
-  const prototype = element instanceof HTMLTextAreaElement
-    ? HTMLTextAreaElement.prototype
-    : HTMLInputElement.prototype;
-  const setter = Object.getOwnPropertyDescriptor(prototype, "value")?.set;
-  setter?.call(element, value);
-  element.dispatchEvent(new Event("input", { bubbles: true }));
-  element.dispatchEvent(new Event("change", { bubbles: true }));
+function measureSnapshots() {
+  return Array.from(document.querySelectorAll<HTMLInputElement>('input[name="measure_id"]'))
+    .map((input) => input.closest("form"))
+    .filter((form): form is HTMLFormElement => Boolean(form))
+    .slice(0, 20)
+    .map((form) => ({
+      title: fieldValue(form, "title"),
+      category: fieldValue(form, "category"),
+      description: fieldValue(form, "description"),
+      decision: fieldValue(form, "decision"),
+      rationale: fieldValue(form, "rationale"),
+      cost_min: fieldValue(form, "cost_min"),
+      cost_max: fieldValue(form, "cost_max"),
+      status: fieldValue(form, "status"),
+    }))
+    .filter((measure) => Object.values(measure).some((value) => Boolean(value)));
 }
 
-function applyBasicField(name: string, value: string) {
-  const element = document.querySelector<HTMLInputElement | HTMLTextAreaElement>(`.readiness-workspace [name="${name}"]`);
-  if (element) setNativeValue(element, value);
-}
-
-function applyScenarioFields(scenarioId: string, fields: Record<string, string>) {
-  const form = scenarioForm(scenarioId);
-  if (!form) return;
-  for (const [name, value] of Object.entries(fields)) {
-    const element = form.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name="${name}"]`);
-    if (element) setNativeValue(element, value);
+function compact(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(compact).filter((item) => item !== undefined);
   }
+  if (value && typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([, item]) => item !== "" && item !== null && item !== undefined && item !== false)
+      .map(([key, item]) => [key, compact(item)] as const)
+      .filter(([, item]) => item !== undefined);
+    return Object.fromEntries(entries);
+  }
+  return value;
 }
 
-export function SalesReadinessAiPanel({
-  leadId,
-  scenarios,
-  canWrite,
-  configured,
-}: {
-  leadId: string;
-  scenarios: ScenarioOption[];
-  canWrite: boolean;
-  configured: boolean;
-}) {
-  const [loading, setLoading] = useState<string | null>(null);
+const BASE_INSTRUCTIONS = `Du unterstützt mich bei einem internen Verkaufsfertig-Check für eine Immobilie.
+
+Verbindliche Regeln:
+- Formuliere professionelles, klares Deutsch ohne Werbeübertreibung.
+- Nutze ausschließlich die unten gelieferten Informationen.
+- Erfinde keine Fakten, Mängel, Eigentümerwünsche, Termine, Preise, Kosten, Dauern oder sonstigen Zahlen.
+- Wenn Informationen fehlen oder unsicher sind, benenne das sachlich.
+- Triff keine Eigentümerentscheidung und setze keinen Workflow-Status.
+- Keine Rechts-, Steuer- oder Garantieaussagen.
+- Bestehende Zahlen dürfen sprachlich eingeordnet, aber nicht verändert werden.
+- Antworte nur mit dem angeforderten Textbaustein, ohne Vorrede.`;
+
+function promptForBasic(target: "starting_situation" | "sale_objective" | "overall_assessment") {
+  const context = compact({
+    check: basicSnapshot(),
+    measures: measureSnapshots(),
+  });
+  const task = target === "starting_situation"
+    ? "Formuliere die Ausgangssituation in etwa 90–150 Wörtern. Beschreibe Ist-Zustand, Anlass und bekannte Rahmenbedingungen neutral und konkret. Nimm keine Empfehlung vorweg."
+    : target === "sale_objective"
+      ? "Formuliere das Verkaufsziel in etwa 60–110 Wörtern. Stelle Zielrichtung, bekannten Zeitrahmen und relevante Rahmenbedingungen klar dar."
+      : "Formuliere eine fachliche Gesamtbeurteilung in etwa 120–180 Wörtern. Ordne bekannte Chancen, Hemmnisse, sinnvolle Verkaufsaufbereitung und Unsicherheiten ausgewogen ein.";
+
+  return `${BASE_INSTRUCTIONS}\n\nAUFGABE:\n${task}\n\nVORHANDENE CHECK-DATEN:\n${JSON.stringify(context, null, 2)}`;
+}
+
+function promptForScenario(scenario: ScenarioOption) {
+  const context = compact({
+    check: basicSnapshot(),
+    scenario: {
+      kind: scenario.kind,
+      ...scenarioSnapshot(scenario.id),
+    },
+    measures: measureSnapshots(),
+  });
+
+  return `${BASE_INSTRUCTIONS}\n\nAUFGABE:\nFormuliere für ${KIND_LABELS[scenario.kind]} vier Textbausteine:\n1. Beschreibung: 70–120 Wörter – was dieses Szenario praktisch bedeutet.\n2. Annahmen und Unsicherheiten: 45–90 Wörter – nur auf Basis der vorhandenen Angaben.\n3. Interne Bewertung: 70–120 Wörter – Chancen, Risiken und fachliche Einordnung.\n4. Empfehlungsbegründung: 50–100 Wörter nur dann, wenn das Szenario in den Daten als empfohlen markiert ist; sonst schreibe lediglich \"Nicht als Empfehlung markiert.\"\n\nStrukturiere die Antwort mit genau den Überschriften \"Beschreibung\", \"Annahmen und Unsicherheiten\", \"Interne Bewertung\" und \"Empfehlungsbegründung\".\n\nVORHANDENE CHECK-DATEN:\n${JSON.stringify(context, null, 2)}`;
+}
+
+async function copyText(text: string) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  document.execCommand("copy");
+  textarea.remove();
+}
+
+export function SalesReadinessAiPanel(props: SalesReadinessPromptPanelProps) {
+  const [preview, setPreview] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function generate(
-    target: "starting_situation" | "sale_objective" | "overall_assessment" | "scenario",
-    scenarioId?: string,
-  ) {
-    const key = scenarioId ? `scenario:${scenarioId}` : target;
-    setLoading(key);
+  if (!props.canWrite) return null;
+
+  async function prepare(label: string, prompt: string) {
+    setPreview(prompt);
     setMessage(null);
     setError(null);
     try {
-      const form = target === "scenario" && scenarioId
-        ? { ...basicSnapshot(), ...scenarioSnapshot(scenarioId) }
-        : basicSnapshot();
-      const response = await fetch("/api/sales-readiness-ai", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ leadId, target, scenarioId, form }),
-      });
-      const result = await response.json() as {
-        ok?: boolean;
-        error?: string;
-        fields?: Record<string, string>;
-      };
-      if (!response.ok || !result.ok || !result.fields) {
-        throw new Error(result.error || "KI-Entwurf konnte nicht erstellt werden.");
-      }
-      if (target === "scenario" && scenarioId) {
-        applyScenarioFields(scenarioId, result.fields);
-      } else {
-        const value = result.fields[target];
-        if (value) applyBasicField(target, value);
-      }
-      setMessage("KI-Entwurf eingefügt. Bitte fachlich prüfen und anschließend normal speichern.");
-    } catch (err: any) {
-      setError(String(err?.message ?? "KI-Entwurf konnte nicht erstellt werden."));
-    } finally {
-      setLoading(null);
+      await copyText(prompt);
+      setMessage(`${label} kopiert. Jetzt im ChatGPT-Browser einfügen.`);
+    } catch {
+      setError("Automatisches Kopieren war nicht möglich. Der Textbaustein steht unten zum manuellen Kopieren bereit.");
     }
   }
-
-  if (!canWrite) return null;
 
   return (
     <section className="data-card readiness-ai-card" aria-labelledby="readiness-ai-title">
       <div className="card-head readiness-ai-head">
         <div>
-          <p className="eyebrow">KI-Bausteine</p>
-          <h2 id="readiness-ai-title">Mit ChatGPT formulieren</h2>
+          <p className="eyebrow">ChatGPT-Textbausteine</p>
+          <h2 id="readiness-ai-title">Prompt kopieren und in ChatGPT einfügen</h2>
           <p className="lead-card-caption">
-            Erstellt ausschließlich Textentwürfe aus dem vorhandenen Check. Preise, Status, Eigentümerentscheidung und Finalisierung bleiben unverändert.
+            Die Bausteine übernehmen die aktuell sichtbaren Check-Eingaben und geben ChatGPT klare Regeln für die Formulierung. Es wird nichts automatisch gespeichert oder an eine API übertragen.
           </p>
         </div>
-        <span className="readiness-ai-badge">ChatGPT</span>
+        <span className="readiness-ai-badge">Kopieren</span>
       </div>
-
-      {!configured ? (
-        <div className="form-warning readiness-ai-warning">
-          Die KI-Funktion ist eingebaut, aber der OpenAI API-Key ist in BETA noch nicht verbunden.
-        </div>
-      ) : null}
 
       <div className="readiness-ai-groups">
         <div className="readiness-ai-group">
           <strong>Check-Grunddaten</strong>
           <div className="readiness-ai-actions">
-            <button className="secondary-button" type="button" disabled={!configured || Boolean(loading)} onClick={() => generate("starting_situation")}>
-              {loading === "starting_situation" ? "Formuliert …" : "Ausgangslage formulieren"}
+            <button className="secondary-button" type="button" onClick={() => prepare("Ausgangslage-Prompt", promptForBasic("starting_situation"))}>
+              Ausgangslage kopieren
             </button>
-            <button className="secondary-button" type="button" disabled={!configured || Boolean(loading)} onClick={() => generate("sale_objective")}>
-              {loading === "sale_objective" ? "Formuliert …" : "Verkaufsziel formulieren"}
+            <button className="secondary-button" type="button" onClick={() => prepare("Verkaufsziel-Prompt", promptForBasic("sale_objective"))}>
+              Verkaufsziel kopieren
             </button>
-            <button className="secondary-button" type="button" disabled={!configured || Boolean(loading)} onClick={() => generate("overall_assessment")}>
-              {loading === "overall_assessment" ? "Formuliert …" : "Gesamtbeurteilung formulieren"}
+            <button className="secondary-button" type="button" onClick={() => prepare("Gesamtbeurteilung-Prompt", promptForBasic("overall_assessment"))}>
+              Gesamtbeurteilung kopieren
             </button>
           </div>
         </div>
 
-        {scenarios.length ? (
+        {props.scenarios.length ? (
           <div className="readiness-ai-group">
             <strong>Verkaufsszenarien</strong>
             <div className="readiness-ai-actions">
-              {scenarios.map((scenario) => {
-                const key = `scenario:${scenario.id}`;
-                return (
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    key={scenario.id}
-                    disabled={!configured || Boolean(loading)}
-                    onClick={() => generate("scenario", scenario.id)}
-                    title={scenario.title}
-                  >
-                    {loading === key ? "Formuliert …" : KIND_LABELS[scenario.kind]}
-                  </button>
-                );
-              })}
+              {props.scenarios.map((scenario) => (
+                <button
+                  className="secondary-button"
+                  type="button"
+                  key={scenario.id}
+                  onClick={() => prepare(`${KIND_LABELS[scenario.kind]}-Prompt`, promptForScenario(scenario))}
+                  title={scenario.title}
+                >
+                  {KIND_LABELS[scenario.kind]} kopieren
+                </button>
+              ))}
             </div>
           </div>
         ) : null}
@@ -199,8 +221,21 @@ export function SalesReadinessAiPanel({
 
       {message ? <div className="form-success readiness-ai-feedback">{message}</div> : null}
       {error ? <div className="form-error readiness-ai-feedback">{error}</div> : null}
+
+      {preview ? (
+        <div className="readiness-ai-preview-wrap">
+          <div className="readiness-ai-preview-head">
+            <strong>Zuletzt erzeugter Textbaustein</strong>
+            <button className="secondary-button" type="button" onClick={() => prepare("Textbaustein", preview)}>
+              Erneut kopieren
+            </button>
+          </div>
+          <textarea className="readiness-ai-preview" readOnly value={preview} rows={12} aria-label="ChatGPT-Textbaustein" />
+        </div>
+      ) : null}
+
       <small className="readiness-ai-note">
-        Die erzeugten Texte werden nicht automatisch gespeichert. Vor dem Speichern immer fachlich prüfen. Für die Textgenerierung werden nur die für den Check benötigten Objekt- und Check-Inhalte an OpenAI übertragen; Kontaktnamen werden nicht an den KI-Prompt übergeben.
+        Erst beim Einfügen in ChatGPT verlässt der Text deinen Browser. Prüfe vor dem Einfügen, ob du alle enthaltenen CRM-Angaben wirklich mitsenden möchtest. Die Antwort anschließend fachlich prüfen und manuell in die passenden CRM-Felder übernehmen.
       </small>
     </section>
   );
