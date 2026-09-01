@@ -12,6 +12,8 @@ const GROUPS: NavGroup[] = [
       { label: "Dashboard & Auswertung", to: "/reports" },
       { label: "Suche", to: "/crm/search" },
       { label: "Aufgaben", to: "/crm/tasks" },
+      { label: "E-Mail", to: "/crm/email" },
+      { label: "Kalender", to: "/crm/calendar" },
     ],
   },
   {
@@ -48,6 +50,16 @@ function isSalesReadinessDetail(pathname: string) {
   return /^\/leads\/[^/]+\/sales-readiness(?:\/|$)/.test(pathname);
 }
 
+function contextualEmailTarget(pathname: string) {
+  const contactMatch = pathname.match(/^\/crm\/contacts\/([0-9a-f-]{36})(?:\/|$)/i);
+  if (contactMatch) return `/crm/email?contact_id=${encodeURIComponent(contactMatch[1])}`;
+  const leadMatch = pathname.match(/^\/leads\/([0-9a-f-]{36})(?:\/|$)/i);
+  if (leadMatch) return `/crm/email?lead_id=${encodeURIComponent(leadMatch[1])}`;
+  const inquiryMatch = pathname.match(/^\/inquiries\/([0-9a-f-]{36})(?:\/|$)/i);
+  if (inquiryMatch) return `/crm/email?inquiry_id=${encodeURIComponent(inquiryMatch[1])}`;
+  return "/crm/email";
+}
+
 function isActive(pathname: string, item: NavItem) {
   const readinessDetail = isSalesReadinessDetail(pathname);
 
@@ -70,11 +82,12 @@ function NavGroups({ pathname, mobile = false }: { pathname: string; mobile?: bo
         <section className="persistent-nav-group" key={group.label}>
           <span className="persistent-nav-label">{group.label}</span>
           <div className="persistent-nav-links">
-            {group.items.map((item) => (
-              <Link className={`persistent-nav-item${isActive(pathname, item) ? " active" : ""}`} to={item.to} key={item.to}>
+            {group.items.map((item) => {
+              const target = item.to === "/crm/email" ? contextualEmailTarget(pathname) : item.to;
+              return <Link className={`persistent-nav-item${isActive(pathname, item) ? " active" : ""}`} to={target} key={item.to}>
                 {item.label}
-              </Link>
-            ))}
+              </Link>;
+            })}
           </div>
         </section>
       ))}
