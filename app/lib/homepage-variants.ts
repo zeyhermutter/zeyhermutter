@@ -42,6 +42,20 @@ export const homepageVariants: HomepageVariant[] = [
     description: "Wärmere Ansprache für Eigentümer, Erbengemeinschaften und Familien mit stärkerem Fokus auf Entlastung und persönliche Begleitung.",
     traits: ["nahbar", "situationsbezogen", "emotionaler Einstieg"],
   },
+  {
+    id: "6",
+    name: "Architektur & Substanz",
+    kicker: "Hero-Bild · Navy · Sand · Kupfer",
+    description: "Eine bildstarke Premium-Variante mit großem Immobilienmotiv, dunklem Blau und warmen Kupferakzenten. Der Check wird als bewusste Vorbereitung auf eine hochwertige Vermarktung inszeniert.",
+    traits: ["großes Hero-Bild", "hochwertig", "markant und ruhig"],
+  },
+  {
+    id: "7",
+    name: "Warm & Charaktervoll",
+    kicker: "Hero-Bild · Pflaume · Terrakotta · Creme",
+    description: "Eine emotionalere Bildvariante mit vollflächigem Interior-Hero, warmen Farbtönen und stärkerem Fokus auf die Geschichte und den Charakter einer Immobilie.",
+    traits: ["immersives Hero-Bild", "wärmere Farbwelt", "emotional und persönlich"],
+  },
 ];
 
 export function getHomepageVariant(id: string | undefined) {
