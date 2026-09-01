@@ -119,7 +119,7 @@ export default function SalesReadinessOverview() {
         </div>
       </header>
 
-      <div className="lead-page-width">
+      <div className="sales-readiness-overview-width">
         <section className="data-card">
           <div className="card-head">
             <div>
