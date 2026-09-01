@@ -83,7 +83,7 @@ function SalesReadinessLeadEntryEnhancer() {
 
 function PropertyContextNavigation() {
   const location = useLocation();
-  const match = location.pathname.match(/^\/properties\/([^/]+)(?:\/(documents|media|interests|publication|exposes))?(?:\/preview)?\/?$/);
+  const match = location.pathname.match(/^\/properties\/([^/]+)(?:\/(documents|media|interests|publication|exposes)(?:\/.*)?)?\/?$/);
   if (!match) return null;
 
   const propertyId = match[1];
