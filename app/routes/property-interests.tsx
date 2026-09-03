@@ -1,6 +1,7 @@
 import { data, Form, Link, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/property-interests";
 import { requirePermission } from "~/lib/auth.server";
+import { crmLocalDateTimeToIso } from "~/lib/local-time";
 import { groupMatchingRows, isDeprioritizedDecision, MATCH_DECISION_LABELS } from "~/lib/matching-priority";
 import "~/inquiry.css";
 
@@ -84,16 +85,18 @@ export async function action({request,context,params}:Route.ActionArgs){
   const contactId=text(fd,"contact_id"),disclosedAt=text(fd,"disclosed_at");
   if(!contactId)return data<ActionResult>({error:"Bitte einen Interessenten auswählen."},{status:400,headers:responseHeaders()});
   if(!disclosedAt)return data<ActionResult>({error:"Bitte Datum und Uhrzeit des Nachweises angeben."},{status:400,headers:responseHeaders()});
-  const when=new Date(disclosedAt);
+  const whenIso=crmLocalDateTimeToIso(disclosedAt);
+  const when=whenIso?new Date(whenIso):new Date(NaN);
   if(Number.isNaN(when.getTime()))return data<ActionResult>({error:"Bitte einen gültigen Zeitpunkt für den Nachweis angeben."},{status:400,headers:responseHeaders()});
   if(when.getTime()>Date.now()+5*60*1000)return data<ActionResult>({error:"Ein Nachweis kann nicht in der Zukunft liegen."},{status:400,headers:responseHeaders()});
   const ackKind=text(fd,"acknowledgement_kind")||"NONE",ackAt=text(fd,"acknowledged_at");
   if(ackKind!=="NONE"&&!ackAt)return data<ActionResult>({error:"Zu einer Empfangsbestätigung gehört auch deren Zeitpunkt."},{status:400,headers:responseHeaders()});
+  if(ackKind!=="NONE"&&!crmLocalDateTimeToIso(ackAt))return data<ActionResult>({error:"Bitte einen gültigen Zeitpunkt für die Empfangsbestätigung angeben."},{status:400,headers:responseHeaders()});
   const prior=text(fd,"prior_knowledge_declared")==="yes";
   if(prior&&!text(fd,"prior_knowledge_source"))return data<ActionResult>({error:"Bitte angeben, woher der Interessent das Objekt bereits kannte."},{status:400,headers:responseHeaders()});
   const payload={property_id:propertyId,contact_id:contactId,disclosed_at:when.toISOString(),channel:text(fd,"channel")||"EXPOSE_EMAIL",channel_reference:text(fd,"channel_reference")||null,
    publication_version_id:text(fd,"publication_version_id")||null,expose_id:text(fd,"expose_id")||null,viewing_id:text(fd,"viewing_id")||null,
-   acknowledgement_kind:ackKind,acknowledged_at:ackKind==="NONE"?null:new Date(ackAt).toISOString(),acknowledgement_reference:text(fd,"acknowledgement_reference")||null,
+   acknowledgement_kind:ackKind,acknowledged_at:ackKind==="NONE"?null:crmLocalDateTimeToIso(ackAt),acknowledgement_reference:text(fd,"acknowledgement_reference")||null,
    prior_knowledge_declared:prior,prior_knowledge_source:prior?text(fd,"prior_knowledge_source"):null,prior_knowledge_on:prior?(text(fd,"prior_knowledge_on")||null):null,
    resale_prohibition_notice_given:text(fd,"resale_prohibition_notice_given")==="yes",notes:text(fd,"notes")||null,
    primary_responsible_user:userId,created_by:userId,updated_by:userId};

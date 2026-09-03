@@ -1,6 +1,7 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/mandate-detail";
 import { requirePermission } from "~/lib/auth.server";
+import { crmDateAtTimeToIso } from "~/lib/local-time";
 
 type ActionResult={error?:string;ok?:string};
 
@@ -230,7 +231,8 @@ export async function action({request,context,params}:Route.ActionArgs){
     const {data:mandate,error:loadError}=await supabase.from("brokerage_mandates").select("mandate_number,property_id,withdrawal_deadline_on,primary_responsible_user").eq("id",id).maybeSingle();
     if(loadError||!mandate)return fail("Der Auftrag konnte nicht gelesen werden.");
     if(!mandate.withdrawal_deadline_on)return fail("Für die Wiedervorlage wird zuerst ein Fristende benötigt.");
-    const dueAt=new Date(`${mandate.withdrawal_deadline_on}T09:00:00+02:00`).toISOString();
+    const dueAt=crmDateAtTimeToIso(mandate.withdrawal_deadline_on);
+    if(!dueAt)return fail("Das hinterlegte Fristende ist kein gültiges Datum.");
     const {error}=await supabase.from("tasks").insert({
       title:`Widerrufsfrist beachten · ${mandate.mandate_number}`,
       description:"Vor Ablauf der Widerrufsfrist prüfen, ob Belehrung, Fristende und ein etwaiges Verlangen nach vorzeitigem Leistungsbeginn vollständig dokumentiert sind.",
