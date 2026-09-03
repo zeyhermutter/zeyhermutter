@@ -63,14 +63,18 @@ export async function loader({request,context,params}:Route.LoaderArgs){
     .select("id,closing_number,status,property_id,handover_date,notarized_date,completed_date,properties!inner(id,property_number,internal_title),buyer:contacts!sale_closings_buyer_contact_id_fkey(id,first_name,last_name)")
     .eq("id",closingId).maybeSingle();
   if(error||!row)throw new Response("Abschlussvorgang nicht gefunden.",{status:404,headers:responseHeaders()});
-  const [{data:milestones},{data:protocol},{data:profiles},{data:documents},{data:canWrite},{data:canTask}]=await Promise.all([
-    supabase.from("sale_closing_milestones").select("*,profiles(user_id,display_name)").eq("sale_closing_id",closingId).order("sort_order"),
+  const [{data:milestones,error:milestoneError},{data:protocol,error:protocolError},{data:profiles},{data:documents},{data:canWrite},{data:canTask}]=await Promise.all([
+    supabase.from("sale_closing_milestones").select("*,profiles!sale_closing_milestones_responsible_user_fkey(user_id,display_name)").eq("sale_closing_id",closingId).order("sort_order"),
     supabase.from("sale_handover_protocols").select("*").eq("sale_closing_id",closingId).maybeSingle(),
     supabase.from("profiles").select("user_id,display_name").eq("status","ACTIVE").order("display_name"),
     supabase.from("documents").select("id,title,category").eq("property_id",(row as any).property_id).is("archived_at",null).order("created_at",{ascending:false}).limit(200),
     supabase.rpc("current_user_has_permission",{p_permission:"closing.write"}),
     supabase.rpc("current_user_has_permission",{p_permission:"task.write"}),
   ]);
+  // Fehler hier nicht verschlucken: sonst zeigt die Seite stillschweigend eine leere Liste,
+  // obwohl Daten vorhanden sind.
+  if(milestoneError)throw new Response("Meilensteine konnten nicht geladen werden.",{status:500,headers:responseHeaders()});
+  if(protocolError)throw new Response("Das Übergabeprotokoll konnte nicht geladen werden.",{status:500,headers:responseHeaders()});
   let meters:any[]=[],keys:any[]=[];
   if(protocol){
     const [{data:m},{data:k}]=await Promise.all([
