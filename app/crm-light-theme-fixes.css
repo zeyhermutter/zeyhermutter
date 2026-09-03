@@ -274,3 +274,229 @@
   .task-create-modal-actions { display: grid; }
   .task-create-modal-actions > * { width: 100%; }
 }
+
+/* Thema 13 · Systemweite Abnahme:
+   Zwei verbliebene dunkle Flächen im hellen CRM. Nur Farben/Kontraste –
+   keine Änderungen an Größen, Grid, Abständen oder Navigationsstruktur. */
+
+/* Immobilienakte: Kontextnavigation war noch dunkel. */
+body:has(.persistent-app-frame) .property-context-nav {
+  background: #ffffff !important;
+  border-color: #d4dddb !important;
+}
+body:has(.persistent-app-frame) .property-context-nav a {
+  color: #536263 !important;
+}
+body:has(.persistent-app-frame) .property-context-nav a:hover {
+  color: #172425 !important;
+  background: #eef2f1 !important;
+}
+body:has(.persistent-app-frame) .property-context-nav a.active {
+  color: #172425 !important;
+  background: #dfe8e5 !important;
+  box-shadow: inset 0 0 0 1px #aebbb8 !important;
+}
+
+/* Immobilien-Karte: Popup und Attribution waren noch dunkel. */
+.persistent-app-frame .property-map {
+  border-color: #d4dddb !important;
+}
+.persistent-app-frame .property-map-popup {
+  background: rgba(255, 255, 255, .97) !important;
+  border-color: #cbd6d4 !important;
+  color: #263536 !important;
+}
+.persistent-app-frame .property-map-popup-head {
+  border-bottom-color: #e0e7e5 !important;
+}
+.persistent-app-frame .property-map-popup-head small,
+.persistent-app-frame .property-map-popup-item small,
+.persistent-app-frame .map-coverage-note {
+  color: #5f6f70 !important;
+}
+.persistent-app-frame .property-map-popup-head button {
+  background: #eef2f1 !important;
+  color: #3a4a4b !important;
+}
+.persistent-app-frame .property-map-popup-head button:hover {
+  background: #dfe8e5 !important;
+}
+.persistent-app-frame .property-map-popup-item:hover {
+  background: #eef2f1 !important;
+}
+.persistent-app-frame .property-map-attribution {
+  background: rgba(255, 255, 255, .92) !important;
+  color: #3a4a4b !important;
+}
+
+/* Lange, ungetrennte Zeichenketten (URLs, Freitext ohne Leerzeichen) dürfen
+   Karten und Tabellen nicht auseinanderziehen. */
+.persistent-app-frame .data-card,
+.persistent-app-frame .data-card p,
+.persistent-app-frame .data-card dd,
+.persistent-app-frame .data-card td,
+.persistent-app-frame .data-card h1,
+.persistent-app-frame .data-card h2,
+.persistent-app-frame .data-card h3,
+.persistent-app-frame .editor-title,
+.persistent-app-frame .editor-meta {
+  overflow-wrap: anywhere;
+}
+
+/* Verkäufer-Leads: Pipeline und Objektstatus-Badges waren noch dunkel und
+   dadurch kontrastarm. Nur Farben – Kachelgrößen und Grid bleiben unverändert. */
+.persistent-app-frame .lead-workflow-step {
+  background: #ffffff !important;
+  border-color: #d4dddb !important;
+  color: #263536 !important;
+}
+.persistent-app-frame .lead-workflow-step:hover {
+  background: #f4f7f6 !important;
+  border-color: #aebbb8 !important;
+}
+.persistent-app-frame .lead-workflow-step.active {
+  background: #dfe8e5 !important;
+  border-color: #7f9490 !important;
+}
+.persistent-app-frame .lead-workflow-step.outcome-won {
+  background: #e9f4ec !important;
+  border-color: #98bea4 !important;
+}
+.persistent-app-frame .lead-workflow-step.outcome-lost {
+  background: #fbeeee !important;
+  border-color: #d3aaac !important;
+}
+.persistent-app-frame .lead-workflow-index {
+  border-color: #b3bfbd !important;
+  color: #4d5d5e !important;
+}
+.persistent-app-frame .lead-workflow-copy strong,
+.persistent-app-frame .lead-row-main-link strong {
+  color: #1d2a2b !important;
+}
+.persistent-app-frame .lead-workflow-copy small,
+.persistent-app-frame .lead-workflow-popover-head small,
+.persistent-app-frame .lead-workflow-finished,
+.persistent-app-frame .lead-workflow-action small {
+  color: #5f6f70 !important;
+}
+.persistent-app-frame .lead-workflow-menu[open] > summary {
+  background: #eef2f1 !important;
+  border-color: #9eaeab !important;
+}
+.persistent-app-frame .lead-workflow-popover {
+  background: #ffffff !important;
+  border-color: #cbd6d4 !important;
+  color: #263536 !important;
+}
+.persistent-app-frame .lead-workflow-popover-head {
+  border-bottom-color: #e0e7e5 !important;
+}
+.persistent-app-frame .lead-workflow-action {
+  color: #263536 !important;
+}
+.persistent-app-frame .lead-workflow-action:hover {
+  background: #eef2f1 !important;
+}
+.persistent-app-frame .lead-row-main-link:hover strong,
+.persistent-app-frame .lead-open-link:hover {
+  color: #0f1a1b !important;
+}
+.persistent-app-frame .lead-open-link {
+  color: #4d5d5e !important;
+}
+
+.persistent-app-frame .lead-object-state {
+  background: #edf1f0 !important;
+  border-color: #c7d1cf !important;
+  color: #465758 !important;
+}
+.persistent-app-frame .lead-object-state.state-prepare {
+  background: #fbf1de !important;
+  border-color: #d7bf92 !important;
+  color: #6b5320 !important;
+}
+.persistent-app-frame .lead-object-state.state-ready {
+  background: #e9f4ec !important;
+  border-color: #98bea4 !important;
+  color: #275f3d !important;
+}
+.persistent-app-frame .lead-object-state.state-created {
+  background: #e6f1f8 !important;
+  border-color: #a8c5d6 !important;
+  color: #285e78 !important;
+}
+.persistent-app-frame .lead-object-action.ready { background: #e9f4ec !important; }
+.persistent-app-frame .lead-object-action.created { background: #e6f1f8 !important; }
+
+.persistent-app-frame .lead-workflow-copy .won-breakdown,
+.persistent-app-frame .lead-workflow-overdue {
+  color: #5f6f70 !important;
+}
+.persistent-app-frame .lead-workflow-step.outcome-won .lead-workflow-copy strong,
+.persistent-app-frame .lead-workflow-step.outcome-lost .lead-workflow-copy strong {
+  color: #1d2a2b !important;
+}
+.persistent-app-frame .lead-workflow-count {
+  color: #1d2a2b !important;
+}
+
+/* Dashboard: die Benachrichtigungsglocke im Inhaltsbereich war noch dunkel. */
+.persistent-app-frame .notification-bell-trigger {
+  background: #ffffff !important;
+  border-color: #cbd6d4 !important;
+  color: #4d5d5e !important;
+}
+.persistent-app-frame .notification-bell-trigger:hover,
+.persistent-app-frame .notification-bell[open] .notification-bell-trigger {
+  background: #eef2f1 !important;
+  border-color: #9eaeab !important;
+}
+.persistent-app-frame .notification-bell-count {
+  background: #2f4b47 !important;
+  border-color: #ffffff !important;
+  color: #ffffff !important;
+}
+.persistent-app-frame .notification-bell-popover {
+  background: #ffffff !important;
+  border-color: #cbd6d4 !important;
+  color: #263536 !important;
+}
+.persistent-app-frame .notification-bell-head {
+  border-bottom-color: #e0e7e5 !important;
+}
+.persistent-app-frame .notification-bell-head small,
+.persistent-app-frame .notification-bell-item-message,
+.persistent-app-frame .notification-bell-item small,
+.persistent-app-frame .notification-bell-empty {
+  color: #5f6f70 !important;
+}
+.persistent-app-frame .notification-bell-head > a,
+.persistent-app-frame .notification-bell-footer {
+  color: #4d5d5e !important;
+}
+.persistent-app-frame .notification-bell-head > a:hover,
+.persistent-app-frame .notification-bell-footer:hover {
+  color: #0f1a1b !important;
+}
+.persistent-app-frame .notification-bell-item {
+  border-bottom-color: #e6ebea !important;
+  color: #263536 !important;
+}
+.persistent-app-frame .notification-bell-item:hover { background: #eef2f1 !important; }
+.persistent-app-frame .notification-bell-item.unread { background: #f2f6f5 !important; }
+.persistent-app-frame .notification-bell-item.unread:hover { background: #e7edec !important; }
+.persistent-app-frame .notification-bell-item-title i { background: #2f4b47 !important; }
+.persistent-app-frame .notification-bell-footer { background: #f7f9f8 !important; }
+
+/* Der Build-Stempel liegt ausserhalb von .persistent-app-frame und lag daher
+   im CRM unverändert dunkel über der Seitenleiste. */
+body:has(.persistent-app-frame) .build-version {
+  left: auto !important;
+  top: auto !important;
+  right: 16px !important;
+  bottom: 12px !important;
+  background: rgba(255, 255, 255, .92) !important;
+  color: #647273 !important;
+  border-color: #cbd5d3 !important;
+}
