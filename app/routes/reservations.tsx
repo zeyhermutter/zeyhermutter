@@ -95,6 +95,9 @@ export async function action({request,context}:Route.ActionArgs){
     const fee=numOrNull(fd,"fee_amount");
     if(typeof fee==="number"&&!Number.isFinite(fee))return invalid("Ungültiges Reservierungsentgelt.");
     const documented=text(fd,"agreement_documented")==="yes";
+    // Ein eingetragenes Entgelt darf nicht stillschweigend verschwinden, nur weil die
+    // Vereinbarung nicht dokumentiert ist. Lieber abweisen als leise verwerfen.
+    if(!documented&&(fee!==null||text(fd,"fee_note")))return invalid("Ein Reservierungsentgelt lässt sich nur erfassen, wenn die Vereinbarung dokumentiert ist. Bitte zuerst „Vereinbarung dokumentiert“ auf „Ja“ setzen oder die Angaben zum Entgelt leeren.");
     const {error}=await supabase.from("property_reservations").insert({
       property_id:propertyId,contact_id:contactId,
       purchase_offer_id:text(fd,"purchase_offer_id")||null,
@@ -122,6 +125,7 @@ export async function action({request,context}:Route.ActionArgs){
     const fee=numOrNull(fd,"fee_amount");
     if(typeof fee==="number"&&!Number.isFinite(fee))return invalid("Ungültiges Reservierungsentgelt.");
     const documented=text(fd,"agreement_documented")==="yes";
+    if(!documented&&(fee!==null||text(fd,"fee_note")))return invalid("Ein Reservierungsentgelt lässt sich nur erfassen, wenn die Vereinbarung dokumentiert ist. Bitte zuerst „Vereinbarung dokumentiert“ auf „Ja“ setzen oder die Angaben zum Entgelt leeren.");
     const {data:updated,error}=await supabase.from("property_reservations").update({
       reserved_until:until,
       reserved_price:price,
