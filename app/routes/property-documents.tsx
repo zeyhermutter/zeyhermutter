@@ -50,8 +50,13 @@ const CATEGORIES = [
   ["PHOTOS", "Fotos"],
   ["NOTARY", "Notar"],
   ["INVOICE", "Rechnung"],
+  ["IDENTITY_PROOF", "Identitätsnachweis"],
   ["OTHER", "Sonstige"],
 ] as const;
+
+// Identitätsnachweise gehören zur Geldwäscheakte: eigene Berechtigung, immer vertraulich,
+// eigene Aufbewahrungsfrist. Sie erscheinen deshalb nur für Berechtigte in der Auswahl.
+const GWG_CATEGORY = "IDENTITY_PROOF";
 
 const CLASSIFICATIONS = [
   ["PUBLIC", "Öffentlich"],
@@ -107,7 +112,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 
   const [{ data: property, error: propertyError }, { data: documents, error: documentError }] = await Promise.all([
     supabase.from("properties").select("id, property_number, internal_title").eq("id", propertyId).maybeSingle(),
-    supabase.from("documents").select("id, category, classification, title, description, current_version, created_at, archived_at, version").eq("property_id", propertyId).is("archived_at", null).order("created_at", { ascending: false }),
+    supabase.from("documents").select("id, category, classification, title, description, current_version, retention_category, retention_until, legal_hold, created_at, archived_at, version").eq("property_id", propertyId).is("archived_at", null).order("created_at", { ascending: false }),
   ]);
   if (propertyError || !property) throw new Response("Immobilie nicht gefunden.", { status: 404, headers: responseHeaders() });
   if (documentError) throw new Response("Dokumente konnten nicht geladen werden.", { status: 500, headers: responseHeaders() });
@@ -130,8 +135,11 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     (versionMap[version.document_id] ??= []).push(version);
   }
 
-  const { data: canArchive } = await supabase.rpc("current_user_has_permission", { p_permission: "document.archive" });
-  return data({ property, documents: documents ?? [], versionMap, signedUrls, profile, canArchive: canArchive === true }, { headers: responseHeaders() });
+  const [{ data: canArchive }, { data: canGwgWrite }] = await Promise.all([
+    supabase.rpc("current_user_has_permission", { p_permission: "document.archive" }),
+    supabase.rpc("current_user_has_permission", { p_permission: "gwg.write" }),
+  ]);
+  return data({ property, documents: documents ?? [], versionMap, signedUrls, profile, canArchive: canArchive === true, canGwgWrite: canGwgWrite === true }, { headers: responseHeaders() });
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
@@ -233,7 +241,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 }
 
 export default function PropertyDocuments() {
-  const { property, documents, versionMap, signedUrls, profile, canArchive } = useLoaderData<typeof loader>();
+  const { property, documents, versionMap, signedUrls, profile, canArchive, canGwgWrite } = useLoaderData<typeof loader>();
+  const selectableCategories = CATEGORIES.filter(([value]) => value !== GWG_CATEGORY || canGwgWrite);
   const result = useActionData<typeof action>();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const activeDocument = openIndex === null ? null : documents[openIndex];
@@ -268,7 +277,7 @@ export default function PropertyDocuments() {
         <Form method="post" encType="multipart/form-data" className="auth-form">
           <input type="hidden" name="_intent" value="create"/>
           <label><span>Titel *</span><input name="title" required/></label>
-          <label><span>Kategorie *</span><select name="category" defaultValue="OTHER">{CATEGORIES.map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+          <label><span>Kategorie *</span><select name="category" defaultValue="OTHER">{selectableCategories.map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select>{canGwgWrite ? <small className="subtle">Identitätsnachweise werden automatisch als vertraulich geführt und fünf Jahre aufbewahrt.</small> : null}</label>
           <label><span>Klassifizierung *</span><select name="classification" defaultValue="INTERNAL">{CLASSIFICATIONS.map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></label>
           <label><span>Beschreibung</span><textarea name="description" rows={3}/></label>
           <label><span>Datei *</span><input name="file" type="file" required/></label>
@@ -295,6 +304,7 @@ export default function PropertyDocuments() {
         { label: "Titel", value: activeDocument.title },
         { label: "Kategorie", value: categoryLabel(activeDocument.category) },
         { label: "Klassifizierung", value: classificationLabel(activeDocument.classification) },
+        { label: "Aufbewahrung", value: activeDocument.retention_until ? `bis ${new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeZone: "Europe/Berlin" }).format(new Date(`${activeDocument.retention_until}T12:00:00Z`))}${activeDocument.legal_hold ? " · Löschsperre" : ""}` : "keine Frist hinterlegt" },
         { label: "Beschreibung", value: activeDocument.description || "—" },
         { label: "Aktuelle Version", value: `v${activeDocument.current_version}` },
         { label: "Dateiname", value: activeVersion?.original_filename || "—" },
@@ -309,7 +319,7 @@ export default function PropertyDocuments() {
         <input type="hidden" name="document_id" value={activeDocument.id}/>
         <input type="hidden" name="version" value={activeDocument.version}/>
         <label><span>Titel *</span><input name="title" defaultValue={activeDocument.title} required/></label>
-        <label><span>Kategorie *</span><select name="category" defaultValue={activeDocument.category}>{CATEGORIES.map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+        <label><span>Kategorie *</span><select name="category" defaultValue={activeDocument.category}>{selectableCategories.map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></label>
         <label><span>Klassifizierung *</span><select name="classification" defaultValue={activeDocument.classification}>{CLASSIFICATIONS.map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></label>
         <label><span>Beschreibung</span><textarea name="description" rows={3} defaultValue={activeDocument.description ?? ""}/></label>
         <button className="primary-button" type="submit">Metadaten speichern</button>
