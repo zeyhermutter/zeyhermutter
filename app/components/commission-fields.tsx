@@ -24,11 +24,14 @@ export type CommissionOfferOption = {
   status: string;
 };
 
+export type CommissionMandateOption = { id: string; propertyId: string; label: string; sides: string[] };
+
 export type CommissionProfileOption = { user_id: string; display_name: string };
 
 export type CommissionInitialValues = {
   property_id?: string | null;
   purchase_offer_id?: string | null;
+  mandate_id?: string | null;
   party_contact_id?: string | null;
   side?: string | null;
   calculation_method?: string | null;
@@ -48,6 +51,7 @@ type Props = {
   properties: CommissionPropertyOption[];
   partyOptions: CommissionPartyOption[];
   offers: CommissionOfferOption[];
+  mandates?: CommissionMandateOption[];
   profiles: CommissionProfileOption[];
   initial?: CommissionInitialValues;
   defaultResponsibleUser: string;
@@ -61,21 +65,24 @@ function euro(value: number | string | null | undefined) {
   return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(number);
 }
 
-export function CommissionFields({ properties, partyOptions, offers, profiles, initial, defaultResponsibleUser, disabled = false, showPaymentFields = true }: Props) {
+export function CommissionFields({ properties, partyOptions, offers, mandates = [], profiles, initial, defaultResponsibleUser, disabled = false, showPaymentFields = true }: Props) {
   const [propertyId, setPropertyId] = useState(initial?.property_id ?? properties[0]?.id ?? "");
   const [side, setSide] = useState(initial?.side === "BUYER" ? "BUYER" : "SELLER");
   const [method, setMethod] = useState(initial?.calculation_method === "FIXED" ? "FIXED" : "PERCENT");
   const [partyId, setPartyId] = useState(initial?.party_contact_id ?? "");
   const [offerId, setOfferId] = useState(initial?.purchase_offer_id ?? "");
+  const [mandateId, setMandateId] = useState(initial?.mandate_id ?? "");
 
   const parties = useMemo(() => partyOptions.filter((party) => party.propertyId === propertyId && party.side === side), [partyOptions, propertyId, side]);
   const availableOffers = useMemo(() => offers.filter((offer) => offer.propertyId === propertyId), [offers, propertyId]);
+  const availableMandates = useMemo(() => mandates.filter((mandate) => mandate.propertyId === propertyId && mandate.sides.includes(side)), [mandates, propertyId, side]);
   const property = properties.find((item) => item.id === propertyId);
 
   function changeProperty(next: string) {
     setPropertyId(next);
     if (!partyOptions.some((party) => party.propertyId === next && party.side === side && party.contactId === partyId)) setPartyId("");
     if (!offers.some((offer) => offer.propertyId === next && offer.id === offerId)) setOfferId("");
+    if (!mandates.some((mandate) => mandate.propertyId === next && mandate.id === mandateId)) setMandateId("");
   }
 
   function changeSide(next: "SELLER" | "BUYER") {
@@ -89,6 +96,7 @@ export function CommissionFields({ properties, partyOptions, offers, profiles, i
       <label className="form-field"><span>Provisionsseite *</span><select name="side" value={side} onChange={(event) => changeSide(event.currentTarget.value as "SELLER" | "BUYER")}><option value="SELLER">Innenprovision · Verkäuferseite</option><option value="BUYER">Außenprovision · Käuferseite</option></select></label>
       <label className="form-field"><span>Zahlende Partei</span><select name="party_contact_id" value={partyId} onChange={(event) => setPartyId(event.currentTarget.value)}><option value="">Noch offen</option>{parties.map((party) => <option value={party.contactId} key={`${party.side}-${party.propertyId}-${party.contactId}`}>{party.label}</option>)}</select><small className="subtle">{side === "SELLER" ? "Nur mit der Immobilie verknüpfte Eigentümer." : "Nur Interessenten mit Kaufangebot für diese Immobilie."}</small></label>
       <label className="form-field"><span>Kaufangebot / Vorgang</span><select name="purchase_offer_id" value={offerId} onChange={(event) => setOfferId(event.currentTarget.value)}><option value="">Ohne konkreten Angebotsbezug</option>{availableOffers.map((offer) => <option value={offer.id} key={offer.id}>{offer.label} · {euro(offer.amount)} · {offer.status}</option>)}</select></label>
+      <label className="form-field"><span>Maklerauftrag</span><select name="mandate_id" value={mandateId} onChange={(event) => setMandateId(event.currentTarget.value)}><option value="">Ohne Auftragsbezug</option>{availableMandates.map((mandate) => <option value={mandate.id} key={mandate.id}>{mandate.label}</option>)}</select><small className="subtle">Nur Aufträge dieser Immobilie, in denen diese Provisionsseite vereinbart ist.</small></label>
       <label className="form-field"><span>Berechnungsart *</span><select name="calculation_method" value={method} onChange={(event) => setMethod(event.currentTarget.value as "PERCENT" | "FIXED")}><option value="PERCENT">Prozentual</option><option value="FIXED">Festbetrag</option></select></label>
       {method === "PERCENT" ? <>
         <label className="form-field"><span>Berechnungsgrundlage (€)</span><input name="calculation_basis" type="number" min="0" step="0.01" defaultValue={initial?.calculation_basis ?? property?.purchase_price ?? ""}/></label>

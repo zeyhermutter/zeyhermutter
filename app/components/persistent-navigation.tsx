@@ -9,7 +9,7 @@ const GROUPS: NavGroup[] = [
     { label: "Übersicht", to: "/crm", exact: true }, { label: "Dashboard & Auswertung", to: "/reports" }, { label: "Suche", to: "/crm/search" }, { label: "Aufgaben", to: "/crm/tasks" }, { label: "E-Mail", to: "/crm/email" }, { label: "Kalender", to: "/crm/calendar" },
   ]},
   { label: "Objekte & Verkauf", items: [
-    { label: "Immobilien", to: "/properties" }, { label: "Verkäufer-Leads", to: "/leads" }, { label: "Verkaufsstrategie-Check", to: "/crm/sales-readiness" }, { label: "Kaufangebote", to: "/purchase-offers" }, { label: "Abschlüsse & Notar", to: "/closings" }, { label: "Provisionen", to: "/commissions" },
+    { label: "Immobilien", to: "/properties" }, { label: "Verkäufer-Leads", to: "/leads" }, { label: "Verkaufsstrategie-Check", to: "/crm/sales-readiness" }, { label: "Makleraufträge", to: "/mandates" }, { label: "Kaufangebote", to: "/purchase-offers" }, { label: "Abschlüsse & Notar", to: "/closings" }, { label: "Provisionen", to: "/commissions" },
   ]},
   { label: "Interessenten", items: [ { label: "Suchprofile", to: "/search-profiles" }, { label: "Anfragen", to: "/inquiries" }, { label: "Besichtigungen", to: "/viewings" } ]},
   { label: "Verwaltung", items: [ { label: "Website-CMS", to: "/crm/website" }, { label: "Organisationen", to: "/crm/organizations" }, { label: "Benutzer & Rollen", to: "/crm/users" }, { label: "Archiv", to: "/crm/archive" }, { label: "Systemhistorie", to: "/crm/history" } ]},

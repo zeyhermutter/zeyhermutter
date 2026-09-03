@@ -29,6 +29,9 @@ const STATUS_LABELS: Record<string,string> = {
 function labelStatus(value:string){return STATUS_LABELS[value]??value.replaceAll("_"," ");}
 function auditValueLabel(value:unknown){if(value===null||value===undefined||value==="")return"—";const raw=typeof value==="object"?JSON.stringify(value):String(value);return raw.length>140?`${raw.slice(0,137)}…`:raw;}
 
+const MANDATE_TYPE: Record<string,string> = {SIMPLE:"Einfacher Auftrag",EXCLUSIVE:"Alleinauftrag",QUALIFIED_EXCLUSIVE:"Qualifizierter Alleinauftrag"};
+const MANDATE_STATUS: Record<string,string> = {DRAFT:"Entwurf",ACTIVE:"Aktiv",WITHDRAWN:"Widerrufen",TERMINATED:"Gekündigt",EXPIRED:"Abgelaufen",FULFILLED:"Erfüllt",CANCELLED:"Verworfen"};
+
 export async function loader({ request, context, params }: Route.LoaderArgs) {
   const { supabase, responseHeaders, profile } = await requirePermission(request, context.cloudflare.env, "property.read");
   const propertyId=params.propertyId;
@@ -36,7 +39,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   const { data: property, error } = await supabase.from("properties").select("*").eq("id",propertyId).maybeSingle();
   if(error||!property) throw new Response("Immobilie nicht gefunden.",{status:404,headers:responseHeaders()});
 
-  const [addressRes,ownersRes,contactsRes,featuresRes,customFeaturesRes,energyRes,checklistRes,transitionsRes,usersRes,auditPermissionRes] = await Promise.all([
+  const [addressRes,ownersRes,contactsRes,featuresRes,customFeaturesRes,energyRes,checklistRes,transitionsRes,usersRes,auditPermissionRes,mandatesRes] = await Promise.all([
     supabase.from("property_addresses").select("*").eq("property_id",propertyId).maybeSingle(),
     supabase.from("property_owners").select("*").eq("property_id",propertyId).order("primary_contact",{ascending:false}),
     supabase.from("contacts").select("id, contact_number, first_name, last_name, email").is("archived_at",null).order("last_name").limit(1000),
@@ -47,6 +50,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     supabase.from("property_status_transitions").select("to_status, description").eq("from_status",property.status).order("to_status"),
     supabase.from("profiles").select("user_id, display_name").eq("status","ACTIVE").order("display_name"),
     supabase.rpc("current_user_has_permission",{p_permission:"audit.read"}),
+    supabase.from("brokerage_mandates").select("id,mandate_number,mandate_type,client_side,status,client_is_consumer,text_form_confirmed,term_start,term_end,withdrawal_instruction_given_on,withdrawal_deadline_on,early_start_requested_on").eq("property_id",propertyId).is("archived_at",null).order("updated_at",{ascending:false}).limit(20),
   ]);
   const firstError=[addressRes,ownersRes,contactsRes,featuresRes,customFeaturesRes,energyRes,checklistRes,transitionsRes,usersRes].find((r)=>r.error)?.error;
   if(firstError) throw new Response("Objektdaten konnten nicht vollständig geladen werden.",{status:500,headers:responseHeaders()});
@@ -58,7 +62,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   }
   const contactMap=Object.fromEntries((contactsRes.data??[]).map((c)=>[c.id,c]));
   const customFeatureOptions=Array.from(new Map((customFeaturesRes.data??[]).map((f)=>[f.feature_key,{key:f.feature_key,label:f.label}])).values());
-  return data({property,address:addressRes.data,owners:ownersRes.data??[],contacts:contactsRes.data??[],contactMap,features:featuresRes.data??[],customFeatureOptions,energy:energyRes.data,checklist:checklistRes.data??[],transitions:transitionsRes.data??[],users:usersRes.data??[],auditEvents,profile,newOwner},{headers:responseHeaders()});
+  return data({property,mandates:mandatesRes.data??[],address:addressRes.data,owners:ownersRes.data??[],contacts:contactsRes.data??[],contactMap,features:featuresRes.data??[],customFeatureOptions,energy:energyRes.data,checklist:checklistRes.data??[],transitions:transitionsRes.data??[],users:usersRes.data??[],auditEvents,profile,newOwner},{headers:responseHeaders()});
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
@@ -248,6 +252,7 @@ export default function PropertyDetail(){
       <section className="data-card" id="status"><div className="card-head"><div><p className="eyebrow">Ablauf</p><h2>Status</h2></div><span className="badge">{labelStatus(p.status)}</span></div><div className="inline-actions">
         {p.status==="ARCHIVED" && p.status_before_archive ? <Form method="post"><input type="hidden" name="_intent" value="status"/><input type="hidden" name="version" value={p.version}/><input type="hidden" name="target_status" value={p.status_before_archive}/><button className="secondary-button" type="submit">Wiederherstellen → {labelStatus(p.status_before_archive)}</button></Form> : d.transitions.map((t)=><Form method="post" key={t.to_status}><input type="hidden" name="_intent" value="status"/><input type="hidden" name="version" value={p.version}/><input type="hidden" name="target_status" value={t.to_status}/><button className="secondary-button" type="submit" title={t.description??""}>→ {labelStatus(t.to_status)}</button></Form>)}
       </div></section>
+      <section className="data-card" id="maklerauftrag"><div className="card-head"><div><p className="eyebrow">Beauftragung</p><h2>Maklerauftrag</h2></div><Link className="subtle-link" to={`/mandates?property_id=${encodeURIComponent(p.id)}`}>Aufträge öffnen →</Link></div>{d.mandates.length===0?<p className="empty-state">Für diese Immobilie ist kein Maklerauftrag erfasst.</p>:d.mandates.map((m:any)=>{const risk=m.status==="ACTIVE"&&m.client_is_consumer&&(!m.withdrawal_instruction_given_on||(m.withdrawal_deadline_on&&m.withdrawal_deadline_on>=new Date().toISOString().slice(0,10)&&!m.early_start_requested_on));return <Link className="data-row data-row-link" to={`/mandates/${m.id}`} key={m.id}><div><strong>{m.mandate_number} · {MANDATE_TYPE[m.mandate_type]??m.mandate_type}</strong><small>{MANDATE_STATUS[m.status]??m.status}{m.term_start?` · ab ${new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeZone:"Europe/Berlin"}).format(new Date(m.term_start))}`:""}</small></div><div className="row-meta">{risk?<span className="status-pill status-lost">Widerruf offen</span>:<span>{m.text_form_confirmed?"Textform dokumentiert":"Textform offen"}</span>}</div><span className="subtle-link">Öffnen →</span></Link>;})}</section>
       <section className="data-card" id="checkliste"><div className="card-head"><div><p className="eyebrow">Vermarktungsreife</p><h2>Checkliste</h2></div><span className="subtle">{d.checklist.filter((i)=>i.status==="DONE"||i.status==="WAIVED").length}/{d.checklist.length}</span></div>{d.checklist.map((item)=><Form method="post" className={`checklist-row checklist-${item.status.toLowerCase().replace("_","-")}`} key={item.id}><input type="hidden" name="_intent" value="checklist"/><input type="hidden" name="checklist_id" value={item.id}/><input type="hidden" name="checklist_version" value={item.version}/><div><strong>{item.title}</strong><small>{item.category}{item.required?" · Pflicht":" · optional"}</small></div><select name="checklist_status" defaultValue={item.status} onChange={(e)=>e.currentTarget.form?.requestSubmit()}><option value="TODO">Offen</option><option value="IN_PROGRESS">In Arbeit</option><option value="DONE">Erledigt</option><option value="WAIVED">Entfällt</option></select></Form>)}</section>
     </div>
 
