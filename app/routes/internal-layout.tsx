@@ -102,6 +102,7 @@ function PropertyContextNavigation() {
       <Link className={section === "compliance" ? "active" : ""} to={`/properties/${propertyId}/compliance`}>Geldwäsche</Link>
       <Link to={`/mandates?property_id=${encodeURIComponent(propertyId)}`}>Maklerauftrag</Link>
       <Link to={`/purchase-offers?property_id=${encodeURIComponent(propertyId)}`}>Kaufangebote</Link>
+      <Link to={`/reservations?property_id=${encodeURIComponent(propertyId)}`}>Reservierungen</Link>
       <Link to={`/closings?property_id=${encodeURIComponent(propertyId)}`}>Abschluss & Notar</Link>
       <Link to={`/commissions?property_id=${encodeURIComponent(propertyId)}`}>Provisionen</Link>
     </nav>
