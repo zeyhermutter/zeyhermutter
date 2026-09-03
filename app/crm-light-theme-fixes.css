@@ -513,3 +513,14 @@ body:has(.persistent-app-frame) .build-version {
   padding-top: 18px;
   border-top: 1px solid #e0e7e5;
 }
+
+/* Die Kontextnavigation der Immobilienakte ist mit dem Reiter „Maklerauftrag“
+   breiter geworden und hat auf Laptop-Breite einen horizontalen Seiten-Scroll
+   erzeugt. Der Überlauf bleibt jetzt innerhalb der Leiste. */
+body:has(.persistent-app-frame) .property-context-nav {
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+body:has(.persistent-app-frame) .property-context-nav a {
+  flex: 0 0 auto;
+}
