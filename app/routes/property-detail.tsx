@@ -49,7 +49,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   const { data: property, error } = await supabase.from("properties").select("*").eq("id",propertyId).maybeSingle();
   if(error||!property) throw new Response("Immobilie nicht gefunden.",{status:404,headers:responseHeaders()});
 
-  const [addressRes,ownersRes,contactsRes,featuresRes,customFeaturesRes,energyRes,checklistRes,transitionsRes,usersRes,auditPermissionRes,gwgPermissionRes,legalRes,encumbranceRes,dispositionPermissionRes,dispositionRes,dispositionPartyRes,gwgCaseRes,mandatesRes] = await Promise.all([
+  const [addressRes,ownersRes,contactsRes,featuresRes,customFeaturesRes,energyRes,checklistRes,transitionsRes,usersRes,auditPermissionRes,gwgPermissionRes,legalRes,encumbranceRes,dispositionPermissionRes,priceStagesRes,valuationsRes,dispositionRes,dispositionPartyRes,gwgCaseRes,mandatesRes] = await Promise.all([
     supabase.from("property_addresses").select("*").eq("property_id",propertyId).maybeSingle(),
     supabase.from("property_owners").select("*").eq("property_id",propertyId).order("primary_contact",{ascending:false}),
     supabase.from("contacts").select("id, contact_number, first_name, last_name, email").is("archived_at",null).order("last_name").limit(1000),
@@ -64,6 +64,8 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     supabase.from("property_legal_data").select("id,land_registry_court,land_register_sheet,extract_dated_on,living_area_basis,heritable_building_right,ground_lease_until,monument_protection,milieu_protection,redevelopment_area,contamination_suspicion,development_charges_open").eq("property_id",propertyId).maybeSingle(),
     supabase.from("property_encumbrances").select("id,section,kind,rank_position,content,beneficiary_name,nominal_amount,remaining_amount,deletable,deletion_consent_available,sale_impact,deleted_on,archived_at").eq("property_id",propertyId).is("archived_at",null).is("deleted_on",null).order("section").order("rank_position",{nullsFirst:false}),
     supabase.rpc("current_user_has_permission",{p_permission:"disposition.read"}),
+    supabase.from("property_price_stages").select("id,price,previous_price,effective_from,reason,is_initial").eq("property_id",propertyId).order("effective_from",{ascending:false}).limit(8),
+    supabase.from("property_valuations").select("id,valuation_number,method,valued_on,range_from,range_to,result_value").eq("property_id",propertyId).is("archived_at",null).order("valued_on",{ascending:false}).limit(3),
     supabase.from("property_dispositions").select("*").eq("property_id",propertyId).maybeSingle(),
     supabase.from("property_disposition_parties").select("id,disposition_id,contact_id,party_role,represents_contact_id,share_percentage,consent_status,consent_on,court_approval_required,court_approval_granted_on,power_of_attorney_revoked_on,power_of_attorney_valid_until,is_minor,archived_at,contacts!property_disposition_parties_contact_id_fkey(first_name,last_name)"),
     supabase.from("gwg_cases").select("id,case_number,risk_level,risk_assessed_on,retention_until,legal_hold,archived_at,gwg_identifications(id,party_role,identified_on)").eq("property_id",propertyId).is("archived_at",null).limit(1),
@@ -79,7 +81,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   }
   const contactMap=Object.fromEntries((contactsRes.data??[]).map((c)=>[c.id,c]));
   const customFeatureOptions=Array.from(new Map((customFeaturesRes.data??[]).map((f)=>[f.feature_key,{key:f.feature_key,label:f.label}])).values());
-  return data({property,mandates:mandatesRes.data??[],canGwgRead:gwgPermissionRes.data===true,gwgCase:(gwgCaseRes.data??[])[0]??null,legal:legalRes.data??null,encumbrances:encumbranceRes.data??[],canDispositionRead:dispositionPermissionRes.data===true,disposition:dispositionRes.data??null,dispositionParties:((dispositionPartyRes.data??[]) as any[]).filter((row)=>!dispositionRes.data||row.disposition_id===(dispositionRes.data as any).id),address:addressRes.data,owners:ownersRes.data??[],contacts:contactsRes.data??[],contactMap,features:featuresRes.data??[],customFeatureOptions,energy:energyRes.data,checklist:checklistRes.data??[],transitions:transitionsRes.data??[],users:usersRes.data??[],auditEvents,profile,newOwner},{headers:responseHeaders()});
+  return data({property,mandates:mandatesRes.data??[],canGwgRead:gwgPermissionRes.data===true,gwgCase:(gwgCaseRes.data??[])[0]??null,legal:legalRes.data??null,encumbrances:encumbranceRes.data??[],canDispositionRead:dispositionPermissionRes.data===true,priceStages:priceStagesRes.data??[],valuations:valuationsRes.data??[],disposition:dispositionRes.data??null,dispositionParties:((dispositionPartyRes.data??[]) as any[]).filter((row)=>!dispositionRes.data||row.disposition_id===(dispositionRes.data as any).id),address:addressRes.data,owners:ownersRes.data??[],contacts:contactsRes.data??[],contactMap,features:featuresRes.data??[],customFeatureOptions,energy:energyRes.data,checklist:checklistRes.data??[],transitions:transitionsRes.data??[],users:usersRes.data??[],auditEvents,profile,newOwner},{headers:responseHeaders()});
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
@@ -270,6 +272,30 @@ export default function PropertyDetail(){
         {p.status==="ARCHIVED" && p.status_before_archive ? <Form method="post"><input type="hidden" name="_intent" value="status"/><input type="hidden" name="version" value={p.version}/><input type="hidden" name="target_status" value={p.status_before_archive}/><button className="secondary-button" type="submit">Wiederherstellen → {labelStatus(p.status_before_archive)}</button></Form> : d.transitions.map((t)=><Form method="post" key={t.to_status}><input type="hidden" name="_intent" value="status"/><input type="hidden" name="version" value={p.version}/><input type="hidden" name="target_status" value={t.to_status}/><button className="secondary-button" type="submit" title={t.description??""}>→ {labelStatus(t.to_status)}</button></Form>)}
       </div></section>
       <section className="data-card" id="maklerauftrag"><div className="card-head"><div><p className="eyebrow">Beauftragung</p><h2>Maklerauftrag</h2></div><Link className="subtle-link" to={`/mandates?property_id=${encodeURIComponent(p.id)}`}>Aufträge öffnen →</Link></div>{d.mandates.length===0?<p className="empty-state">Für diese Immobilie ist kein Maklerauftrag erfasst.</p>:d.mandates.map((m:any)=>{const risk=m.status==="ACTIVE"&&m.client_is_consumer&&(!m.withdrawal_instruction_given_on||(m.withdrawal_deadline_on&&m.withdrawal_deadline_on>=new Date().toISOString().slice(0,10)&&!m.early_start_requested_on));return <Link className="data-row data-row-link" to={`/mandates/${m.id}`} key={m.id}><div><strong>{m.mandate_number} · {MANDATE_TYPE[m.mandate_type]??m.mandate_type}</strong><small>{MANDATE_STATUS[m.status]??m.status}{m.term_start?` · ab ${new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeZone:"Europe/Berlin"}).format(new Date(m.term_start))}`:""}</small></div><div className="row-meta">{risk?<span className="status-pill status-lost">Widerruf offen</span>:<span>{m.text_form_confirmed?"Textform dokumentiert":"Textform offen"}</span>}</div><span className="subtle-link">Öffnen →</span></Link>;})}</section>
+      <section className="data-card" id="preis-wert"><div className="card-head"><div><p className="eyebrow">Begründbar</p><h2>Preis & Wert</h2></div><Link className="subtle-link" to={`/properties/${p.id}/pricing`}>Verlauf & Wertermittlung →</Link></div>{(()=>{
+        const stufen=(d.priceStages??[]) as any[];
+        const bewertungen=(d.valuations??[]) as any[];
+        if(!stufen.length&&!bewertungen.length)return <p className="empty-state">Kein Preisverlauf und keine Wertermittlung erfasst. Ohne beides lässt sich eine Preisentscheidung im Rückblick nicht begründen.</p>;
+        const aktuell=stufen[0];
+        const abweichung=aktuell&&Number(p.purchase_price)!==Number(aktuell.price);
+        return <>
+          <dl className="detail-list">
+            <div><dt>Geführter Preis</dt><dd>{euro(p.purchase_price)}</dd></div>
+            <div><dt>Preisstufen</dt><dd>{stufen.length}{aktuell?` · zuletzt ${formatDay(aktuell.effective_from)}`:""}</dd></div>
+            <div><dt>Wertermittlung</dt><dd>{bewertungen.length?`${bewertungen.length} erfasst`:"keine"}</dd></div>
+            {bewertungen[0]?<div><dt>Jüngste Einschätzung</dt><dd>{bewertungen[0].result_value?euro(bewertungen[0].result_value):bewertungen[0].range_from?`${euro(bewertungen[0].range_from)} bis ${euro(bewertungen[0].range_to)}`:"ohne Ergebnis"}</dd></div>:null}
+          </dl>
+          {stufen.length?<div className="data-list" style={{marginTop:"0.75rem"}}>{stufen.map((s:any)=>{
+            const delta=s.previous_price?Number(s.price)-Number(s.previous_price):null;
+            return <Link className="data-row data-row-link" to={`/properties/${p.id}/pricing#preisverlauf`} key={s.id}>
+              <div><strong>{euro(s.price)}{delta!==null?` (${delta>0?"+":""}${euro(delta)})`:" · Ausgangspreis"}</strong><small>{formatDay(s.effective_from)}</small></div>
+              <div className="row-meta"><span>{s.reason||(s.is_initial?"Ausgangspreis":"ohne Begründung")}</span></div>
+              <span className="subtle-link">Öffnen →</span>
+            </Link>;
+          })}</div>:null}
+          {abweichung?<p className="form-warning" style={{marginTop:"0.75rem"}}>Der geführte Objektpreis weicht von der jüngsten Preisstufe ({euro(aktuell.price)}) ab.</p>:null}
+        </>;
+      })()}</section>
       {d.canDispositionRead?<section className="data-card" id="verfuegungsberechtigung"><div className="card-head"><div><p className="eyebrow">Wer darf verkaufen</p><h2>Verfügungsberechtigung</h2></div><Link className="subtle-link" to={`/properties/${p.id}/disposition`}>Erfassen & prüfen →</Link></div>{(()=>{
         const rec=d.disposition as any;const parties=((d.dispositionParties??[]) as any[]).filter((row)=>!row.archived_at);
         const gaps=dispositionGaps(rec,(d.dispositionParties??[]) as any[]);
