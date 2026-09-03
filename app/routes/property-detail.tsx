@@ -271,7 +271,7 @@ export default function PropertyDetail(){
         const debt=rows.filter((row)=>row.section==="LAND_REGISTER_III").reduce((sum,row)=>sum+Number(row.remaining_amount??row.nominal_amount??0),0);
         return <>
           <dl className="detail-list">
-            <div><dt>Grundbuch</dt><dd>{l?.land_registry_court||l?.land_register_sheet?`${l.land_registry_court??"—"} · Blatt ${l.land_register_sheet??"—"}`:"nicht erfasst"}</dd></div>
+            <div><dt>Grundbuch</dt><dd>{l?.land_registry_court||l?.land_register_sheet?[l?.land_registry_court,l?.land_register_sheet].filter(Boolean).join(" · "):"nicht erfasst"}</dd></div>
             <div><dt>Auszug vom</dt><dd>{formatDay(l?.extract_dated_on??null)}</dd></div>
             <div><dt>Wohnflächengrundlage</dt><dd>{l?.living_area_basis==="WOFLV"?"Wohnflächenverordnung":l?.living_area_basis==="DIN_277"?"DIN 277":l?.living_area_basis==="ESTIMATED"?"Geschätzt":"Unbekannt"}</dd></div>
             {rows.some((row)=>row.section==="LAND_REGISTER_III")?<div><dt>Offene Grundpfandrechte</dt><dd>{euro(debt)}</dd></div>:null}
