@@ -1,6 +1,7 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/property-detail";
 import { requirePermission } from "~/lib/auth.server";
+import { dispositionGaps } from "./property-disposition";
 
 type FeatureChoice = { key:string; label:string };
 type ActionResult = { error?: string; success?: string; featurePreview?: { entered:string; formatted:string; exact?:FeatureChoice; suggestion?:FeatureChoice } };
@@ -31,7 +32,10 @@ function auditValueLabel(value:unknown){if(value===null||value===undefined||valu
 
 const MANDATE_TYPE: Record<string,string> = {SIMPLE:"Einfacher Auftrag",EXCLUSIVE:"Alleinauftrag",QUALIFIED_EXCLUSIVE:"Qualifizierter Alleinauftrag"};
 const GWG_RISK: Record<string,string> = {LOW:"gering",MEDIUM:"mittel",HIGH:"hoch"};
-const ENCUMBRANCE_SECTION: Record<string,string> = {LAND_REGISTER_II:"Abt. II",LAND_REGISTER_III:"Abt. III",BUILDING_ENCUMBRANCE:"Baulast"};
+const DISPOSITION_STRUCTURE: Record<string,string> = {SOLE:"Alleineigentum",FRACTIONAL:"Miteigentum nach Bruchteilen",COMMUNITY_OF_HEIRS:"Erbengemeinschaft",MARITAL_COMMUNITY:"Gütergemeinschaft",OTHER:"Andere Form",UNKNOWN:"noch nicht geklärt"};
+const DISPOSITION_ROLE: Record<string,string> = {OWNER:"Eigentümer",CO_HEIR:"Miterbe",EXECUTOR:"Testamentsvollstrecker",ATTORNEY_IN_FACT:"Bevollmächtigter",LEGAL_GUARDIAN:"Betreuer",SUPPLEMENTARY_CURATOR:"Ergänzungspfleger",SPOUSE:"Ehegatte"};
+const DISPOSITION_CONSENT: Record<string,string> = {NOT_REQUIRED:"Nicht erforderlich",OPEN:"Zustimmung offen",GIVEN:"Zustimmung erteilt",REFUSED:"Zustimmung verweigert"};
+const ENCUMBRANCE_SECTION: Record<string,string> ={LAND_REGISTER_II:"Abt. II",LAND_REGISTER_III:"Abt. III",BUILDING_ENCUMBRANCE:"Baulast"};
 const ENCUMBRANCE_KIND: Record<string,string> = {RESIDENCE_RIGHT:"Wohnrecht",USUFRUCT:"Nießbrauch",RIGHT_OF_WAY:"Wegerecht",UTILITY_EASEMENT:"Leitungsrecht",PRE_EMPTION_RIGHT:"Vorkaufsrecht",REAL_CHARGE:"Reallast",HERITABLE_BUILDING_RIGHT:"Erbbaurecht",PRIORITY_NOTICE:"Auflassungsvormerkung",REDEVELOPMENT_NOTE:"Sanierungsvermerk",REALLOCATION_NOTE:"Umlegungsvermerk",INSOLVENCY_NOTE:"Insolvenzvermerk",LAND_CHARGE:"Grundschuld",MORTGAGE:"Hypothek",ANNUITY_CHARGE:"Rentenschuld",ACCESS:"Zufahrtsbaulast",DISTANCE_AREA:"Abstandsflächenbaulast",PARKING:"Stellplatzbaulast",UNION:"Vereinigungsbaulast",DEVELOPMENT:"Erschließungsbaulast",CHILDREN_PLAYGROUND:"Spielplatzbaulast",OTHER:"Sonstiges"};
 const ENCUMBRANCE_IMPACT: Record<string,string> = {NONE:"ohne Auswirkung",TRANSFERS_TO_BUYER:"geht auf den Käufer über",MUST_BE_DELETED:"muss gelöscht werden",PURCHASE_PRICE_RELEVANT:"kaufpreisrelevant",UNCLEAR:"Auswirkung offen"};
 function euro(value:any){const n=Number(value);return Number.isFinite(n)?new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n):"—";}
@@ -45,7 +49,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   const { data: property, error } = await supabase.from("properties").select("*").eq("id",propertyId).maybeSingle();
   if(error||!property) throw new Response("Immobilie nicht gefunden.",{status:404,headers:responseHeaders()});
 
-  const [addressRes,ownersRes,contactsRes,featuresRes,customFeaturesRes,energyRes,checklistRes,transitionsRes,usersRes,auditPermissionRes,gwgPermissionRes,legalRes,encumbranceRes,gwgCaseRes,mandatesRes] = await Promise.all([
+  const [addressRes,ownersRes,contactsRes,featuresRes,customFeaturesRes,energyRes,checklistRes,transitionsRes,usersRes,auditPermissionRes,gwgPermissionRes,legalRes,encumbranceRes,dispositionPermissionRes,dispositionRes,dispositionPartyRes,gwgCaseRes,mandatesRes] = await Promise.all([
     supabase.from("property_addresses").select("*").eq("property_id",propertyId).maybeSingle(),
     supabase.from("property_owners").select("*").eq("property_id",propertyId).order("primary_contact",{ascending:false}),
     supabase.from("contacts").select("id, contact_number, first_name, last_name, email").is("archived_at",null).order("last_name").limit(1000),
@@ -59,6 +63,9 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     supabase.rpc("current_user_has_permission",{p_permission:"gwg.read"}),
     supabase.from("property_legal_data").select("id,land_registry_court,land_register_sheet,extract_dated_on,living_area_basis,heritable_building_right,ground_lease_until,monument_protection,milieu_protection,redevelopment_area,contamination_suspicion,development_charges_open").eq("property_id",propertyId).maybeSingle(),
     supabase.from("property_encumbrances").select("id,section,kind,rank_position,content,beneficiary_name,nominal_amount,remaining_amount,deletable,deletion_consent_available,sale_impact,deleted_on,archived_at").eq("property_id",propertyId).is("archived_at",null).is("deleted_on",null).order("section").order("rank_position",{nullsFirst:false}),
+    supabase.rpc("current_user_has_permission",{p_permission:"disposition.read"}),
+    supabase.from("property_dispositions").select("*").eq("property_id",propertyId).maybeSingle(),
+    supabase.from("property_disposition_parties").select("id,disposition_id,contact_id,party_role,represents_contact_id,share_percentage,consent_status,consent_on,court_approval_required,court_approval_granted_on,power_of_attorney_revoked_on,power_of_attorney_valid_until,is_minor,archived_at,contacts!property_disposition_parties_contact_id_fkey(first_name,last_name)"),
     supabase.from("gwg_cases").select("id,case_number,risk_level,risk_assessed_on,retention_until,legal_hold,archived_at,gwg_identifications(id,party_role,identified_on)").eq("property_id",propertyId).is("archived_at",null).limit(1),
     supabase.from("brokerage_mandates").select("id,mandate_number,mandate_type,client_side,status,client_is_consumer,text_form_confirmed,term_start,term_end,withdrawal_instruction_given_on,withdrawal_deadline_on,early_start_requested_on").eq("property_id",propertyId).is("archived_at",null).order("updated_at",{ascending:false}).limit(20),
   ]);
@@ -72,7 +79,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   }
   const contactMap=Object.fromEntries((contactsRes.data??[]).map((c)=>[c.id,c]));
   const customFeatureOptions=Array.from(new Map((customFeaturesRes.data??[]).map((f)=>[f.feature_key,{key:f.feature_key,label:f.label}])).values());
-  return data({property,mandates:mandatesRes.data??[],canGwgRead:gwgPermissionRes.data===true,gwgCase:(gwgCaseRes.data??[])[0]??null,legal:legalRes.data??null,encumbrances:encumbranceRes.data??[],address:addressRes.data,owners:ownersRes.data??[],contacts:contactsRes.data??[],contactMap,features:featuresRes.data??[],customFeatureOptions,energy:energyRes.data,checklist:checklistRes.data??[],transitions:transitionsRes.data??[],users:usersRes.data??[],auditEvents,profile,newOwner},{headers:responseHeaders()});
+  return data({property,mandates:mandatesRes.data??[],canGwgRead:gwgPermissionRes.data===true,gwgCase:(gwgCaseRes.data??[])[0]??null,legal:legalRes.data??null,encumbrances:encumbranceRes.data??[],canDispositionRead:dispositionPermissionRes.data===true,disposition:dispositionRes.data??null,dispositionParties:((dispositionPartyRes.data??[]) as any[]).filter((row)=>!dispositionRes.data||row.disposition_id===(dispositionRes.data as any).id),address:addressRes.data,owners:ownersRes.data??[],contacts:contactsRes.data??[],contactMap,features:featuresRes.data??[],customFeatureOptions,energy:energyRes.data,checklist:checklistRes.data??[],transitions:transitionsRes.data??[],users:usersRes.data??[],auditEvents,profile,newOwner},{headers:responseHeaders()});
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
@@ -263,6 +270,19 @@ export default function PropertyDetail(){
         {p.status==="ARCHIVED" && p.status_before_archive ? <Form method="post"><input type="hidden" name="_intent" value="status"/><input type="hidden" name="version" value={p.version}/><input type="hidden" name="target_status" value={p.status_before_archive}/><button className="secondary-button" type="submit">Wiederherstellen → {labelStatus(p.status_before_archive)}</button></Form> : d.transitions.map((t)=><Form method="post" key={t.to_status}><input type="hidden" name="_intent" value="status"/><input type="hidden" name="version" value={p.version}/><input type="hidden" name="target_status" value={t.to_status}/><button className="secondary-button" type="submit" title={t.description??""}>→ {labelStatus(t.to_status)}</button></Form>)}
       </div></section>
       <section className="data-card" id="maklerauftrag"><div className="card-head"><div><p className="eyebrow">Beauftragung</p><h2>Maklerauftrag</h2></div><Link className="subtle-link" to={`/mandates?property_id=${encodeURIComponent(p.id)}`}>Aufträge öffnen →</Link></div>{d.mandates.length===0?<p className="empty-state">Für diese Immobilie ist kein Maklerauftrag erfasst.</p>:d.mandates.map((m:any)=>{const risk=m.status==="ACTIVE"&&m.client_is_consumer&&(!m.withdrawal_instruction_given_on||(m.withdrawal_deadline_on&&m.withdrawal_deadline_on>=new Date().toISOString().slice(0,10)&&!m.early_start_requested_on));return <Link className="data-row data-row-link" to={`/mandates/${m.id}`} key={m.id}><div><strong>{m.mandate_number} · {MANDATE_TYPE[m.mandate_type]??m.mandate_type}</strong><small>{MANDATE_STATUS[m.status]??m.status}{m.term_start?` · ab ${new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeZone:"Europe/Berlin"}).format(new Date(m.term_start))}`:""}</small></div><div className="row-meta">{risk?<span className="status-pill status-lost">Widerruf offen</span>:<span>{m.text_form_confirmed?"Textform dokumentiert":"Textform offen"}</span>}</div><span className="subtle-link">Öffnen →</span></Link>;})}</section>
+      {d.canDispositionRead?<section className="data-card" id="verfuegungsberechtigung"><div className="card-head"><div><p className="eyebrow">Wer darf verkaufen</p><h2>Verfügungsberechtigung</h2></div><Link className="subtle-link" to={`/properties/${p.id}/disposition`}>Erfassen & prüfen →</Link></div>{(()=>{
+        const rec=d.disposition as any;const parties=((d.dispositionParties??[]) as any[]).filter((row)=>!row.archived_at);
+        const gaps=dispositionGaps(rec,(d.dispositionParties??[]) as any[]);
+        return <>
+          <div className={gaps.length?"form-warning":"form-success"}><strong>{gaps.length?"Verfügungsberechtigung offen":"Verfügungsberechtigung geklärt"}</strong>{gaps.length?<ul>{gaps.map((gap:string)=><li key={gap}>{gap}</li>)}</ul>:<p>Alle im System geführten Angaben, Zustimmungen und Genehmigungen sind dokumentiert.</p>}</div>
+          {rec?<dl className="detail-list"><div><dt>Eigentümerstellung</dt><dd>{DISPOSITION_STRUCTURE[rec.ownership_structure]??rec.ownership_structure}</dd></div><div><dt>Erbfall</dt><dd>{rec.inheritance_case?`ja${rec.date_of_death?` · verstorben ${formatDay(rec.date_of_death)}`:""}`:"nein"}</dd></div>{rec.inheritance_case?<div><dt>Erbnachweis</dt><dd>{rec.succession_proof_issued_on?`erteilt ${formatDay(rec.succession_proof_issued_on)}`:rec.succession_proof_type?"beantragt bzw. offen":"nicht festgelegt"}</dd></div>:null}<div><dt>Beteiligte</dt><dd>{parties.length}</dd></div></dl>:null}
+          {parties.length?<div className="data-list" style={{marginTop:"0.75rem"}}>{parties.map((row:any)=>{const c=Array.isArray(row.contacts)?row.contacts[0]:row.contacts;return <Link className="data-row data-row-link" to={`/properties/${p.id}/disposition#beteiligte`} key={row.id}>
+            <div><strong>{c?`${c.last_name}, ${c.first_name}`:"Kontakt"} · {DISPOSITION_ROLE[row.party_role]??row.party_role}</strong><small>{row.share_percentage?`Quote ${Number(row.share_percentage).toLocaleString("de-DE",{maximumFractionDigits:3})} %`:row.is_minor?"minderjährig":"—"}</small></div>
+            <div className="row-meta"><span className={`status-pill ${row.consent_status==="GIVEN"?"status-sold":row.consent_status==="REFUSED"?"status-lost":row.consent_status==="OPEN"?"status-draft":"status-archived"}`}>{DISPOSITION_CONSENT[row.consent_status]??row.consent_status}</span><small>{row.court_approval_required&&!row.court_approval_granted_on?"Genehmigung ausstehend":row.power_of_attorney_revoked_on?"Vollmacht widerrufen":""}</small></div>
+            <span className="subtle-link">Öffnen →</span>
+          </Link>;})}</div>:null}
+        </>;
+      })()}</section>:null}
       <section className="data-card" id="recht-lasten"><div className="card-head"><div><p className="eyebrow">Rechtsobjekt</p><h2>Recht & Lasten</h2></div><Link className="subtle-link" to={`/properties/${p.id}/legal`}>Erfassen & prüfen →</Link></div>{(()=>{
         const l=d.legal as any;const rows=(d.encumbrances??[]) as any[];
         const flags=l?[l.monument_protection?"Denkmalschutz":null,l.milieu_protection?"Milieuschutz":null,l.redevelopment_area?"Sanierungsgebiet":null,l.contamination_suspicion?"Altlastenverdacht":null,l.development_charges_open?"Erschließungsbeiträge offen":null,l.heritable_building_right?"Erbbaurecht":null].filter(Boolean) as string[]:[];

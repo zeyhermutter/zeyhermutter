@@ -70,6 +70,7 @@ export default [
     route("properties/:propertyId/interests", "routes/property-interests.tsx"),
     route("properties/:propertyId/compliance", "routes/property-compliance.tsx"),
     route("properties/:propertyId/legal", "routes/property-legal.tsx"),
+    route("properties/:propertyId/disposition", "routes/property-disposition.tsx"),
     route("properties/:propertyId/publication", "routes/property-publication.tsx"),
     route("properties/:propertyId/publication/preview", "routes/property-publication-preview.tsx"),
     route("properties/:propertyId/exposes", "routes/property-exposes.tsx"),

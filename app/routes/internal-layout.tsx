@@ -83,7 +83,7 @@ function SalesReadinessLeadEntryEnhancer() {
 
 function PropertyContextNavigation() {
   const location = useLocation();
-  const match = location.pathname.match(/^\/properties\/([^/]+)(?:\/(documents|media|interests|publication|exposes|marketing|compliance|legal)(?:\/.*)?)?\/?$/);
+  const match = location.pathname.match(/^\/properties\/([^/]+)(?:\/(documents|media|interests|publication|exposes|marketing|compliance|legal|disposition)(?:\/.*)?)?\/?$/);
   if (!match) return null;
 
   const propertyId = match[1];
@@ -92,6 +92,7 @@ function PropertyContextNavigation() {
     <nav className="property-context-nav persistent-property-context-nav" aria-label="Immobilienakte">
       <Link className={section === "record" ? "active" : ""} to={`/properties/${propertyId}`}>Objektakte</Link>
       <Link className={section === "legal" ? "active" : ""} to={`/properties/${propertyId}/legal`}>Recht & Lasten</Link>
+      <Link className={section === "disposition" ? "active" : ""} to={`/properties/${propertyId}/disposition`}>Verfügungsberechtigung</Link>
       <Link className={section === "interests" ? "active" : ""} to={`/properties/${propertyId}/interests`}>Interessenten & Besichtigungen</Link>
       <Link className={section === "publication" ? "active" : ""} to={`/properties/${propertyId}/publication`}>Website</Link>
       <Link className={section === "exposes" ? "active" : ""} to={`/properties/${propertyId}/exposes`}>Exposés</Link>
