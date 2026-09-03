@@ -500,3 +500,16 @@ body:has(.persistent-app-frame) .build-version {
   color: #647273 !important;
   border-color: #cbd5d3 !important;
 }
+
+/* Thema 2 · Objektnachweis: archivierte Nachweise erkennbar, Erfassungsformular
+   mit dem üblichen Abstand. Nur Farben und Abstände innerhalb der Karte. */
+.persistent-app-frame .inquiry-row.is-archived {
+  opacity: .68;
+}
+.persistent-app-frame .disclosure-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid #e0e7e5;
+}

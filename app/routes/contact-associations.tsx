@@ -39,11 +39,23 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   }
   if (!contact) throw new Response("Kontakt nicht gefunden.", { status: 404 });
 
+  const { data: canReadDisclosures } = await supabase.rpc("current_user_has_permission", { p_permission: "disclosure.read" });
+  let disclosures: any[] = [];
+  if (canReadDisclosures === true) {
+    const result = await supabase
+      .from("property_disclosures")
+      .select("id, disclosure_number, property_id, disclosed_at, channel, acknowledgement_kind, acknowledged_at, prior_knowledge_declared, prior_knowledge_source, resale_prohibition_notice_given, archived_at, properties(id, property_number, internal_title, status)")
+      .eq("contact_id", contactId)
+      .order("disclosed_at", { ascending: false })
+      .limit(200);
+    if (!result.error) disclosures = result.data ?? [];
+  }
+
   const organizationMap = Object.fromEntries((organizations ?? []).map((item) => [item.id, item]));
   const activeAddresses = (addresses ?? []).filter((item) => !item.archived_at);
 
   return data(
-    { contact, profile, organizations: organizations ?? [], links: links ?? [], organizationMap, addresses: activeAddresses },
+    { contact, profile, organizations: organizations ?? [], links: links ?? [], organizationMap, addresses: activeAddresses, disclosures, canReadDisclosures: canReadDisclosures === true },
     { headers: responseHeaders() },
   );
 }
@@ -128,7 +140,18 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 }
 
 export default function ContactAssociations() {
-  const { contact, profile, organizations, links, organizationMap, addresses } = useLoaderData<typeof loader>();
+  const { contact, profile, organizations, links, organizationMap, addresses, disclosures, canReadDisclosures } = useLoaderData<typeof loader>();
+  const firstIds = new Set<string>();
+  {
+    const earliest = new Map<string, any>();
+    for (const item of disclosures as any[]) {
+      if (item.archived_at) continue;
+      const current = earliest.get(item.property_id);
+      if (!current || new Date(item.disclosed_at) < new Date(current.disclosed_at)) earliest.set(item.property_id, item);
+    }
+    for (const item of earliest.values()) firstIds.add(item.id);
+  }
+  const fmt = (value: string | null) => (value ? new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Berlin" }).format(new Date(value)) : "—");
   const result = useActionData<typeof action>();
 
   return (
@@ -143,6 +166,26 @@ export default function ContactAssociations() {
       </header>
 
       {result?.error ? <div className="form-error">{result.error}</div> : null}
+
+      <section className="data-card">
+        <div className="card-head"><div><p className="eyebrow">Interessentenschutz</p><h2>Nachgewiesene Objekte</h2></div><span className="subtle">{canReadDisclosures ? `${disclosures.filter((item: any) => !item.archived_at).length} Nachweise` : "Keine Berechtigung"}</span></div>
+        {canReadDisclosures ? (
+          <div className="data-list">
+            {disclosures.map((item: any) => {
+              const property = Array.isArray(item.properties) ? item.properties[0] : item.properties;
+              return (
+                <Link className="data-row data-row-link" to={`/properties/${item.property_id}/interests#objektnachweise`} key={item.id}>
+                  <div><strong>{property?.property_number ?? "Objekt"} · {property?.internal_title ?? ""}</strong><small>{item.disclosure_number}{item.archived_at ? " · archiviert" : ""}</small></div>
+                  <div className="row-meta"><span>{fmt(item.disclosed_at)}</span><small>{firstIds.has(item.id) ? "Erstnachweis" : "Weiterer Nachweis"}</small></div>
+                  <div className="row-meta"><span>{item.acknowledgement_kind === "NONE" ? "Ohne Empfangsbestätigung" : `Bestätigt ${fmt(item.acknowledged_at)}`}</span><small>{item.prior_knowledge_declared ? `Vorkenntnis: ${item.prior_knowledge_source}` : "Keine Vorkenntnis erklärt"}</small></div>
+                  <span className="subtle-link">Objekt öffnen →</span>
+                </Link>
+              );
+            })}
+            {disclosures.length === 0 ? <p className="empty-state">Diesem Kontakt wurde noch kein Objekt nachgewiesen.</p> : null}
+          </div>
+        ) : <p className="empty-state">Keine Berechtigung zum Anzeigen von Objektnachweisen.</p>}
+      </section>
 
       <div className="dashboard-grid">
         <section className="data-card">
