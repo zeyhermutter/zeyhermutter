@@ -2,6 +2,7 @@ import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-
 import type { Route } from "./+types/property-detail";
 import { requirePermission } from "~/lib/auth.server";
 import { dispositionGaps } from "./property-disposition";
+import { grossYield } from "./property-hoa-tenancy";
 
 type FeatureChoice = { key:string; label:string };
 type ActionResult = { error?: string; success?: string; featurePreview?: { entered:string; formatted:string; exact?:FeatureChoice; suggestion?:FeatureChoice } };
@@ -40,6 +41,8 @@ const ENCUMBRANCE_KIND: Record<string,string> = {RESIDENCE_RIGHT:"Wohnrecht",USU
 const ENCUMBRANCE_IMPACT: Record<string,string> = {NONE:"ohne Auswirkung",TRANSFERS_TO_BUYER:"geht auf den Käufer über",MUST_BE_DELETED:"muss gelöscht werden",PURCHASE_PRICE_RELEVANT:"kaufpreisrelevant",UNCLEAR:"Auswirkung offen"};
 function euro(value:any){const n=Number(value);return Number.isFinite(n)?new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n):"—";}
 function formatDay(value:string|null){if(!value)return"—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeZone:"Europe/Berlin"}).format(new Date(`${value}T12:00:00Z`));}
+const LEVY_STATUS: Record<string,string> = {EXPECTED:"absehbar",RESOLVED:"beschlossen",PAID:"gezahlt",CANCELLED:"aufgehoben"};
+const TENANCY_STATUS: Record<string,string> = {ACTIVE:"laufend",ENDED:"beendet",TERMINATED:"gekündigt"};
 const MANDATE_STATUS: Record<string,string> = {DRAFT:"Entwurf",ACTIVE:"Aktiv",WITHDRAWN:"Widerrufen",TERMINATED:"Gekündigt",EXPIRED:"Abgelaufen",FULFILLED:"Erfüllt",CANCELLED:"Verworfen"};
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
@@ -49,7 +52,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   const { data: property, error } = await supabase.from("properties").select("*").eq("id",propertyId).maybeSingle();
   if(error||!property) throw new Response("Immobilie nicht gefunden.",{status:404,headers:responseHeaders()});
 
-  const [addressRes,ownersRes,contactsRes,featuresRes,customFeaturesRes,energyRes,checklistRes,transitionsRes,usersRes,auditPermissionRes,gwgPermissionRes,legalRes,encumbranceRes,dispositionPermissionRes,priceStagesRes,valuationsRes,dispositionRes,dispositionPartyRes,gwgCaseRes,mandatesRes] = await Promise.all([
+  const [addressRes,ownersRes,contactsRes,featuresRes,customFeaturesRes,energyRes,checklistRes,transitionsRes,usersRes,auditPermissionRes,gwgPermissionRes,legalRes,encumbranceRes,dispositionPermissionRes,priceStagesRes,valuationsRes,dispositionRes,dispositionPartyRes,gwgCaseRes,mandatesRes,hoaRes,leviesRes,tenanciesRes] = await Promise.all([
     supabase.from("property_addresses").select("*").eq("property_id",propertyId).maybeSingle(),
     supabase.from("property_owners").select("*").eq("property_id",propertyId).order("primary_contact",{ascending:false}),
     supabase.from("contacts").select("id, contact_number, first_name, last_name, email").is("archived_at",null).order("last_name").limit(1000),
@@ -70,6 +73,9 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     supabase.from("property_disposition_parties").select("id,disposition_id,contact_id,party_role,represents_contact_id,share_percentage,consent_status,consent_on,court_approval_required,court_approval_granted_on,power_of_attorney_revoked_on,power_of_attorney_valid_until,is_minor,archived_at,contacts!property_disposition_parties_contact_id_fkey(first_name,last_name)"),
     supabase.from("gwg_cases").select("id,case_number,risk_level,risk_assessed_on,retention_until,legal_hold,archived_at,gwg_identifications(id,party_role,identified_on)").eq("property_id",propertyId).is("archived_at",null).limit(1),
     supabase.from("brokerage_mandates").select("id,mandate_number,mandate_type,client_side,status,client_is_consumer,text_form_confirmed,term_start,term_end,withdrawal_instruction_given_on,withdrawal_deadline_on,early_start_requested_on").eq("property_id",propertyId).is("archived_at",null).order("updated_at",{ascending:false}).limit(20),
+    supabase.from("property_hoa_data").select("id,fee_operating,fee_reserve,fee_reference_month,maintenance_reserve_balance,maintenance_reserve_date,economic_plan_year,annual_statement_year,manager_contract_until").eq("property_id",propertyId).maybeSingle(),
+    supabase.from("property_hoa_special_levies").select("id,purpose,status,own_share_amount,due_on").eq("property_id",propertyId).in("status",["EXPECTED","RESOLVED"]).order("due_on",{nullsFirst:false}).limit(20),
+    supabase.from("property_tenancies").select("id,status,tenant_name,rent_cold,starts_on,ends_on,contract_type,tenant_pre_emption_relevant,conversion_blocking_until,arrears_amount,pending_rent_increase,archived_at").eq("property_id",propertyId).is("archived_at",null).order("status").order("starts_on",{ascending:false}).limit(20),
   ]);
   const firstError=[addressRes,ownersRes,contactsRes,featuresRes,customFeaturesRes,energyRes,checklistRes,transitionsRes,usersRes].find((r)=>r.error)?.error;
   if(firstError) throw new Response("Objektdaten konnten nicht vollständig geladen werden.",{status:500,headers:responseHeaders()});
@@ -81,7 +87,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   }
   const contactMap=Object.fromEntries((contactsRes.data??[]).map((c)=>[c.id,c]));
   const customFeatureOptions=Array.from(new Map((customFeaturesRes.data??[]).map((f)=>[f.feature_key,{key:f.feature_key,label:f.label}])).values());
-  return data({property,mandates:mandatesRes.data??[],canGwgRead:gwgPermissionRes.data===true,gwgCase:(gwgCaseRes.data??[])[0]??null,legal:legalRes.data??null,encumbrances:encumbranceRes.data??[],canDispositionRead:dispositionPermissionRes.data===true,priceStages:priceStagesRes.data??[],valuations:valuationsRes.data??[],disposition:dispositionRes.data??null,dispositionParties:((dispositionPartyRes.data??[]) as any[]).filter((row)=>!dispositionRes.data||row.disposition_id===(dispositionRes.data as any).id),address:addressRes.data,owners:ownersRes.data??[],contacts:contactsRes.data??[],contactMap,features:featuresRes.data??[],customFeatureOptions,energy:energyRes.data,checklist:checklistRes.data??[],transitions:transitionsRes.data??[],users:usersRes.data??[],auditEvents,profile,newOwner},{headers:responseHeaders()});
+  return data({property,mandates:mandatesRes.data??[],hoa:hoaRes.data??null,specialLevies:leviesRes.data??[],tenancies:tenanciesRes.data??[],canGwgRead:gwgPermissionRes.data===true,gwgCase:(gwgCaseRes.data??[])[0]??null,legal:legalRes.data??null,encumbrances:encumbranceRes.data??[],canDispositionRead:dispositionPermissionRes.data===true,priceStages:priceStagesRes.data??[],valuations:valuationsRes.data??[],disposition:dispositionRes.data??null,dispositionParties:((dispositionPartyRes.data??[]) as any[]).filter((row)=>!dispositionRes.data||row.disposition_id===(dispositionRes.data as any).id),address:addressRes.data,owners:ownersRes.data??[],contacts:contactsRes.data??[],contactMap,features:featuresRes.data??[],customFeatureOptions,energy:energyRes.data,checklist:checklistRes.data??[],transitions:transitionsRes.data??[],users:usersRes.data??[],auditEvents,profile,newOwner},{headers:responseHeaders()});
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
@@ -294,6 +300,44 @@ export default function PropertyDetail(){
             </Link>;
           })}</div>:null}
           {abweichung?<p className="form-warning" style={{marginTop:"0.75rem"}}>Der geführte Objektpreis weicht von der jüngsten Preisstufe ({euro(aktuell.price)}) ab.</p>:null}
+        </>;
+      })()}</section>
+      <section className="data-card" id="weg-miete"><div className="card-head"><div><p className="eyebrow">Eigentum & Nutzung</p><h2>WEG & Miete</h2></div><Link className="subtle-link" to={`/properties/${p.id}/hoa-tenancy`}>Erfassen & prüfen →</Link></div>{(()=>{
+        const weg=d.hoa as any;
+        const umlagen=((d.specialLevies??[]) as any[]).filter((l)=>l.status==="EXPECTED"||l.status==="RESOLVED");
+        const miete=((d.tenancies??[]) as any[]);
+        const aktiv=miete.find((t)=>t.status==="ACTIVE")??null;
+        if(!weg&&!umlagen.length&&!miete.length)return <p className="empty-state">Weder WEG- noch Mietdaten erfasst. Bei einer Eigentumswohnung oder einem vermieteten Objekt fehlen damit die Angaben, nach denen Käufer regelmäßig fragen.</p>;
+        const offen=umlagen.reduce((sum,l)=>sum+(Number(l.own_share_amount)||0),0);
+        const rendite=aktiv?grossYield(p.purchase_price,aktiv.rent_cold):null;
+        const heute=new Date().toISOString().slice(0,10);
+        const sperrfrist=aktiv&&aktiv.conversion_blocking_until&&aktiv.conversion_blocking_until>=heute?aktiv.conversion_blocking_until:null;
+        const summe=weg&&weg.fee_operating!==null&&weg.fee_reserve!==null?Number(weg.fee_operating)+Number(weg.fee_reserve):null;
+        const splitAbweichung=summe!==null&&p.hoa_fee!==null&&Math.abs(summe-Number(p.hoa_fee))>0.01;
+        return <>
+          <dl className="detail-list">
+            <div><dt>Hausgeld</dt><dd>{euro(p.hoa_fee)}{weg&&summe!==null?` · davon ${euro(weg.fee_reserve)} Rücklage`:""}</dd></div>
+            <div><dt>Erhaltungsrücklage</dt><dd>{weg&&weg.maintenance_reserve_balance!==null?`${euro(weg.maintenance_reserve_balance)} (Stand ${formatDay(weg.maintenance_reserve_date)})`:"nicht erfasst"}</dd></div>
+            <div><dt>Sonderumlagen</dt><dd>{umlagen.length?`${umlagen.length} offen · Anteil ${euro(offen)}`:"keine offenen"}</dd></div>
+            <div><dt>Mietsituation</dt><dd>{aktiv?`vermietet · ${euro(aktiv.rent_cold)} Kaltmiete`:miete.length?"aktuell nicht vermietet":"nicht erfasst"}</dd></div>
+            {rendite!==null?<div><dt>Bruttomietrendite</dt><dd>{rendite.toLocaleString("de-DE",{maximumFractionDigits:2})} % (rechnerisch aus Kaltmiete und geführtem Preis)</dd></div>:null}
+          </dl>
+          {umlagen.length?<div className="data-list" style={{marginTop:"0.75rem"}}>{umlagen.slice(0,4).map((l:any)=>
+            <Link className="data-row data-row-link" to={`/properties/${p.id}/hoa-tenancy#sonderumlagen`} key={l.id}>
+              <div><strong>{l.purpose}</strong><small>{LEVY_STATUS[l.status]??l.status}{l.due_on?` · fällig ${formatDay(l.due_on)}`:""}</small></div>
+              <div className="row-meta"><span>{l.own_share_amount!==null?euro(l.own_share_amount):"Anteil offen"}</span></div>
+              <span className="subtle-link">Öffnen →</span>
+            </Link>)}</div>:null}
+          {miete.length?<div className="data-list" style={{marginTop:"0.75rem"}}>{miete.slice(0,3).map((t:any)=>
+            <Link className="data-row data-row-link" to={`/properties/${p.id}/hoa-tenancy#miete`} key={t.id}>
+              <div><strong>{t.tenant_name||"Mieter über Kontakt erfasst"}</strong><small>{TENANCY_STATUS[t.status]??t.status}{t.starts_on?` · seit ${formatDay(t.starts_on)}`:""}</small></div>
+              <div className="row-meta"><span>{t.rent_cold!==null?`${euro(t.rent_cold)} kalt`:"Miete offen"}</span></div>
+              <span className="subtle-link">Öffnen →</span>
+            </Link>)}</div>:null}
+          {splitAbweichung?<p className="form-warning" style={{marginTop:"0.75rem"}}>Die erfasste Hausgeldaufteilung ({euro(summe)}) weicht vom geführten Hausgeld ({euro(p.hoa_fee)}) ab.</p>:null}
+          {aktiv&&aktiv.tenant_pre_emption_relevant?<p className="form-warning" style={{marginTop:"0.75rem"}}>Ein Vorkaufsrecht des Mieters ist als möglich vermerkt. Vor der Vermarktung anwaltlich klären lassen.</p>:null}
+          {sperrfrist?<p className="form-warning" style={{marginTop:"0.75rem"}}>Eine Sperrfrist nach Umwandlung ist bis {formatDay(sperrfrist)} vermerkt.</p>:null}
+          {aktiv&&Number(aktiv.arrears_amount)>0?<p className="form-warning" style={{marginTop:"0.75rem"}}>Mietrückstand von {euro(aktiv.arrears_amount)} erfasst.</p>:null}
         </>;
       })()}</section>
       {d.canDispositionRead?<section className="data-card" id="verfuegungsberechtigung"><div className="card-head"><div><p className="eyebrow">Wer darf verkaufen</p><h2>Verfügungsberechtigung</h2></div><Link className="subtle-link" to={`/properties/${p.id}/disposition`}>Erfassen & prüfen →</Link></div>{(()=>{

@@ -74,6 +74,7 @@ export default [
     route("properties/:propertyId/legal", "routes/property-legal.tsx"),
     route("properties/:propertyId/disposition", "routes/property-disposition.tsx"),
     route("properties/:propertyId/pricing", "routes/property-pricing.tsx"),
+    route("properties/:propertyId/hoa-tenancy", "routes/property-hoa-tenancy.tsx"),
     route("properties/:propertyId/publication", "routes/property-publication.tsx"),
     route("properties/:propertyId/publication/preview", "routes/property-publication-preview.tsx"),
     route("properties/:propertyId/exposes", "routes/property-exposes.tsx"),
