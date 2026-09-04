@@ -163,9 +163,12 @@ export async function action({request,context,params}:Route.ActionArgs){
     const closingId=text(fd,"closing_id")||null;
     if(occasion==="VIEWING"&&!viewingId)return invalid("Für einen Nachweis zur Besichtigung ist die Besichtigung auszuwählen.");
     if(occasion==="CONTRACT_CONCLUSION"&&!closingId)return invalid("Für eine Übergabe bei Vertragsschluss ist der Abschlussvorgang auszuwählen.");
-    // Bei Vertragsschluss ist die Übergabe der Sinn des Eintrags; sie wird nicht
-    // stillschweigend auf „nein" gesetzt, sondern ausdrücklich verlangt.
-    const handedOver=occasion==="CONTRACT_CONCLUSION"?true:text(fd,"handed_over")==="yes";
+    // Bei Vertragsschluss ist die Übergabe der Sinn des Eintrags. Wer hier
+    // ausdrücklich „nur vorgelegt" wählt, bekommt eine Erklärung — der Eintrag
+    // wird nicht stillschweigend zu einer Übergabe umgedeutet, die nicht
+    // stattgefunden hat.
+    const handedOver=text(fd,"handed_over")==="yes";
+    if(occasion==="CONTRACT_CONCLUSION"&&!handedOver)return invalid("Bei Vertragsschluss wird die Übergabe dokumentiert. Bitte „Ja, übergeben\" wählen oder als sonstigen Anlass erfassen, wenn der Ausweis nur vorgelegt wurde.");
     const {error}=await supabase.from("energy_certificate_presentations").insert({
       property_id:propertyId,contact_id:contactId,
       viewing_id:occasion==="VIEWING"?viewingId:(viewingId||null),
@@ -276,8 +279,8 @@ export default function PropertyMandatoryData(){
     <section className="data-card" id="nachweise">
       <div className="card-head"><div><p className="eyebrow">Vorlage und Übergabe</p><h2>Nachweise</h2></div><span className="status-pill">{presentations.length} {presentations.length===1?"Eintrag":"Einträge"}</span></div>
 
-      {viewingsWithoutProof.length?<p className="form-warning">Zu {viewingsWithoutProof.length} {viewingsWithoutProof.length===1?"Besichtigung ist":"Besichtigungen sind"} keine Vorlage des Energieausweises dokumentiert: {viewingsWithoutProof.slice(0,5).map((v)=>v.viewing_number).join(", ")}{viewingsWithoutProof.length>5?" und weitere":""}.</p>:null}
-      {closingsWithoutHandover.length?<p className="form-warning">Zu {closingsWithoutHandover.length} {closingsWithoutHandover.length===1?"Abschlussvorgang ist":"Abschlussvorgängen sind"} keine Übergabe des Energieausweises dokumentiert: {closingsWithoutHandover.map((c)=>c.closing_number).join(", ")}.</p>:null}
+      {viewingsWithoutProof.length?<p className="form-warning">Zu {viewingsWithoutProof.length} {viewingsWithoutProof.length===1?"Besichtigung":"Besichtigungen"} ist keine Vorlage des Energieausweises dokumentiert: {viewingsWithoutProof.slice(0,5).map((v)=>v.viewing_number).join(", ")}{viewingsWithoutProof.length>5?" und weitere":""}.</p>:null}
+      {closingsWithoutHandover.length?<p className="form-warning">Zu {closingsWithoutHandover.length} {closingsWithoutHandover.length===1?"Abschlussvorgang":"Abschlussvorgängen"} ist keine Übergabe des Energieausweises dokumentiert: {closingsWithoutHandover.map((c)=>c.closing_number).join(", ")}.</p>:null}
 
       {presentations.length===0
         ?<p className="empty-state">Noch kein Nachweis erfasst.</p>
@@ -296,7 +299,7 @@ export default function PropertyMandatoryData(){
         <label className="form-field"><span>Abschlussvorgang</span><select name="closing_id" defaultValue="" disabled={disabled}><option value="">—</option>{closings.map((c)=><option key={c.id} value={c.id}>{c.closing_number}</option>)}</select><small className="subtle">Beim Anlass Vertragsschluss erforderlich.</small></label>
         <label className="form-field"><span>Datum *</span><input type="date" name="presented_on" defaultValue={today()} disabled={disabled}/></label>
         <label className="form-field"><span>Form *</span><select name="presentation_form" defaultValue="IN_PERSON" disabled={disabled}>{Object.entries(PRESENTATION_FORM).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label>
-        <label className="form-field"><span>Übergeben</span><select name="handed_over" defaultValue="no" disabled={disabled}><option value="no">Nein, nur vorgelegt</option><option value="yes">Ja, übergeben</option></select><small className="subtle">Bei Vertragsschluss wird die Übergabe vorausgesetzt.</small></label>
+        <label className="form-field"><span>Übergeben</span><select name="handed_over" defaultValue="no" disabled={disabled}><option value="no">Nein, nur vorgelegt</option><option value="yes">Ja, übergeben</option></select><small className="subtle">Beim Anlass Vertragsschluss ist „Ja, übergeben" erforderlich.</small></label>
         <label className="form-field full-width"><span>Notiz</span><input name="note" disabled={disabled}/></label>
         <div className="form-field full-width inline-actions"><button className="secondary-button" type="submit" disabled={disabled}>Nachweis erfassen</button></div>
       </Form>
