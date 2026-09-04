@@ -91,7 +91,7 @@ export function feedbackSummary(feedback:any[],currentPrice:number|null){
 }
 
 export async function loader({request,context,params}:Route.LoaderArgs){
-  const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"property.read");
+  const {supabase,responseHeaders,profile,userId}=await requirePermission(request,context.cloudflare.env,"property.read");
   const propertyId=params.propertyId!;
   const {data:property,error:propertyError}=await supabase.from("properties")
     .select("id,property_number,internal_title,status,purchase_price,living_area_sqm,plot_area_sqm").eq("id",propertyId).maybeSingle();
@@ -114,7 +114,7 @@ export async function loader({request,context,params}:Route.LoaderArgs){
   if(readError)throw new Response("Preis- und Bewertungsdaten konnten nicht geladen werden.",{status:500,headers:responseHeaders()});
 
   return data({
-    profile,property,
+    profile,userId,property,
     stages:stagesRes.data??[],
     inquiries:inquiriesRes.data??[],
     viewings:viewingsRes.data??[],
@@ -301,7 +301,7 @@ export default function PropertyPricing(){
         <div className="form-grid">
           <label className="form-field"><span>{hasInitial?"Neuer Preis €":"Ausgangspreis €"} *</span><input name="price" inputMode="decimal" required/>{hasInitial&&current?<small className="subtle">Bisher {money(current.price)}</small>:null}</label>
           <label className="form-field"><span>Gültig ab *</span><input name="effective_from" type="date" defaultValue={today()} max={today()} required/></label>
-          <label className="form-field"><span>Entschieden von</span><select name="decided_by" defaultValue="">{d.profiles.map((p:any)=><option value={p.user_id} key={p.user_id}>{p.display_name}</option>)}</select></label>
+          <label className="form-field"><span>Entschieden von</span><select name="decided_by" defaultValue={d.userId}>{d.profiles.map((p:any)=><option value={p.user_id} key={p.user_id}>{p.display_name}</option>)}</select></label>
           <label className="form-field"><span>Objektpreis angleichen</span><select name="sync_property" defaultValue="yes"><option value="yes">Ja</option><option value="no">Nein</option></select><small className="subtle">Hält Objektakte und Verlauf zusammen.</small></label>
         </div>
         <label className="form-field full-width"><span>Begründung{hasInitial?" *":""}</span><textarea name="reason" rows={2} required={hasInitial} placeholder={hasInitial?"Warum wird der Preis geändert?":"Optional: wie kam der Ausgangspreis zustande?"}/></label>
@@ -398,7 +398,7 @@ export default function PropertyPricing(){
         <div className="form-grid">
           <label className="form-field"><span>Verfahren *</span><select name="method" defaultValue="COMPARATIVE" required>{Object.entries(VALUATION_METHOD).map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></label>
           <label className="form-field"><span>Bewertungsdatum *</span><input name="valued_on" type="date" defaultValue={today()} max={today()} required/></label>
-          <label className="form-field"><span>Bewerter</span><select name="valuer_user" defaultValue="">{d.profiles.map((p:any)=><option value={p.user_id} key={p.user_id}>{p.display_name}</option>)}</select></label>
+          <label className="form-field"><span>Bewerter</span><select name="valuer_user" defaultValue={d.userId}>{d.profiles.map((p:any)=><option value={p.user_id} key={p.user_id}>{p.display_name}</option>)}</select></label>
           <label className="form-field"><span>Externer Bewerter</span><input name="valuer_name" placeholder="falls extern erstellt"/></label>
           <label className="form-field"><span>Zugehöriger Lead</span><select name="lead_id" defaultValue=""><option value="">—</option>{d.leads.map((l:any)=><option value={l.id} key={l.id}>{l.lead_number}</option>)}</select></label>
           <label className="form-field"><span>Bodenrichtwert € je m²</span><input name="land_reference_value" inputMode="decimal"/></label>
