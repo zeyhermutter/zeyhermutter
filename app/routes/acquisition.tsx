@@ -14,6 +14,7 @@ function numOrNull(fd:FormData,key:string){const raw=text(fd,key);if(!raw)return
 function intOrNull(fd:FormData,key:string){const raw=text(fd,key);if(!raw)return null;const n=Number.parseInt(raw,10);return Number.isFinite(n)?n:NaN;}
 function money(value:any){const n=Number(value);return Number.isFinite(n)?new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n):"—";}
 function formatDate(value:string|null){if(!value)return"—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeZone:"Europe/Berlin"}).format(new Date(`${value}T12:00:00Z`));}
+function plural(count:any,one:string,many:string){return `${Number(count)||0} ${Number(count)===1?one:many}`;}
 
 function errorMessage(error:any){
   const message=String(error?.message??"");
@@ -178,7 +179,7 @@ export default function Acquisition(){
           const p=performance.get(c.id);
           return <Link className="data-row data-row-link" to={`/acquisition/${c.id}`} key={c.id}>
             <div><strong>{c.campaign_number} · {c.name}</strong><small>{c.lead_sources?.label??"Kanal offen"} · {c.acquisition_areas?.name??"Gebiet offen"}{c.starts_on?` · ab ${formatDate(c.starts_on)}`:""}</small></div>
-            <div className="row-meta"><span>{p?`${p.responses} Reaktionen · ${p.mandates} Aufträge · ${p.sales} Verkäufe`:"keine Zuordnung im Zeitraum"}</span><small>{c.household_count?`${c.household_count} Haushalte`:"Haushalte offen"}{c.actual_cost!=null?` · ${money(c.actual_cost)} Kosten`:c.planned_cost!=null?` · ${money(c.planned_cost)} geplant`:""}</small></div>
+            <div className="row-meta"><span>{p?`${plural(p.responses,"Reaktion","Reaktionen")} · ${plural(p.mandates,"Auftrag","Aufträge")} · ${plural(p.sales,"Verkauf","Verkäufe")}`:"keine Zuordnung im Zeitraum"}</span><small>{c.household_count?`${plural(c.household_count,"Haushalt","Haushalte")}`:"Haushalte offen"}{c.actual_cost!=null?` · ${money(c.actual_cost)} Kosten`:c.planned_cost!=null?` · ${money(c.planned_cost)} geplant`:""}</small></div>
             <span className={`status-pill ${CAMPAIGN_CLASS[c.status]??""}`}>{CAMPAIGN_STATUS[c.status]??c.status}</span>
           </Link>;
         })}</div>}
@@ -209,7 +210,7 @@ export default function Acquisition(){
           <div className="data-row" key={a.id}>
             <div style={{paddingLeft:`${a.depth*1.25}rem`}}><strong>{a.name}</strong><small>{AREA_TYPE[a.area_type]??a.area_type}{a.postal_code?` · ${a.postal_code}`:""}{a.household_estimate?` · ca. ${a.household_estimate} Haushalte`:""}</small></div>
             <div className="row-meta"><small>{a.path}</small></div>
-            <span>{campaigns.filter((c:any)=>c.area_id===a.id).length} Kampagnen</span>
+            <span>{plural(campaigns.filter((c:any)=>c.area_id===a.id).length,"Kampagne","Kampagnen")}</span>
           </div>)}</div>}
 
       <Form method="post" className="form-grid" style={{marginTop:"1rem"}}>

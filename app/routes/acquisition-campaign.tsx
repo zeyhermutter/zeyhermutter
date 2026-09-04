@@ -13,6 +13,7 @@ function numOrNull(fd:FormData,key:string){const raw=text(fd,key);if(!raw)return
 function intOrNull(fd:FormData,key:string){const raw=text(fd,key);if(!raw)return null;const n=Number.parseInt(raw,10);return Number.isFinite(n)?n:NaN;}
 function money(value:any){const n=Number(value);return Number.isFinite(n)?new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n):"—";}
 function formatDate(value:string|null){if(!value)return"—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeZone:"Europe/Berlin"}).format(new Date(`${value}T12:00:00Z`));}
+function plural(count:any,one:string,many:string){return `${Number(count)||0} ${Number(count)===1?one:many}`;}
 
 /**
  * Kosten je Reaktion. Gibt null zurück, solange Kosten oder Reaktionen fehlen —
@@ -176,7 +177,7 @@ export default function AcquisitionCampaign(){
       <article className="metric"><span>Eigentümergespräche</span><strong>{p?.owner_talks??0}</strong><small>mit Bewertungstermin</small></article>
       <article className="metric"><span>Verkaufsstrategie-Checks</span><strong>{p?.readiness_checks??0}</strong><small>aus diesen Leads</small></article>
       <article className="metric"><span>Aufträge</span><strong>{p?.mandates??0}</strong><small>{p?.sales??0} davon verkauft</small></article>
-      <article className="metric"><span>Kosten je Reaktion</span><strong>{perResponse===null?"nicht berechenbar":money(perResponse)}</strong><small>{perResponse===null?"Kosten oder Reaktionen fehlen":`${money(effectiveCost)} auf ${p?.responses} Reaktionen`}</small></article>
+      <article className="metric"><span>Kosten je Reaktion</span><strong>{perResponse===null?"nicht berechenbar":money(perResponse)}</strong><small>{perResponse===null?"Kosten oder Reaktionen fehlen":`${money(effectiveCost)} auf ${plural(p?.responses,"Reaktion","Reaktionen")}`}</small></article>
       <article className="metric"><span>Provision erwartet</span><strong>{d.canReadCommission?money(p?.commission_expected):"—"}</strong><small>{d.canReadCommission?`${money(p?.commission_paid)} gezahlt`:"keine Berechtigung für Provisionen"}</small></article>
     </div>
 
@@ -211,7 +212,7 @@ export default function AcquisitionCampaign(){
         :<div className="data-list">{waves.map((w:any)=>
           <div className="data-row" key={w.id}>
             <div><strong>{w.wave_position}. {w.name}</strong><small>{w.medium||"Werbemittel offen"}{w.call_to_action?` · ${w.call_to_action}`:""}{w.sent_on?` · versendet ${formatDate(w.sent_on)}`:" · noch nicht versendet"}</small></div>
-            <div className="row-meta"><span>{w.household_count?`${w.household_count} Haushalte`:"Haushalte offen"}</span><small>{w.cost!=null?money(w.cost):"Kosten offen"} · {attributions.filter((a)=>a.wave_id===w.id).length} Reaktionen</small></div>
+            <div className="row-meta"><span>{w.household_count?`${w.household_count} Haushalte`:"Haushalte offen"}</span><small>{w.cost!=null?money(w.cost):"Kosten offen"} · {plural(attributions.filter((a)=>a.wave_id===w.id).length,"Reaktion","Reaktionen")}</small></div>
             <Form method="post"><input type="hidden" name="_intent" value="wave_remove"/><input type="hidden" name="wave_id" value={w.id}/><button className="text-button" type="submit" disabled={disabled}>Entfernen</button></Form>
           </div>)}</div>}
 

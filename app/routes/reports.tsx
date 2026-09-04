@@ -160,6 +160,11 @@ function formatNumber(value: number | string | null | undefined) {
   return new Intl.NumberFormat("de-DE", { maximumFractionDigits: 0 }).format(Number(value ?? 0));
 }
 
+function pluralLabel(value: number | string | null | undefined, one: string, many: string) {
+  const count = Number(value ?? 0);
+  return `${formatNumber(count)} ${count === 1 ? one : many}`;
+}
+
 function formatRate(value: number | string | null | undefined) {
   if (value === null || value === undefined || Number.isNaN(Number(value))) return null;
   return `${new Intl.NumberFormat("de-DE", { maximumFractionDigits: 1 }).format(Number(value))} %`;
@@ -378,7 +383,7 @@ export default function Reports() {
         ? <p className="empty-state">Im gewählten Zeitraum ist keiner Kampagne ein Lead zugeordnet.</p>
         : <div className="data-list">{campaigns.map((row: any) => <div className="data-row" key={row.campaign_id}>
             <div><strong>{row.campaign_number} · {row.name}</strong><small>{row.channel_label} · {row.area_path ?? "Gebiet offen"}</small></div>
-            <div className="row-meta"><span>{formatNumber(row.responses)} Reaktionen · {formatNumber(row.owner_talks)} Gespräche · {formatNumber(row.readiness_checks)} Checks</span><small>{formatNumber(row.mandates)} Aufträge · {formatNumber(row.sales)} Verkäufe{row.household_count ? ` · ${formatNumber(row.household_count)} Haushalte` : ""}</small></div>
+            <div className="row-meta"><span>{pluralLabel(row.responses, "Reaktion", "Reaktionen")} · {pluralLabel(row.owner_talks, "Gespräch", "Gespräche")} · {pluralLabel(row.readiness_checks, "Check", "Checks")}</span><small>{pluralLabel(row.mandates, "Auftrag", "Aufträge")} · {pluralLabel(row.sales, "Verkauf", "Verkäufe")}{row.household_count ? ` · ${pluralLabel(row.household_count, "Haushalt", "Haushalte")}` : ""}</small></div>
             <span>{canReadCommission ? formatCurrency(row.commission_expected) : "—"}</span>
           </div>)}</div>}
       <p className="reporting-quality-note"><strong>Datenbasis:</strong> Ausschließlich Leads, die in der Leadakte einer Kampagne zugeordnet wurden. Ohne Zuordnung erscheint ein Lead hier nicht.{canReadCommission ? "" : " Provisionswerte bleiben leer, weil die Berechtigung zum Lesen von Provisionen fehlt."}</p>
@@ -393,7 +398,7 @@ export default function Reports() {
         ? <p className="empty-state">Im gewählten Zeitraum ist keinem Partner ein Lead als Empfehlung zugeordnet.</p>
         : <div className="data-list">{partners.map((row: any) => <Link className="data-row data-row-link" to={`/crm/organizations/${row.organization_id}/partner`} key={row.organization_id}>
             <div><strong>{row.name}</strong><small>{row.trade ?? "Gewerk offen"}{row.regulated_profession && row.regulated_profession !== "NONE" ? " · regulierte Berufsgruppe" : ""}{row.blocked ? " · gesperrt" : ""}</small></div>
-            <div className="row-meta"><span>{formatNumber(row.referrals)} Empfehlungen · {formatNumber(row.appointments)} Termine</span><small>{formatNumber(row.readiness_checks)} Checks · {formatNumber(row.mandates)} Aufträge · {formatNumber(row.sales)} Verkäufe</small></div>
+            <div className="row-meta"><span>{pluralLabel(row.referrals, "Empfehlung", "Empfehlungen")} · {pluralLabel(row.appointments, "Termin", "Termine")}</span><small>{pluralLabel(row.readiness_checks, "Check", "Checks")} · {pluralLabel(row.mandates, "Auftrag", "Aufträge")} · {pluralLabel(row.sales, "Verkauf", "Verkäufe")}</small></div>
             <span className="subtle-link">Öffnen →</span>
           </Link>)}</div>}
     </section>
