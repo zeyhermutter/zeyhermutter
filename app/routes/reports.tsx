@@ -206,7 +206,19 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   });
   if (error || !summary) throw new Response("Dashboard-Kennzahlen konnten nicht geladen werden.", { status: 500, headers: responseHeaders() });
 
+  const [campaignRes, partnerRes, commissionRes] = await Promise.all([
+    supabase.rpc("acquisition_campaign_performance", { p_from: period.from, p_to: period.to }),
+    supabase.rpc("partner_referral_performance", { p_from: period.from, p_to: period.to }),
+    supabase.rpc("current_user_has_permission", { p_permission: "commission.read" }),
+  ]);
+  // Lesefehler nicht verschlucken: eine leere Kampagnenliste darf nicht wie
+  // „keine Kampagnen" aussehen, wenn die Abfrage fehlgeschlagen ist.
+  if (campaignRes.error || partnerRes.error) throw new Response("Akquise-Kennzahlen konnten nicht geladen werden.", { status: 500, headers: responseHeaders() });
+
   return data({
+    campaigns: (campaignRes.data ?? []) as any[],
+    partners: (partnerRes.data ?? []) as any[],
+    canReadCommission: commissionRes.data === true,
     profile,
     canReadCompany: companyAllowed === true,
     scope: requestedScope,
@@ -260,7 +272,7 @@ function LeadSources({ rows }: { rows: LeadSourceRow[] }) {
 }
 
 export default function Reports() {
-  const { profile, canReadCompany, scope, periodPreset, from, to, rangeError, summary } = useLoaderData<typeof loader>();
+  const { profile, canReadCompany, scope, periodPreset, from, to, rangeError, summary, campaigns, partners, canReadCommission } = useLoaderData<typeof loader>();
   const snapshot = summary.snapshot;
   const period = summary.period;
   const leadSources = summary.breakdowns?.lead_sources ?? [];
@@ -355,6 +367,35 @@ export default function Reports() {
       </div>
       <LeadSources rows={leadSources}/>
       {Number(unassignedLeads) > 0 ? <p className="reporting-quality-note"><strong>Datenhinweis:</strong> {formatNumber(unassignedLeads)} Leads im Zeitraum besitzen noch keine strukturierte Leadquelle.</p> : null}
+    </section>
+
+    <section className="reporting-section data-card">
+      <div className="reporting-section-head">
+        <div><p className="eyebrow">Akquise</p><h2>Kampagnen nach Gebiet</h2></div>
+        <Link className="subtle-link" to="/acquisition">Kampagnen öffnen →</Link>
+      </div>
+      {campaigns.length === 0
+        ? <p className="empty-state">Im gewählten Zeitraum ist keiner Kampagne ein Lead zugeordnet.</p>
+        : <div className="data-list">{campaigns.map((row: any) => <div className="data-row" key={row.campaign_id}>
+            <div><strong>{row.campaign_number} · {row.name}</strong><small>{row.channel_label} · {row.area_path ?? "Gebiet offen"}</small></div>
+            <div className="row-meta"><span>{formatNumber(row.responses)} Reaktionen · {formatNumber(row.owner_talks)} Gespräche · {formatNumber(row.readiness_checks)} Checks</span><small>{formatNumber(row.mandates)} Aufträge · {formatNumber(row.sales)} Verkäufe{row.household_count ? ` · ${formatNumber(row.household_count)} Haushalte` : ""}</small></div>
+            <span>{canReadCommission ? formatCurrency(row.commission_expected) : "—"}</span>
+          </div>)}</div>}
+      <p className="reporting-quality-note"><strong>Datenbasis:</strong> Ausschließlich Leads, die in der Leadakte einer Kampagne zugeordnet wurden. Ohne Zuordnung erscheint ein Lead hier nicht.{canReadCommission ? "" : " Provisionswerte bleiben leer, weil die Berechtigung zum Lesen von Provisionen fehlt."}</p>
+    </section>
+
+    <section className="reporting-section data-card">
+      <div className="reporting-section-head">
+        <div><p className="eyebrow">Akquise</p><h2>Partnerempfehlungen</h2></div>
+        <Link className="subtle-link" to="/crm/organizations">Organisationen öffnen →</Link>
+      </div>
+      {partners.length === 0
+        ? <p className="empty-state">Im gewählten Zeitraum ist keinem Partner ein Lead als Empfehlung zugeordnet.</p>
+        : <div className="data-list">{partners.map((row: any) => <Link className="data-row data-row-link" to={`/crm/organizations/${row.organization_id}/partner`} key={row.organization_id}>
+            <div><strong>{row.name}</strong><small>{row.trade ?? "Gewerk offen"}{row.regulated_profession && row.regulated_profession !== "NONE" ? " · regulierte Berufsgruppe" : ""}{row.blocked ? " · gesperrt" : ""}</small></div>
+            <div className="row-meta"><span>{formatNumber(row.referrals)} Empfehlungen · {formatNumber(row.appointments)} Termine</span><small>{formatNumber(row.readiness_checks)} Checks · {formatNumber(row.mandates)} Aufträge · {formatNumber(row.sales)} Verkäufe</small></div>
+            <span className="subtle-link">Öffnen →</span>
+          </Link>)}</div>}
     </section>
 
     <section className="reporting-section data-card">
