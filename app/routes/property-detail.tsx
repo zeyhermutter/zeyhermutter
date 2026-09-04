@@ -1,7 +1,6 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/property-detail";
 import { requirePermission } from "~/lib/auth.server";
-import { dispositionGaps } from "./property-disposition";
 import { grossYield } from "./property-hoa-tenancy";
 
 type FeatureChoice = { key:string; label:string };
@@ -54,7 +53,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   const { data: property, error } = await supabase.from("properties").select("*").eq("id",propertyId).maybeSingle();
   if(error||!property) throw new Response("Immobilie nicht gefunden.",{status:404,headers:responseHeaders()});
 
-  const [addressRes,ownersRes,contactsRes,featuresRes,customFeaturesRes,energyRes,checklistRes,transitionsRes,usersRes,auditPermissionRes,gwgPermissionRes,legalRes,encumbranceRes,dispositionPermissionRes,priceStagesRes,valuationsRes,dispositionRes,dispositionPartyRes,gwgCaseRes,mandatesRes,hoaRes,leviesRes,tenanciesRes,disclosureGapsRes] = await Promise.all([
+  const [addressRes,ownersRes,contactsRes,featuresRes,customFeaturesRes,energyRes,checklistRes,transitionsRes,usersRes,auditPermissionRes,gwgPermissionRes,legalRes,encumbranceRes,dispositionPermissionRes,priceStagesRes,valuationsRes,dispositionRes,dispositionPartyRes,gwgCaseRes,mandatesRes,hoaRes,leviesRes,tenanciesRes,disclosureGapsRes,dispositionGapsRes,saleProjectRes] = await Promise.all([
     supabase.from("property_addresses").select("*").eq("property_id",propertyId).maybeSingle(),
     supabase.from("property_owners").select("*").eq("property_id",propertyId).order("primary_contact",{ascending:false}),
     supabase.from("contacts").select("id, contact_number, first_name, last_name, email").is("archived_at",null).order("last_name").limit(1000),
@@ -79,6 +78,8 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     supabase.from("property_hoa_special_levies").select("id,purpose,status,own_share_amount,due_on").eq("property_id",propertyId).in("status",["EXPECTED","RESOLVED"]).order("due_on",{nullsFirst:false}).limit(20),
     supabase.from("property_tenancies").select("id,status,tenant_name,rent_cold,starts_on,ends_on,contract_type,tenant_pre_emption_relevant,conversion_blocking_until,arrears_amount,pending_rent_increase,archived_at").eq("property_id",propertyId).is("archived_at",null).order("status").order("starts_on",{ascending:false}).limit(20),
     supabase.rpc("property_disclosure_gaps",{p_property_id:propertyId}),
+    supabase.rpc("property_disposition_gaps",{p_property_id:propertyId}),
+    supabase.from("sale_projects").select("id,project_number,phase,status").eq("property_id",propertyId).is("archived_at",null).maybeSingle(),
   ]);
   const firstError=[addressRes,ownersRes,contactsRes,featuresRes,customFeaturesRes,energyRes,checklistRes,transitionsRes,usersRes].find((r)=>r.error)?.error;
   if(firstError) throw new Response("Objektdaten konnten nicht vollständig geladen werden.",{status:500,headers:responseHeaders()});
@@ -90,7 +91,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   }
   const contactMap=Object.fromEntries((contactsRes.data??[]).map((c)=>[c.id,c]));
   const customFeatureOptions=Array.from(new Map((customFeaturesRes.data??[]).map((f)=>[f.feature_key,{key:f.feature_key,label:f.label}])).values());
-  return data({property,mandates:mandatesRes.data??[],hoa:hoaRes.data??null,specialLevies:leviesRes.data??[],tenancies:tenanciesRes.data??[],disclosureGaps:(disclosureGapsRes.data??[]) as string[],canGwgRead:gwgPermissionRes.data===true,gwgCase:(gwgCaseRes.data??[])[0]??null,legal:legalRes.data??null,encumbrances:encumbranceRes.data??[],canDispositionRead:dispositionPermissionRes.data===true,priceStages:priceStagesRes.data??[],valuations:valuationsRes.data??[],disposition:dispositionRes.data??null,dispositionParties:((dispositionPartyRes.data??[]) as any[]).filter((row)=>!dispositionRes.data||row.disposition_id===(dispositionRes.data as any).id),address:addressRes.data,owners:ownersRes.data??[],contacts:contactsRes.data??[],contactMap,features:featuresRes.data??[],customFeatureOptions,energy:energyRes.data,checklist:checklistRes.data??[],transitions:transitionsRes.data??[],users:usersRes.data??[],auditEvents,profile,newOwner},{headers:responseHeaders()});
+  return data({property,mandates:mandatesRes.data??[],hoa:hoaRes.data??null,specialLevies:leviesRes.data??[],tenancies:tenanciesRes.data??[],disclosureGaps:(disclosureGapsRes.data??[]) as string[],dispositionGaps:(dispositionGapsRes.data??[]) as string[],saleProject:saleProjectRes.data??null,canGwgRead:gwgPermissionRes.data===true,gwgCase:(gwgCaseRes.data??[])[0]??null,legal:legalRes.data??null,encumbrances:encumbranceRes.data??[],canDispositionRead:dispositionPermissionRes.data===true,priceStages:priceStagesRes.data??[],valuations:valuationsRes.data??[],disposition:dispositionRes.data??null,dispositionParties:((dispositionPartyRes.data??[]) as any[]).filter((row)=>!dispositionRes.data||row.disposition_id===(dispositionRes.data as any).id),address:addressRes.data,owners:ownersRes.data??[],contacts:contactsRes.data??[],contactMap,features:featuresRes.data??[],customFeatureOptions,energy:energyRes.data,checklist:checklistRes.data??[],transitions:transitionsRes.data??[],users:usersRes.data??[],auditEvents,profile,newOwner},{headers:responseHeaders()});
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
@@ -271,6 +272,7 @@ export default function PropertyDetail(){
       <section className="data-card" id="status"><div className="card-head"><div><p className="eyebrow">Ablauf</p><h2>Status</h2></div><span className="badge">{labelStatus(p.status)}</span></div><div className="inline-actions">
         {p.status==="ARCHIVED" && p.status_before_archive ? <Form method="post"><input type="hidden" name="_intent" value="status"/><input type="hidden" name="version" value={p.version}/><input type="hidden" name="target_status" value={p.status_before_archive}/><button className="secondary-button" type="submit">Wiederherstellen → {labelStatus(p.status_before_archive)}</button></Form> : d.transitions.map((t)=><Form method="post" key={t.to_status}><input type="hidden" name="_intent" value="status"/><input type="hidden" name="version" value={p.version}/><input type="hidden" name="target_status" value={t.to_status}/><button className="secondary-button" type="submit" title={t.description??""}>→ {labelStatus(t.to_status)}</button></Form>)}
       </div></section>
+      <section className="data-card" id="verkaufsprojekt"><div className="card-head"><div><p className="eyebrow">Klammer</p><h2>Verkaufsprojekt</h2></div>{d.saleProject?<Link className="subtle-link" to={`/projects/${(d.saleProject as any).id}`}>Projekt öffnen →</Link>:<Link className="subtle-link" to="/projects">Projekte →</Link>}</div>{d.saleProject?<p className="form-help">{(d.saleProject as any).project_number} · Phase {(d.saleProject as any).phase} · Status {(d.saleProject as any).status}</p>:<p className="empty-state">Zu dieser Immobilie ist kein Verkaufsprojekt angelegt.</p>}</section>
       <section className="data-card" id="maklerauftrag"><div className="card-head"><div><p className="eyebrow">Beauftragung</p><h2>Maklerauftrag</h2></div><Link className="subtle-link" to={`/mandates?property_id=${encodeURIComponent(p.id)}`}>Aufträge öffnen →</Link></div>{d.mandates.length===0?<p className="empty-state">Für diese Immobilie ist kein Maklerauftrag erfasst.</p>:d.mandates.map((m:any)=>{const risk=m.status==="ACTIVE"&&m.client_is_consumer&&(!m.withdrawal_instruction_given_on||(m.withdrawal_deadline_on&&m.withdrawal_deadline_on>=new Date().toISOString().slice(0,10)&&!m.early_start_requested_on));return <Link className="data-row data-row-link" to={`/mandates/${m.id}`} key={m.id}><div><strong>{m.mandate_number} · {MANDATE_TYPE[m.mandate_type]??m.mandate_type}</strong><small>{MANDATE_STATUS[m.status]??m.status}{m.term_start?` · ab ${new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeZone:"Europe/Berlin"}).format(new Date(m.term_start))}`:""}</small></div><div className="row-meta">{risk?<span className="status-pill status-lost">Widerruf offen</span>:<span>{m.text_form_confirmed?"Textform dokumentiert":"Textform offen"}</span>}</div><span className="subtle-link">Öffnen →</span></Link>;})}</section>
       <section className="data-card" id="preis-wert"><div className="card-head"><div><p className="eyebrow">Begründbar</p><h2>Preis & Wert</h2></div><Link className="subtle-link" to={`/properties/${p.id}/pricing`}>Verlauf & Wertermittlung →</Link></div>{(()=>{
         const stufen=(d.priceStages??[]) as any[];
@@ -336,7 +338,7 @@ export default function PropertyDetail(){
       })()}</section>
       {d.canDispositionRead?<section className="data-card" id="verfuegungsberechtigung"><div className="card-head"><div><p className="eyebrow">Wer darf verkaufen</p><h2>Verfügungsberechtigung</h2></div><Link className="subtle-link" to={`/properties/${p.id}/disposition`}>Erfassen & prüfen →</Link></div>{(()=>{
         const rec=d.disposition as any;const parties=((d.dispositionParties??[]) as any[]).filter((row)=>!row.archived_at);
-        const gaps=dispositionGaps(rec,(d.dispositionParties??[]) as any[]);
+        const gaps=(d.dispositionGaps??[]) as string[];
         return <>
           <div className={gaps.length?"form-warning":"form-success"}><strong>{gaps.length?"Verfügungsberechtigung offen":"Verfügungsberechtigung geklärt"}</strong>{gaps.length?<ul>{gaps.map((gap:string)=><li key={gap}>{gap}</li>)}</ul>:<p>Alle im System geführten Angaben, Zustimmungen und Genehmigungen sind dokumentiert.</p>}</div>
           {rec?<dl className="detail-list"><div><dt>Eigentümerstellung</dt><dd>{DISPOSITION_STRUCTURE[rec.ownership_structure]??rec.ownership_structure}</dd></div><div><dt>Erbfall</dt><dd>{rec.inheritance_case?`ja${rec.date_of_death?` · verstorben ${formatDay(rec.date_of_death)}`:""}`:"nein"}</dd></div>{rec.inheritance_case?<div><dt>Erbnachweis</dt><dd>{rec.succession_proof_issued_on?`erteilt ${formatDay(rec.succession_proof_issued_on)}`:rec.succession_proof_type?"beantragt bzw. offen":"nicht festgelegt"}</dd></div>:null}<div><dt>Beteiligte</dt><dd>{parties.length}</dd></div></dl>:null}

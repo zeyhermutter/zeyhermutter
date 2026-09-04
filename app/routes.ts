@@ -45,6 +45,8 @@ export default [
     route("leads/:leadId", "routes/lead-detail.tsx"),
     route("leads/:leadId/sales-readiness", "routes/lead-sales-readiness.tsx"),
     route("compliance", "routes/compliance.tsx"),
+    route("projects", "routes/projects.tsx"),
+    route("projects/:projectId", "routes/project-detail.tsx"),
     route("acquisition", "routes/acquisition.tsx"),
     route("acquisition/:campaignId", "routes/acquisition-campaign.tsx"),
     route("mandates", "routes/mandates.tsx"),

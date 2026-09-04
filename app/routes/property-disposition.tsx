@@ -62,44 +62,19 @@ function errorMessage(error:any){
 }
 
 /**
- * Fasst zusammen, was der Verfügungsberechtigung noch fehlt. Bewusst eine reine
- * Vollständigkeitsprüfung der Erfassung — keine Aussage darüber, ob jemand
- * rechtlich wirksam verfügen kann.
+ * Die Lückenliste — eine reine Vollständigkeitsprüfung der Erfassung, keine
+ * Aussage darüber, ob jemand rechtlich wirksam verfügen kann — kommt seit
+ * Thema 11 aus public.property_disposition_gaps. Sie erscheint auch in der
+ * Objektakte und in den Blockern des Verkaufsprojekts; eine zweite Fassung in
+ * TypeScript würde davon abdriften.
  */
-export function dispositionGaps(record:any,parties:any[]){
-  const gaps:string[]=[];
-  if(!record)return ["Für diese Immobilie ist die Verfügungsberechtigung nicht erfasst."];
-  const active=parties.filter((row)=>!row.archived_at);
-  if(record.ownership_structure==="UNKNOWN")gaps.push("Die Eigentümerstellung ist nicht festgelegt.");
-  if(record.inheritance_case){
-    if(!record.succession_proof_type)gaps.push("Es ist nicht festgelegt, womit die Erbfolge nachgewiesen wird.");
-    else if(!record.succession_proof_issued_on)gaps.push(`${PROOF[record.succession_proof_type]??"Der Erbnachweis"} ist noch nicht erteilt.`);
-    if(!record.land_register_corrected)gaps.push("Die Grundbuchberichtigung ist nicht als erfolgt dokumentiert.");
-    if(record.ownership_structure==="COMMUNITY_OF_HEIRS"&&!active.some((row)=>row.party_role==="CO_HEIR"))gaps.push("Zur Erbengemeinschaft ist kein Miterbe erfasst.");
-  }
-  if(record.executor_appointed&&!active.some((row)=>row.party_role==="EXECUTOR"))gaps.push("Testamentsvollstreckung ist vermerkt, aber kein Vollstrecker erfasst.");
-  if(record.spousal_consent_required&&!record.spousal_consent_given_on)gaps.push("Die erforderliche Ehegattenzustimmung liegt nicht vor.");
-  const open=active.filter((row)=>row.consent_status==="OPEN");
-  if(open.length)gaps.push(`${open.length} ${open.length===1?"Zustimmung ist":"Zustimmungen sind"} noch offen.`);
-  const refused=active.filter((row)=>row.consent_status==="REFUSED");
-  if(refused.length)gaps.push(`${refused.length} ${refused.length===1?"Zustimmung wurde":"Zustimmungen wurden"} verweigert.`);
-  const approvals=active.filter((row)=>row.court_approval_required&&!row.court_approval_granted_on);
-  if(approvals.length)gaps.push(`${approvals.length} gerichtliche ${approvals.length===1?"Genehmigung steht":"Genehmigungen stehen"} aus.`);
-  const revoked=active.filter((row)=>row.party_role==="ATTORNEY_IN_FACT"&&row.power_of_attorney_revoked_on);
-  if(revoked.length)gaps.push(`${revoked.length} ${revoked.length===1?"Vollmacht ist":"Vollmachten sind"} widerrufen.`);
-  const expired=active.filter((row)=>row.party_role==="ATTORNEY_IN_FACT"&&row.power_of_attorney_valid_until&&row.power_of_attorney_valid_until<today()&&!row.power_of_attorney_revoked_on);
-  if(expired.length)gaps.push(`${expired.length} ${expired.length===1?"Vollmacht ist":"Vollmachten sind"} abgelaufen.`);
-  const minors=active.filter((row)=>row.is_minor&&!active.some((c)=>c.represents_contact_id===row.contact_id&&c.party_role==="SUPPLEMENTARY_CURATOR"));
-  if(minors.length)gaps.push(`Für ${minors.length} minderjährige ${minors.length===1?"beteiligte Person ist":"beteiligte Personen sind"} kein Ergänzungspfleger erfasst.`);
-  return gaps;
-}
 
 export async function loader({request,context,params}:Route.LoaderArgs){
   const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"disposition.read");
   const propertyId=params.propertyId!;
   const {data:property,error:propertyError}=await supabase.from("properties").select("id,property_number,internal_title,status,primary_responsible_user").eq("id",propertyId).maybeSingle();
   if(propertyError||!property)throw new Response("Immobilie nicht gefunden.",{status:404,headers:responseHeaders()});
-  const [{data:record},{data:partiesRaw},{data:owners},{data:contacts},{data:profiles},{data:canWrite},{data:canArchive},{data:canTask}]=await Promise.all([
+  const [{data:record},{data:partiesRaw},{data:owners},{data:contacts},{data:profiles},{data:canWrite},{data:canArchive},{data:canTask},{data:gapsResult}]=await Promise.all([
     supabase.from("property_dispositions").select("*").eq("property_id",propertyId).maybeSingle(),
     supabase.from("property_disposition_parties").select("*,contacts!property_disposition_parties_contact_id_fkey(id,contact_number,first_name,last_name),represents:contacts!property_disposition_parties_represents_contact_id_fkey(id,first_name,last_name)").order("party_role").order("created_at"),
     supabase.from("property_owners").select("contact_id,ownership_percentage,primary_contact").eq("property_id",propertyId),
@@ -108,9 +83,10 @@ export async function loader({request,context,params}:Route.LoaderArgs){
     supabase.rpc("current_user_has_permission",{p_permission:"disposition.write"}),
     supabase.rpc("current_user_has_permission",{p_permission:"disposition.archive"}),
     supabase.rpc("current_user_has_permission",{p_permission:"task.write"}),
+    supabase.rpc("property_disposition_gaps",{p_property_id:propertyId}),
   ]);
   const parties=((partiesRaw??[]) as any[]).filter((row)=>!record||row.disposition_id===record.id);
-  return data({profile,property,record,parties,owners:owners??[],contacts:contacts??[],profiles:profiles??[],canWrite:canWrite===true,canArchive:canArchive===true,canTask:canTask===true},{headers:responseHeaders()});
+  return data({profile,property,record,parties,gaps:(gapsResult??[]) as string[],owners:owners??[],contacts:contacts??[],profiles:profiles??[],canWrite:canWrite===true,canArchive:canArchive===true,canTask:canTask===true},{headers:responseHeaders()});
 }
 
 export async function action({request,context,params}:Route.ActionArgs){
@@ -320,7 +296,7 @@ export default function PropertyDisposition(){
   const record=d.record as any;
   const parties=d.parties as any[];
   const locked=!d.canWrite;
-  const gaps=dispositionGaps(record,parties);
+  const gaps=(d.gaps??[]) as string[];
   const active=parties.filter((row)=>!row.archived_at);
   const inheritance=Boolean(record?.inheritance_case);
   return <main className="editor-shell">
