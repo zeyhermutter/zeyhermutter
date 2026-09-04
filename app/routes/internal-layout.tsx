@@ -83,7 +83,7 @@ function SalesReadinessLeadEntryEnhancer() {
 
 function PropertyContextNavigation() {
   const location = useLocation();
-  const match = location.pathname.match(/^\/properties\/([^/]+)(?:\/(documents|media|interests|publication|exposes|marketing|compliance|legal|disposition|pricing|hoa-tenancy)(?:\/.*)?)?\/?$/);
+  const match = location.pathname.match(/^\/properties\/([^/]+)(?:\/(documents|media|interests|publication|exposes|marketing|compliance|legal|disposition|pricing|hoa-tenancy|mandatory-data)(?:\/.*)?)?\/?$/);
   if (!match) return null;
 
   const propertyId = match[1];
@@ -95,6 +95,7 @@ function PropertyContextNavigation() {
       <Link className={section === "disposition" ? "active" : ""} to={`/properties/${propertyId}/disposition`}>Verfügungsberechtigung</Link>
       <Link className={section === "pricing" ? "active" : ""} to={`/properties/${propertyId}/pricing`}>Preis & Wert</Link>
       <Link className={section === "hoa-tenancy" ? "active" : ""} to={`/properties/${propertyId}/hoa-tenancy`}>WEG & Miete</Link>
+      <Link className={section === "mandatory-data" ? "active" : ""} to={`/properties/${propertyId}/mandatory-data`}>Pflichtangaben</Link>
       <Link className={section === "interests" ? "active" : ""} to={`/properties/${propertyId}/interests`}>Interessenten & Besichtigungen</Link>
       <Link className={section === "publication" ? "active" : ""} to={`/properties/${propertyId}/publication`}>Website</Link>
       <Link className={section === "exposes" ? "active" : ""} to={`/properties/${propertyId}/exposes`}>Exposés</Link>

@@ -16,6 +16,7 @@ function errorMessage(message:string){
  if(message.includes("PROPERTY_NOT_READY_FOR_PUBLICATION"))return "Eine Freigabeversion kann erst ab Objektstatus „Vorbereitung“ erzeugt werden.";
  if(message.includes("PROPERTY_NOT_IN_MARKETING"))return "Veröffentlichen ist erst möglich, wenn die Immobilie in Vermarktung oder Reserviert steht.";
  if(message.includes("PUBLIC_PRICE_REQUIRED")||message.includes("PUBLIC_RENT_REQUIRED"))return "Für die Veröffentlichung muss ein gültiger Preis hinterlegt sein.";
+ if(message.includes("PUBLIC_MANDATORY_DISCLOSURES_MISSING"))return "Die Pflichtangaben zum Energieausweis sind unvollständig. Sie sind unter Pflichtangaben zu ergänzen oder als begründete Ausnahme zu erfassen.";
  if(message.includes("PROPERTY_ADDRESS_REQUIRED"))return "Für die Veröffentlichung muss eine Objektadresse vorhanden sein.";
  if(message.includes("PROPERTY_PUBLISH_REQUIRED"))return "Dir fehlt die Berechtigung zum Freigeben bzw. Veröffentlichen.";
  return "Die Veröffentlichungsaktion konnte nicht ausgeführt werden.";
@@ -39,13 +40,14 @@ async function ensurePublicMediaCopies(supabase:any,propertyId:string){
 export async function loader({request,context,params}:Route.LoaderArgs){
  const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"property.read");
  const propertyId=params.propertyId!;
- const [propertyRes,publicationRes,addressRes,energyRes,mediaRes,publishPermissionRes]=await Promise.all([
+ const [propertyRes,publicationRes,addressRes,energyRes,mediaRes,publishPermissionRes,disclosureGapsRes]=await Promise.all([
   supabase.from("properties").select("id,property_number,internal_title,property_type,transaction_type,status,purchase_price,rent_cold,living_area_sqm,plot_area_sqm,year_built,version").eq("id",propertyId).maybeSingle(),
   supabase.from("property_publications").select("*").eq("property_id",propertyId).maybeSingle(),
   supabase.from("property_addresses").select("id,public_address_mode,street,house_number,postal_code,city,district").eq("property_id",propertyId).maybeSingle(),
   supabase.from("property_energy_data").select("id,certificate_present,efficiency_class,energy_value_kwh").eq("property_id",propertyId).maybeSingle(),
   supabase.from("property_media").select("id,title,alt_text,sort_order,version").eq("property_id",propertyId).eq("media_type","IMAGE").eq("public_approved",true).is("archived_at",null).order("sort_order").order("created_at"),
-  supabase.rpc("current_user_has_permission",{p_permission:"property.publish"})
+  supabase.rpc("current_user_has_permission",{p_permission:"property.publish"}),
+  supabase.rpc("property_disclosure_gaps",{p_property_id:propertyId})
  ]);
  if(propertyRes.error||!propertyRes.data)throw new Response("Immobilie nicht gefunden.",{status:404,headers:responseHeaders()});
  if(publicationRes.error||addressRes.error||energyRes.error||mediaRes.error)throw new Response("Veröffentlichungsakte konnte nicht vollständig geladen werden.",{status:500,headers:responseHeaders()});
@@ -62,8 +64,9 @@ export async function loader({request,context,params}:Route.LoaderArgs){
   {id:"public-core-data",label:property.property_type==="LAND"?"Grundstücksfläche":"Relevante Objektgröße",ok:property.property_type==="LAND"?isPositive(property.plot_area_sqm):(["DETACHED_HOUSE","SEMI_DETACHED_HOUSE","TERRACED_HOUSE","APARTMENT_BUILDING","APARTMENT","PENTHOUSE","MAISONETTE"].includes(property.property_type)?isPositive(property.living_area_sqm):true)},
   {id:"public-media",label:"Mindestens ein freigegebenes Foto",ok:approvedMedia.length>0},
   {id:"public-review",label:"Inhalts- und Datenschutzprüfung bestätigt",ok:Boolean(publication.content_review_confirmed_at&&publication.content_review_confirmed_by)},
+  ...((disclosureGapsRes.data??[]) as string[]).map((gap,index)=>({id:`public-disclosure-${index}`,label:`Pflichtangaben: ${gap}`,ok:false})),
  ].filter(item=>!item.ok):[];
- return data({property,publication,versions,liveVersion,canPublish:publishPermissionRes.data===true,profile,address,energy,approvedMedia,blockers},{headers:responseHeaders()});
+ return data({property,publication,versions,liveVersion,canPublish:publishPermissionRes.data===true,profile,address,energy,approvedMedia,blockers,disclosureGaps:(disclosureGapsRes.data??[]) as string[]},{headers:responseHeaders()});
 }
 
 export async function action({request,context,params}:Route.ActionArgs){
