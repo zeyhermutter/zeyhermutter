@@ -61,7 +61,7 @@ export default function Help() {
             <div><p className="eyebrow">Kapitel {k.nummer}</p><h2>{k.titel}</h2></div>
             <a className="subtle-link" href="#seitenanfang">↑ Inhalt</a>
           </div>
-          <HelpChapterBody kapitel={k} spaeter />
+          <HelpChapterBody kapitel={k} />
         </section>
       ))}
     </main>

@@ -14,13 +14,19 @@ export function HelpText({ inhalt }: { inhalt: string }) {
     : <span key={i}>{teil}</span>)}</>;
 }
 
-// `spaeter` schaltet das verzoegerte Laden der Bilder ein. Das ist nur auf der
-// durchgehenden Anleitungsseite sinnvoll, wo zwoelf Bilder untereinander
-// stehen. Im Hilfe-Fenster muss es AUS bleiben: dort steckt das Bild in einem
-// eigenen Scrollbereich und hat ohne geladene Datei die Hoehe null — der
-// Browser sieht dann nie eine Ueberschneidung mit dem Sichtfeld und laedt das
-// Bild nie. Live nachgewiesen: currentSrc blieb auch nach vier Sekunden leer.
-export function HelpBlockView({ block, spaeter = false }: { block: HelpBlock; spaeter?: boolean }) {
+// Die Bilder laden sofort, nicht verzoegert.
+//
+// loading="lazy" war der erste Versuch und hat hier nie ausgeloest — weder im
+// Hilfe-Fenster noch auf der durchgehenden Seite. Am BETA-Stand d1bc433
+// nachgemessen: Fenster auf 1200 px gescrollt, erstes Bild bei 13 px voll im
+// Sichtfeld, Breite und Hoehe gesetzt, kein scrollender Vorfahr — und nach
+// zweieinhalb Sekunden immer noch naturalWidth 0. Ein Bild, das vielleicht
+// erscheint, ist in einer Anleitung schlechter als eines, das laedt.
+//
+// Der Preis ist gering: zwoelf Bilder, zusammen 528 KB, auf einer internen
+// Seite, die niemand im Minutentakt oeffnet. Breite und Hoehe bleiben gesetzt,
+// damit der Platz reserviert ist und beim Laden nichts springt.
+export function HelpBlockView({ block }: { block: HelpBlock }) {
   if (block.art === "absatz") return <p className="help-absatz"><HelpText inhalt={block.text} /></p>;
   if (block.art === "liste") return <ul className="help-liste">{block.punkte.map((p, i) => <li key={i}><HelpText inhalt={p} /></li>)}</ul>;
   if (block.art === "schritte") return <ol className="help-schritte">{block.punkte.map((p, i) => <li key={i}><HelpText inhalt={p} /></li>)}</ol>;
@@ -28,12 +34,12 @@ export function HelpBlockView({ block, spaeter = false }: { block: HelpBlock; sp
   if (block.art === "warnung") return <div className="help-warnung"><HelpText inhalt={block.text} /></div>;
   return (
     <figure className="help-bild">
-      <img src={`/hilfe/${block.datei}`} alt={block.unterschrift} loading={spaeter ? "lazy" : "eager"} width={block.breite} height={block.hoehe} />
+      <img src={`/hilfe/${block.datei}`} alt={block.unterschrift} width={block.breite} height={block.hoehe} />
       <figcaption>{block.unterschrift}</figcaption>
     </figure>
   );
 }
 
-export function HelpChapterBody({ kapitel, spaeter = false }: { kapitel: HelpChapter; spaeter?: boolean }) {
-  return <>{kapitel.bloecke.map((b, i) => <HelpBlockView block={b} spaeter={spaeter} key={i} />)}</>;
+export function HelpChapterBody({ kapitel }: { kapitel: HelpChapter }) {
+  return <>{kapitel.bloecke.map((b, i) => <HelpBlockView block={b} key={i} />)}</>;
 }
