@@ -1,6 +1,7 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/contact-detail";
 import { requireActiveUser } from "~/lib/auth.server";
+import { REFERRAL_STATUS } from "./referrals";
 
 type FieldChange = { old?: unknown; new?: unknown };
 type ActionResult = { error?: string; conflict?: boolean };
@@ -50,7 +51,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   const contactId = params.contactId;
   if (!contactId) throw new Response("Kontakt fehlt.", { status: 404 });
 
-  const [{ data: contact, error: contactError }, { data: history, error: historyError }] =
+  const [{ data: contact, error: contactError }, { data: history, error: historyError }, { data: referrals }] =
     await Promise.all([
       supabase
         .from("contacts")
@@ -64,6 +65,13 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
         .eq("entity_id", contactId)
         .order("occurred_at", { ascending: false })
         .limit(50),
+      supabase
+        .from("referrals")
+        .select("id, referral_number, received_on, status, referred_name, acknowledged_on, referred_contact:contacts!referrals_referred_contact_id_fkey(first_name,last_name), leads(id,lead_number)")
+        .eq("referrer_contact_id", contactId)
+        .is("archived_at", null)
+        .order("received_on", { ascending: false })
+        .limit(50),
     ]);
 
   if (contactError || historyError) {
@@ -73,7 +81,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 
   const url = new URL(request.url);
   return data(
-    { contact, history: history ?? [], profile, saved: url.searchParams.get("saved") === "1" },
+    { contact, history: history ?? [], referrals: referrals ?? [], profile, saved: url.searchParams.get("saved") === "1" },
     { headers: responseHeaders() },
   );
 }
@@ -154,7 +162,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 }
 
 export default function ContactDetail() {
-  const { contact, history, profile, saved } = useLoaderData<typeof loader>();
+  const { contact, history, referrals, profile, saved } = useLoaderData<typeof loader>();
   const result = useActionData<typeof action>();
 
   return (
@@ -191,6 +199,22 @@ export default function ContactDetail() {
           <label className="form-field full-width"><span>Interne Notiz</span><textarea name="internal_notes" rows={6} defaultValue={contact.internal_notes ?? ""} /></label>
           <div className="form-actions"><Link className="secondary-button link-button" to="/crm">Zurück</Link><button className="primary-button" type="submit">Änderungen speichern</button></div>
         </Form>
+
+        <aside className="history-card">
+          <div className="card-head"><div><p className="eyebrow">Nach dem Verkauf</p><h2>Empfehlungen</h2></div><Link className="subtle-link" to="/referrals">Alle →</Link></div>
+          {referrals.length === 0
+            ? <p className="empty-state">Von dieser Person ist keine Empfehlung erfasst.</p>
+            : <div className="data-list">{referrals.map((referral: any) => {
+                const referred = Array.isArray(referral.referred_contact) ? referral.referred_contact[0] : referral.referred_contact;
+                const lead = Array.isArray(referral.leads) ? referral.leads[0] : referral.leads;
+                return (
+                  <Link className="data-row data-row-link" to={`/referrals/${referral.id}`} key={referral.id}>
+                    <div><strong>{referral.referral_number}</strong><small>empfiehlt {referred ? `${referred.last_name}, ${referred.first_name}` : referral.referred_name ?? "ohne Namen"}</small></div>
+                    <div className="row-meta"><span className="status-pill">{REFERRAL_STATUS[referral.status] ?? referral.status}</span><small>{lead ? lead.lead_number : referral.acknowledged_on ? "bedankt" : "kein Lead"}</small></div>
+                  </Link>
+                );
+              })}</div>}
+        </aside>
 
         <aside className="history-card">
           <div className="card-head"><div><p className="eyebrow">Audit</p><h2>Historie</h2></div><span className="subtle">letzte 50</span></div>

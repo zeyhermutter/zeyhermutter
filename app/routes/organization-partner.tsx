@@ -1,6 +1,7 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/organization-partner";
 import { requirePermission } from "~/lib/auth.server";
+import { REFERRAL_STATUS } from "./referrals";
 
 type ActionResult={error?:string};
 
@@ -60,11 +61,12 @@ export async function loader({request,context,params}:Route.LoaderArgs){
     .select("id,organization_number,name,legal_form,city,status").eq("id",organizationId).maybeSingle();
   if(error||!organization)throw new Response("Organisation nicht gefunden.",{status:404,headers:responseHeaders()});
 
-  const [profileRes,feesRes,referralsRes,canWriteRes]=await Promise.all([
+  const [profileRes,feesRes,referralsRes,canWriteRes,referralCasesRes]=await Promise.all([
     supabase.from("partner_profiles").select("*,profiles!partner_profiles_compliance_reviewed_by_fkey(display_name)").eq("organization_id",organizationId).maybeSingle(),
     supabase.from("partner_referral_fees").select("*,leads(id,lead_number),properties(id,property_number)").eq("organization_id",organizationId).order("agreed_on",{ascending:false}),
     supabase.from("lead_acquisitions").select("id,response_on,leads(id,lead_number,status,valuation_appointment_at,converted_property_id)").eq("referrer_organization_id",organizationId).order("response_on",{ascending:false,nullsFirst:false}),
     supabase.rpc("current_user_has_permission",{p_permission:"organization.write"}),
+    supabase.from("referrals").select("id,referral_number,received_on,status,referred_name,acknowledged_on,referred_contact:contacts!referrals_referred_contact_id_fkey(first_name,last_name),leads(id,lead_number)").eq("referrer_organization_id",organizationId).is("archived_at",null).order("received_on",{ascending:false}),
   ]);
   const readError=[profileRes,feesRes,referralsRes].find((r)=>r.error)?.error;
   if(readError)throw new Response("Die Partnerdaten konnten nicht geladen werden.",{status:500,headers:responseHeaders()});
@@ -74,6 +76,7 @@ export async function loader({request,context,params}:Route.LoaderArgs){
     partner:profileRes.data,
     fees:feesRes.data??[],
     referrals:referralsRes.data??[],
+    referralCases:referralCasesRes.data??[],
     canWrite:canWriteRes.data===true,
   },{headers:responseHeaders()});
 }
@@ -263,6 +266,22 @@ export default function OrganizationPartner(){
             <div className="row-meta"><span>{r.leads?.status??"—"}</span><small>{r.leads?.valuation_appointment_at?"Bewertungstermin vereinbart":"kein Bewertungstermin"}{r.leads?.converted_property_id?" · in Immobilie überführt":""}</small></div>
             <span className="subtle-link">Öffnen →</span>
           </Link>)}</div>}
+    </section>
+
+    <section className="data-card" id="empfehlungsvorgaenge">
+      <div className="card-head"><div><p className="eyebrow">Wer wen empfohlen hat</p><h2>Empfehlungsvorgänge</h2></div><Link className="subtle-link" to="/referrals">Empfehlungen →</Link></div>
+      {(d.referralCases as any[]).length===0
+        ?<p className="empty-state">Von diesem Partner ist kein Empfehlungsvorgang erfasst. Anders als die Herkunft oben lässt sich hier auch eine Empfehlung führen, aus der noch kein Lead entstanden ist.</p>
+        :<div className="data-list">{(d.referralCases as any[]).map((referral:any)=>{
+          const referred=Array.isArray(referral.referred_contact)?referral.referred_contact[0]:referral.referred_contact;
+          const lead=Array.isArray(referral.leads)?referral.leads[0]:referral.leads;
+          return <Link className="data-row data-row-link" to={`/referrals/${referral.id}`} key={referral.id}>
+            <div><strong>{referral.referral_number}</strong><small>empfiehlt {referred?`${referred.last_name}, ${referred.first_name}`:referral.referred_name??"ohne Namen"}</small></div>
+            <div className="row-meta"><span>{formatDate(referral.received_on)}</span><small>{lead?lead.lead_number:"kein Lead"}</small></div>
+            <div className="row-meta"><span className="status-pill">{REFERRAL_STATUS[referral.status]??referral.status}</span><small>{referral.acknowledged_on?"bedankt":"kein Dank dokumentiert"}</small></div>
+            <span className="subtle-link">Öffnen →</span>
+          </Link>;
+        })}</div>}
     </section>
 
     <section className="data-card">

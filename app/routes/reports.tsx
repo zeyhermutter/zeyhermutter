@@ -211,16 +211,20 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   });
   if (error || !summary) throw new Response("Dashboard-Kennzahlen konnten nicht geladen werden.", { status: 500, headers: responseHeaders() });
 
-  const [campaignRes, partnerRes, commissionRes] = await Promise.all([
+  const [campaignRes, partnerRes, commissionRes, referralRes, referralGapRes] = await Promise.all([
     supabase.rpc("acquisition_campaign_performance", { p_from: period.from, p_to: period.to }),
     supabase.rpc("partner_referral_performance", { p_from: period.from, p_to: period.to }),
     supabase.rpc("current_user_has_permission", { p_permission: "commission.read" }),
+    supabase.rpc("referral_performance", { p_from: period.from, p_to: period.to }),
+    supabase.rpc("referral_attribution_gaps"),
   ]);
   // Lesefehler nicht verschlucken: eine leere Kampagnenliste darf nicht wie
   // „keine Kampagnen" aussehen, wenn die Abfrage fehlgeschlagen ist.
   if (campaignRes.error || partnerRes.error) throw new Response("Akquise-Kennzahlen konnten nicht geladen werden.", { status: 500, headers: responseHeaders() });
 
   return data({
+    referrals: (referralRes.data ?? []) as any[],
+    referralGaps: (referralGapRes.data ?? []) as any[],
     campaigns: (campaignRes.data ?? []) as any[],
     partners: (partnerRes.data ?? []) as any[],
     canReadCommission: commissionRes.data === true,
@@ -277,7 +281,7 @@ function LeadSources({ rows }: { rows: LeadSourceRow[] }) {
 }
 
 export default function Reports() {
-  const { profile, canReadCompany, scope, periodPreset, from, to, rangeError, summary, campaigns, partners, canReadCommission } = useLoaderData<typeof loader>();
+  const { profile, canReadCompany, scope, periodPreset, from, to, rangeError, summary, campaigns, partners, referrals, referralGaps, canReadCommission } = useLoaderData<typeof loader>();
   const snapshot = summary.snapshot;
   const period = summary.period;
   const leadSources = summary.breakdowns?.lead_sources ?? [];
@@ -401,6 +405,24 @@ export default function Reports() {
             <div className="row-meta"><span>{pluralLabel(row.referrals, "Empfehlung", "Empfehlungen")} · {pluralLabel(row.appointments, "Termin", "Termine")}</span><small>{pluralLabel(row.readiness_checks, "Check", "Checks")} · {pluralLabel(row.mandates, "Auftrag", "Aufträge")} · {pluralLabel(row.sales, "Verkauf", "Verkäufe")}</small></div>
             <span className="subtle-link">Öffnen →</span>
           </Link>)}</div>}
+    </section>
+
+    <section className="reporting-section data-card">
+      <div className="reporting-section-head">
+        <div><p className="eyebrow">Nach dem Verkauf</p><h2>Empfehlungen</h2></div>
+        <Link className="subtle-link" to="/referrals">Empfehlungen öffnen →</Link>
+      </div>
+      {(referrals as any[]).length === 0
+        ? <p className="empty-state">Im gewählten Zeitraum ist keine Empfehlung erfasst.</p>
+        : <div className="data-list">{(referrals as any[]).map((row: any) => <Link className="data-row data-row-link" to={row.referrer_kind === "ORGANIZATION" ? `/crm/organizations/${row.referrer_id}/partner` : `/crm/contacts/${row.referrer_id}`} key={`${row.referrer_kind}-${row.referrer_id}`}>
+            <div><strong>{row.referrer_label}</strong><small>{row.referrer_kind === "ORGANIZATION" ? "Organisation" : "Person"}{row.last_referral_on ? ` · zuletzt ${formatDate(row.last_referral_on)}` : ""}</small></div>
+            <div className="row-meta"><span>{pluralLabel(row.referrals, "Empfehlung", "Empfehlungen")} · {pluralLabel(row.leads, "Lead", "Leads")}</span><small>{pluralLabel(row.won, "Auftrag", "Aufträge")} · {pluralLabel(row.lost, "verloren", "verloren")} · {pluralLabel(row.declined, "ohne Interesse", "ohne Interesse")}</small></div>
+            <div className="row-meta"><span>{pluralLabel(row.acknowledged, "Dank dokumentiert", "Danksagungen dokumentiert")}</span><small>{Number(row.referrals) - Number(row.acknowledged) > 0 ? `${pluralLabel(Number(row.referrals) - Number(row.acknowledged), "Empfehlung", "Empfehlungen")} ohne Rückmeldung` : "vollständig zurückgemeldet"}</small></div>
+            <span className="subtle-link">Öffnen →</span>
+          </Link>)}</div>}
+      {(referralGaps as any[]).length > 0
+        ? <p className="form-warning" style={{ marginTop: "0.75rem" }}>{pluralLabel((referralGaps as any[]).length, "Empfehlung weicht", "Empfehlungen weichen")} von der Herkunft des zugehörigen Leads ab. Für die Partnerauswertung oben zählt die Herkunft am Lead. <Link className="subtle-link" to="/referrals">Abweichungen ansehen →</Link></p>
+        : null}
     </section>
 
     <section className="reporting-section data-card">
