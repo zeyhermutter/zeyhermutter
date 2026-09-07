@@ -5,6 +5,11 @@ import { requirePermission } from "~/lib/auth.server";
 type ActionResult={error?:string};
 
 export const AUDIENCE:Record<string,string>={BUYER:"Käufer",SELLER:"Verkäufer"};
+// Der Schluessel des Bausteins ist unveraenderlich und stand im Bearbeiten-
+// Formular als roher Datenbankwert ("FOLLOW_UP", "REFERRAL_REQUEST"). Der Titel
+// darueber laesst sich aendern, der Schluessel nicht — deshalb wird er weiterhin
+// gezeigt, jetzt aber benannt.
+export const STEP_KEY:Record<string,string>={FOLLOW_UP:"Nachfassen nach der Übergabe",REFERRAL_REQUEST:"Empfehlungsanfrage",ANNIVERSARY:"Jahrestag der Übergabe"};
 export const TASK_PRIORITY:Record<string,string>={LOW:"Niedrig",NORMAL:"Normal",HIGH:"Hoch",URGENT:"Dringend"};
 export const TASK_STATUS:Record<string,string>={OPEN:"Offen",IN_PROGRESS:"In Arbeit",DONE:"Erledigt",CANCELLED:"Verworfen"};
 
@@ -149,7 +154,7 @@ export default function AfterSales(){
               <label className="form-field full-width"><span>Beschreibung</span><textarea name="description" rows={2} defaultValue={template.description??""}/></label>
               <label className="form-field checkbox-row"><input type="checkbox" name="active" defaultChecked={template.active}/><span>Aktiv</span></label>
               <div className="form-field inline-actions"><button className="secondary-button" type="submit">Baustein speichern</button></div>
-              <p className="form-field full-width subtle">{template.step_key} · {offsetLabel(template.offset_days)}</p>
+              <p className="form-field full-width subtle">Fester Baustein: {STEP_KEY[template.step_key]??template.step_key} · {offsetLabel(template.offset_days)}</p>
             </Form>
             :<>
               <div><strong>{template.title}</strong><small>{template.description??"ohne Beschreibung"}</small></div>

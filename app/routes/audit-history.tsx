@@ -4,13 +4,24 @@ import { requirePermission } from "~/lib/auth.server";
 import "~/module04-fixes.css";
 
 const PAGE_SIZE = 50;
+// Alle Felder, die tatsaechlich in field_changes vorkommen. Vorher war rund ein
+// Drittel benannt, der Rest erschien als englischer Spaltenname mit Unterstrich
+// ("internal title", "first name"). Die Abschnittsmarken in Grossbuchstaben
+// (ADDRESS, MEDIA, ...) sind keine Spalten, sondern ganze Teilbereiche eines
+// Datensatzes; sie stehen hier ebenfalls, weil sie in derselben Liste landen.
 const FIELD_LABELS:Record<string,string>={
-  title:"Titel",description:"Beschreibung",status:"Status",priority:"Priorität",contact_id:"Kontakt",property_id:"Immobilie",lead_id:"Lead",search_profile_id:"Suchprofil",inquiry_id:"Anfrage",viewing_id:"Besichtigung",
-  min_price:"Preis von €",max_price:"Preis bis €",min_living_area:"Wohnfläche ab m²",max_living_area:"Wohnfläche bis m²",min_plot_area:"Grundstück ab m²",min_rooms:"Zimmer ab",min_construction_year:"Baujahr ab",transaction_type:"Kauf / Miete",property_types:"Immobilientypen",financing_status:"Finanzierung",move_in_from:"Gewünschter Einzug",desired_features:"Gewünschte Merkmale",primary_responsible_user:"Verantwortlich",responsible_user:"Verantwortlich",internal_notes:"Interne Notizen",
-  postal_code:"PLZ",city:"Ort",district:"Ortsteil",radius_km:"Suchradius km",channel:"Eingangskanal",source_label:"Quelle",message:"Nachricht",received_at:"Eingegangen am",answered_at:"Beantwortet am",lost_reason:"Grund für kein weiteres Interesse",
-  starts_at:"Beginn",ends_at:"Ende",meeting_point:"Treffpunkt",interest_level:"Interesse",positives:"Positives Feedback",concerns:"Bedenken",price_feedback:"Preisrückmeldung",next_step:"Nächster Schritt",
-  amount:"Angebotsbetrag €",valid_until:"Gültig bis",notes:"Notizen",submitted_at:"Abgegeben am",supersedes_offer_id:"Ersetzt Angebot",replaced_by_offer_id:"Ersetzt durch Angebot",
-  due_at:"Fällig",completed_at:"Erledigt am",archived_at:"Archiviert am",archived_by:"Archiviert von",version:"Version",
+  record:"Datensatz",ADDRESS:"Adresse",CHECKLIST:"Vermarktungscheckliste",ENERGY:"Energiedaten",FEATURE:"Merkmal",MEDIA:"Medium",OWNER:"Eigentümer",
+  title:"Titel",description:"Beschreibung",status:"Status",priority:"Priorität",contact_id:"Kontakt",property_id:"Immobilie",lead_id:"Lead",search_profile_id:"Suchprofil",inquiry_id:"Anfrage",viewing_id:"Besichtigung",sale_project_id:"Verkaufsprojekt",converted_property_id:"Erzeugte Immobilie",
+  first_name:"Vorname",last_name:"Nachname",email:"E-Mail",mobile:"Mobil",phone:"Telefon",salutation:"Anrede",role:"Rolle",category:"Kategorie",
+  internal_title:"Interne Bezeichnung",internal_assessment:"Interne Einschätzung",internal_notes:"Interne Notizen",location_description:"Lagebeschreibung",teaser:"Kurztext",assumptions:"Annahmen",recommendation_rationale:"Begründung der Empfehlung",
+  min_price:"Preis von €",max_price:"Preis bis €",min_living_area:"Wohnfläche ab m²",max_living_area:"Wohnfläche bis m²",min_plot_area:"Grundstück ab m²",min_rooms:"Zimmer ab",min_construction_year:"Baujahr ab",transaction_type:"Kauf / Miete",property_types:"Immobilientypen",financing_status:"Finanzierung",move_in_from:"Gewünschter Einzug",desired_features:"Gewünschte Merkmale",primary_responsible_user:"Verantwortlich",responsible_user:"Verantwortlich",
+  property_type:"Immobilienart",condition:"Zustand",year_built:"Baujahr",modernization_year:"Modernisierungsjahr",floor:"Etage",bedrooms:"Schlafzimmer",bathrooms:"Bäder",parking_spaces:"Stellplätze",residential_units:"Wohneinheiten",plot_area_sqm:"Grundstück m²",usable_area_sqm:"Nutzfläche m²",living_area_sqm:"Wohnfläche m²",available_from:"Verfügbar ab",tenancy_status:"Vermietungsstand",hoa_fee:"Hausgeld",additional_costs:"Nebenkosten",
+  postal_code:"PLZ",city:"Ort",district:"Ortsteil",address:"Adresse",property_city:"Ort der Immobilie",property_street:"Straße der Immobilie",radius_km:"Suchradius km",channel:"Eingangskanal",source_label:"Quelle",message:"Nachricht",received_at:"Eingegangen am",answered_at:"Beantwortet am",lost_reason:"Grund für kein weiteres Interesse",follow_up_at:"Wiedervorlage",
+  starts_at:"Beginn",ends_at:"Ende",meeting_point:"Treffpunkt",interest_level:"Interesse",positives:"Positives Feedback",concerns:"Bedenken",price_feedback:"Preisrückmeldung",next_step:"Nächster Schritt",next_step_due_on:"Nächster Schritt fällig",next_step_user:"Nächster Schritt verantwortlich",
+  amount:"Angebotsbetrag €",offer_number:"Angebotsnummer",purchase_price:"Kaufpreis €",expected_amount:"Erwarteter Betrag €",paid_amount:"Gezahlter Betrag €",paid_at:"Gezahlt am",payment_status:"Zahlungsstatus",invoice_status:"Rechnungsstatus",invoice_reference:"Rechnungsreferenz",agreed_percent:"Vereinbarter Satz %",valid_until:"Gültig bis",notes:"Notizen",submitted_at:"Abgegeben am",decided_at:"Entschieden am",supersedes_offer_id:"Ersetzt Angebot",replaced_by_offer_id:"Ersetzt durch Angebot",
+  estimated_sale_price_min:"Erwarteter Verkaufspreis ab €",estimated_sale_price_max:"Erwarteter Verkaufspreis bis €",investment_min:"Investition ab €",investment_max:"Investition bis €",duration_weeks_min:"Dauer ab Wochen",duration_weeks_max:"Dauer bis Wochen",
+  current_version:"Aktuelle Version",candidate_version:"Entwurfsversion",published_version:"Veröffentlichte Version",has_unpublished_changes:"Unveröffentlichte Änderungen",content_review_confirmed_at:"Inhaltsprüfung bestätigt am",content_review_confirmed_by:"Inhaltsprüfung bestätigt von",converted_at:"Umgewandelt am",converted_by:"Umgewandelt von",
+  due_at:"Fällig",completed_at:"Erledigt am",archived_at:"Archiviert am",archived_by:"Archiviert von",status_before_archive:"Status vor Archivierung",version:"Version",
 };
 // Alle Bereiche, die einen Eintrag in die Systemhistorie schreiben koennen.
 // Vorher standen hier zehn; die uebrigen einundvierzig erschienen in der Liste
@@ -59,7 +70,9 @@ function valueLabel(value:unknown,field?:string){
   if(field==="transaction_type")return TRANSACTION_LABELS[raw]??raw;
   if(field==="financing_status")return FINANCING_LABELS[raw]??raw;
   if(field==="property_types")return TYPE_LABELS[raw]??raw;
-  if(field?.endsWith("_id")||field==="primary_responsible_user"||field==="responsible_user"||field==="archived_by")return raw?"Verknüpft":"—";
+  // Benutzer- und Verweisfelder tragen eine UUID. Die hilft niemandem, deshalb
+  // steht hier nur, ob eine Verknuepfung besteht.
+  if(field?.endsWith("_id")||field?.endsWith("_by")||field?.endsWith("_user")||field==="primary_responsible_user")return raw?"Verknüpft":"—";
   return raw.length>160?`${raw.slice(0,157)}…`:raw;
 }
 export async function loader({request,context}:Route.LoaderArgs){const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"audit.read");const url=new URL(request.url);const entityType=(url.searchParams.get("entity")??"").trim();const action=(url.searchParams.get("action")??"").trim();const actor=(url.searchParams.get("actor")??"").trim();const reference=(url.searchParams.get("reference")??"").trim();const page=Math.max(1,Number(url.searchParams.get("page")??"1")||1);const from=(page-1)*PAGE_SIZE,to=from+PAGE_SIZE-1;let query=supabase.from("audit_events").select("id, occurred_at, actor_display_name_snapshot, entity_type, entity_id, entity_reference, action, field_changes, source, description",{count:"exact"}).order("occurred_at",{ascending:false}).range(from,to);if(entityType)query=query.eq("entity_type",entityType);if(action)query=query.eq("action",action);if(actor)query=query.ilike("actor_display_name_snapshot",`%${actor}%`);if(reference)query=query.ilike("entity_reference",`%${reference}%`);const {data:events,count,error}=await query;if(error)throw new Response("Systemhistorie konnte nicht geladen werden.",{status:500});const total=count??0;return data({events:events??[],total,page,pageCount:Math.max(1,Math.ceil(total/PAGE_SIZE)),filters:{entityType,action,actor,reference},profile},{headers:responseHeaders()});}

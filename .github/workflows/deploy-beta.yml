@@ -42,11 +42,17 @@ jobs:
       # Dieser Schritt laeuft ausschliesslich hier und ausschliesslich gegen das
       # BETA-Projekt; im Workflow "Deploy PRODUCTION" gibt es ihn nicht.
       #
-      # Der erzeugte Datensatz darf NICHT geloescht werden. Die Intake-Funktion
-      # dedupliziert ueber SMOKE_KEY: solange der Lead existiert - auch
-      # archiviert - gibt sie ihn zurueck und legt nichts Neues an. Wird er
-      # geloescht, entsteht beim naechsten Deploy ein neuer. Auf BETA liegt er
-      # deshalb genau einmal, archiviert, mit einer Notiz am Lead.
+      # Die erzeugten Datensaetze duerfen NICHT geloescht werden. Die
+      # Intake-Funktion dedupliziert ueber SMOKE_KEY: solange der Lead existiert
+      # - auch archiviert - gibt sie ihn zurueck und legt nichts Neues an. Wird
+      # er geloescht, entsteht beim naechsten Deploy ein neuer.
+      #
+      # Der Lauf legt zwei Datensaetze an, den Lead ZM-L-000068 und den Kontakt
+      # ZM-K-000105. Beide sind auf BETA archiviert und tragen eine Notiz.
+      # Der Kontakt muss mit archiviert bleiben: als aktiver Kontakt stand er
+      # sonst in jeder Kontaktauswahl der Anwendung zur Auswahl. Nachgeprueft:
+      # mit beiden archiviert liefert die Funktion weiterhin "dedupliziert" und
+      # legt weder Lead noch Kontakt neu an.
       - name: Verify BETA seller intake routing
         env:
           SMOKE_KEY: beta-smoke-seller-check-20260901-001
