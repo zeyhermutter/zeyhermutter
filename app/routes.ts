@@ -95,6 +95,7 @@ export default [
     route("properties/:propertyId/exposes/:exposeId/preview", "routes/property-expose-preview.tsx"),
     route("properties/:propertyId/marketing", "routes/property-marketing.tsx"),
     route("properties/:propertyId/documents", "routes/property-documents.tsx"),
+    route("properties/:propertyId/document-requirements", "routes/property-document-requirements.tsx"),
     route("properties/:propertyId/media", "routes/property-media.tsx"),
   ]),
   route("__preview/sales-readiness", "routes/sales-readiness-preview.tsx"),

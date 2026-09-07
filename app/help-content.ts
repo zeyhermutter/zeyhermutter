@@ -444,9 +444,13 @@ export const HELP_CHAPTERS: HelpChapter[] = [
   {
     id: "unterlagen",
     nummer: "15",
-    titel: "Dokumente und Medien",
-    kurz: "Unterlagen ablegen, versionieren und Bilder verwalten.",
-    pfade: ["/properties/:propertyId/documents", "/properties/:propertyId/media"],
+    titel: "Dokumente, Unterlagenliste und Medien",
+    kurz: "Unterlagen anfordern, ablegen, versionieren und Bilder verwalten.",
+    pfade: [
+      "/properties/:propertyId/documents",
+      "/properties/:propertyId/document-requirements",
+      "/properties/:propertyId/media",
+    ],
     bloecke: [
       { art: "absatz", text:
         "Dokumente hängen an einer Immobilie oder einem Kontakt und tragen eine "
@@ -464,6 +468,31 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         "Ein Weiterbildungsnachweis lässt sich derzeit noch nicht hochladen: die "
         + "Dokumentenablage kennt nur Immobilie und Kontakt als Anker, nicht den "
         + "Benutzer. Der Nachweis wird deshalb ohne Datei geführt." },
+
+      { art: "absatz", text:
+        "**Die Unterlagenliste** beantwortet die andere Frage: nicht was da ist, "
+        + "sondern was noch fehlt. Sie steht in der Objektakte unter "
+        + "**Unterlagenliste** und führt je Objekt eine Zeile pro Unterlage mit "
+        + "ihrem Stand — Fehlt, Angefordert, Vorhanden, Zu prüfen, Geprüft, "
+        + "Veraltet oder Nicht erforderlich." },
+      { art: "schritte", punkte: [
+        "Arbeitsliste übernehmen. Damit stehen die üblichen Unterlagen als Zeilen in der Akte. Vorhandene Zeilen bleiben unverändert.",
+        "Zeilen, die dieses Objekt nicht betrifft, auf „Nicht erforderlich“ setzen — etwa die Teilungserklärung bei einem freistehenden Haus.",
+        "Beim Anfordern das Datum und den Kontakt eintragen, bei dem angefordert wurde. Für eine Frist lässt sich aus derselben Zeile eine Wiedervorlage anlegen.",
+        "Nach dem Eingang das Eingangsdatum setzen und das Dokument aus der Ablage verknüpfen.",
+        "Wer die Unterlage prüft, setzt den Stand auf „Geprüft“; das System trägt die prüfende Person selbst ein.",
+      ]},
+      { art: "liste", punkte: [
+        "**Gültig bis** ist für Unterlagen gedacht, die altern — der Energieausweis etwa. Läuft das Datum ab, weist die Seite darauf hin.",
+        "Die Liste prüft nur, ob die erfassten Angaben zueinander passen: kein Datum in der Zukunft, keine Prüfung vor dem Eingang, kein Dokument aus einer fremden Akte.",
+        "Die Arbeitsliste selbst ist frei änderbar — Zeilen lassen sich abschalten, umbenennen oder ergänzen.",
+      ]},
+      { art: "warnung", text:
+        "Die Unterlagenliste sagt **nicht**, welche Unterlage vorgeschrieben ist. "
+        + "Sie ist die Arbeitsliste dieses Büros: „Fehlt“ heißt „steht auf unserer "
+        + "Liste und ist noch nicht da“. Was im Einzelfall gebraucht wird, "
+        + "entscheiden die Beteiligten — im Zweifel mit rechtlichem Rat, nicht mit "
+        + "dieser Software." },
     ],
   },
   {

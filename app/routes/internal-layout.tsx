@@ -114,7 +114,7 @@ function SalesReadinessLeadEntryEnhancer() {
 
 function PropertyContextNavigation() {
   const location = useLocation();
-  const match = location.pathname.match(/^\/properties\/([^/]+)(?:\/(documents|media|interests|publication|exposes|marketing|compliance|legal|disposition|pricing|hoa-tenancy|mandatory-data)(?:\/.*)?)?\/?$/);
+  const match = location.pathname.match(/^\/properties\/([^/]+)(?:\/(documents|document-requirements|media|interests|publication|exposes|marketing|compliance|legal|disposition|pricing|hoa-tenancy|mandatory-data)(?:\/.*)?)?\/?$/);
   if (!match) return null;
 
   const propertyId = match[1];
@@ -132,6 +132,7 @@ function PropertyContextNavigation() {
       <Link className={section === "exposes" ? "active" : ""} to={`/properties/${propertyId}/exposes`}>Exposés</Link>
       <Link className={section === "marketing" ? "active" : ""} to={`/properties/${propertyId}/marketing`}>Vermarktung & Portale</Link>
       <Link className={section === "documents" ? "active" : ""} to={`/properties/${propertyId}/documents`}>Dokumente</Link>
+      <Link className={section === "document-requirements" ? "active" : ""} to={`/properties/${propertyId}/document-requirements`}>Unterlagenliste</Link>
       <Link className={section === "media" ? "active" : ""} to={`/properties/${propertyId}/media`}>Medien</Link>
       <Link className={section === "compliance" ? "active" : ""} to={`/properties/${propertyId}/compliance`}>Geldwäsche</Link>
       <Link to={`/mandates?property_id=${encodeURIComponent(propertyId)}`}>Maklerauftrag</Link>
