@@ -44,8 +44,14 @@ export async function loader({request,context}:Route.LoaderArgs){
   ]);
   if(error)throw new Response("Geldwäscheakten konnten nicht geladen werden.",{status:500,headers:responseHeaders()});
   const rulesRes=await supabase.from("document_retention_rules").select("*").order("retention_category").order("category");
+  // Zaehlwerte zur Aufbewahrung inkl. verwaister Speicherdateien. Die Funktion
+  // liefert nur Zahlen und Kategorienamen, keine Dokumentinhalte.
+  const overviewRes=await supabase.rpc("document_retention_overview");
   // Eine leere Regelliste darf nicht wie "keine Aufbewahrungsregeln" aussehen.
   if(rulesRes.error)throw new Response("Die Aufbewahrungsregeln konnten nicht geladen werden.",{status:500,headers:responseHeaders()});
+  // Ein stiller Fehlschlag saehe hier aus wie "keine offenen Punkte" und waere
+  // damit die gefaehrlichste aller Anzeigen.
+  if(overviewRes.error)throw new Response("Der Aufbewahrungsueberblick konnte nicht geladen werden.",{status:500,headers:responseHeaders()});
   const all=((cases??[]) as any[]).map((row)=>{
     const identifications=(row.gwg_identifications??[]) as any[];
     const open:string[]=[];
@@ -80,12 +86,14 @@ export async function loader({request,context}:Route.LoaderArgs){
     return [row.case_number,property?.property_number,property?.internal_title].filter(Boolean).join(" ").toLocaleLowerCase("de-DE").includes(needle);
   });
   const retentionDocuments=((documents??[]) as any[]).filter((row)=>row.retention_category||row.category==="IDENTITY_PROOF");
-  return data({profile,rows:filtered,summary,filters,retentionDocuments,rules:rulesRes.data??[],canWrite:canWrite===true},{headers:responseHeaders()});
+  const overview=(Array.isArray(overviewRes.data)?overviewRes.data[0]:overviewRes.data)??null;
+  return data({profile,rows:filtered,summary,filters,retentionDocuments,rules:rulesRes.data??[],overview,canWrite:canWrite===true},{headers:responseHeaders()});
 }
 
 export default function Compliance(){
   const d=useLoaderData<typeof loader>();
   const {profile,rows,summary,filters,retentionDocuments}=d;
+  const o=d.overview as any;
   const overdue=retentionDocuments.filter((row:any)=>row.retention_until<today());
   return <main className="editor-shell">
     <header className="editor-header"><div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">Verwaltung</p><h1 className="editor-title">Geldwäsche & Aufbewahrung</h1><p className="editor-meta">Risikoeinstufung, Identifizierung der Beteiligten und Ablauf der Aufbewahrungsfristen über alle Verkaufsfälle.</p></div><div className="header-actions"><span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div></header>
@@ -126,6 +134,31 @@ export default function Compliance(){
           {property?<Link className="subtle-link" to={`/properties/${property.id}/documents`}>Dokumente öffnen →</Link>:null}
         </div>;})}
       </div>}
+    </section>
+
+    <section className="data-card" id="loeschreife">
+      <div className="card-head"><div><p className="eyebrow">Stand der Unterlagen</p><h2>Löschreife und Lücken</h2></div><span className="status-pill">{o?`${o.documents_total} Unterlagen`:"—"}</span></div>
+      <p className="subtle">Diese Übersicht zeigt nur den Stand. Sie löscht nichts, setzt keine Frist und trifft keine rechtliche Aussage darüber, wie lange eine Unterlage aufzubewahren ist. Über eine Löschung entscheidet die Geschäftsführung.</p>
+      {o?<>
+        <div className="metric-grid">
+          <article className="metric-card"><span>Jetzt löschreif</span><strong>{o.deletion_eligible}</strong><small>Frist abgelaufen, keine Löschsperre</small></article>
+          <article className="metric-card"><span>Ohne Löschdatum</span><strong>{o.without_retention_date}</strong><small>Aufbewahrung nicht bestimmbar</small></article>
+          <article className="metric-card"><span>Löschsperren</span><strong>{o.under_legal_hold}</strong><small>bewusst zurückgehalten</small></article>
+          <article className="metric-card"><span>Dateien ohne Datensatz</span><strong>{o.orphaned_files}</strong><small>liegen im Speicher, gehören zu nichts</small></article>
+        </div>
+        {(o.missing_rule_categories??[]).length>0
+          ?<div className="form-warning"><strong>Für diese Dokumentarten ist keine Aufbewahrungsregel hinterlegt.</strong><p>Solange keine Regel dahintersteht, kann das System zu diesen Unterlagen kein Löschdatum nennen. Welche Frist gilt, ist eine rechtliche Frage und muss fachlich entschieden werden.</p><ul>{(o.missing_rule_categories as string[]).map((category)=><li key={category}>{DOCUMENT_CATEGORY[category]??category}</li>)}</ul></div>
+          :null}
+        {o.unknown_retention_category>0
+          ?<div className="form-warning"><strong>{o.unknown_retention_category} Unterlagen tragen eine Aufbewahrungskategorie, die das System nicht kennt.</strong><p>Sie stammen aus einer Zeit, in der die Spalte freien Text zuließ. Neue Einträge sind auf die sieben bekannten Kategorien begrenzt; der Altbestand wird bewusst nicht automatisch umgeschrieben.</p></div>
+          :null}
+        {o.orphaned_files>0
+          ?<div className="form-warning"><strong>{o.orphaned_files} Dateien liegen im Speicher, ohne dass ein Datensatz auf sie verweist.</strong><p>Sie werden von keiner Akte mehr angezeigt und unterliegen dadurch keiner Aufbewahrungsprüfung. Entfernen lassen sie sich nur über die Speicherverwaltung, nicht aus der Anwendung heraus.</p><ul className="detail-list">{(o.orphaned_examples as string[]).map((path)=><li key={path}><small>{path}</small></li>)}</ul></div>
+          :null}
+        {o.deletion_eligible===0&&(o.missing_rule_categories??[]).length===0&&o.unknown_retention_category===0&&o.orphaned_files===0
+          ?<p className="empty-state">Keine löschreifen Unterlagen und keine offenen Lücken.</p>
+          :null}
+      </>:<p className="empty-state">Der Überblick steht derzeit nicht zur Verfügung.</p>}
     </section>
 
     <section className="data-card" id="aufbewahrungsregeln">
