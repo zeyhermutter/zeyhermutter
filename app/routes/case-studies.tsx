@@ -1,6 +1,7 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/case-studies";
 import { requirePermission } from "~/lib/auth.server";
+import { euroRund, tag } from "~/lib/format";
 
 type ActionResult={error?:string};
 
@@ -14,8 +15,8 @@ export const FEEDBACK_SOURCE:Record<string,string>={WRITTEN:"Schriftlich",VERBAL
 export function one(v:any){return Array.isArray(v)?v[0]:v;}
 // Ohne Grundlage steht hier ein Strich. Number(null) waere 0 und damit eine
 // Zahl, die niemand erfasst hat.
-export function money(v:any){if(v===null||v===undefined||v==="")return"—";const n=Number(v);return Number.isFinite(n)?new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n):"—";}
-export function formatDay(v:string|null){if(!v)return"—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeZone:"Europe/Berlin"}).format(new Date(v+"T12:00:00Z"));}
+export const money = euroRund;
+export const formatDay = tag;
 export function plural(count:number,one:string,many:string){return `${count} ${count===1?one:many}`;}
 
 export function caseStudyErrorMessage(message:string){

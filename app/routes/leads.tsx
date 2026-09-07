@@ -1,6 +1,7 @@
 import { data, Form, Link, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/leads";
 import { requirePermission } from "~/lib/auth.server";
+import { zeitpunktKurz as fmt } from "~/lib/format";
 import "~/lead.css";
 import "~/lead-workflow.css";
 import "~/lead-object-state.css";
@@ -14,7 +15,7 @@ const APARTMENT_TYPES=new Set(["APARTMENT","PENTHOUSE","MAISONETTE"]);
 const HOUSE_TYPES=new Set(["DETACHED_HOUSE","SEMI_DETACHED_HOUSE","TERRACED_HOUSE"]);
 const COMMERCIAL_TYPES=new Set(["COMMERCIAL","OFFICE","RETAIL"]);
 function one(value:any){return Array.isArray(value)?value[0]:value;}
-function fmt(value:string|null){return value?new Intl.DateTimeFormat("de-DE",{dateStyle:"short",timeStyle:"short",timeZone:"Europe/Berlin"}).format(new Date(value)):"—";}
+
 function address(row:any){return [row.property_street,row.property_house_number].filter(Boolean).join(" ")+(row.property_postal_code||row.property_city?`, ${[row.property_postal_code,row.property_city].filter(Boolean).join(" ")}`:"");}
 function positive(value:any){return Number(value)>0;}
 function wonObjectState(row:any){

@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import { euroRund as euro } from "~/lib/format";
+import { IMMOBILIENSTATUS, KAUFANGEBOTSTATUS, beschrifte } from "~/lib/labels";
 
 export type CommissionPropertyOption = {
   id: string;
@@ -59,12 +61,6 @@ type Props = {
   showPaymentFields?: boolean;
 };
 
-function euro(value: number | string | null | undefined) {
-  const number = Number(value);
-  if (!Number.isFinite(number)) return "—";
-  return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(number);
-}
-
 export function CommissionFields({ properties, partyOptions, offers, mandates = [], profiles, initial, defaultResponsibleUser, disabled = false, showPaymentFields = true }: Props) {
   const [propertyId, setPropertyId] = useState(initial?.property_id ?? properties[0]?.id ?? "");
   const [side, setSide] = useState(initial?.side === "BUYER" ? "BUYER" : "SELLER");
@@ -92,10 +88,10 @@ export function CommissionFields({ properties, partyOptions, offers, mandates = 
 
   return <fieldset disabled={disabled} className="commission-fieldset">
     <div className="form-grid">
-      <label className="form-field"><span>Immobilie *</span><select name="property_id" value={propertyId} onChange={(event) => changeProperty(event.currentTarget.value)} required><option value="">Auswählen…</option>{properties.map((item) => <option value={item.id} key={item.id}>{item.property_number} · {item.internal_title}</option>)}</select><small className="subtle">{property ? `${property.status} · aktueller Kaufpreis ${euro(property.purchase_price)}` : "Nur Verkaufsimmobilien"}</small></label>
+      <label className="form-field"><span>Immobilie *</span><select name="property_id" value={propertyId} onChange={(event) => changeProperty(event.currentTarget.value)} required><option value="">Auswählen…</option>{properties.map((item) => <option value={item.id} key={item.id}>{item.property_number} · {item.internal_title}</option>)}</select><small className="subtle">{property ? `${beschrifte(IMMOBILIENSTATUS, property.status)} · aktueller Kaufpreis ${euro(property.purchase_price)}` : "Nur Verkaufsimmobilien"}</small></label>
       <label className="form-field"><span>Provisionsseite *</span><select name="side" value={side} onChange={(event) => changeSide(event.currentTarget.value as "SELLER" | "BUYER")}><option value="SELLER">Innenprovision · Verkäuferseite</option><option value="BUYER">Außenprovision · Käuferseite</option></select></label>
       <label className="form-field"><span>Zahlende Partei</span><select name="party_contact_id" value={partyId} onChange={(event) => setPartyId(event.currentTarget.value)}><option value="">Noch offen</option>{parties.map((party) => <option value={party.contactId} key={`${party.side}-${party.propertyId}-${party.contactId}`}>{party.label}</option>)}</select><small className="subtle">{side === "SELLER" ? "Nur mit der Immobilie verknüpfte Eigentümer." : "Nur Interessenten mit Kaufangebot für diese Immobilie."}</small></label>
-      <label className="form-field"><span>Kaufangebot / Vorgang</span><select name="purchase_offer_id" value={offerId} onChange={(event) => setOfferId(event.currentTarget.value)}><option value="">Ohne konkreten Angebotsbezug</option>{availableOffers.map((offer) => <option value={offer.id} key={offer.id}>{offer.label} · {euro(offer.amount)} · {offer.status}</option>)}</select></label>
+      <label className="form-field"><span>Kaufangebot / Vorgang</span><select name="purchase_offer_id" value={offerId} onChange={(event) => setOfferId(event.currentTarget.value)}><option value="">Ohne konkreten Angebotsbezug</option>{availableOffers.map((offer) => <option value={offer.id} key={offer.id}>{offer.label} · {euro(offer.amount)} · {beschrifte(KAUFANGEBOTSTATUS, offer.status)}</option>)}</select></label>
       <label className="form-field"><span>Maklerauftrag</span><select name="mandate_id" value={mandateId} onChange={(event) => setMandateId(event.currentTarget.value)}><option value="">Ohne Auftragsbezug</option>{availableMandates.map((mandate) => <option value={mandate.id} key={mandate.id}>{mandate.label}</option>)}</select><small className="subtle">Nur Aufträge dieser Immobilie, in denen diese Provisionsseite vereinbart ist.</small></label>
       <label className="form-field"><span>Berechnungsart *</span><select name="calculation_method" value={method} onChange={(event) => setMethod(event.currentTarget.value as "PERCENT" | "FIXED")}><option value="PERCENT">Prozentual</option><option value="FIXED">Festbetrag</option></select></label>
       {method === "PERCENT" ? <>

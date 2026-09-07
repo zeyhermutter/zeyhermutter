@@ -2,12 +2,13 @@ import { data, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/property-publication-preview";
 import { requirePermission } from "~/lib/auth.server";
 import { BrandWordmark } from "~/components/public-shell";
+import { euroRund } from "~/lib/format";
 import "~/public-website.css";
 
 const TYPE_LABELS:Record<string,string>={DETACHED_HOUSE:"Einfamilienhaus",SEMI_DETACHED_HOUSE:"Doppelhaushälfte",TERRACED_HOUSE:"Reihenhaus",APARTMENT_BUILDING:"Mehrfamilienhaus",APARTMENT:"Wohnung",PENTHOUSE:"Penthouse",MAISONETTE:"Maisonette",LAND:"Grundstück",COMMERCIAL:"Gewerbe",OFFICE:"Büro",RETAIL:"Einzelhandel",GARAGE:"Garage",PARKING_SPACE:"Stellplatz",OTHER:"Immobilie"};
 // Ohne belastbaren Preis steht hier "Preis auf Anfrage". Number("") waere 0 und
 // damit ein Preis von null Euro, den niemand hinterlegt hat.
-function money(v:any){if(v===null||v===undefined||v==="")return"Preis auf Anfrage";const n=Number(v);return Number.isFinite(n)?new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n):"Preis auf Anfrage";}
+function money(v:any){return euroRund(v,"Preis auf Anfrage");}
 function addressLabel(s:any){const a=s.address;if(!a)return"Adresse auf Anfrage";const street=[a.street,a.house_number].filter(Boolean).join(" ");const city=[a.postal_code,a.city].filter(Boolean).join(" ");return [street,city,a.district].filter(Boolean).join(" · ")||"Adresse auf Anfrage";}
 function mediaUrl(item:any){return item?.id&&item?.source_version?`/immobilien/medien/${item.id}/${item.source_version}`:null;}
 export function meta(){return[{title:"Publikationsvorschau · ZeyherMutterOS"},{name:"robots",content:"noindex,nofollow"}]}

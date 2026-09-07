@@ -2,6 +2,7 @@ import { data, Form, redirect, useActionData, useLoaderData } from "react-router
 import type { Route } from "./+types/public-property-detail";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
 import { PublicFooter, PublicHeader } from "~/components/public-shell";
+import { euroRund, tag } from "~/lib/format";
 import "~/public-website.css";
 
 const TYPE_LABELS:Record<string,string>={DETACHED_HOUSE:"Einfamilienhaus",SEMI_DETACHED_HOUSE:"Doppelhaushälfte",TERRACED_HOUSE:"Reihenhaus",APARTMENT_BUILDING:"Mehrfamilienhaus",APARTMENT:"Wohnung",PENTHOUSE:"Penthouse",MAISONETTE:"Maisonette",LAND:"Grundstück",COMMERCIAL:"Gewerbe",OFFICE:"Büro",RETAIL:"Einzelhandel",GARAGE:"Garage",PARKING_SPACE:"Stellplatz",OTHER:"Immobilie"};
@@ -9,10 +10,10 @@ const ENERGY_CERTIFICATE_TYPE:Record<string,string>={DEMAND:"Bedarfsausweis",CON
 const ENERGY_EXEMPTION:Record<string,string>={MONUMENT_PROTECTION:"Das Gebäude steht unter Denkmalschutz",SMALL_BUILDING:"Es handelt sich um ein kleines Gebäude",NOT_REGULARLY_HEATED:"Das Gebäude wird nicht regelmäßig beheizt",DEMOLITION_PLANNED:"Für das Gebäude ist ein Abriss vorgesehen",OTHER:"Es ist eine Ausnahme erfasst"};
 // Ohne belastbaren Preis steht hier "Preis auf Anfrage". Number("") waere 0 und
 // damit ein Preis von null Euro, den niemand hinterlegt hat.
-function money(v:any){if(v===null||v===undefined||v==="")return"Preis auf Anfrage";const n=Number(v);return Number.isFinite(n)?new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n):"Preis auf Anfrage";}
+function money(v:any){return euroRund(v,"Preis auf Anfrage");}
 function addressLabel(s:any){const a=s.address;if(!a)return"Adresse auf Anfrage";const street=[a.street,a.house_number].filter(Boolean).join(" ");const city=[a.postal_code,a.city].filter(Boolean).join(" ");return [street,city,a.district].filter(Boolean).join(" · ")||"Adresse auf Anfrage";}
 function mediaUrl(item:any){return item?.id&&item?.source_version?`/immobilien/medien/${item.id}/${item.source_version}`:null;}
-function formatDate(value:any){if(!value)return"Auf Anfrage";try{return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeZone:"Europe/Berlin"}).format(new Date(value));}catch{return String(value);}}
+function formatDate(value:any){return tag(value,"Auf Anfrage");}
 function clean(fd:FormData,key:string,max:number){return String(fd.get(key)??"").trim().replace(/\s+/g," ").slice(0,max);}
 async function sha256(value:string){const bytes=new TextEncoder().encode(value);const hash=await crypto.subtle.digest("SHA-256",bytes);return Array.from(new Uint8Array(hash)).map(v=>v.toString(16).padStart(2,"0")).join("");}
 export function meta({data:routeData}:Route.MetaArgs){const row=(routeData as any)?.row,s=row?.snapshot??{},canonicalUrl=(routeData as any)?.canonicalUrl;return[{title:`${s.seo?.title||row?.public_title||"Immobilie"} · ZeyherMutter`},{name:"description",content:s.seo?.description||row?.teaser||"Immobilienangebot von ZeyherMutter"},{name:"robots",content:"index,follow"},...(canonicalUrl?[{tagName:"link" as const,rel:"canonical",href:canonicalUrl}]:[])]}

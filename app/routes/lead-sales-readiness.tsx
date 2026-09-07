@@ -9,6 +9,7 @@ import {
 } from "~/components/sales-readiness-media-panel";
 import { requirePermission } from "~/lib/auth.server";
 import { loadSalesReadiness, requireSalesReadinessBackend } from "~/lib/sales-readiness.server";
+import { DOKUMENTKATEGORIE, MEDIENART, beschrifte } from "~/lib/labels";
 import "~/sales-readiness.css";
 import "~/sales-readiness-editor.css";
 import "~/sales-readiness-media.css";
@@ -208,7 +209,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
           bucket: item.storage_bucket,
           path: item.storage_path,
           title: item.title || fileName(item.storage_path),
-          subtitle: item.alt_text ? `Objektmedium · ${item.alt_text}` : `Objektmedium · ${item.media_type}`,
+          subtitle: item.alt_text ? `Objektmedium · ${item.alt_text}` : `Objektmedium · ${beschrifte(MEDIENART, item.media_type)}`,
           kind: mediaKind(item.storage_path, "", item.media_type),
           signedUrl: null,
         });
@@ -233,7 +234,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
             bucket: version.storage_bucket,
             path: version.storage_path,
             title: document.title || version.original_filename,
-            subtitle: `${document.category} · ${version.original_filename}`,
+            subtitle: `${beschrifte(DOKUMENTKATEGORIE, document.category)} · ${version.original_filename}`,
             kind: mediaKind(version.storage_path, version.mime_type),
             signedUrl: null,
           });

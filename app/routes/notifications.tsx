@@ -1,11 +1,12 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/notifications";
 import { requireActiveUser } from "~/lib/auth.server";
+import { zeitpunkt as formatDate } from "~/lib/format";
 import "~/notifications.css";
 
 type ActionResult = { error?: string };
 function text(formData: FormData, key: string) { return String(formData.get(key) ?? "").trim(); }
-function formatDate(value: string) { return new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Berlin" }).format(new Date(value)); }
+
 function safeRedirectTarget(value: string) { return value.startsWith("/") && !value.startsWith("//") ? value : "/crm/notifications"; }
 
 export async function loader({ request, context }: Route.LoaderArgs) {

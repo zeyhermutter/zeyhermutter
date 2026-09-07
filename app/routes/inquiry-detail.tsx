@@ -4,6 +4,8 @@ import { MentionPicker } from "~/components/mention-picker";
 import { TaskModal } from "~/components/task-modal";
 import { ConcurrencyConflictModal } from "~/components/concurrency-conflict-modal";
 import { requirePermission } from "~/lib/auth.server";
+import { zeitpunkt as formatDate } from "~/lib/format";
+import { crmLocalDateTimeToIso as berlinLocalToIso } from "~/lib/local-time";
 import "~/inquiry.css";
 
 type ActionResult={error?:string;ok?:string};
@@ -13,8 +15,7 @@ const TASK_STATUS:Record<string,string>={OPEN:"Offen",IN_PROGRESS:"In Bearbeitun
 const VIEWING_STATUS:Record<string,string>={PLANNED:"Geplant",CONFIRMED:"Bestätigt",COMPLETED:"Durchgeführt",CANCELLED:"Abgesagt",NO_SHOW:"Nicht erschienen"};
 const MAIN_FLOW=["NEW","CONTACTED","QUALIFIED","VIEWING_PLANNED","CLOSED"];
 function one(v:any){return Array.isArray(v)?v[0]:v;}function text(fd:FormData,k:string){return String(fd.get(k)??"").trim();}
-function formatDate(v:string|null){if(!v)return "—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeStyle:"short",timeZone:"Europe/Berlin"}).format(new Date(v));}
-function berlinLocalToIso(value:string){if(!value)return null;const m=value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);if(!m)return null;const target=Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5]);let guess=target;for(let i=0;i<2;i++){const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Berlin",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date(guess));const g=(t:string)=>Number(parts.find(p=>p.type===t)?.value);const rendered=Date.UTC(g("year"),g("month")-1,g("day"),g("hour"),g("minute"));guess=target-(rendered-guess);}return new Date(guess).toISOString();}
+
 export async function loader({request,context,params}:Route.LoaderArgs){
  const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"inquiry.read");const id=params.inquiryId!,url=new URL(request.url);
  const [{data:row,error},{data:profiles},{data:properties},{data:searchProfiles},{data:transitions},{data:comments},{data:activity},{data:audit},{data:tasks},{data:viewings},{data:canWrite},{data:canArchive}]=await Promise.all([

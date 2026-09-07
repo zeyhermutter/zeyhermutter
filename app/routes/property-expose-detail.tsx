@@ -2,6 +2,7 @@ import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-
 import type { Route } from "./+types/property-expose-detail";
 import { ConcurrencyConflictModal } from "~/components/concurrency-conflict-modal";
 import { requirePermission } from "~/lib/auth.server";
+import { euroGenau as money, zeitpunkt as formatDate } from "~/lib/format";
 import "~/publication.css";
 
 type ActionResult={error?:string;ok?:string};
@@ -9,8 +10,7 @@ const STATUS:Record<string,string>={DRAFT:"Entwurf",GENERATED:"PDF erzeugt",APPR
 function text(fd:FormData,k:string){return String(fd.get(k)??"").trim();}
 function num(v:string){if(!v)return null;const n=Number(v.includes(",")?v.replace(/\./g,"").replace(",","."):v);return Number.isFinite(n)?n:NaN;}
 function one(v:any){return Array.isArray(v)?v[0]:v;}
-function formatDate(v:string|null){return v?new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeStyle:"short",timeZone:"Europe/Berlin"}).format(new Date(v)):"—";}
-function money(v:any){const n=Number(v);return Number.isFinite(n)?new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR"}).format(n):"—";}
+
 function exposeError(message:string){if(message.includes("PUBLICATION_VERSION_NOT_APPROVED"))return"Eine verknüpfte Publikationsversion muss vor der Exposé-Freigabe freigegeben sein.";if(message.includes("EXPOSE_CONTENT_IMMUTABLE"))return"Eine bereits erzeugte Exposé-Version ist inhaltlich unveränderlich. Lege eine neue Version an.";if(message.includes("EXPOSE_APPROVE_REQUIRED"))return"Dir fehlt die Berechtigung zur Freigabe.";if(message.includes("EXPOSE_ARCHIVE_REQUIRED"))return"Dir fehlt die Berechtigung zum Archivieren.";return"Die Exposé-Aktion konnte nicht ausgeführt werden.";}
 
 export async function loader({request,context,params}:Route.LoaderArgs){

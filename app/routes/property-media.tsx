@@ -3,6 +3,7 @@ import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-
 import type { Route } from "./+types/property-media";
 import { AssetPreviewModal, type AssetPreviewKind } from "~/components/asset-preview-modal";
 import { requirePermission } from "~/lib/auth.server";
+import { zeitpunkt as formatDate } from "~/lib/format";
 
 type ActionResult = { error?: string };
 const MAX_UPLOAD_BYTES = 75 * 1024 * 1024;
@@ -26,7 +27,7 @@ function mimeAllowedForType(mediaType:string,mimeType:string){
 }
 function text(fd: FormData,key:string){return String(fd.get(key)??"").trim();}
 function safeFilename(name:string){const v=name.normalize("NFKD").replace(/[^a-zA-Z0-9._-]+/g,"-").replace(/-+/g,"-");return v.slice(-140)||"medium";}
-function formatDate(value:string){return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeStyle:"short",timeZone:"Europe/Berlin"}).format(new Date(value));}
+
 function displayFilename(storagePath:string){const filename=storagePath.split("/").pop()??storagePath;return filename.length>37&&filename[36]==="-"?filename.slice(37):filename;}
 function mediaPreviewKind(mediaType:string,storagePath:string):AssetPreviewKind{
   const path=storagePath.toLowerCase();

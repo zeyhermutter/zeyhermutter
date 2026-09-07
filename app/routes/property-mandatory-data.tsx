@@ -1,6 +1,7 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/property-mandatory-data";
 import { requirePermission } from "~/lib/auth.server";
+import { tag as formatDate } from "~/lib/format";
 
 type ActionResult={error?:string};
 
@@ -14,7 +15,7 @@ function text(fd:FormData,key:string){return String(fd.get(key)??"").trim();}
 function dateOrNull(fd:FormData,key:string){const v=text(fd,key);return /^\d{4}-\d{2}-\d{2}$/.test(v)?v:null;}
 function numOrNull(fd:FormData,key:string){const raw=text(fd,key);if(!raw)return null;const n=Number(raw.includes(",")?raw.replace(/\./g,"").replace(",","."):raw);return Number.isFinite(n)?n:NaN;}
 function intOrNull(fd:FormData,key:string){const raw=text(fd,key);if(!raw)return null;const n=Number.parseInt(raw,10);return Number.isFinite(n)?n:NaN;}
-function formatDate(value:string|null){if(!value)return"—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeZone:"Europe/Berlin"}).format(new Date(`${value}T12:00:00Z`));}
+
 function today(){return new Date().toISOString().slice(0,10);}
 function contactLabel(c:any){return c?`${c.last_name}, ${c.first_name}${c.contact_number?` · ${c.contact_number}`:""}`:"";}
 

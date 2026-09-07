@@ -2,6 +2,8 @@ import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-
 import type { Route } from "./+types/mandate-detail";
 import { requirePermission } from "~/lib/auth.server";
 import { crmDateAtTimeToIso } from "~/lib/local-time";
+import { euroGenau as money, tag as formatDate, zeitpunkt } from "~/lib/format";
+import { AUFGABENSTATUS, PROVISIONSSTATUS, beschrifte } from "~/lib/labels";
 
 type ActionResult={error?:string;ok?:string};
 
@@ -19,8 +21,7 @@ function one(value:any){return Array.isArray(value)?value[0]:value;}
 function text(fd:FormData,key:string){return String(fd.get(key)??"").trim();}
 function integer(fd:FormData,key:string){const raw=text(fd,key);if(!raw)return null;const value=Number(raw);return Number.isInteger(value)?value:NaN;}
 function decimal(fd:FormData,key:string){const raw=text(fd,key).replace(",",".");if(!raw)return null;const value=Number(raw);return Number.isFinite(value)?value:NaN;}
-function formatDate(value:string|null){if(!value)return"—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeZone:"Europe/Berlin"}).format(new Date(value));}
-function money(value:number|string|null|undefined){const n=Number(value);return Number.isFinite(n)?new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR",maximumFractionDigits:2}).format(n):"—";}
+
 function today(){return new Date().toISOString().slice(0,10);}
 function termLabel(term:any){if(!term)return"nicht vereinbart";return term.calculation_method==="PERCENT"?`${Number(term.agreed_percent).toLocaleString("de-DE",{maximumFractionDigits:4})} %`:money(term.agreed_fixed_amount);}
 
@@ -404,7 +405,7 @@ export default function MandateDetail(){
       </Form>
       {editable&&canTask?<Form method="post" className="inline-actions"><input type="hidden" name="_intent" value="reminder"/><button className="secondary-button" type="submit">Wiedervorlage zur Widerrufsfrist anlegen</button></Form>:null}
       <div className="data-list">
-        {tasks.map((task:any)=><Link className="data-row data-row-link" to="/crm/tasks" key={task.id}><div><strong>{task.title}</strong><small>{task.task_number} · {task.status}</small></div><div className="row-meta"><span>Fällig {formatDate(task.due_at)}</span></div><span className="subtle-link">Aufgaben öffnen →</span></Link>)}
+        {tasks.map((task:any)=><Link className="data-row data-row-link" to="/crm/tasks" key={task.id}><div><strong>{task.title}</strong><small>{task.task_number} · {beschrifte(AUFGABENSTATUS,task.status)}</small></div><div className="row-meta"><span>Fällig {formatDate(task.due_at)}</span></div><span className="subtle-link">Aufgaben öffnen →</span></Link>)}
         {tasks.length===0?<p className="empty-state">Keine offene Wiedervorlage zu diesem Auftrag.</p>:null}
       </div>
     </section>
@@ -427,7 +428,7 @@ export default function MandateDetail(){
     <section className="data-card">
       <div className="card-head"><div><p className="eyebrow">Provisionen</p><h2>{commissions.length} verknüpfte Vorgänge</h2></div><Link className="subtle-link" to={`/commissions?property_id=${encodeURIComponent(row.property_id)}`}>Alle Provisionen →</Link></div>
       <div className="data-list">
-        {commissions.map((commission:any)=><Link className="data-row data-row-link" to={`/commissions/${commission.id}`} key={commission.id}><div><strong>{commission.commission_number} · {SIDE[commission.side]??commission.side}</strong><small>{commission.status}</small></div><div className="row-meta"><span>{money(commission.actual_amount??commission.expected_amount)}</span><small>{commission.due_date?`Fällig ${formatDate(commission.due_date)}`:"Fälligkeit offen"}</small></div><span className="subtle-link">Öffnen →</span></Link>)}
+        {commissions.map((commission:any)=><Link className="data-row data-row-link" to={`/commissions/${commission.id}`} key={commission.id}><div><strong>{commission.commission_number} · {SIDE[commission.side]??commission.side}</strong><small>{beschrifte(PROVISIONSSTATUS,commission.status)}</small></div><div className="row-meta"><span>{money(commission.actual_amount??commission.expected_amount)}</span><small>{commission.due_date?`Fällig ${formatDate(commission.due_date)}`:"Fälligkeit offen"}</small></div><span className="subtle-link">Öffnen →</span></Link>)}
         {commissions.length===0?<p className="empty-state">Diesem Auftrag ist noch keine Provision zugeordnet. Die Zuordnung erfolgt in der Provisionsakte.</p>:null}
       </div>
     </section>
@@ -435,7 +436,7 @@ export default function MandateDetail(){
     <section className="data-card">
       <div className="card-head"><div><p className="eyebrow">Historie</p><h2>Änderungsverlauf</h2></div><span className="subtle">{audit.length} Einträge</span></div>
       <div className="data-list">
-        {audit.map((event:any)=><div className="data-row" key={event.id}><div><strong>{auditLabel(event.field_changes)}</strong><small>{event.actor_display_name_snapshot??"System"} · {event.action}</small></div><div className="row-meta"><span>{new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeStyle:"short",timeZone:"Europe/Berlin"}).format(new Date(event.occurred_at))}</span></div></div>)}
+        {audit.map((event:any)=><div className="data-row" key={event.id}><div><strong>{auditLabel(event.field_changes)}</strong><small>{event.actor_display_name_snapshot??"System"} · {event.action}</small></div><div className="row-meta"><span>{zeitpunkt(event.occurred_at)}</span></div></div>)}
         {audit.length===0?<p className="empty-state">Keine sichtbare Historie vorhanden.</p>:null}
       </div>
     </section>

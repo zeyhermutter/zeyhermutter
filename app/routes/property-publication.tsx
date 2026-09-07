@@ -1,6 +1,8 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/property-publication";
 import { requirePermission } from "~/lib/auth.server";
+import { zeitpunkt as formatDate } from "~/lib/format";
+import { ADRESSANZEIGE, beschrifte } from "~/lib/labels";
 import "~/publication.css";
 
 type ActionResult={error?:string;success?:string};
@@ -21,7 +23,7 @@ function errorMessage(message:string){
  if(message.includes("PROPERTY_PUBLISH_REQUIRED"))return "Dir fehlt die Berechtigung zum Freigeben bzw. Veröffentlichen.";
  return "Die Veröffentlichungsaktion konnte nicht ausgeführt werden.";
 }
-function formatDate(value:string|null){return value?new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeStyle:"short",timeZone:"Europe/Berlin"}).format(new Date(value)):"—";}
+
 function isPositive(value:any){return value!==null&&value!==undefined&&Number(value)>0;}
 
 async function ensurePublicMediaCopies(supabase:any,propertyId:string){
@@ -124,7 +126,7 @@ export default function PropertyPublication(){
   {publication?<section className="data-card" id="freigabe"><div className="card-head"><div><p className="eyebrow">Publikations-Checkliste</p><h2>Vor Veröffentlichung prüfen</h2></div><span>{blockers.length?`${blockers.length} offen`:"Bereit"}</span></div>
    <div className="publication-check-grid">
     <div id="public-price" className={blockedIds.has("public-price")?"publication-check blocked":"publication-check ok"}><strong>Preis</strong><small>{property.transaction_type==="SALE"?(property.purchase_price?`${property.purchase_price} €`:"fehlt"):(property.rent_cold?`${property.rent_cold} € Kaltmiete`:"fehlt")}</small></div>
-    <div id="public-address" className={blockedIds.has("public-address")?"publication-check blocked":"publication-check ok"}><strong>Adresse</strong><small>{address?`${address.public_address_mode} · ${address.postal_code} ${address.city}`:"fehlt"}</small></div>
+    <div id="public-address" className={blockedIds.has("public-address")?"publication-check blocked":"publication-check ok"}><strong>Adresse</strong><small>{address?`${beschrifte(ADRESSANZEIGE, address.public_address_mode)} · ${address.postal_code} ${address.city}`:"fehlt"}</small></div>
     <div id="public-core-data" className={blockedIds.has("public-core-data")?"publication-check blocked":"publication-check ok"}><strong>Kerndaten</strong><small>{property.property_type==="LAND"?`${property.plot_area_sqm??"—"} m² Grundstück`:`${property.living_area_sqm??"—"} m² Wohnfläche`}</small></div>
     <div id="public-media" className={blockedIds.has("public-media")?"publication-check blocked":"publication-check ok"}><strong>Öffentliche Fotos</strong><small>{approvedMedia.length} freigegeben · erstes Bild = Hauptbild</small></div>
     <div className="publication-check"><strong>Energiedaten</strong><small>{energy?"geprüfter Datensatz vorhanden":"noch kein Energiedatensatz hinterlegt"}</small></div>

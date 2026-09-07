@@ -2,6 +2,7 @@ import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-
 import type { Route } from "./+types/contact-detail";
 import { requireActiveUser } from "~/lib/auth.server";
 import { REFERRAL_STATUS } from "./referrals";
+import { zeitpunkt as formatDate } from "~/lib/format";
 
 type FieldChange = { old?: unknown; new?: unknown };
 type ActionResult = { error?: string; conflict?: boolean };
@@ -26,14 +27,6 @@ const fieldLabels: Record<string, string> = {
 
 function text(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
-}
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("de-DE", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "Europe/Berlin",
-  }).format(new Date(value));
 }
 
 function valueLabel(value: unknown) {

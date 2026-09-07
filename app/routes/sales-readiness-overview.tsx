@@ -2,6 +2,8 @@ import { data, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/sales-readiness-overview";
 import { requirePermission } from "~/lib/auth.server";
 import { requireSalesReadinessBackend } from "~/lib/sales-readiness.server";
+import { tag as formatDate } from "~/lib/format";
+import { LEADSTATUS, beschrifte } from "~/lib/labels";
 import "~/lead.css";
 
 const CHECK_STATUS: Record<string, string> = {
@@ -25,14 +27,6 @@ const OWNER_DECISION: Record<string, string> = {
 
 function one(value: any) {
   return Array.isArray(value) ? value[0] : value;
-}
-
-function formatDate(value: string | null) {
-  if (!value) return "—";
-  return new Intl.DateTimeFormat("de-DE", {
-    dateStyle: "medium",
-    timeZone: "Europe/Berlin",
-  }).format(new Date(value));
 }
 
 export function meta() {
@@ -188,7 +182,7 @@ export default function SalesReadinessOverview() {
 
                   <div className="lead-row-secondary">
                     <strong>{check ? OWNER_DECISION[check.owner_decision] ?? check.owner_decision ?? "Entscheidung offen" : "Noch kein Check"}</strong>
-                    <small>Lead-Status {lead.status}</small>
+                    <small>Lead-Status {beschrifte(LEADSTATUS, lead.status)}</small>
                   </div>
 
                   <div className="row-meta lead-row-secondary">

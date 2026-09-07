@@ -1,6 +1,7 @@
 import { data, Form, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/mandates";
 import { requirePermission } from "~/lib/auth.server";
+import { euroRund, prozent, tag as formatDate } from "~/lib/format";
 
 const STATUS: Record<string,string> = {DRAFT:"Entwurf",ACTIVE:"Aktiv",WITHDRAWN:"Widerrufen",TERMINATED:"Gekündigt",EXPIRED:"Abgelaufen",FULFILLED:"Erfüllt",CANCELLED:"Verworfen"};
 const STATUS_CLASS: Record<string,string> = {DRAFT:"status-draft",ACTIVE:"status-marketing",WITHDRAWN:"status-lost",TERMINATED:"status-lost",EXPIRED:"status-archived",FULFILLED:"status-sold",CANCELLED:"status-archived"};
@@ -8,7 +9,7 @@ const TYPE: Record<string,string> = {SIMPLE:"Einfacher Auftrag",EXCLUSIVE:"Allei
 const CLIENT_SIDE: Record<string,string> = {SELLER:"Verkäuferauftrag",BUYER:"Käuferauftrag",BOTH:"Doppeltätigkeit"};
 
 function one(value:any){return Array.isArray(value)?value[0]:value;}
-function formatDate(value:string|null){if(!value)return"—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeZone:"Europe/Berlin"}).format(new Date(value));}
+
 function today(){return new Date().toISOString().slice(0,10);}
 
 export function openWithdrawalRisk(row:any){
@@ -81,7 +82,7 @@ export default function Mandates(){
         const clients=(row.brokerage_mandate_clients??[]).map((client:any)=>{const contact=one(client.contacts);return contact?`${contact.first_name} ${contact.last_name}`:null;}).filter(Boolean);
         const seller=(row.brokerage_mandate_commission_terms??[]).find((term:any)=>term.side==="SELLER");
         const buyer=(row.brokerage_mandate_commission_terms??[]).find((term:any)=>term.side==="BUYER");
-        const termLabel=(term:any)=>!term?"—":term.calculation_method==="PERCENT"?`${Number(term.agreed_percent).toLocaleString("de-DE",{maximumFractionDigits:2})} %`:new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(Number(term.agreed_fixed_amount));
+        const termLabel=(term:any)=>!term?"—":term.calculation_method==="PERCENT"?prozent(term.agreed_percent,2):euroRund(term.agreed_fixed_amount);
         return <Link className="data-row data-row-link" to={`/mandates/${row.id}`} key={row.id}>
           <div><strong>{row.mandate_number} · {TYPE[row.mandate_type]??row.mandate_type}</strong><small>{property?.property_number??"—"} · {property?.internal_title??"Immobilie"}{clients.length?` · ${clients.join(", ")}`:" · Auftraggeber offen"}</small></div>
           <div className="row-meta"><span className={`status-pill ${STATUS_CLASS[row.status]??"status-draft"}`}>{row.archived_at?"Archiviert":STATUS[row.status]??row.status}</span><small>{CLIENT_SIDE[row.client_side]??row.client_side}</small></div>

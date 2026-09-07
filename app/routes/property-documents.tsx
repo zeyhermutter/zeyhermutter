@@ -3,6 +3,7 @@ import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-
 import type { Route } from "./+types/property-documents";
 import { AssetPreviewModal, type AssetPreviewKind } from "~/components/asset-preview-modal";
 import { requirePermission } from "~/lib/auth.server";
+import { tag, zeitpunkt as formatDate } from "~/lib/format";
 import "~/property-documents.css";
 
 type ActionResult = { error?: string };
@@ -87,10 +88,6 @@ function safeFilename(name: string) {
 async function sha256Hex(file: File) {
   const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
   return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
-}
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Berlin" }).format(new Date(value));
 }
 
 function formatSize(bytes: number) {
@@ -304,7 +301,7 @@ export default function PropertyDocuments() {
         { label: "Titel", value: activeDocument.title },
         { label: "Kategorie", value: categoryLabel(activeDocument.category) },
         { label: "Klassifizierung", value: classificationLabel(activeDocument.classification) },
-        { label: "Aufbewahrung", value: activeDocument.retention_until ? `bis ${new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeZone: "Europe/Berlin" }).format(new Date(`${activeDocument.retention_until}T12:00:00Z`))}${activeDocument.legal_hold ? " · Löschsperre" : ""}` : "keine Frist hinterlegt" },
+        { label: "Aufbewahrung", value: activeDocument.retention_until ? `bis ${tag(activeDocument.retention_until)}${activeDocument.legal_hold ? " · Löschsperre" : ""}` : "keine Frist hinterlegt" },
         { label: "Beschreibung", value: activeDocument.description || "—" },
         { label: "Aktuelle Version", value: `v${activeDocument.current_version}` },
         { label: "Dateiname", value: activeVersion?.original_filename || "—" },

@@ -3,6 +3,7 @@ import type { Route } from "./+types/property-interests";
 import { requirePermission } from "~/lib/auth.server";
 import { crmLocalDateTimeToIso } from "~/lib/local-time";
 import { groupMatchingRows, isDeprioritizedDecision, MATCH_DECISION_LABELS } from "~/lib/matching-priority";
+import { euroRund as money, istLeer, tag, zahl, zeitpunkt as formatDate } from "~/lib/format";
 import "~/inquiry.css";
 
 type ActionResult={error?:string;ok?:string};
@@ -12,11 +13,10 @@ const DISCLOSURE_ACK:Record<string,string>={NONE:"Keine Bestätigung",EMAIL_REPL
 const VIEWING_STATUS:Record<string,string>={PLANNED:"Geplant",CONFIRMED:"Bestätigt",COMPLETED:"Durchgeführt",CANCELLED:"Abgesagt",NO_SHOW:"Nicht erschienen"};
 function one(v:any){return Array.isArray(v)?v[0]:v;}
 function text(fd:FormData,k:string){return String(fd.get(k)??"").trim();}
-function money(v:any){return v==null?"—":new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(Number(v));}
-function number(v:any,suffix=""){return v==null?"—":`${new Intl.NumberFormat("de-DE",{maximumFractionDigits:1}).format(Number(v))}${suffix}`;}
+
+function number(v:any,suffix=""){return istLeer(v)?"—":`${zahl(v,1)}${suffix}`;}
 function range(min:any,max:any,formatter:(v:any)=>string){if(min==null&&max==null)return"—";if(min!=null&&max!=null)return`${formatter(min)} – ${formatter(max)}`;if(min!=null)return`ab ${formatter(min)}`;return`bis ${formatter(max)}`;}
 function nowLocal(){const d=new Date();const pad=(n:number)=>String(n).padStart(2,"0");return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;}
-function formatDate(v:string|null){if(!v)return"—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeStyle:"short",timeZone:"Europe/Berlin"}).format(new Date(v));}
 
 export async function loader({request,context,params}:Route.LoaderArgs){
  const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"property.read");
@@ -150,7 +150,7 @@ export default function PropertyInterests(){
       <div><strong>{d.disclosure_number} · {c?`${c.first_name} ${c.last_name}`:"Interessent"}</strong><small>{c?.contact_number??"—"}{d.channel_reference?` · ${d.channel_reference}`:""}</small></div>
       <div><span className="inquiry-status qualified">{DISCLOSURE_CHANNEL[d.channel]??d.channel}</span><small>{first?"Erstnachweis":"Weiterer Nachweis"}</small></div>
       <div><strong>{formatDate(d.disclosed_at)}</strong><small>{d.acknowledgement_kind==="NONE"?"Ohne Empfangsbestätigung":`${DISCLOSURE_ACK[d.acknowledgement_kind]??d.acknowledgement_kind} · ${formatDate(d.acknowledged_at)}`}</small></div>
-      <div><small>{d.prior_knowledge_declared?`Vorkenntnis erklärt: ${d.prior_knowledge_source}${d.prior_knowledge_on?` (${new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeZone:"Europe/Berlin"}).format(new Date(d.prior_knowledge_on))})`:""}`:"Keine Vorkenntnis erklärt"}</small><small>{d.resale_prohibition_notice_given?"Weitergabeverbot erteilt":"Weitergabeverbot nicht dokumentiert"}</small></div>
+      <div><small>{d.prior_knowledge_declared?`Vorkenntnis erklärt: ${d.prior_knowledge_source}${d.prior_knowledge_on?` (${tag(d.prior_knowledge_on)})`:""}`:"Keine Vorkenntnis erklärt"}</small><small>{d.resale_prohibition_notice_given?"Weitergabeverbot erteilt":"Weitergabeverbot nicht dokumentiert"}</small></div>
       <div><Link className="secondary-button link-button compact" to={`/crm/contacts/${d.contact_id}`}>Kontakt öffnen</Link>{canWriteDisclosures?<Form method="post"><input type="hidden" name="_intent" value="disclosure_archive"/><input type="hidden" name="disclosure_id" value={d.id}/><input type="hidden" name="mode" value={d.archived_at?"restore":"archive"}/><button className="secondary-button compact" type="submit">{d.archived_at?"Wiederherstellen":"Archivieren"}</button></Form>:null}</div>
      </div>})}{disclosures.length===0?<p className="empty-state">Für dieses Objekt ist noch kein Nachweis dokumentiert.</p>:null}</div>
      {canWriteDisclosures?<Form method="post" className="disclosure-form">

@@ -1,6 +1,7 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/contact-collaboration";
 import { requireActiveUser } from "~/lib/auth.server";
+import { zeitpunkt as formatDate } from "~/lib/format";
 
 type ActionResult = { error?: string };
 
@@ -15,14 +16,6 @@ const activityLabels = Object.fromEntries(activityTypes);
 
 function text(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
-}
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("de-DE", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "Europe/Berlin",
-  }).format(new Date(value));
 }
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {

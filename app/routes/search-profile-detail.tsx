@@ -6,6 +6,8 @@ import { ConcurrencyConflictModal } from "~/components/concurrency-conflict-moda
 import { requirePermission } from "~/lib/auth.server";
 import { geocodeSearchLocation } from "~/lib/geocoding.server";
 import { groupMatchingRows, isDeprioritizedDecision, MATCH_DECISION_LABELS } from "~/lib/matching-priority";
+import { euroRund, istLeer, zeitpunkt as formatDate } from "~/lib/format";
+import { crmLocalDateTimeToIso as berlinLocalToIso } from "~/lib/local-time";
 import "~/search-profile.css";
 import "~/inquiry.css";
 
@@ -19,10 +21,9 @@ function one(v:any){return Array.isArray(v)?v[0]:v;}
 function text(fd:FormData,k:string){return String(fd.get(k)??"").trim();}
 function num(v:string){if(!v)return null;const normalized=v.includes(",")?v.replace(/\./g,"").replace(",","."):v;const n=Number(normalized);return Number.isFinite(n)?n:NaN;}
 function nval(v:any){return v===null||v===undefined?"":String(v).replace(".",",");}
-function formatDate(v:string|null){if(!v)return "—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeStyle:"short",timeZone:"Europe/Berlin"}).format(new Date(v));}
-function money(v:any,transaction="BUY"){if(v===null||v===undefined)return "Preis offen";return new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(Number(v))+(transaction==="RENT"?" / Monat":"");}
+
+function money(v:any,transaction="BUY"){if(istLeer(v))return "Preis offen";return euroRund(v)+(transaction==="RENT"?" / Monat":"");}
 function auditValue(v:any){if(v===null||v===undefined||v==="")return"—";if(Array.isArray(v))return v.join(", ")||"—";if(typeof v==="object")return JSON.stringify(v);return String(v);}
-function berlinLocalToIso(value:string){if(!value)return null;const m=value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);if(!m)return null;const target=Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5]);let guess=target;for(let i=0;i<2;i++){const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Berlin",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date(guess));const g=(t:string)=>Number(parts.find(p=>p.type===t)?.value);const rendered=Date.UTC(g("year"),g("month")-1,g("day"),g("hour"),g("minute"));guess=target-(rendered-guess);}return new Date(guess).toISOString();}
 
 export async function loader({request,context,params}:Route.LoaderArgs){
  const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"search_profile.read");

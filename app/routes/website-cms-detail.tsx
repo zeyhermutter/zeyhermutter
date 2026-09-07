@@ -2,11 +2,12 @@ import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-
 import type { Route } from "./+types/website-cms-detail";
 import { requirePermission } from "~/lib/auth.server";
 import { isWebsitePageKey, normalizeWebsiteContent, WEBSITE_PAGE_DEFINITIONS } from "~/lib/website-content";
+import { zeitpunkt as formatDate } from "~/lib/format";
 import "~/website-cms.css";
 
 type ActionResult = { error?: string };
 function text(fd: FormData, key: string) { return String(fd.get(key) ?? "").trim(); }
-function formatDate(value: string | null) { return value ? new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Berlin" }).format(new Date(value)) : "—"; }
+
 function pageKeyFrom(value: string | undefined) { const key = String(value ?? "").toUpperCase(); return isWebsitePageKey(key) ? key : null; }
 function workflowError(message: string) { if (message.includes("VERSION_CONFLICT")) return "Die Seite wurde zwischenzeitlich geändert. Bitte neu laden."; if (message.includes("PUBLISH_REQUIRED")) return "Dir fehlt die Berechtigung zum Veröffentlichen."; if (message.includes("WRITE_REQUIRED")) return "Dir fehlt die Berechtigung zum Bearbeiten."; if (message.includes("CANDIDATE_REQUIRED")) return "Bitte zuerst eine Vorschauversion erstellen."; return "Die CMS-Aktion konnte nicht ausgeführt werden."; }
 

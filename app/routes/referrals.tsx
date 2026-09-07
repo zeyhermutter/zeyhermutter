@@ -1,6 +1,7 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/referrals";
 import { requirePermission } from "~/lib/auth.server";
+import { tag } from "~/lib/format";
 
 type ActionResult={error?:string};
 
@@ -10,7 +11,7 @@ export const REFERRAL_CHANNEL:Record<string,string>={PHONE:"Telefon",EMAIL:"E-Ma
 export const ACKNOWLEDGEMENT:Record<string,string>={THANK_YOU_NOTE:"Dankschreiben",CALL:"Anruf",GIFT:"Aufmerksamkeit",FEE:"Vergütung",NONE:"Bewusst nichts"};
 
 export function one(v:any){return Array.isArray(v)?v[0]:v;}
-export function formatDay(v:string|null){if(!v)return"—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeZone:"Europe/Berlin"}).format(new Date(v+"T12:00:00Z"));}
+export const formatDay = tag;
 export function plural(count:number,one:string,many:string){return `${count} ${count===1?one:many}`;}
 
 export function referrerLabel(row:any){

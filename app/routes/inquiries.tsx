@@ -1,6 +1,7 @@
 import { data, Form, Link, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/inquiries";
 import { requirePermission } from "~/lib/auth.server";
+import { zeitpunktKurz as formatDate } from "~/lib/format";
 import "~/inquiry.css";
 
 type ActionResult={error?:string;ok?:string};
@@ -24,7 +25,7 @@ export function elapsedLabel(hours:any){
 const STATUS:Record<string,string>={NEW:"Neu",CONTACTED:"Kontaktiert",QUALIFIED:"Qualifiziert",VIEWING_PLANNED:"Besichtigung geplant",CLOSED:"Erledigt",LOST:"Kein weiteres Interesse"};
 const CHANNEL:Record<string,string>={WEBSITE:"Website",PORTAL:"Immobilienportal",PHONE:"Telefon",EMAIL:"E-Mail",REFERRAL:"Empfehlung",WALK_IN:"Persönlich",OTHER:"Sonstige"};
 function one(v:any){return Array.isArray(v)?v[0]:v;}
-function formatDate(v:string|null){if(!v)return "—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"short",timeStyle:"short",timeZone:"Europe/Berlin"}).format(new Date(v));}
+
 export async function loader({request,context}:Route.LoaderArgs){
  const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"inquiry.read");
  const u=new URL(request.url),q=(u.searchParams.get("q")??"").trim().toLowerCase(),status=u.searchParams.get("status")??"OPEN",channel=u.searchParams.get("channel")??"ALL",responsible=u.searchParams.get("responsible")??"ALL",archived=u.searchParams.get("archived")==="1";

@@ -1,7 +1,8 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/closing-milestones";
 import { requirePermission } from "~/lib/auth.server";
-import { crmDateAtTimeToIso, crmLocalDateTimeToIso } from "~/lib/local-time";
+import { tag as formatDate, zeitpunkt as formatMoment } from "~/lib/format";
+import { crmDateAtTimeToIso, crmIsoToLocalDateTime as isoToLocal, crmLocalDateTimeToIso } from "~/lib/local-time";
 
 type ActionResult={error?:string};
 
@@ -25,9 +26,7 @@ function one(value:any){return Array.isArray(value)?value[0]:value;}
 function text(fd:FormData,key:string){return String(fd.get(key)??"").trim();}
 function dateOrNull(fd:FormData,key:string){const v=text(fd,key);return /^\d{4}-\d{2}-\d{2}$/.test(v)?v:null;}
 function numOrNull(fd:FormData,key:string){const raw=text(fd,key);if(!raw)return null;const n=Number(raw.includes(",")?raw.replace(/\./g,"").replace(",","."):raw);return Number.isFinite(n)?n:NaN;}
-function formatDate(value:string|null){if(!value)return"—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeZone:"Europe/Berlin"}).format(new Date(`${value}T12:00:00Z`));}
-function formatMoment(value:string|null){if(!value)return"—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeStyle:"short",timeZone:"Europe/Berlin"}).format(new Date(value));}
-function isoToLocal(value:string|null){if(!value)return"";const p=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Berlin",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date(value));const g=(t:string)=>p.find((x)=>x.type===t)?.value??"";return `${g("year")}-${g("month")}-${g("day")}T${g("hour")}:${g("minute")}`;}
+
 function today(){return new Date().toISOString().slice(0,10);}
 
 function errorMessage(error:any){

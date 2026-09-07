@@ -1,6 +1,7 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/property-pricing";
 import { requirePermission } from "~/lib/auth.server";
+import { euroRund as money, tag as formatDate } from "~/lib/format";
 
 type ActionResult={error?:string};
 
@@ -11,8 +12,7 @@ function one(value:any){return Array.isArray(value)?value[0]:value;}
 function text(fd:FormData,key:string){return String(fd.get(key)??"").trim();}
 function dateOrNull(fd:FormData,key:string){const v=text(fd,key);return /^\d{4}-\d{2}-\d{2}$/.test(v)?v:null;}
 function numOrNull(fd:FormData,key:string){const raw=text(fd,key);if(!raw)return null;const n=Number(raw.includes(",")?raw.replace(/\./g,"").replace(",","."):raw);return Number.isFinite(n)?n:NaN;}
-function formatDate(value:string|null){if(!value)return"—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeZone:"Europe/Berlin"}).format(new Date(`${value}T12:00:00Z`));}
-function money(value:any){const n=Number(value);return Number.isFinite(n)?new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n):"—";}
+
 function today(){return new Date().toISOString().slice(0,10);}
 function dayDiff(from:string,to:string){return Math.max(0,Math.round((new Date(`${to}T12:00:00Z`).getTime()-new Date(`${from}T12:00:00Z`).getTime())/864e5));}
 

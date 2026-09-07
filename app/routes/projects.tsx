@@ -1,6 +1,7 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/projects";
 import { requirePermission } from "~/lib/auth.server";
+import { tag } from "~/lib/format";
 
 type ActionResult={error?:string};
 
@@ -11,7 +12,7 @@ export const BLOCKER_AREA:Record<string,string>={PROPERTY:"Immobilie",CHECK:"Ver
 
 function text(fd:FormData,key:string){return String(fd.get(key)??"").trim();}
 function dateOrNull(fd:FormData,key:string){const v=text(fd,key);return /^\d{4}-\d{2}-\d{2}$/.test(v)?v:null;}
-export function formatDay(value:string|null){if(!value)return"—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeZone:"Europe/Berlin"}).format(new Date(`${value}T12:00:00Z`));}
+export const formatDay = tag;
 
 /**
  * Genau eine nächste Aktion je Projekt. Das System erfindet keine: entweder es

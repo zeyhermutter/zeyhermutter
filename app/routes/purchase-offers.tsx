@@ -1,13 +1,12 @@
 import { data, Form, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/purchase-offers";
 import { requirePermission } from "~/lib/auth.server";
+import { euroGenau as money, tag as formatDate } from "~/lib/format";
 
 const STATUS:Record<string,string>={DRAFT:"Entwurf",SUBMITTED:"Abgegeben",COUNTERED:"Gegenangebot",ACCEPTED:"Angenommen",REJECTED:"Abgelehnt",WITHDRAWN:"Zurückgezogen",REPLACED:"Ersetzt",FAILED:"Abschluss gescheitert"};
 const FINANCING:Record<string,string>={OPEN:"Offen",IN_PROGRESS:"In Klärung",CONFIRMED:"Bestätigt",NOT_REQUIRED:"Nicht erforderlich"};
 const STATUS_CLASS:Record<string,string>={DRAFT:"status-draft",SUBMITTED:"status-marketing",COUNTERED:"status-contract-pending",ACCEPTED:"status-reserved",REJECTED:"status-lost",WITHDRAWN:"status-withdrawn",REPLACED:"status-archived",FAILED:"status-lost"};
 function one(v:any){return Array.isArray(v)?v[0]:v;}
-function money(v:any){const n=Number(v);return Number.isFinite(n)?new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR"}).format(n):"—";}
-function formatDate(v:string|null){if(!v)return"—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeZone:"Europe/Berlin"}).format(new Date(v));}
 
 export async function loader({request,context}:Route.LoaderArgs){
   const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"offer.read");

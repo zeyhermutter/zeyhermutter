@@ -2,6 +2,7 @@ import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-
 import type { Route } from "./+types/project-detail";
 import { requirePermission } from "~/lib/auth.server";
 import { BLOCKER_AREA, PHASE, PROJECT_STATUS, STATUS_CLASS, formatDay, nextAction, projectErrorMessage } from "./projects";
+import { euroRund as money, zeitpunkt as formatMoment } from "~/lib/format";
 
 type ActionResult={error?:string};
 
@@ -14,8 +15,6 @@ const CLOSING_STATUS:Record<string,string>={PREPARATION:"Abschlussvorbereitung",
 function text(fd:FormData,key:string){return String(fd.get(key)??"").trim();}
 function dateOrNull(fd:FormData,key:string){const v=text(fd,key);return /^\d{4}-\d{2}-\d{2}$/.test(v)?v:null;}
 function numOrNull(fd:FormData,key:string){const raw=text(fd,key);if(!raw)return null;const n=Number(raw.includes(",")?raw.replace(/\./g,"").replace(",","."):raw);return Number.isFinite(n)?n:NaN;}
-function money(value:any){const n=Number(value);return Number.isFinite(n)?new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n):"—";}
-function formatMoment(value:string|null){if(!value)return"—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeStyle:"short",timeZone:"Europe/Berlin"}).format(new Date(value));}
 
 export async function loader({request,context,params}:Route.LoaderArgs){
   const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"project.read");

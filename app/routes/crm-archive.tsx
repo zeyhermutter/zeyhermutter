@@ -1,6 +1,7 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/crm-archive";
 import { requireActiveUser } from "~/lib/auth.server";
+import { AUFGABENPRIORITAET, AUFGABENSTATUS, KONTAKTSTATUS, beschrifte } from "~/lib/labels";
 
 type EntityType = "CONTACT" | "ORGANIZATION" | "TASK";
 type ActionResult = { error?: string };
@@ -16,26 +17,26 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const view = url.searchParams.get("view") === "archived" ? "archived" : "active";
   const archived = view === "archived";
 
-  let items: Array<{ id: string; reference: string; title: string; subtitle: string; status: string; version: number }> = [];
+  let items: Array<{ id: string; reference: string; title: string; subtitle: string; statusLabel: string; version: number }> = [];
 
   if (entityType === "CONTACT") {
     let query = supabase.from("contacts").select("id, contact_number, first_name, last_name, email, mobile, status, version").order("updated_at", { ascending: false }).limit(100);
     query = archived ? query.not("archived_at", "is", null) : query.is("archived_at", null);
     const { data: rows, error } = await query;
     if (error) throw new Response("Kontakte konnten nicht geladen werden.", { status: 500 });
-    items = (rows ?? []).map((row) => ({ id: row.id, reference: row.contact_number, title: `${row.first_name} ${row.last_name}`, subtitle: row.email ?? row.mobile ?? "—", status: row.status, version: row.version }));
+    items = (rows ?? []).map((row) => ({ id: row.id, reference: row.contact_number, title: `${row.first_name} ${row.last_name}`, subtitle: row.email ?? row.mobile ?? "—", statusLabel: beschrifte(KONTAKTSTATUS, row.status), version: row.version }));
   } else if (entityType === "ORGANIZATION") {
     let query = supabase.from("organizations").select("id, organization_number, name, legal_form, city, status, version").order("updated_at", { ascending: false }).limit(100);
     query = archived ? query.not("archived_at", "is", null) : query.is("archived_at", null);
     const { data: rows, error } = await query;
     if (error) throw new Response("Organisationen konnten nicht geladen werden.", { status: 500 });
-    items = (rows ?? []).map((row) => ({ id: row.id, reference: row.organization_number, title: row.name, subtitle: [row.legal_form, row.city].filter(Boolean).join(" · ") || "—", status: row.status, version: row.version }));
+    items = (rows ?? []).map((row) => ({ id: row.id, reference: row.organization_number, title: row.name, subtitle: [row.legal_form, row.city].filter(Boolean).join(" · ") || "—", statusLabel: beschrifte(KONTAKTSTATUS, row.status), version: row.version }));
   } else {
     let query = supabase.from("tasks").select("id, task_number, title, priority, status, version").order("updated_at", { ascending: false }).limit(100);
     query = archived ? query.not("archived_at", "is", null) : query.is("archived_at", null);
     const { data: rows, error } = await query;
     if (error) throw new Response("Aufgaben konnten nicht geladen werden.", { status: 500 });
-    items = (rows ?? []).map((row) => ({ id: row.id, reference: row.task_number, title: row.title, subtitle: row.priority, status: row.status, version: row.version }));
+    items = (rows ?? []).map((row) => ({ id: row.id, reference: row.task_number, title: row.title, subtitle: beschrifte(AUFGABENPRIORITAET, row.priority), statusLabel: beschrifte(AUFGABENSTATUS, row.status), version: row.version }));
   }
 
   return data({ entityType, view, items, profile }, { headers: responseHeaders() });
@@ -109,7 +110,7 @@ export default function CrmArchive() {
         <div className="data-list">
           {items.map((item) => (
             <div className="data-row" key={item.id}>
-              <div><strong>{item.title}</strong><small>{item.reference} · {item.subtitle} · {item.status}</small></div>
+              <div><strong>{item.title}</strong><small>{item.reference} · {item.subtitle} · {item.statusLabel}</small></div>
               <Form method="post">
                 <input type="hidden" name="entity_type" value={entityType} />
                 <input type="hidden" name="entity_id" value={item.id} />

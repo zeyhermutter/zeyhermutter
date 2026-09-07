@@ -1,6 +1,7 @@
 import { data, Form, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/compliance";
 import { requirePermission } from "~/lib/auth.server";
+import { tag as formatDate } from "~/lib/format";
 
 const RISK:Record<string,string>={LOW:"Gering",MEDIUM:"Mittel",HIGH:"Hoch"};
 const RISK_CLASS:Record<string,string>={LOW:"status-sold",MEDIUM:"status-marketing",HIGH:"status-lost"};
@@ -29,7 +30,7 @@ const DOCUMENT_CATEGORY:Record<string,string>={
 };
 
 function one(value:any){return Array.isArray(value)?value[0]:value;}
-function formatDate(value:string|null){if(!value)return"—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeZone:"Europe/Berlin"}).format(new Date(`${value}T12:00:00Z`));}
+
 function today(){return new Date().toISOString().slice(0,10);}
 function inDays(days:number){return new Date(Date.now()+days*864e5).toISOString().slice(0,10);}
 

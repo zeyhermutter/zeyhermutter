@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { Form, Link } from "react-router";
 import { MentionPicker } from "~/components/mention-picker";
+import { zeitpunkt as formatDate } from "~/lib/format";
 import "~/task-collaboration.css";
 
 const STATUS:Record<string,string>={OPEN:"Offen",IN_PROGRESS:"In Bearbeitung",DONE:"Erledigt",CANCELLED:"Abgebrochen"};
 const PRIORITY:Record<string,string>={LOW:"Niedrig",NORMAL:"Normal",HIGH:"Hoch",URGENT:"Dringend"};
-function formatDate(v:string|null){if(!v)return"—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeStyle:"short",timeZone:"Europe/Berlin"}).format(new Date(v));}
+
 function dateInputValue(v:string|null){return v?new Date(v).toISOString().slice(0,10):"";}
 export type ModalTask={id:string;task_number:string;title:string;description?:string|null;status:string;priority:string;due_at:string|null;responsible_user?:string|null;created_by?:string|null;version?:number;};
 export type TaskWatcher={user_id:string;created_at?:string|null};

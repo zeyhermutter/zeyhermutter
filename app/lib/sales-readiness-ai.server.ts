@@ -1,4 +1,5 @@
 import type { SalesReadinessViewModel } from "~/lib/sales-readiness";
+import { euroRund, istLeer } from "~/lib/format";
 
 export type SalesReadinessAiTarget =
   | "starting_situation"
@@ -42,12 +43,7 @@ function parseJsonText(text: string) {
 }
 
 function euro(value: number | null | undefined) {
-  if (value === null || value === undefined) return null;
-  return new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 0,
-  }).format(value);
+  return istLeer(value) ? null : euroRund(value);
 }
 
 function scenarioContext(viewModel: SalesReadinessViewModel, scenarioId?: string) {

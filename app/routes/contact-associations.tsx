@@ -1,6 +1,8 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/contact-associations";
 import { requireActiveUser } from "~/lib/auth.server";
+import { zeitpunkt } from "~/lib/format";
+import { ADRESSART, ORGANISATIONSROLLE, beschrifte } from "~/lib/labels";
 
 type ActionResult = { error?: string };
 
@@ -151,7 +153,7 @@ export default function ContactAssociations() {
     }
     for (const item of earliest.values()) firstIds.add(item.id);
   }
-  const fmt = (value: string | null) => (value ? new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Berlin" }).format(new Date(value)) : "—");
+  const fmt = zeitpunkt;
   const result = useActionData<typeof action>();
 
   return (
@@ -195,7 +197,7 @@ export default function ContactAssociations() {
               const organization = organizationMap[link.organization_id];
               return (
                 <div className="data-row" key={link.id}>
-                  <div><strong>{organization?.name ?? "Organisation"}</strong><small>{link.role}{link.position ? ` · ${link.position}` : ""}</small></div>
+                  <div><strong>{organization?.name ?? "Organisation"}</strong><small>{beschrifte(ORGANISATIONSROLLE, link.role)}{link.position ? ` · ${link.position}` : ""}</small></div>
                   <Form method="post"><input type="hidden" name="_intent" value="remove_organization" /><input type="hidden" name="link_id" value={link.id} /><button className="text-button" type="submit">Entfernen</button></Form>
                 </div>
               );
@@ -205,7 +207,7 @@ export default function ContactAssociations() {
           <Form method="post" className="auth-form">
             <input type="hidden" name="_intent" value="add_organization" />
             <label><span>Organisation</span><select name="organization_id" required defaultValue=""><option value="" disabled>Bitte auswählen</option>{organizations.map((organization) => <option key={organization.id} value={organization.id}>{organization.name} · {organization.organization_number}</option>)}</select></label>
-            <label><span>Rolle</span><select name="role" defaultValue="ANSPRECHPARTNER">{orgRoles.map((role) => <option key={role} value={role}>{role}</option>)}</select></label>
+            <label><span>Rolle</span><select name="role" defaultValue="ANSPRECHPARTNER">{orgRoles.map((role) => <option key={role} value={role}>{beschrifte(ORGANISATIONSROLLE, role)}</option>)}</select></label>
             <label><span>Position/Funktion</span><input name="position" placeholder="z. B. Geschäftsführer" /></label>
             <button className="secondary-button" type="submit">Organisation verknüpfen</button>
           </Form>
@@ -216,7 +218,7 @@ export default function ContactAssociations() {
           <div className="data-list">
             {addresses.map((address) => (
               <div className="data-row" key={address.id}>
-                <div><strong>{address.street} {address.house_number ?? ""}</strong><small>{address.postal_code} {address.city} · {address.address_type}{address.is_primary ? " · Primär" : ""}</small></div>
+                <div><strong>{address.street} {address.house_number ?? ""}</strong><small>{address.postal_code} {address.city} · {beschrifte(ADRESSART, address.address_type)}{address.is_primary ? " · Primär" : ""}</small></div>
                 <Form method="post"><input type="hidden" name="_intent" value="archive_address" /><input type="hidden" name="address_id" value={address.id} /><input type="hidden" name="version" value={address.version} /><button className="text-button" type="submit">Archivieren</button></Form>
               </div>
             ))}

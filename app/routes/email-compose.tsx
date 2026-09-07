@@ -1,6 +1,8 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/email-compose";
 import { requireActiveUser } from "~/lib/auth.server";
+import { zeitpunkt as formatDate } from "~/lib/format";
+import { crmLocalDateTimeToIso as berlinLocalToIso, crmNowLocalDateTime as berlinInputNow } from "~/lib/local-time";
 import "~/communication.css";
 
 type ContextType = "CONTACT" | "LEAD" | "INQUIRY";
@@ -27,51 +29,6 @@ function one<T>(value: T | T[] | null | undefined): T | null {
 
 function text(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
-}
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("de-DE", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "Europe/Berlin",
-  }).format(new Date(value));
-}
-
-function berlinLocalToIso(value: string) {
-  if (!value) return null;
-  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
-  if (!match) return null;
-  const target = Date.UTC(+match[1], +match[2] - 1, +match[3], +match[4], +match[5]);
-  let guess = target;
-  for (let i = 0; i < 2; i += 1) {
-    const parts = new Intl.DateTimeFormat("en-CA", {
-      timeZone: "Europe/Berlin",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      hourCycle: "h23",
-    }).formatToParts(new Date(guess));
-    const get = (type: string) => Number(parts.find((part) => part.type === type)?.value);
-    const shown = Date.UTC(get("year"), get("month") - 1, get("day"), get("hour"), get("minute"));
-    guess = target - (shown - guess);
-  }
-  return new Date(guess).toISOString();
-}
-
-function berlinInputNow() {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Europe/Berlin",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-  }).formatToParts(new Date());
-  const get = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
-  return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}`;
 }
 
 function resolveContext(url: URL): ContextRef | null {

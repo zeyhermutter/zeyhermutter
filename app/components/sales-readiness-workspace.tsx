@@ -8,6 +8,7 @@ import {
   OWNER_DECISION_LABELS,
   SALES_READINESS_STATUS_LABELS,
 } from "~/lib/sales-readiness";
+import { euroRund as euro } from "~/lib/format";
 
 const CATEGORIES = [
   ["CLEARANCE_DISPOSAL", "Entrümpelung & Entsorgung"],
@@ -28,16 +29,6 @@ const SCENARIO_LABELS = {
   RECOMMENDED_PREPARATION: "B · Optimierte Verkaufsaufbereitung",
   EXTENDED_MEASURES: "C · Umfangreichere Renovierung",
 } as const;
-
-function euro(value: number | null | undefined) {
-  return value === null || value === undefined
-    ? "—"
-    : new Intl.NumberFormat("de-DE", {
-        style: "currency",
-        currency: "EUR",
-        maximumFractionDigits: 0,
-      }).format(value);
-}
 
 function inputDate(value: string | null) {
   return value ? value.slice(0, 10) : "";

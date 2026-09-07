@@ -1,9 +1,9 @@
 import { data, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/website-cms";
 import { requirePermission } from "~/lib/auth.server";
+import { zeitpunkt as formatDate } from "~/lib/format";
 import "~/website-cms.css";
 
-function formatDate(value: string | null) { return value ? new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Berlin" }).format(new Date(value)) : "—"; }
 function stateLabel(page: any) { if (page.status === "PUBLISHED" && !page.has_unpublished_changes) return "Veröffentlicht"; if (page.status === "READY") return "Version zur Freigabe bereit"; if (page.published_version) return "Veröffentlicht · Änderungen offen"; return "Entwurf"; }
 
 export async function loader({ request, context }: Route.LoaderArgs) {

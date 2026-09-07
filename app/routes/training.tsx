@@ -1,6 +1,7 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/training";
 import { requirePermission } from "~/lib/auth.server";
+import { tag } from "~/lib/format";
 
 type ActionResult={error?:string};
 
@@ -8,7 +9,7 @@ export const TRAINING_FORMAT:Record<string,string>={IN_PERSON:"Präsenz",ONLINE_
 
 function text(fd:FormData,key:string){return String(fd.get(key)??"").trim();}
 function dateOrNull(fd:FormData,key:string){const v=text(fd,key);return /^\d{4}-\d{2}-\d{2}$/.test(v)?v:null;}
-export function formatDay(v:string|null){if(!v)return"—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeZone:"Europe/Berlin"}).format(new Date(v+"T12:00:00Z"));}
+export const formatDay = tag;
 export function hoursLabel(value:any){const n=Number(value);if(!Number.isFinite(n))return"—";return `${n.toLocaleString("de-DE",{maximumFractionDigits:2})} ${n===1?"Stunde":"Stunden"}`;}
 export function plural(count:number,one:string,many:string){return `${count} ${count===1?one:many}`;}
 

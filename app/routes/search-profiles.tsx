@@ -1,12 +1,13 @@
 import { data, Form, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/search-profiles";
 import { requirePermission } from "~/lib/auth.server";
+import { euroRund as money } from "~/lib/format";
 import "~/search-profile.css";
 
 const STATUS_LABELS:Record<string,string>={ACTIVE:"Aktiv",PAUSED:"Pausiert",CLOSED:"Abgeschlossen"};
 const TYPE_LABELS:Record<string,string>={DETACHED_HOUSE:"Einfamilienhaus",SEMI_DETACHED_HOUSE:"Doppelhaushälfte",TERRACED_HOUSE:"Reihenhaus",APARTMENT_BUILDING:"Mehrfamilienhaus",APARTMENT:"Wohnung",PENTHOUSE:"Penthouse",MAISONETTE:"Maisonette",LAND:"Grundstück",COMMERCIAL:"Gewerbe",OFFICE:"Büro",RETAIL:"Einzelhandel",GARAGE:"Garage",PARKING_SPACE:"Stellplatz",OTHER:"Sonstige"};
 function one(v:any){return Array.isArray(v)?v[0]:v;}
-function money(v:any){if(v===null||v===undefined)return "—";return new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(Number(v));}
+
 export async function loader({request,context}:Route.LoaderArgs){
   const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"search_profile.read");
   const url=new URL(request.url);const q=(url.searchParams.get("q")??"").trim().toLowerCase();const archived=url.searchParams.get("archived")==="1";const status=url.searchParams.get("status")??(archived?"ALL":"ACTIVE");const transaction=url.searchParams.get("transaction")??"ALL";const responsible=url.searchParams.get("responsible")??"ALL";

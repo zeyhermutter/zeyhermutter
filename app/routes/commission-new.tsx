@@ -2,6 +2,7 @@ import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-
 import type { Route } from "./+types/commission-new";
 import { CommissionFields, type CommissionOfferOption, type CommissionPartyOption } from "~/components/commission-fields";
 import { requirePermission } from "~/lib/auth.server";
+import { MAKLERAUFTRAGSTATUS, beschrifte } from "~/lib/labels";
 
 type ActionResult={error?:string};
 function text(fd:FormData,key:string){return String(fd.get(key)??"").trim();}
@@ -23,7 +24,7 @@ async function loadOptions(supabase:any){
  for(const owner of owners??[]){const contact=Array.isArray(owner.contacts)?owner.contacts[0]:owner.contacts;if(!activePropertyIds.has(owner.property_id)||!contact||contact.archived_at)continue;const key=`SELLER:${owner.property_id}:${owner.contact_id}`;if(seen.has(key))continue;seen.add(key);partyOptions.push({propertyId:owner.property_id,contactId:owner.contact_id,side:"SELLER",label:`${contact.first_name} ${contact.last_name} · ${contact.contact_number}`});}
  const offerOptions:CommissionOfferOption[]=[];
  for(const offer of offers??[]){const contact=Array.isArray(offer.contacts)?offer.contacts[0]:offer.contacts;if(!activePropertyIds.has(offer.property_id)||!contact||contact.archived_at)continue;const key=`BUYER:${offer.property_id}:${offer.contact_id}`;if(!seen.has(key)){seen.add(key);partyOptions.push({propertyId:offer.property_id,contactId:offer.contact_id,side:"BUYER",label:`${contact.first_name} ${contact.last_name} · ${contact.contact_number}`});}offerOptions.push({id:offer.id,propertyId:offer.property_id,contactId:offer.contact_id,label:offer.offer_number,amount:offer.amount,status:offer.status});}
- const mandateOptions=(mandates??[]).map((mandate:any)=>({id:mandate.id,propertyId:mandate.property_id,label:`${mandate.mandate_number} · ${mandate.status}`,sides:(mandate.brokerage_mandate_commission_terms??[]).map((term:any)=>term.side)}));
+ const mandateOptions=(mandates??[]).map((mandate:any)=>({id:mandate.id,propertyId:mandate.property_id,label:`${mandate.mandate_number} · ${beschrifte(MAKLERAUFTRAGSTATUS,mandate.status)}`,sides:(mandate.brokerage_mandate_commission_terms??[]).map((term:any)=>term.side)}));
  return {properties:properties??[],partyOptions,offers:offerOptions,mandates:mandateOptions,profiles:profiles??[]};
 }
 

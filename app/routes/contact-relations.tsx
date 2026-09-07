@@ -1,6 +1,8 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/contact-relations";
 import { requireActiveUser } from "~/lib/auth.server";
+import { tag as dateOnly } from "~/lib/format";
+import { AUFGABENPRIORITAET, AUFGABENSTATUS, beschrifte } from "~/lib/labels";
 
 type ActionResult = { error?: string; success?: string };
 
@@ -19,14 +21,6 @@ const relationshipLabels = Object.fromEntries(relationshipTypes);
 
 function text(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
-}
-
-function dateOnly(value: string | null) {
-  if (!value) return "—";
-  return new Intl.DateTimeFormat("de-DE", {
-    dateStyle: "medium",
-    timeZone: "Europe/Berlin",
-  }).format(new Date(value));
 }
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
@@ -301,8 +295,8 @@ export default function ContactRelations() {
         <div className="data-list">
           {tasks.map((task) => (
             <div className="data-row" key={task.id}>
-              <div><strong>{task.title}</strong><small>{task.task_number} · {task.priority} · fällig {dateOnly(task.due_at)}</small></div>
-              <div className="row-meta"><span>{task.status}</span>{task.status !== "DONE" && task.status !== "CANCELLED" ? <Form method="post"><input type="hidden" name="_intent" value="complete_task" /><input type="hidden" name="task_id" value={task.id} /><input type="hidden" name="version" value={task.version} /><button className="text-button" type="submit">Erledigt</button></Form> : null}</div>
+              <div><strong>{task.title}</strong><small>{task.task_number} · {beschrifte(AUFGABENPRIORITAET, task.priority)} · fällig {dateOnly(task.due_at)}</small></div>
+              <div className="row-meta"><span>{beschrifte(AUFGABENSTATUS, task.status)}</span>{task.status !== "DONE" && task.status !== "CANCELLED" ? <Form method="post"><input type="hidden" name="_intent" value="complete_task" /><input type="hidden" name="task_id" value={task.id} /><input type="hidden" name="version" value={task.version} /><button className="text-button" type="submit">Erledigt</button></Form> : null}</div>
             </div>
           ))}
           {tasks.length === 0 ? <p className="empty-state">Noch keine Aufgaben zu diesem Kontakt.</p> : null}

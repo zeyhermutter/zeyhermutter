@@ -1,6 +1,8 @@
 import { data, Form, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/reports";
 import { requireActiveUser } from "~/lib/auth.server";
+import { euroRund as formatCurrency, prozent, zahl, zahl as formatNumber, zeitpunkt as formatGenerated } from "~/lib/format";
+import { crmToday as berlinToday } from "~/lib/local-time";
 import "~/reporting.css";
 
 type PipelineRow = { status: string; count: number };
@@ -92,12 +94,6 @@ const PERIOD_PRESETS: { key: Exclude<PeriodPreset, "custom">; label: string }[] 
   { key: "year", label: "Jahr" },
 ];
 
-function berlinToday() {
-  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
-  const get = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
-  return `${get("year")}-${get("month")}-${get("day")}`;
-}
-
 function validDate(value: string | null, fallback: string) {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return fallback;
   const parsed = Date.parse(`${value}T00:00:00Z`);
@@ -152,31 +148,19 @@ function resolvePeriod(url: URL) {
   return { preset, from, to, rangeError: null as string | null };
 }
 
-function formatCurrency(value: number | string | null | undefined) {
-  return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(Number(value ?? 0));
-}
-
-function formatNumber(value: number | string | null | undefined) {
-  return new Intl.NumberFormat("de-DE", { maximumFractionDigits: 0 }).format(Number(value ?? 0));
-}
-
 function pluralLabel(value: number | string | null | undefined, one: string, many: string) {
   const count = Number(value ?? 0);
   return `${formatNumber(count)} ${count === 1 ? one : many}`;
 }
 
 function formatRate(value: number | string | null | undefined) {
-  if (value === null || value === undefined || Number.isNaN(Number(value))) return null;
-  return `${new Intl.NumberFormat("de-DE", { maximumFractionDigits: 1 }).format(Number(value))} %`;
+  const text = prozent(value, 1, "");
+  return text || null;
 }
 
 function formatDays(value: number | string | null | undefined) {
-  if (value === null || value === undefined || Number.isNaN(Number(value))) return null;
-  return `${new Intl.NumberFormat("de-DE", { maximumFractionDigits: 1 }).format(Number(value))} Tage`;
-}
-
-function formatGenerated(value: string) {
-  return new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Berlin" }).format(new Date(value));
+  const text = zahl(value, 1, "");
+  return text ? `${text} Tage` : null;
 }
 
 function formatDate(value: string) {

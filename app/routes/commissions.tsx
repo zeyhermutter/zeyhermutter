@@ -1,14 +1,15 @@
 import { data, Form, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/commissions";
 import { requirePermission } from "~/lib/auth.server";
+import { euroGenau as money, tag as formatDate } from "~/lib/format";
+import { RECHNUNGSSTATUS, ZAHLUNGSSTATUS, beschrifte } from "~/lib/labels";
 
 const STATUS: Record<string,string> = {DRAFT:"Entwurf",EXPECTED:"Erwartet",DUE:"Fällig",INVOICED:"Abgerechnet",PARTIALLY_PAID:"Teilweise bezahlt",PAID:"Bezahlt",CANCELLED:"Storniert"};
 const SIDE: Record<string,string> = {SELLER:"Innenprovision",BUYER:"Außenprovision"};
 const STATUS_CLASS: Record<string,string> = {DRAFT:"status-draft",EXPECTED:"status-valuation",DUE:"status-contract-pending",INVOICED:"status-marketing",PARTIALLY_PAID:"status-preparation",PAID:"status-sold",CANCELLED:"status-lost"};
 
 function one(value:any){return Array.isArray(value)?value[0]:value;}
-function money(value:number|string|null|undefined){const n=Number(value);return Number.isFinite(n)?new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR",maximumFractionDigits:2}).format(n):"—";}
-function formatDate(value:string|null){if(!value)return"—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeZone:"Europe/Berlin"}).format(new Date(value));}
+
 function targetAmount(row:any){const value=row.actual_amount??row.expected_amount;const n=Number(value);return Number.isFinite(n)?n:0;}
 
 export async function loader({request,context}:Route.LoaderArgs){
@@ -69,7 +70,7 @@ export default function Commissions(){
     </Form></section>
 
     <section className="data-card"><div className="card-head"><div><p className="eyebrow">Provisionsverzeichnis</p><h2>{rows.length} Vorgänge</h2></div></div><div className="data-list">
-      {rows.map((row:any)=>{const property=one(row.properties),party=one(row.party),offer=one(row.purchase_offers);return <Link className="data-row data-row-link" to={`/commissions/${row.id}`} key={row.id}><div><strong>{row.commission_number} · {SIDE[row.side]??row.side}</strong><small>{property?.property_number??"—"} · {property?.internal_title??"Immobilie"}{party?` · ${party.first_name} ${party.last_name}`:" · Partei noch offen"}</small></div><div className="row-meta"><span className={`status-pill ${STATUS_CLASS[row.status]??"status-draft"}`}>{row.archived_at?"Archiviert":STATUS[row.status]??row.status}</span><small>{money(row.actual_amount??row.expected_amount)}{offer?.offer_number?` · ${offer.offer_number}`:""}</small></div><div className="row-meta"><span>{row.due_date?`Fällig ${formatDate(row.due_date)}`:"Fälligkeit offen"}</span><small>{row.invoice_status} · {row.payment_status}</small></div><span className="subtle-link">Öffnen →</span></Link>})}
+      {rows.map((row:any)=>{const property=one(row.properties),party=one(row.party),offer=one(row.purchase_offers);return <Link className="data-row data-row-link" to={`/commissions/${row.id}`} key={row.id}><div><strong>{row.commission_number} · {SIDE[row.side]??row.side}</strong><small>{property?.property_number??"—"} · {property?.internal_title??"Immobilie"}{party?` · ${party.first_name} ${party.last_name}`:" · Partei noch offen"}</small></div><div className="row-meta"><span className={`status-pill ${STATUS_CLASS[row.status]??"status-draft"}`}>{row.archived_at?"Archiviert":STATUS[row.status]??row.status}</span><small>{money(row.actual_amount??row.expected_amount)}{offer?.offer_number?` · ${offer.offer_number}`:""}</small></div><div className="row-meta"><span>{row.due_date?`Fällig ${formatDate(row.due_date)}`:"Fälligkeit offen"}</span><small>{beschrifte(RECHNUNGSSTATUS,row.invoice_status)} · {beschrifte(ZAHLUNGSSTATUS,row.payment_status)}</small></div><span className="subtle-link">Öffnen →</span></Link>})}
       {rows.length===0?<p className="empty-state">Keine Provisionen in dieser Ansicht.</p>:null}
     </div></section>
   </main>;

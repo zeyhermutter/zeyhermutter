@@ -3,13 +3,13 @@ import type { Route } from "./+types/tasks";
 import { TaskCreateModal } from "~/components/task-create-modal";
 import { TaskModal } from "~/components/task-modal";
 import { requireActiveUser } from "~/lib/auth.server";
+import { zeitpunkt as formatDate } from "~/lib/format";
 import "~/inquiry.css";
 
 type ActionResult = { error?: string };
 const STATUS: Record<string, string> = { OPEN: "Offen", IN_PROGRESS: "In Bearbeitung", DONE: "Erledigt", CANCELLED: "Abgebrochen" };
 const PRIORITY: Record<string, string> = { LOW: "Niedrig", NORMAL: "Normal", HIGH: "Hoch", URGENT: "Dringend" };
 function text(fd: FormData, k: string) { return String(fd.get(k) ?? "").trim(); }
-function formatDate(v: string | null) { if (!v) return "—"; return new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Berlin" }).format(new Date(v)); }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { supabase, responseHeaders, profile } = await requireActiveUser(request, context.cloudflare.env);

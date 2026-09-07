@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { euroRund } from "~/lib/format";
 
 const MEASURE_TITLES: Record<string, string> = {
   CLEARANCE_DISPOSAL: "Entrümpelung vor Vermarktungsstart",
@@ -146,13 +147,7 @@ function validateFormRanges(form: HTMLFormElement) {
 }
 
 function euroFromInput(value: string) {
-  const number = Number(value);
-  if (!Number.isFinite(number)) return "";
-  return new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 0,
-  }).format(number);
+  return euroRund(value, "");
 }
 
 function selectedLabel(select: HTMLSelectElement | null) {

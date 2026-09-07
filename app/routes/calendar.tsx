@@ -1,6 +1,8 @@
 import { data, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/calendar";
 import { requireActiveUser } from "~/lib/auth.server";
+import { uhrzeit as formatTime } from "~/lib/format";
+import { ABSCHLUSSSTATUS, AUFGABENSTATUS, BESICHTIGUNGSSTATUS, beschrifte } from "~/lib/labels";
 import "~/calendar.css";
 
 type CalendarKind = "TASK" | "LEAD_FOLLOWUP" | "LEAD_VALUATION" | "VIEWING" | "CLOSING_NOTARY";
@@ -14,7 +16,7 @@ type CalendarEvent = {
   sourcePath: string;
   sourceLabel: string;
   exportUrl: string;
-  status: string | null;
+  statusLabel: string | null;
 };
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -86,10 +88,6 @@ function dateKey(value: string) {
 
 function formatDay(value: string) {
   return new Intl.DateTimeFormat("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", timeZone: "Europe/Berlin" }).format(new Date(`${value}T12:00:00Z`));
-}
-
-function formatTime(value: string) {
-  return new Intl.DateTimeFormat("de-DE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Berlin" }).format(new Date(value));
 }
 
 function minuteKey(value: string) {
@@ -196,7 +194,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       sourcePath: taskSourcePath(task),
       sourceLabel: "Aufgabe / interner Termin",
       exportUrl: exportUrl("task", task.id),
-      status: task.status,
+      statusLabel: beschrifte(AUFGABENSTATUS, task.status),
     });
   }
 
@@ -213,7 +211,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       sourcePath: `/leads/${row.id}`,
       sourceLabel: "Wiedervorlage",
       exportUrl: exportUrl("lead_followup", row.id),
-      status: null,
+      statusLabel: null,
     });
   }
 
@@ -231,7 +229,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       sourcePath: `/leads/${row.id}`,
       sourceLabel: "Eigentümertermin",
       exportUrl: exportUrl("lead_valuation", row.id),
-      status: null,
+      statusLabel: null,
     });
   }
 
@@ -248,7 +246,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       sourcePath: `/viewings/${row.id}`,
       sourceLabel: "Besichtigung",
       exportUrl: exportUrl("viewing", row.id),
-      status: row.status,
+      statusLabel: beschrifte(BESICHTIGUNGSSTATUS, row.status),
     });
   }
 
@@ -265,7 +263,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       sourcePath: `/closings/${row.id}`,
       sourceLabel: "Notartermin",
       exportUrl: exportUrl("closing_notary", row.id),
-      status: row.status,
+      statusLabel: beschrifte(ABSCHLUSSSTATUS, row.status),
     });
   }
 
@@ -332,7 +330,7 @@ export default function CalendarPage() {
           <div className="calendar-day-events">
             {dayEvents.map((event) => <article className="calendar-event" key={event.key}>
               <div className="calendar-event-time"><strong>{formatTime(event.startsAt)}</strong>{event.endsAt ? <small>bis {formatTime(event.endsAt)}</small> : null}</div>
-              <div className="calendar-event-main"><strong>{event.title}</strong><p>{event.subtitle}</p><span className="calendar-kind">{event.sourceLabel}{event.status ? ` · ${event.status}` : ""}</span></div>
+              <div className="calendar-event-main"><strong>{event.title}</strong><p>{event.subtitle}</p><span className="calendar-kind">{event.sourceLabel}{event.statusLabel ? ` · ${event.statusLabel}` : ""}</span></div>
               <div className="calendar-event-actions"><Link className="subtle-link" to={event.sourcePath}>CRM öffnen →</Link><a className="secondary-button link-button compact" href={event.exportUrl}>.ics</a></div>
             </article>)}
           </div>

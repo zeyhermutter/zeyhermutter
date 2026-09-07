@@ -2,6 +2,7 @@ import { useState } from "react";
 import { data, Form, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/properties";
 import { requirePermission } from "~/lib/auth.server";
+import { euroRund as money } from "~/lib/format";
 import "~/properties-workflow.css";
 
 const PAGE_SIZE = 50;
@@ -66,11 +67,6 @@ const TYPE_LABELS: Record<string, string> = {
   PARKING_SPACE: "Stellplatz",
   OTHER: "Sonstige",
 };
-
-function money(value: number | string | null) {
-  if (value === null || value === undefined) return "—";
-  return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(Number(value));
-}
 
 function statusClass(status:string){return `status-${status.toLowerCase().replaceAll("_","-")}`;}
 

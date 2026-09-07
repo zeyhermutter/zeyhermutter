@@ -1,6 +1,7 @@
 import { data, Form, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/audit-history";
 import { requirePermission } from "~/lib/auth.server";
+import { zeitpunkt as formatDate } from "~/lib/format";
 import "~/module04-fixes.css";
 
 const PAGE_SIZE = 50;
@@ -55,7 +56,7 @@ const PRIORITY_LABELS:Record<string,string>={LOW:"Niedrig",NORMAL:"Normal",HIGH:
 const TRANSACTION_LABELS:Record<string,string>={BUY:"Kauf",RENT:"Miete",SALE:"Verkauf"};
 const FINANCING_LABELS:Record<string,string>={OPEN:"Noch offen",IN_PROGRESS:"In Klärung",CONFIRMED:"Bestätigt",NOT_REQUIRED:"Nicht erforderlich"};
 const TYPE_LABELS:Record<string,string>={DETACHED_HOUSE:"Einfamilienhaus",SEMI_DETACHED_HOUSE:"Doppelhaushälfte",TERRACED_HOUSE:"Reihenhaus",APARTMENT_BUILDING:"Mehrfamilienhaus",APARTMENT:"Wohnung",PENTHOUSE:"Penthouse",MAISONETTE:"Maisonette",LAND:"Grundstück",COMMERCIAL:"Gewerbe",OFFICE:"Büro",RETAIL:"Einzelhandel",GARAGE:"Garage",PARKING_SPACE:"Stellplatz",OTHER:"Sonstige"};
-function formatDate(value:string){return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeStyle:"short",timeZone:"Europe/Berlin"}).format(new Date(value));}
+
 function valueLabel(value:unknown,field?:string){
   if(value===null||value===undefined||value==="")return"—";
   if(Array.isArray(value)){

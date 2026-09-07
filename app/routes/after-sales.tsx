@@ -1,6 +1,7 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/after-sales";
 import { requirePermission } from "~/lib/auth.server";
+import { tag } from "~/lib/format";
 
 type ActionResult={error?:string};
 
@@ -17,7 +18,7 @@ function one(v:any){return Array.isArray(v)?v[0]:v;}
 function text(fd:FormData,key:string){return String(fd.get(key)??"").trim();}
 function plural(count:number,singular:string,many:string){return `${count} ${count===1?singular:many}`;}
 
-export function formatMoment(value:string|null){if(!value)return"—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeZone:"Europe/Berlin"}).format(new Date(value));}
+export const formatMoment = tag;
 
 export function offsetLabel(days:number){
   if(days===0)return"am Tag der Übergabe";
