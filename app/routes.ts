@@ -33,6 +33,7 @@ export default [
     route("crm/users", "routes/user-admin.tsx"),
     route("crm/training", "routes/training.tsx"),
     route("crm/archive", "routes/crm-archive.tsx"),
+    route("crm/hilfe", "routes/help.tsx"),
     route("crm/contacts/new", "routes/contact-new.tsx"),
     route("crm/contacts/:contactId", "routes/contact-detail.tsx"),
     route("crm/contacts/:contactId/relations", "routes/contact-relations.tsx"),

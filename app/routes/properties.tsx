@@ -6,7 +6,7 @@ import "~/properties-workflow.css";
 
 const PAGE_SIZE = 50;
 
-const STATUS_LABELS: Record<string,string> = {
+export const STATUS_LABELS: Record<string,string> = {
   DRAFT:"Entwurf", ACQUISITION:"Akquise", VALUATION:"Bewertung", CONTRACT_PENDING:"Vertrag in Vorbereitung",
   PREPARATION:"Vorbereitung", MARKETING:"Vermarktung", RESERVED:"Reserviert", NOTARY:"Notar",
   SOLD:"Verkauft", LOST:"Verloren", WITHDRAWN:"Zurückgezogen", ARCHIVED:"Archiviert",

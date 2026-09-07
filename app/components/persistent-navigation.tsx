@@ -14,7 +14,7 @@ const GROUPS: NavGroup[] = [
   ]},
   { label: "Interessenten", items: [ { label: "Suchprofile", to: "/search-profiles" }, { label: "Anfragen", to: "/inquiries" }, { label: "Besichtigungen", to: "/viewings" } ]},
   { label: "Nach dem Verkauf", items: [ { label: "Nachbetreuung", to: "/after-sales" }, { label: "Empfehlungen", to: "/referrals" }, { label: "Case Studies", to: "/case-studies" } ]},
-  { label: "Verwaltung", items: [ { label: "Website-CMS", to: "/crm/website" }, { label: "Geldwäsche & Aufbewahrung", to: "/compliance" }, { label: "Organisationen", to: "/crm/organizations" }, { label: "Benutzer & Rollen", to: "/crm/users" }, { label: "Weiterbildung", to: "/crm/training" }, { label: "Archiv", to: "/crm/archive" }, { label: "Systemhistorie", to: "/crm/history" } ]},
+  { label: "Verwaltung", items: [ { label: "Website-CMS", to: "/crm/website" }, { label: "Geldwäsche & Aufbewahrung", to: "/compliance" }, { label: "Organisationen", to: "/crm/organizations" }, { label: "Benutzer & Rollen", to: "/crm/users" }, { label: "Weiterbildung", to: "/crm/training" }, { label: "Archiv", to: "/crm/archive" }, { label: "Systemhistorie", to: "/crm/history" }, { label: "Anleitung", to: "/crm/hilfe" } ]},
 ];
 
 function isSalesReadinessDetail(pathname: string) { return /^\/leads\/[^/]+\/sales-readiness(?:\/|$)/.test(pathname); }

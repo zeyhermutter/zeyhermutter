@@ -524,3 +524,17 @@ body:has(.persistent-app-frame) .property-context-nav {
 body:has(.persistent-app-frame) .property-context-nav a {
   flex: 0 0 auto;
 }
+
+/* Die vier Kennzahlen im Verkaufsstrategie-Check waren dunkle Kacheln auf
+   heller Seite, mit dunklem Text darin. crm-light-theme.css setzt fuer sie nur
+   die Textfarbe von <strong> auf Anthrazit, nicht aber Hintergrund und Rahmen
+   der Kachel selbst — die blieben aus sales-readiness-editor.css dunkel. Das
+   Ergebnis war dunkler Text auf dunklem Grund, praktisch unlesbar.
+   Aufgefallen beim Fotografieren der Masken fuer die Anleitung. */
+.persistent-app-frame .readiness-edit-card > .readiness-number-grid > div {
+  background: #ffffff !important;
+  border-color: #d6dfdd !important;
+}
+.persistent-app-frame .readiness-edit-card > .readiness-number-grid > div small {
+  color: #697778 !important;
+}

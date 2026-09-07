@@ -1,0 +1,204 @@
+/* Anleitung — hell geschrieben, nicht dunkel und nachtraeglich uebersteuert.
+   Die Farbwerte sind dieselben wie in crm-light-theme.css, damit die Seite sich
+   in das CRM einfuegt und nicht wie eine eigene Anwendung wirkt. Grid, Abstaende
+   und Kartenstruktur uebernimmt sie unveraendert aus data-card. */
+
+.help-shell {
+  --help-text: #1d2a2b;
+  --help-gedaempft: #536263;
+  --help-linie: #d6dfdd;
+  --help-akzent: #2f4442;
+}
+
+/* Inhaltsverzeichnis ------------------------------------------------------- */
+.help-inhalt-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 2px;
+}
+.help-inhalt-liste a {
+  display: flex;
+  gap: 14px;
+  align-items: baseline;
+  padding: 11px 12px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--help-text);
+}
+.help-inhalt-liste a:hover { background: #eef2f1; }
+.help-inhalt-liste li.aktiv a { background: #dfe8e5; box-shadow: inset 2px 0 0 #637a77; }
+.help-inhalt-nummer {
+  flex: 0 0 auto;
+  min-width: 22px;
+  font: 700 12px/1.5 ui-monospace, monospace;
+  color: #697778;
+}
+.help-inhalt-liste strong { display: block; font-size: 14px; }
+.help-inhalt-liste small { display: block; margin-top: 3px; color: var(--help-gedaempft); font-size: 12px; line-height: 1.5; }
+
+/* Kapitel ------------------------------------------------------------------ */
+.help-kapitel { scroll-margin-top: 18px; }
+.help-kapitel.aktiv { box-shadow: inset 3px 0 0 #637a77; }
+
+.help-absatz {
+  max-width: 74ch;
+  margin: 0 0 14px;
+  line-height: 1.7;
+  color: var(--help-text);
+}
+.help-liste, .help-schritte {
+  max-width: 74ch;
+  margin: 0 0 14px;
+  padding-left: 22px;
+  line-height: 1.7;
+  color: var(--help-text);
+}
+.help-liste li, .help-schritte li { margin-bottom: 7px; }
+.help-schritte li::marker { font-weight: 700; color: #697778; }
+
+.help-hinweis, .help-warnung {
+  max-width: 74ch;
+  margin: 0 0 14px;
+  padding: 13px 15px;
+  border-radius: 10px;
+  line-height: 1.65;
+  font-size: 14px;
+}
+.help-hinweis { border: 1px solid #cddbd7; background: #f2f7f5; color: #2f4442; }
+.help-warnung { border: 1px solid #e2d3ab; background: #fdf8ea; color: #6b5620; }
+
+/* Bilder ------------------------------------------------------------------- */
+.help-bild { margin: 0 0 18px; }
+.help-bild img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--help-linie);
+  border-radius: 12px;
+  background: #ffffff;
+}
+.help-bild figcaption {
+  margin-top: 8px;
+  color: var(--help-gedaempft);
+  font-size: 12.5px;
+  line-height: 1.55;
+  max-width: 74ch;
+}
+
+/* Der Hilfe-Link im Kopfbereich jeder internen Seite ------------------------ */
+/* Fest unten rechts, oberhalb des Build-Stempels (rechts 16px, unten 12px).
+   Damit steht der Link auf jeder Seite an derselben Stelle und kollidiert
+   nicht mit den Kopfzeilen der einzelnen Akten. */
+.help-entry {
+  position: fixed;
+  right: 16px;
+  bottom: 46px;
+  z-index: 40;
+  box-shadow: 0 6px 18px #1d2a2b1f;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #c3cfcd;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #536263;
+  font-size: 12.5px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.help-entry:hover { border-color: #97a8a5; color: #172425; background: #f7f9f8; }
+.help-entry svg { width: 15px; height: 15px; flex: 0 0 auto; }
+
+@media (max-width: 900px) {
+  .help-inhalt-liste { grid-template-columns: 1fr; }
+  .help-entry span { display: none; }
+  .help-entry { padding: 0 9px; }
+}
+
+/* Hilfe-Fenster über der Seite ---------------------------------------------
+   Hell geschrieben. Das vorhandene module04-Modal ist dunkel angelegt und wird
+   nur nachtraeglich uebersteuert; das wird hier nicht fortgesetzt. */
+.help-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: #1d2a2b8f;
+  backdrop-filter: blur(3px);
+}
+.help-modal {
+  width: min(900px, 100%);
+  max-height: min(860px, calc(100vh - 40px));
+  overflow: auto;
+  padding: 24px 26px;
+  border: 1px solid #d6dfdd;
+  border-radius: 18px;
+  background: #ffffff;
+  color: #1d2a2b;
+  box-shadow: 0 26px 90px #1d2a2b45;
+  outline: none;
+}
+.help-modal-kopf {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid #e6ecea;
+}
+.help-modal-kopf h2 { margin: 4px 0 0; font-size: 24px; letter-spacing: -.02em; }
+.help-modal-aktionen { display: flex; gap: 8px; align-items: center; flex: 0 0 auto; }
+.help-modal-schliessen {
+  border: 0;
+  background: transparent;
+  color: #697778;
+  font-size: 26px;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
+}
+.help-modal-schliessen:hover { color: #172425; }
+.help-modal-inhalt > :last-child { margin-bottom: 0; }
+
+.help-modal-kapitelwahl {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid #e6ecea;
+}
+.help-modal-kapitelliste { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.help-modal-kapitelknopf {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 11px;
+  border: 1px solid #d6dfdd;
+  border-radius: 999px;
+  background: #f7f9f8;
+  color: #536263;
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.help-modal-kapitelknopf:hover { border-color: #97a8a5; color: #172425; background: #eef2f1; }
+.help-modal-kapitelknopf.aktiv {
+  border-color: #637a77;
+  background: #dfe8e5;
+  color: #172425;
+  font-weight: 700;
+}
+.help-modal-kapitelnummer { font: 700 11px/1 ui-monospace, monospace; color: #697778; }
+.help-modal-kapitelknopf.aktiv .help-modal-kapitelnummer { color: #2f4442; }
+
+@media (max-width: 700px) {
+  .help-modal { padding: 18px; border-radius: 14px; }
+  .help-modal-kopf { flex-direction: column; gap: 12px; }
+  .help-modal-aktionen { width: 100%; justify-content: space-between; }
+}

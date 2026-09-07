@@ -4,6 +4,7 @@ import type { Route } from "./+types/internal-layout";
 import type { HeaderNotification } from "~/components/notification-bell";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
 import { CrmFormGuardrails } from "~/components/crm-form-guardrails";
+import { HelpEntry } from "~/components/help-entry";
 import { LiveListFilters } from "~/components/live-list-filters";
 import { PersistentNavigation } from "~/components/persistent-navigation";
 import { RecordSectionNavigation } from "~/components/record-section-navigation";
@@ -148,6 +149,7 @@ export default function InternalLayout({ loaderData }: Route.ComponentProps) {
         <LiveListFilters />
         <PropertyContextNavigation />
         <RecordSectionNavigation />
+        <HelpEntry />
         <Outlet />
       </div>
     </div>
