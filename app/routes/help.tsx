@@ -1,4 +1,5 @@
-import { Link, useLocation } from "react-router";
+import { useEffect, useState } from "react";
+import { Link } from "react-router";
 import type { Route } from "./+types/help";
 import { HELP_CHAPTERS, HELP_INTRO, HELP_TITLE } from "~/help-content";
 import { HelpChapterBody } from "~/components/help-blocks";
@@ -13,9 +14,20 @@ export function meta() {
 // der Anmeldung, weil sie interne Ablaeufe beschreibt.
 
 export default function Help() {
-  const location = useLocation();
-  // Kommt der Aufruf vom Hilfe-Link einer Seite, steht das Zielkapitel im Hash.
-  const aktiv = location.hash.replace("#", "");
+  // Kommt der Aufruf aus dem Hilfe-Fenster, steht das Zielkapitel im Anker.
+  //
+  // Der Anker wird bewusst erst im Browser gelesen: Browser senden ihn nicht an
+  // den Server, die serverseitig gerenderte Seite kennt ihn also nicht. Ohne
+  // dieses Nachlesen sprang die Seite zwar an die richtige Stelle, hob das
+  // Kapitel aber nie hervor. Auf hashchange hoeren, damit auch das Klicken im
+  // Inhaltsverzeichnis die Hervorhebung mitzieht.
+  const [aktiv, setAktiv] = useState("");
+  useEffect(() => {
+    const lesen = () => setAktiv(window.location.hash.replace("#", ""));
+    lesen();
+    window.addEventListener("hashchange", lesen);
+    return () => window.removeEventListener("hashchange", lesen);
+  }, []);
 
   return (
     <main className="editor-shell help-shell">

@@ -12,6 +12,11 @@ import "~/crm-form-guardrails.css";
 import "~/responsive-data-card.css";
 import "~/crm-light-theme.css";
 import "~/crm-light-theme-fixes.css";
+// Der Hilfe-Knopf und sein Fenster stehen auf JEDER internen Seite. Sein
+// Stylesheet gehoert deshalb hierher und nicht in routes/help.tsx: von dort
+// geladen fehlte es ueberall ausser auf der Anleitungsseite selbst, und der
+// Knopf stand ungestylt im Textfluss statt fest unten rechts.
+import "~/help.css";
 
 const NAV_STACK_KEY = "zm_internal_navigation_stack";
 
