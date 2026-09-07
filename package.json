@@ -18,7 +18,8 @@
     "check": "pnpm run check:beta",
     "check:brand-logo": "node scripts/check-brand-logo.mjs",
     "check:beta": "pnpm run check:brand-logo && pnpm run typecheck && pnpm run build:beta && wrangler deploy --dry-run",
-    "check:production": "pnpm run typecheck && pnpm run build:production && wrangler deploy --dry-run"
+    "check:production": "pnpm run typecheck && pnpm run build:production && wrangler deploy --dry-run",
+    "anleitung:docx": "node --experimental-strip-types scripts/build-anleitung-docx.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.5",

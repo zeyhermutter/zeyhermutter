@@ -61,8 +61,11 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         "Unten links steht die Umgebung. Steht dort BETA, ist es das Testsystem — dort darf gefahrlos geübt werden.",
       ]},
       { art: "hinweis", text:
-        "Auf jeder Seite steht rechts oben ein Hilfe-Link. Er führt genau zu dem "
-        + "Kapitel dieser Anleitung, das die geöffnete Seite beschreibt." },
+        "Auf jeder Seite steht unten rechts ein Hilfe-Knopf. Er öffnet genau das "
+        + "Kapitel dieser Anleitung, das die geöffnete Seite beschreibt — als "
+        + "Fenster über der Seite, damit angefangene Eingaben nicht verloren gehen. "
+        + "Aus dem Fenster heraus lässt sich die vollständige Anleitung zusätzlich "
+        + "in einem eigenen Tab öffnen, etwa für einen zweiten Bildschirm." },
     ],
   },
   {
