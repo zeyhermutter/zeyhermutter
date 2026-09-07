@@ -4,7 +4,29 @@ import { requirePermission } from "~/lib/auth.server";
 
 const RISK:Record<string,string>={LOW:"Gering",MEDIUM:"Mittel",HIGH:"Hoch"};
 const RISK_CLASS:Record<string,string>={LOW:"status-sold",MEDIUM:"status-marketing",HIGH:"status-lost"};
-const RETENTION_CATEGORY:Record<string,string>={GWG_IDENTIFICATION:"Geldwäsche · Identifizierung"};
+const RETENTION_CATEGORY:Record<string,string>={
+  GWG_IDENTIFICATION:"Geldwäsche · Identifizierung",
+  CONTRACT:"Vertrag",
+  EVIDENCE:"Nachweis",
+  FINANCIAL:"Kaufmännisch",
+  LEGAL_CAPACITY:"Verfügungsberechtigung",
+  PROPERTY:"Objektunterlagen",
+  TRAINING:"Weiterbildung",
+};
+const DOCUMENT_CATEGORY:Record<string,string>={
+  LAND_REGISTER:"Grundbuchauszug",CADASTRAL_MAP:"Flurkarte",FLOOR_PLAN:"Grundriss",
+  LIVING_AREA_CALCULATION:"Wohnflächenberechnung",ENERGY_CERTIFICATE:"Energieausweis",
+  DECLARATION_OF_DIVISION:"Teilungserklärung",BUILDING_DOCUMENTS:"Bauunterlagen",
+  TENANCY_AGREEMENT:"Mietvertrag",WEG:"WEG-Unterlagen",BUSINESS_PLAN:"Wirtschaftsplan",
+  MINUTES:"Protokoll",BROKERAGE_AGREEMENT:"Maklerauftrag",PHOTOS:"Fotos",NOTARY:"Notarunterlagen",
+  INVOICE:"Rechnung",IDENTITY_PROOF:"Identitätsnachweis",OTHER:"Sonstiges",
+  BUILDING_ENCUMBRANCE_REGISTER:"Baulastenverzeichnis",CONTAMINATION_REGISTER:"Altlastenauskunft",
+  SUCCESSION_PROOF:"Erbnachweis",POWER_OF_ATTORNEY:"Vollmacht",GUARDIANSHIP_PROOF:"Betreuerausweis",
+  WITHDRAWAL_INSTRUCTION:"Widerrufsbelehrung",PROPERTY_DISCLOSURE:"Objektnachweis",
+  RESERVATION_AGREEMENT:"Reservierungsvereinbarung",FINANCING_CONFIRMATION:"Finanzierungsbestätigung",
+  SERVICE_CHARGE_STATEMENT:"Nebenkostenabrechnung",RESOLUTION_COLLECTION:"Beschlusssammlung",
+  HANDOVER_PROTOCOL:"Übergabeprotokoll",TRAINING_CERTIFICATE:"Weiterbildungsnachweis",
+};
 
 function one(value:any){return Array.isArray(value)?value[0]:value;}
 function formatDate(value:string|null){if(!value)return"—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeZone:"Europe/Berlin"}).format(new Date(`${value}T12:00:00Z`));}
@@ -21,6 +43,9 @@ export async function loader({request,context}:Route.LoaderArgs){
     supabase.rpc("current_user_has_permission",{p_permission:"gwg.write"}),
   ]);
   if(error)throw new Response("Geldwäscheakten konnten nicht geladen werden.",{status:500,headers:responseHeaders()});
+  const rulesRes=await supabase.from("document_retention_rules").select("*").order("retention_category").order("category");
+  // Eine leere Regelliste darf nicht wie "keine Aufbewahrungsregeln" aussehen.
+  if(rulesRes.error)throw new Response("Die Aufbewahrungsregeln konnten nicht geladen werden.",{status:500,headers:responseHeaders()});
   const all=((cases??[]) as any[]).map((row)=>{
     const identifications=(row.gwg_identifications??[]) as any[];
     const open:string[]=[];
@@ -55,11 +80,12 @@ export async function loader({request,context}:Route.LoaderArgs){
     return [row.case_number,property?.property_number,property?.internal_title].filter(Boolean).join(" ").toLocaleLowerCase("de-DE").includes(needle);
   });
   const retentionDocuments=((documents??[]) as any[]).filter((row)=>row.retention_category||row.category==="IDENTITY_PROOF");
-  return data({profile,rows:filtered,summary,filters,retentionDocuments,canWrite:canWrite===true},{headers:responseHeaders()});
+  return data({profile,rows:filtered,summary,filters,retentionDocuments,rules:rulesRes.data??[],canWrite:canWrite===true},{headers:responseHeaders()});
 }
 
 export default function Compliance(){
-  const {profile,rows,summary,filters,retentionDocuments}=useLoaderData<typeof loader>();
+  const d=useLoaderData<typeof loader>();
+  const {profile,rows,summary,filters,retentionDocuments}=d;
   const overdue=retentionDocuments.filter((row:any)=>row.retention_until<today());
   return <main className="editor-shell">
     <header className="editor-header"><div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">Verwaltung</p><h1 className="editor-title">Geldwäsche & Aufbewahrung</h1><p className="editor-meta">Risikoeinstufung, Identifizierung der Beteiligten und Ablauf der Aufbewahrungsfristen über alle Verkaufsfälle.</p></div><div className="header-actions"><span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div></header>
@@ -100,6 +126,19 @@ export default function Compliance(){
           {property?<Link className="subtle-link" to={`/properties/${property.id}/documents`}>Dokumente öffnen →</Link>:null}
         </div>;})}
       </div>}
+    </section>
+
+    <section className="data-card" id="aufbewahrungsregeln">
+      <div className="card-head"><div><p className="eyebrow">Voreinstellung je Dokumentart</p><h2>Aufbewahrungsregeln</h2></div><span className="status-pill">{(d.rules as any[]).length}</span></div>
+      <p className="subtle">Diese Fristen greifen beim Anlegen eines neuen Dokuments, wenn dort keine eigene Frist steht. Bereits erfasste Dokumente bleiben unverändert. Die Werte sind eine betriebliche Voreinstellung und keine rechtliche Aussage der Software.</p>
+      {(d.rules as any[]).length===0
+        ?<p className="empty-state">Es ist keine Aufbewahrungsregel hinterlegt.</p>
+        :<div className="data-list">{(d.rules as any[]).map((rule:any)=>
+          <div className="data-row" key={rule.id}>
+            <div><strong>{DOCUMENT_CATEGORY[rule.category]??rule.category}</strong><small>{rule.basis_note??"ohne Begründung hinterlegt"}</small></div>
+            <div className="row-meta"><span>{RETENTION_CATEGORY[rule.retention_category]??rule.retention_category}</span><small>{rule.retention_years} {rule.retention_years===1?"Jahr":"Jahre"}</small></div>
+            <div className="row-meta"><span className={rule.active?"status-pill status-sold":"status-pill status-archived"}>{rule.active?"Aktiv":"Inaktiv"}</span></div>
+          </div>)}</div>}
     </section>
 
     <section className="data-card"><div className="card-head"><div><p className="eyebrow">Vor produktiver Nutzung</p><h2>Anwaltlich abzunehmen</h2></div></div>
