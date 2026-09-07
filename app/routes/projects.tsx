@@ -132,8 +132,8 @@ export default function Projects(){
 
     <div className="metric-grid">
       <article className="metric"><span>Angezeigt</span><strong>{projects.length}</strong><small>von {d.total} nicht archivierten</small></article>
-      <article className="metric"><span>Ohne Immobilie</span><strong>{withoutProperty}</strong><small>Projekt zeigt auf kein Objekt</small></article>
-      <article className="metric"><span>Fällige Schritte</span><strong>{overdue}</strong><small>nächster Schritt überfällig</small></article>
+      <article className="metric"><span>Ohne Immobilie</span><strong>{withoutProperty}</strong><small>{withoutProperty===1?"Projekt zeigt auf kein Objekt":"Projekte zeigen auf kein Objekt"}</small></article>
+      <article className="metric"><span>Fällige Schritte</span><strong>{overdue}</strong><small>{overdue===1?"nächster Schritt ist überfällig":"nächste Schritte sind überfällig"}</small></article>
     </div>
 
     <section className="data-card">

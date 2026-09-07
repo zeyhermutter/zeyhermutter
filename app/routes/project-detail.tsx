@@ -6,6 +6,10 @@ import { BLOCKER_AREA, PHASE, PROJECT_STATUS, STATUS_CLASS, formatDay, nextActio
 type ActionResult={error?:string};
 
 const MEASURE_STATUS:Record<string,string>={PROPOSED:"Vorgeschlagen",QUOTE_REQUIRED:"Angebot nötig",QUOTE_REQUESTED:"Angebot angefragt",QUOTE_RECEIVED:"Angebot da",WAITING_OWNER:"Wartet auf Eigentümer",APPROVED:"Freigegeben",COMMISSIONED:"Beauftragt",PLANNED:"Geplant",IN_PROGRESS:"In Arbeit",BLOCKED:"Blockiert",DONE:"Erledigt",CHECKED:"Abgenommen",DISMISSED:"Verworfen"};
+const CHECK_STATUS:Record<string,string>={DRAFT:"Entwurf",READY_FOR_REVIEW:"Prüfbereit",FINALIZED:"Finalisiert"};
+const OWNER_DECISION:Record<string,string>={OPEN:"Entscheidung offen",ACCEPTED:"Empfehlung angenommen",PARTIALLY_ACCEPTED:"Teilweise angenommen",DECLINED:"Empfehlung abgelehnt"};
+const MANDATE_STATUS:Record<string,string>={DRAFT:"Entwurf",ACTIVE:"Aktiv",WITHDRAWN:"Widerrufen",TERMINATED:"Gekündigt",EXPIRED:"Abgelaufen",FULFILLED:"Erfüllt",CANCELLED:"Verworfen"};
+const CLOSING_STATUS:Record<string,string>={PREPARATION:"Abschlussvorbereitung",NOTARY_INSTRUCTED:"Notariat beauftragt",DRAFT_RECEIVED:"Entwurf eingegangen",APPOINTMENT_SCHEDULED:"Beurkundung terminiert",NOTARIZED:"Beurkundet",PURCHASE_PRICE_DUE:"Kaufpreis fällig",PURCHASE_PRICE_PAID:"Kaufpreis bezahlt",HANDOVER_COMPLETED:"Übergabe erfolgt",COMPLETED:"Abgeschlossen",CANCELLED:"Abgebrochen"};
 
 function text(fd:FormData,key:string){return String(fd.get(key)??"").trim();}
 function dateOrNull(fd:FormData,key:string){const v=text(fd,key);return /^\d{4}-\d{2}-\d{2}$/.test(v)?v:null;}
@@ -24,7 +28,7 @@ export async function loader({request,context,params}:Route.LoaderArgs){
   const p=project as any;
   const [blockersRes,checkRes,profilesRes,contactsRes,propertiesRes,mandatesRes,closingsRes,tasksRes,activityRes,canWriteRes,canAssignRes]=await Promise.all([
     supabase.rpc("sale_project_blockers",{p_project_id:projectId}),
-    supabase.from("lead_sales_readiness_checks").select("id,revision_no,status,is_current,lead_id,owner_decision,owner_decision_at,finalized_at").or(`sale_project_id.eq.${projectId}${p.lead_id?`,lead_id.eq.${p.lead_id}`:""}`).order("revision_no",{ascending:false}),
+    supabase.from("lead_sales_readiness_checks").select("id,revision_no,status,is_current,lead_id,sale_project_id,owner_decision,owner_decision_at,finalized_at").or(`sale_project_id.eq.${projectId}${p.lead_id?`,lead_id.eq.${p.lead_id}`:""}`).order("revision_no",{ascending:false}),
     supabase.from("profiles").select("user_id,display_name").eq("status","ACTIVE").order("display_name"),
     supabase.from("contacts").select("id,contact_number,first_name,last_name").is("archived_at",null).order("last_name").limit(1000),
     supabase.from("properties").select("id,property_number,internal_title").is("archived_at",null).order("property_number").limit(500),
@@ -249,8 +253,8 @@ export default function ProjectDetail(){
         ?<p className="empty-state">Zu diesem Projekt ist kein Check erfasst. Der Check wird weiterhin über den Lead geführt.</p>
         :<div className="data-list">{(d.checks as any[]).map((c:any)=>
           <div className="data-row" key={c.id}>
-            <div><strong>Revision {c.revision_no}</strong><small>{c.status}{c.is_current?" · aktuell":""}{c.finalized_at?` · finalisiert ${formatMoment(c.finalized_at)}`:""}</small></div>
-            <div className="row-meta"><span>{c.owner_decision??"Entscheidung offen"}</span><small>{c.owner_decision_at?formatMoment(c.owner_decision_at):""}</small></div>
+            <div><strong>Revision {c.revision_no}</strong><small>{CHECK_STATUS[c.status]??c.status}{c.is_current?" · aktuell":""}{c.finalized_at?` · finalisiert ${formatMoment(c.finalized_at)}`:""}</small></div>
+            <div className="row-meta"><span>{OWNER_DECISION[c.owner_decision]??c.owner_decision??"Entscheidung offen"}</span><small>{c.owner_decision_at?formatMoment(c.owner_decision_at):""}</small></div>
             {c.sale_project_id?<span className="status-pill status-sold">verknüpft</span>
               :<Form method="post"><input type="hidden" name="_intent" value="link_check"/><input type="hidden" name="check_id" value={c.id}/><button className="text-button" type="submit" disabled={disabled}>Mit Projekt verknüpfen</button></Form>}
           </div>)}</div>}
@@ -267,8 +271,8 @@ export default function ProjectDetail(){
         ?<p className="empty-state">Ohne zugeordnete Immobilie gibt es hier nichts zu zeigen.</p>
         :<>
           <dl className="detail-list">
-            <div><dt>Maklerauftrag</dt><dd>{(d.mandates as any[]).length?(d.mandates as any[]).map((m:any)=>`${m.mandate_number} (${m.status})`).join(", "):"keiner erfasst"}</dd></div>
-            <div><dt>Abschluss & Notar</dt><dd>{(d.closings as any[]).length?(d.closings as any[]).map((c:any)=>`${c.closing_number} (${c.status})`).join(", "):"keiner erfasst"}</dd></div>
+            <div><dt>Maklerauftrag</dt><dd>{(d.mandates as any[]).length?(d.mandates as any[]).map((m:any)=>`${m.mandate_number} · ${MANDATE_STATUS[m.status]??m.status}`).join(", "):"keiner erfasst"}</dd></div>
+            <div><dt>Abschluss & Notar</dt><dd>{(d.closings as any[]).length?(d.closings as any[]).map((c:any)=>`${c.closing_number} · ${CLOSING_STATUS[c.status]??c.status}`).join(", "):"keiner erfasst"}</dd></div>
           </dl>
           <div className="inline-actions" style={{marginTop:"0.75rem"}}>
             <Link className="secondary-button link-button" to={`/properties/${p.property_id}`}>Objektakte</Link>
