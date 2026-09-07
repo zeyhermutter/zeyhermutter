@@ -1,3 +1,11 @@
+-- Nachverbuchung (Thema 14, C-1).
+--
+-- Diese Migration lag im Repository, war auf BETA aber nie in
+-- supabase_migrations.schema_migrations eingetragen. Der Zustand ist bereits
+-- hergestellt: Constraint und beide Funktionen stimmen zeichengenau mit dieser
+-- Datei ueberein. Die Anweisungen sind idempotent, das erneute Ausfuehren
+-- bestaetigt den Zustand und traegt die Version nach.
+
 alter table public.search_profile_property_decisions
   drop constraint if exists search_profile_property_decisions_status_check;
 

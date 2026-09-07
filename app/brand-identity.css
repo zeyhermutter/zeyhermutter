@@ -67,6 +67,32 @@
   object-fit:contain;
 }
 
+/* Wortmarke im Kopfbereich, solange keine intakte Logodatei vorliegt. */
+.public-site .public-brand-wordmark{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  line-height:1.05;
+  padding:6px 0;
+}
+
+.public-site .public-brand-wordmark-name{
+  font-family:"Cormorant Garamond",Georgia,"Times New Roman",serif;
+  font-size:clamp(1.5rem,2.4vw,2rem);
+  font-weight:600;
+  letter-spacing:.01em;
+  color:var(--brand-ivory);
+}
+
+.public-site .public-brand-wordmark-kind{
+  font-family:"Montserrat",Arial,sans-serif;
+  font-size:clamp(.62rem,.9vw,.72rem);
+  font-weight:600;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:var(--brand-gold-light);
+}
+
 .public-site .public-nav{
   align-items:center;
 }
