@@ -11,7 +11,7 @@ import "~/public-ci-overrides.css";
 // scripts/check-brand-logo.mjs prüft die Bilddaten jetzt wirklich; sobald eine
 // intakte Datei eingebunden ist, kann die Wortmarke wieder durch das Bild
 // ersetzt werden.
-function BrandWordmark() {
+export function BrandWordmark() {
   return (
     <span className="public-brand-wordmark">
       <span className="public-brand-wordmark-name">Zeyher &amp; Mutter</span>

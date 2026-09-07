@@ -1,6 +1,7 @@
 import { data, Form, redirect, useActionData } from "react-router";
 import type { Route } from "./+types/login";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
+import "~/auth-light-theme.css";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { supabase, responseHeaders } = createSupabaseServerClient(

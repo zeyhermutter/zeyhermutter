@@ -1,0 +1,68 @@
+/* BETA – helle Anmelde- und Fehlerseite.
+
+   app/styles.css ist das dunkle Basis-Stylesheet aus der ersten Fassung. Fuer
+   die internen Seiten liegt crm-light-theme.css darueber, das aber nur unter
+   .persistent-app-frame greift. Die Anmeldeseite und die Fehlerseite haengen
+   nicht in diesem Rahmen und blieben deshalb als einzige Seiten dunkel: man
+   meldete sich auf einer schwarzen Seite an und landete in einem hellen CRM.
+
+   Hier stehen ausschliesslich Farben und Kontraste. Kachelgroessen, Grid,
+   Abstaende und Rundungen bleiben unveraendert; die Werte sind dieselben wie
+   in crm-light-theme.css, damit Anmeldung und CRM zusammenpassen. */
+
+.auth-shell,
+.error-shell {
+  color-scheme: light;
+  color: #1d2a2b;
+  background: #eef2f1;
+}
+
+.auth-shell .auth-card,
+.error-shell .panel {
+  border-color: #d6dfdd;
+  background: #ffffff;
+  color: #1d2a2b;
+  box-shadow: 0 18px 48px #1d2a2b14;
+}
+
+.auth-shell .brand,
+.error-shell .eyebrow,
+.auth-shell .auth-title,
+.error-shell h1 {
+  color: #172425;
+}
+
+.auth-shell .brand-mark {
+  border-color: #aebbb8;
+  background: #f7f9f8;
+  color: #263536;
+}
+
+.auth-shell .eyebrow { color: #697778; }
+.auth-shell .auth-copy,
+.error-shell p { color: #536263; }
+.auth-shell .auth-form label { color: #495859; }
+
+.auth-shell .auth-form input {
+  border-color: #c3cfcd;
+  background: #ffffff;
+  color: #172425;
+}
+
+.auth-shell .auth-form input:focus {
+  border-color: #637a77;
+  box-shadow: 0 0 0 3px #637a7726;
+}
+
+/* Der Absendeknopf ist im dunklen Basis-Stylesheet hell auf dunkel. Auf hellem
+   Grund waere er unsichtbar, deshalb hier umgekehrt. */
+.auth-shell .primary-button {
+  background: #2f4442;
+  color: #f4f8f6;
+}
+
+.auth-shell .form-error {
+  border-color: #d9b4b7;
+  background: #fbf1f1;
+  color: #7d2f36;
+}

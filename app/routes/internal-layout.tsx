@@ -1,5 +1,8 @@
 import { useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
+import type { Route } from "./+types/internal-layout";
+import type { HeaderNotification } from "~/components/notification-bell";
+import { createSupabaseServerClient } from "~/lib/supabase.server";
 import { CrmFormGuardrails } from "~/components/crm-form-guardrails";
 import { LiveListFilters } from "~/components/live-list-filters";
 import { PersistentNavigation } from "~/components/persistent-navigation";
@@ -10,6 +13,28 @@ import "~/crm-light-theme.css";
 import "~/crm-light-theme-fixes.css";
 
 const NAV_STACK_KEY = "zm_internal_navigation_stack";
+
+// Die Benachrichtigungen fuer die Glocke im Seitenstreifen. Sie lagen bisher
+// nur im Loader der CRM-Uebersicht, weshalb die Glocke auf allen anderen Seiten
+// keinen Zaehler hatte. Hier gilt sie fuer jede interne Seite.
+//
+// Der Loader wirft bewusst nicht: er haengt an jeder internen Seite, und eine
+// nicht ladbare Glocke darf keine Akte unerreichbar machen. Faellt die Abfrage
+// aus, liefert er null; der Seitenstreifen zeigt dann den einfachen Link ohne
+// Zaehler. Die Anmeldung selbst pruefen weiterhin die einzelnen Seiten.
+export async function loader({ request, context }: Route.LoaderArgs) {
+  const { supabase } = createSupabaseServerClient(request, context.cloudflare.env);
+  const { data: claims } = await supabase.auth.getClaims();
+  if (!claims?.claims?.sub) return { notifications: null, unreadCount: 0 };
+
+  const [{ count, error: countError }, { data: rows, error: rowError }] = await Promise.all([
+    supabase.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null),
+    supabase.from("notifications").select("id,type,title,message,entity_type,entity_id,created_at,read_at").order("created_at", { ascending: false }).limit(8),
+  ]);
+  if (countError || rowError) return { notifications: null, unreadCount: 0 };
+
+  return { notifications: (rows ?? []) as HeaderNotification[], unreadCount: count ?? 0 };
+}
 
 function readStack() {
   try {
@@ -112,13 +137,13 @@ function PropertyContextNavigation() {
   );
 }
 
-export default function InternalLayout() {
+export default function InternalLayout({ loaderData }: Route.ComponentProps) {
   return (
     <div className="persistent-app-frame">
       <CrmFormGuardrails />
       <SmartBackNavigation />
       <SalesReadinessLeadEntryEnhancer />
-      <PersistentNavigation />
+      <PersistentNavigation notifications={loaderData?.notifications ?? undefined} unreadCount={loaderData?.unreadCount ?? 0} />
       <div className="persistent-app-main">
         <LiveListFilters />
         <PropertyContextNavigation />

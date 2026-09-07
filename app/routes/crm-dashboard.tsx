@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { data, Form, Link, useFetcher, useLoaderData } from "react-router";
 import type { Route } from "./+types/crm-dashboard";
-import { NotificationBell, type HeaderNotification } from "~/components/notification-bell";
 import { PropertyOverviewMap, type PropertyMapPoint } from "~/components/property-overview-map";
 import { requireActiveUser, requirePermission } from "~/lib/auth.server";
 import { geocodePropertyAddress } from "~/lib/geocoding.server";
@@ -23,7 +22,6 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     { data: tasks, error: taskError },
     { count: organizationCount, error: organizationError },
     { count: unreadCount, error: notificationError },
-    { data: headerNotifications, error: headerNotificationError },
     { count: propertyCount, error: propertyError },
     propertyPermission,
     { data: recentLeads, error: recentLeadError },
@@ -34,7 +32,6 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     supabase.from("tasks").select("id,task_number,title,status,priority,due_at,contact_id,lead_id,inquiry_id,search_profile_id,viewing_id").is("archived_at", null).in("status", ["OPEN", "IN_PROGRESS"]).order("due_at", { ascending: true }).limit(10),
     supabase.from("organizations").select("id", { count: "exact", head: true }).is("archived_at", null),
     supabase.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null),
-    supabase.from("notifications").select("id,type,title,message,entity_type,entity_id,created_at,read_at").order("created_at", { ascending: false }).limit(8),
     supabase.from("properties").select("id", { count: "exact", head: true }).neq("status", "ARCHIVED"),
     supabase.rpc("current_user_has_permission", { p_permission: "property.read" }),
     supabase.from("leads").select("id,lead_number,status,follow_up_at,property_city,updated_at,contacts!inner(first_name,last_name)").is("archived_at", null).order("updated_at", { ascending: false }).limit(6),
@@ -42,7 +39,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     supabase.rpc("crm_dashboard_summary", { p_scope: "mine", p_from: monthStart, p_to: today }),
   ]);
 
-  if (contactError || taskError || organizationError || notificationError || headerNotificationError || propertyError || recentLeadError || recentInquiryError || dashboardSummaryError || !dashboardSummary) {
+  if (contactError || taskError || organizationError || notificationError || propertyError || recentLeadError || recentInquiryError || dashboardSummaryError || !dashboardSummary) {
     throw new Response("CRM-Daten konnten nicht geladen werden.", { status: 500, headers: responseHeaders() });
   }
 
@@ -74,7 +71,6 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     organizationCount: organizationCount ?? 0,
     taskCount: Number(snapshot.open_tasks ?? 0),
     unreadCount: unreadCount ?? 0,
-    headerNotifications: (headerNotifications ?? []) as HeaderNotification[],
     propertyCount: propertyCount ?? 0,
     propertyMapPoints,
     missingCoordinateCount,
@@ -112,7 +108,7 @@ function formatDate(value: string | null) { if (!value) return "—"; return new
 function one(value: any) { return Array.isArray(value) ? value[0] : value; }
 
 export default function CrmDashboard() {
-  const { profile, contacts, tasks, contactCount, organizationCount, taskCount, unreadCount, headerNotifications, propertyCount, propertyMapPoints, missingCoordinateCount, leadCount, newLeadCount, overdueLeadCount, recentLeads, searchProfileCount, openInquiryCount, recentInquiries, upcomingViewingCount } = useLoaderData<typeof loader>();
+  const { profile, contacts, tasks, contactCount, organizationCount, taskCount, unreadCount, propertyCount, propertyMapPoints, missingCoordinateCount, leadCount, newLeadCount, overdueLeadCount, recentLeads, searchProfileCount, openInquiryCount, recentInquiries, upcomingViewingCount } = useLoaderData<typeof loader>();
   const geocodeFetcher = useFetcher<typeof action>();
   const backfillStarted = useRef(false);
   useEffect(() => {
@@ -146,7 +142,7 @@ export default function CrmDashboard() {
 
     <section className="app-content">
       <header className="app-header">
-        <div><p className="eyebrow">CRM · Immobilien · Verkäufer · Interessenten</p><div className="dashboard-greeting-row"><h1 className="app-title">Guten Tag, {profile.display_name}.</h1><NotificationBell notifications={headerNotifications} unreadCount={unreadCount}/></div></div>
+        <div><p className="eyebrow">CRM · Immobilien · Verkäufer · Interessenten</p><div className="dashboard-greeting-row"><h1 className="app-title">Guten Tag, {profile.display_name}.</h1></div></div>
         <div className="header-actions"><Link className="secondary-button link-button" to="/reports">Auswertung</Link><Link className="secondary-button link-button" to="/search-profiles">Interessenten · {searchProfileCount}</Link><Link className="secondary-button link-button" to="/inquiries">Anfragen · {openInquiryCount}</Link><Link className="secondary-button link-button" to="/viewings">Besichtigungen · {upcomingViewingCount}</Link><Link className="secondary-button link-button" to="/crm/search">Suchen</Link><Link className="primary-button link-button" to="/inquiries/new">+ Anfrage</Link><span className="badge">{__APP_ENV_LABEL__}</span></div>
       </header>
 

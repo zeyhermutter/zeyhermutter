@@ -14,6 +14,9 @@ import { PropertyLeadOnboarding } from "~/components/property-lead-onboarding";
 import "./styles.css";
 import "./crm.css";
 import "./property-context-nav.css";
+// Die Fehlerseite unten in dieser Datei liegt ausserhalb des internen Rahmens
+// und bekaeme sonst nur das dunkle Basis-Stylesheet.
+import "./auth-light-theme.css";
 
 declare const __BUILD_COMMIT__: string;
 
@@ -433,24 +436,14 @@ function AddressGeocodingEnhancer() {
   return null;
 }
 
-function PropertyContextNavigation() {
-  const location = useLocation();
-  const match = location.pathname.match(/^\/properties\/([^/]+)(?:\/(documents|media|interests|publication|exposes))?(?:\/preview)?\/?$/);
-  if (!match) return null;
-
-  const propertyId = match[1];
-  const section = match[2] ?? "record";
-  return (
-    <nav className="property-context-nav" aria-label="Immobilienakte">
-      <Link className={section === "record" ? "active" : ""} to={`/properties/${propertyId}`}>Objektakte</Link>
-      <Link className={section === "interests" ? "active" : ""} to={`/properties/${propertyId}/interests`}>Interessenten & Besichtigungen</Link>
-      <Link className={section === "publication" ? "active" : ""} to={`/properties/${propertyId}/publication`}>Vermarktung</Link>
-      <Link className={section === "exposes" ? "active" : ""} to={`/properties/${propertyId}/exposes`}>Exposés</Link>
-      <Link className={section === "documents" ? "active" : ""} to={`/properties/${propertyId}/documents`}>Dokumente</Link>
-      <Link className={section === "media" ? "active" : ""} to={`/properties/${propertyId}/media`}>Medien</Link>
-    </nav>
-  );
-}
+// Hier stand eine zweite Kontextnavigation der Immobilienakte mit sechs
+// Einträgen. Sie wurde zusätzlich zu der in routes/internal-layout.tsx
+// gerendert, sodass auf jeder Objektseite zwei Leisten übereinander standen —
+// die hier gezeigte war die ältere: sie kannte nur sechs der achtzehn
+// Abschnitte und nannte die Website-Akte noch "Vermarktung", was inzwischen
+// ein eigener Abschnitt ist. Maßgeblich ist die Leiste im internen Layout;
+// diese hier ist entfernt. Das Stylesheet property-context-nav.css bleibt
+// eingebunden, weil die verbliebene Leiste seine Klassen verwendet.
 
 export default function App() {
   return (
@@ -460,7 +453,6 @@ export default function App() {
       <LeadReleaseBlockerEnhancer />
       <OwnerAddDisclosureEnhancer />
       <AddressGeocodingEnhancer />
-      <PropertyContextNavigation />
       <PropertyLeadOnboarding />
       <Outlet />
     </>
