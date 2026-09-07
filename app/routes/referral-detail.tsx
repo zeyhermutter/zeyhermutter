@@ -133,7 +133,9 @@ export default function ReferralDetail(){
       <p><Link className="subtle-link" to={`/leads/${row.resulting_lead_id}#herkunft`}>Herkunft am Lead öffnen →</Link></p>
     </div>:null}
 
-    <div className="dashboard-grid property-section">
+    {/* Über die volle Breite: nebeneinander werden die Eingabefelder so schmal,
+        dass Anlass und Notiz abgeschnitten wirken. */}
+    <div>
       <section className="data-card">
         <div className="card-head"><div><p className="eyebrow">Rahmen</p><h2>Empfehlung</h2></div></div>
         <Form method="post" className="form-grid">
@@ -166,7 +168,7 @@ export default function ReferralDetail(){
         </Form>
       </section>
 
-      <section className="data-card">
+      <section className="data-card" style={{marginTop:"1rem"}}>
         <div className="card-head"><div><p className="eyebrow">Überblick</p><h2>Stand</h2></div></div>
         <dl className="detail-list">
           <div><dt>Empfehlender</dt><dd>{referrerContact
@@ -185,7 +187,7 @@ export default function ReferralDetail(){
       </section>
     </div>
 
-    <div className="dashboard-grid property-section">
+    <div>
       <section className="data-card" id="ergebnis">
         <div className="card-head"><div><p className="eyebrow">Was daraus wurde</p><h2>Ergebnis</h2></div></div>
         <Form method="post" className="form-grid">
@@ -208,7 +210,7 @@ export default function ReferralDetail(){
         </Form>
       </section>
 
-      <section className="data-card" id="dank">
+      <section className="data-card" id="dank" style={{marginTop:"1rem"}}>
         <div className="card-head"><div><p className="eyebrow">Rückmeldung an den Empfehlenden</p><h2>Dank</h2></div></div>
         <Form method="post" className="form-grid">
           <input type="hidden" name="_intent" value="thanks_save"/>

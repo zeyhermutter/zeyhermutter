@@ -10,7 +10,7 @@ const MEDIA_TYPE:Record<string,string>={IMAGE:"Bild",VIDEO:"Video",FLOOR_PLAN:"G
 
 function text(fd:FormData,key:string){return String(fd.get(key)??"").trim();}
 function dateOrNull(fd:FormData,key:string){const v=text(fd,key);return /^\d{4}-\d{2}-\d{2}$/.test(v)?v:null;}
-function days(value:any){const n=Number(value);return Number.isFinite(n)?plural(n,"Tag","Tage"):"—";}
+function days(value:any){if(value===null||value===undefined||value==="")return"—";const n=Number(value);return Number.isFinite(n)?plural(n,"Tag","Tage"):"—";}
 
 export function priceDelta(salePrice:any,reference:any){
   const sale=Number(salePrice),base=Number(reference);
@@ -194,7 +194,7 @@ export default function CaseStudyDetail(){
         <article className="metric"><span>Investition</span><strong>{money(facts.invested)}</strong><small>{plural(Number(facts.measures_done)||0,"umgesetzte Maßnahme","umgesetzte Maßnahmen")}</small></article>
         <article className="metric"><span>Aufbereitung</span><strong>{days(facts.preparation_days)}</strong><small>{facts.preparation_start?`ab ${formatDay(facts.preparation_start)}`:"kein Startpunkt erfasst"}</small></article>
         <article className="metric"><span>Vermarktung</span><strong>{days(facts.marketing_days)}</strong><small>{facts.marketing_start?`ab ${formatDay(facts.marketing_start)}`:"keine Preisstufe erfasst"}</small></article>
-        <article className="metric"><span>Nachfrage</span><strong>{facts.viewings??0}</strong><small>{plural(Number(facts.inquiries)||0,"Anfrage","Anfragen")} · {plural(Number(facts.offers)||0,"Kaufangebot","Kaufangebote")}</small></article>
+        <article className="metric"><span>Besichtigungen</span><strong>{facts.viewings??0}</strong><small>{plural(Number(facts.inquiries)||0,"Anfrage","Anfragen")} · {plural(Number(facts.offers)||0,"Kaufangebot","Kaufangebote")}</small></article>
       </div>
       <p className="subtle">Alle Werte stammen aus dem laufenden Datenbestand und werden nicht gespeichert. Fehlt eine Grundlage, steht dort ein Strich statt einer erfundenen Zahl.</p>
       {facts.price_estimate!=null||facts.valuation_from!=null
@@ -204,7 +204,9 @@ export default function CaseStudyDetail(){
         </dl>:null}
     </section>
 
-    <div className="dashboard-grid property-section">
+    {/* Beide Formulare stehen bewusst über die volle Breite: nebeneinander
+        brechen die Beschriftungen um und die Eingabefelder werden zu schmal. */}
+    <div>
       <section className="data-card" id="erzaehlung">
         <div className="card-head"><div><p className="eyebrow">Vom Benutzer geschrieben</p><h2>Erzählung</h2></div></div>
         <Form method="post" className="form-grid">
@@ -232,7 +234,7 @@ export default function CaseStudyDetail(){
         </Form>
       </section>
 
-      <section className="data-card" id="freigabe">
+      <section className="data-card" id="freigabe" style={{marginTop:"1rem"}}>
         <div className="card-head"><div><p className="eyebrow">Getrennt von der Anonymisierung</p><h2>Marketingfreigabe</h2></div></div>
         <dl className="detail-list">
           <div><dt>Stand</dt><dd>{RELEASE_STATUS[row.release_status]??row.release_status}</dd></div>

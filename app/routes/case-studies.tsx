@@ -12,7 +12,9 @@ export const RELEASE_FORM:Record<string,string>={WRITTEN:"Schriftlich",EMAIL:"E-
 export const FEEDBACK_SOURCE:Record<string,string>={WRITTEN:"Schriftlich",VERBAL:"Mündlich",REVIEW:"Öffentliche Bewertung",SURVEY:"Befragung",OTHER:"Sonstiges"};
 
 export function one(v:any){return Array.isArray(v)?v[0]:v;}
-export function money(v:any){const n=Number(v);return Number.isFinite(n)?new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n):"—";}
+// Ohne Grundlage steht hier ein Strich. Number(null) waere 0 und damit eine
+// Zahl, die niemand erfasst hat.
+export function money(v:any){if(v===null||v===undefined||v==="")return"—";const n=Number(v);return Number.isFinite(n)?new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n):"—";}
 export function formatDay(v:string|null){if(!v)return"—";return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeZone:"Europe/Berlin"}).format(new Date(v+"T12:00:00Z"));}
 export function plural(count:number,one:string,many:string){return `${count} ${count===1?one:many}`;}
 
@@ -54,7 +56,7 @@ export async function loader({request,context}:Route.LoaderArgs){
   const open=((closingsRes.data??[]) as any[]).filter((row:any)=>!taken.has(row.id));
   const rows=all.filter((row:any)=>filter==="ALL"?true:filter==="ARCHIVED"?Boolean(row.archived_at):!row.archived_at&&(filter==="ACTIVE"||row.status===filter));
 
-  return data({profile,rows,openClosings:open,total:all.length,
+  return data({profile,rows,openClosings:open,total:all.length,notarizedCount:((closingsRes.data??[]) as any[]).length,
     publishable:all.filter((row:any)=>!row.archived_at&&row.status==="PUBLISHABLE").length,
     waiting:all.filter((row:any)=>!row.archived_at&&row.release_status==="REQUESTED").length,
     filter,canWrite:canWriteRes.data===true},{headers:responseHeaders()});
@@ -137,7 +139,9 @@ export default function CaseStudies(){
     {d.canWrite?<section className="data-card">
       <div className="card-head"><div><p className="eyebrow">Neu</p><h2>Case Study anlegen</h2></div></div>
       {d.openClosings.length===0
-        ?<p className="empty-state">Zu allen beurkundeten Verkäufen ist bereits eine Case Study erfasst. Vor der Beurkundung lässt sich keine anlegen.</p>
+        ?<p className="empty-state">{d.notarizedCount===0
+            ?"Es ist noch kein Verkauf beurkundet. Eine Case Study entsteht erst danach."
+            :"Zu allen beurkundeten Verkäufen ist bereits eine Case Study erfasst."}</p>
         :<Form method="post" className="form-grid">
           <label className="form-field"><span>Abgeschlossener Verkauf *</span>
             <select name="sale_closing_id" defaultValue="">
