@@ -70,22 +70,13 @@ function kasten(text, farbe, rahmen) {
 function bild(block) {
   const datei = path.join(BILDER, block.datei);
   if (!fs.existsSync(datei)) throw new Error(`Bild fehlt: ${datei}`);
-  // Seitenverhaeltnis aus dem JPEG lesen, damit nichts verzerrt wird.
-  const puffer = fs.readFileSync(datei);
-  let breite = 1200, hoehe = 535;
-  for (let i = 2; i < puffer.length - 9; ) {
-    if (puffer[i] !== 0xff) { i += 1; continue; }
-    const marker = puffer[i + 1];
-    if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker)) {
-      hoehe = puffer.readUInt16BE(i + 5); breite = puffer.readUInt16BE(i + 7); break;
-    }
-    i += 2 + puffer.readUInt16BE(i + 2);
-  }
+  // Masse stehen in den Daten (help-content.ts) und muessen hier nicht noch
+  // einmal aus der Datei gelesen werden.
   return [
     new Paragraph({
       children: [new ImageRun({
-        data: puffer, type: "jpg",
-        transformation: { width: BILDBREITE, height: Math.round(BILDBREITE * hoehe / breite) },
+        data: fs.readFileSync(datei), type: "jpg",
+        transformation: { width: BILDBREITE, height: Math.round(BILDBREITE * block.hoehe / block.breite) },
       })],
       spacing: { before: 120, after: 60 },
     }),

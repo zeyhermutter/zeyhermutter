@@ -15,7 +15,10 @@ export type HelpBlock =
   | { art: "schritte"; punkte: string[] }
   | { art: "hinweis"; text: string }
   | { art: "warnung"; text: string }
-  | { art: "bild"; datei: string; unterschrift: string };
+  // Breite und Hoehe gehoeren in die Daten: ohne sie faellt das Bild vor dem
+  // Laden auf Hoehe null zusammen, und verzoegertes Laden springt nie an,
+  // weil der Browser keine Ueberschneidung mit dem Sichtfeld erkennt.
+  | { art: "bild"; datei: string; breite: number; hoehe: number; unterschrift: string };
 
 export type HelpChapter = {
   id: string;
@@ -47,7 +50,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         + "und dem persönlichen Passwort. Es gibt keine Sammelzugänge: jede Änderung "
         + "wird dem angemeldeten Benutzer zugeschrieben und ist später in der "
         + "Systemhistorie nachvollziehbar." },
-      { art: "bild", datei: "uebersicht.jpg", unterschrift:
+      { art: "bild", datei: "uebersicht.jpg", breite: 1200, hoehe: 535, unterschrift:
         "Die Übersicht nach der Anmeldung. Links die Navigation, oben links die "
         + "Glocke mit der Anzahl ungelesener Benachrichtigungen." },
       { art: "absatz", text:
@@ -184,7 +187,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
       { art: "absatz", text:
         "Das Verkaufsprojekt hält einen Verkaufsfall zusammen. Wer wissen will, wie "
         + "es um einen Fall steht, öffnet das Projekt und nicht sechs Einzellisten." },
-      { art: "bild", datei: "verkaufsprojekt.jpg", unterschrift:
+      { art: "bild", datei: "verkaufsprojekt.jpg", breite: 1200, hoehe: 535, unterschrift:
         "Ein Verkaufsprojekt: oben die eine nächste Aktion, darunter die offenen "
         + "Punkte bis zum Vermarktungsstart." },
       { art: "absatz", text:
@@ -210,7 +213,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         "Der Check beantwortet die Frage, die im Erstgespräch wirklich zählt: Was "
         + "sollte vor dem Verkauf noch gemacht werden, was lohnt sich nicht mehr, und "
         + "was kostet das an Zeit und Geld?" },
-      { art: "bild", datei: "verkaufsstrategie-check.jpg", unterschrift:
+      { art: "bild", datei: "verkaufsstrategie-check.jpg", breite: 1200, hoehe: 535, unterschrift:
         "Ein Check im Entwurf. Oben steht, was zur Prüfbereitschaft noch fehlt." },
       { art: "schritte", punkte: [
         "Ausgangssituation, Verkaufsziel und Besichtigungsdatum erfassen.",
@@ -243,7 +246,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         + "Verfügungsberechtigung, Preis & Wert, WEG & Miete, Pflichtangaben, "
         + "Interessenten, Website, Exposés, Vermarktung, Dokumente, Medien, "
         + "Geldwäsche." },
-      { art: "bild", datei: "objektakte.jpg", unterschrift:
+      { art: "bild", datei: "objektakte.jpg", breite: 1200, hoehe: 535, unterschrift:
         "Die Objektakte. Oben die Abschnittsleiste, darunter Statuswechsel und die "
         + "Karten mit dem jeweiligen Stand." },
       { art: "absatz", text:
@@ -350,7 +353,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
       { art: "absatz", text:
         "Vor dem Wechsel in die Vermarktung und vor jeder Veröffentlichung prüft das "
         + "System die Angaben, die eine Immobilienanzeige tragen muss." },
-      { art: "bild", datei: "pflichtangaben.jpg", unterschrift:
+      { art: "bild", datei: "pflichtangaben.jpg", breite: 1200, hoehe: 535, unterschrift:
         "Die Pflichtangaben. Der grüne Balken bestätigt Vollständigkeit — nicht "
         + "rechtliche Richtigkeit." },
       { art: "liste", punkte: [
@@ -420,7 +423,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         + "Risikoeinstufung mit Begründung und Prüfdatum; der dokumentierte Abgleich "
         + "mit PEP- und Sanktionslisten; die Herkunft der Mittel; der Nachweis der "
         + "unbaren Zahlung." },
-      { art: "bild", datei: "geldwaesche-aufbewahrung.jpg", unterschrift:
+      { art: "bild", datei: "geldwaesche-aufbewahrung.jpg", breite: 1200, hoehe: 535, unterschrift:
         "Die Übersicht über alle Geldwäscheakten und die ablaufenden "
         + "Aufbewahrungsfristen." },
       { art: "warnung", text:
@@ -481,7 +484,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         + "freigegebene, unveränderliche Version. Eine interne Korrektur ändert die "
         + "laufende Anzeige also nicht von selbst — das ist anzeigenrechtlich wichtig "
         + "und in der Praxis beruhigend." },
-      { art: "bild", datei: "veroeffentlichung.jpg", unterschrift:
+      { art: "bild", datei: "veroeffentlichung.jpg", breite: 1200, hoehe: 280, unterschrift:
         "Das Publikationsprinzip: intern bearbeiten, Snapshot veröffentlichen." },
       { art: "schritte", punkte: [
         "Öffentlichen Titel, URL-Kürzel, Untertitel, Kurztext und Objektbeschreibung erfassen.",
@@ -511,7 +514,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         + "Zimmer, Baujahr, Lage mit Suchradius, Kauf oder Miete, Finanzierungsstand "
         + "und gewünschte Merkmale. Daraus schlägt das System passende Objekte vor — "
         + "mit nachvollziehbaren Gründen, nicht als Punktzahl aus einer Blackbox." },
-      { art: "bild", datei: "anfragen-reaktionszeit.jpg", unterschrift:
+      { art: "bild", datei: "anfragen-reaktionszeit.jpg", breite: 1200, hoehe: 535, unterschrift:
         "Die Reaktionszeit je Eingangskanal. Überfällige Anfragen lassen sich per "
         + "Knopfdruck eskalieren." },
       { art: "absatz", text:
@@ -566,7 +569,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
       { art: "absatz", text:
         "Die Abschlussakte hält den Weg zwischen Beurkundung und "
         + "Eigentumsumschreibung zusammen, damit dafür keine Nebenliste nötig ist." },
-      { art: "bild", datei: "abschluss.jpg", unterschrift:
+      { art: "bild", datei: "abschluss.jpg", breite: 1200, hoehe: 535, unterschrift:
         "Eine Abschlussakte mit den beiden Warnungen zu Verfügungsberechtigung und "
         + "Geldwäsche, die vor der Beurkundung offen sind." },
       { art: "absatz", text:
@@ -635,7 +638,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
     kurz: "Kennzahlen über den eigenen Arbeitsplatz oder das ganze Unternehmen.",
     pfade: ["/reports"],
     bloecke: [
-      { art: "bild", datei: "auswertung.jpg", unterschrift:
+      { art: "bild", datei: "auswertung.jpg", breite: 1200, hoehe: 535, unterschrift:
         "Die Auswertung, umschaltbar zwischen eigenem Arbeitsplatz und Unternehmen." },
       { art: "absatz", text:
         "Die Auswertung lässt sich zwischen „Mein Arbeitsplatz\" und „Unternehmen\" "
@@ -659,14 +662,14 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         "Unter **Benutzer & Rollen** werden Zugänge freigeschaltet und Rollen "
         + "vergeben. Niemand kann sich selbst höhere Rechte geben; die Administratorrolle "
         + "vergibt nur ein Administrator. Jede Änderung landet in der Systemhistorie." },
-      { art: "bild", datei: "weiterbildung.jpg", unterschrift:
+      { art: "bild", datei: "weiterbildung.jpg", breite: 1200, hoehe: 535, unterschrift:
         "Die Weiterbildung mit dem Stand je Benutzer im laufenden Zeitraum." },
       { art: "absatz", text:
         "Unter **Weiterbildung** wird je Benutzer erfasst, welche Maßnahme wann mit "
         + "wie vielen Stunden belegt wurde. Das System summiert die Stunden im "
         + "laufenden Zeitraum und zeigt, wie viel noch offen ist. Stunden dürfen mit "
         + "Komma eingegeben werden." },
-      { art: "bild", datei: "systemhistorie.jpg", unterschrift:
+      { art: "bild", datei: "systemhistorie.jpg", breite: 1200, hoehe: 535, unterschrift:
         "Die Systemhistorie mit Filter nach Bereich, Aktion, Benutzer und Referenz." },
       { art: "absatz", text:
         "Die **Systemhistorie** protokolliert jede Änderung mit Zeitpunkt, Benutzer, "
