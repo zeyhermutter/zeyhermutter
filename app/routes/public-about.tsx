@@ -10,11 +10,17 @@ import "~/public-website.css";
 // Website-CMS: Namen, Werdegang und Jahreszahlen kenne ich nicht, und eine
 // erfundene Unternehmensgeschichte wäre schlimmer als eine leere Seite.
 
+// Solange im CMS keine Fassung veroeffentlicht ist, zeigt die Seite den
+// Standardtext -- und der sagt selbst, dass der Inhalt fehlt. Eine solche Seite
+// gehoert nicht in den Index; sie steht aus demselben Grund auch nicht in der
+// Sitemap (SEITEN_OHNE_HINTERLEGTEN_TEXT in app/lib/public-pages.ts). Sobald
+// eine Fassung veroeffentlicht ist, faellt die Sperre von selbst weg.
 export function meta({ data: routeData }: Route.MetaArgs) {
-  const seite = routeData as { seoTitle?: string | null; seoDescription?: string | null } | undefined;
+  const seite = routeData as { seoTitle?: string | null; seoDescription?: string | null; version?: number | null } | undefined;
   return [
     { title: seite?.seoTitle || "Über uns · ZeyherMutter" },
     { name: "description", content: seite?.seoDescription || "Wer hinter Zeyher & Mutter Immobilien in München steht." },
+    { name: "robots", content: seite?.version ? "index,follow" : "noindex,follow" },
   ];
 }
 

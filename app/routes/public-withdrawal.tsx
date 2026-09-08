@@ -13,11 +13,14 @@ import "~/public-website.css";
 // Aufbau und Auszeichnung sind dieselben wie bei Impressum und Datenschutz --
 // die drei gehören zusammen und sollen auch gleich aussehen.
 
+// Ohne veroeffentlichte Fassung steht hier der Standardtext, und der sagt, dass
+// die Belehrung fehlt. Kein Index, und auch nicht in der Sitemap -- siehe
+// SEITEN_OHNE_HINTERLEGTEN_TEXT in app/lib/public-pages.ts.
 export function meta({ data: routeData }: Route.MetaArgs) {
-  const seite = routeData as { seoTitle?: string | null } | undefined;
+  const seite = routeData as { seoTitle?: string | null; version?: number | null } | undefined;
   return [
     { title: seite?.seoTitle || "Widerrufsbelehrung · ZeyherMutter" },
-    { name: "robots", content: "index,follow" },
+    { name: "robots", content: seite?.version ? "index,follow" : "noindex,follow" },
   ];
 }
 
