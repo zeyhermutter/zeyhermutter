@@ -360,6 +360,32 @@
 .public-contact-cta .public-eyebrow::before { background: var(--zm-gold); }
 .public-contact-cta > p { max-width: 66ch; color: var(--zm-auf-navy-leise); }
 
+/* --- Referenzen ---------------------------------------------------- */
+
+.zm-referenzen { width: var(--zm-breite); margin: 0 auto; padding: 0 0 clamp(56px, 7vw, 84px); }
+
+/* Der leere Zustand ist hier kein Platzhalter, sondern die Aussage: es steht
+   nur etwas da, wozu jemand ja gesagt hat. Deshalb bekommt er dieselbe Ruhe
+   wie ein Inhalt und nicht das gestrichelte Kaestchen einer Fehlanzeige. */
+.zm-referenz-leer { max-width: 60ch; padding: clamp(32px, 4vw, 48px); background: var(--zm-sand); }
+.zm-referenz-leer h2 { margin-top: 0; font-size: clamp(24px, 2.6vw, 32px); }
+.zm-referenz-leer p { color: var(--zm-text-leise); margin-bottom: 26px; }
+
+.zm-referenz-hinweis { max-width: 60ch; padding: 18px; background: var(--zm-sand); border-left: 2px solid var(--zm-gold-tief); color: var(--zm-text); }
+
+.zm-referenz-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 20px; }
+.zm-referenz-liste > li > article { padding: clamp(28px, 3vw, 40px); background: var(--zm-karte); border: 1px solid var(--zm-linie); }
+.zm-referenz-liste h2 { margin: 0 0 22px; font-size: clamp(24px, 2.6vw, 34px); }
+.zm-referenz-liste h3 { font-family: var(--zm-sans); font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--zm-text-leise); margin: 22px 0 6px; }
+/* Ueber die volle Blattbreite gelesen hat eine Zeile hier rund 120 Zeichen.
+   Lesbar sind etwa 65 bis 75; darueber verliert das Auge beim Ruecksprung
+   die naechste Zeile. */
+.zm-referenz-liste p { margin: 0; color: var(--zm-text-leise); max-width: 76ch; }
+
+.zm-referenz-zitat { margin: 34px 0 0; padding: 4px 0 4px 22px; border-left: 2px solid var(--zm-gold); }
+.zm-referenz-zitat p { font-family: var(--zm-serif); font-size: clamp(19px, 2vw, 23px); line-height: 1.5; color: var(--zm-text); max-width: 62ch; }
+.zm-referenz-zitat footer { margin-top: 10px; font-size: 12px; letter-spacing: .06em; color: var(--zm-text-leise); }
+
 /* --- Formulare ----------------------------------------------------- */
 
 .public-inquiry-form { display: grid; gap: 16px; margin-top: 28px; max-width: 820px; }

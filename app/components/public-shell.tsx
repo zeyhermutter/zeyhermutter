@@ -44,6 +44,7 @@ export function PublicHeader() {
       <nav className="public-nav" aria-label="Hauptnavigation">
         <Link to="/verkaufsfertig-check">Verkaufsstrategie-Check</Link>
         <Link to="/immobilien">Immobilien</Link>
+        <Link to="/referenzen">Referenzen</Link>
         <Link to="/kontakt">Kontakt</Link>
       </nav>
     </header>
@@ -56,6 +57,7 @@ export function PublicFooter() {
       <span>Zeyher &amp; Mutter · Immobilien · München</span>
       <div>
         <Link to="/verkaufsfertig-check">Verkaufsstrategie-Check</Link>
+        <Link to="/referenzen">Referenzen</Link>
         <Link to="/impressum">Impressum</Link>
         <Link to="/datenschutz">Datenschutz</Link>
         <Link className="public-internal-link" to="/login">Intern</Link>

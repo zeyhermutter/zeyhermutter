@@ -120,6 +120,18 @@ export async function action({request,context,params}:Route.ActionArgs){
     return redirect(`/case-studies/${id}#verwendung`,{headers:responseHeaders()});
   }
 
+  // Getrennt vom Status, weil es eine eigene Entscheidung ist: "darf
+  // veroeffentlicht werden" und "steht auf der Webseite" sind nicht dasselbe.
+  if(intent==="website_save"){
+    await requirePermission(request,context.cloudflare.env,"case_study.approve");
+    const {data:updated,error}=await supabase.from("sale_case_studies")
+      .update({website_published:fd.get("website_published")==="on"})
+      .eq("id",id).eq("version",version).select("id").maybeSingle();
+    if(error)return data<ActionResult>({error:caseStudyErrorMessage(String(error.message??""))},{status:400,headers:responseHeaders()});
+    if(!updated)return conflict();
+    return redirect(`/case-studies/${id}#verwendung`,{headers:responseHeaders()});
+  }
+
   if(intent==="media_add"){
     const mediaId=text(fd,"property_media_id");
     if(!mediaId)return data<ActionResult>({error:"Bitte ein Bild auswählen."},{status:400,headers:responseHeaders()});
@@ -341,7 +353,23 @@ export default function CaseStudyDetail(){
             </select>
           </label>
           <div className="form-field inline-actions"><button className="secondary-button" type="submit" disabled={disabled}>Status speichern</button></div>
-          <p className="form-field full-width subtle">„Öffentlich verwendbar" setzt eine erteilte Freigabe und freigegebene Bilder voraus. Das System prüft das, es entscheidet aber nicht über die Zulässigkeit einer konkreten Veröffentlichung.</p>
+          <p className="form-field full-width subtle">„Öffentlich verwendbar“ setzt eine erteilte Freigabe und freigegebene Bilder voraus. Das System prüft das, es entscheidet aber nicht über die Zulässigkeit einer konkreten Veröffentlichung.</p>
+        </Form>
+        <Form method="post" className="form-grid">
+          <input type="hidden" name="_intent" value="website_save"/>
+          <input type="hidden" name="version" value={row.version}/>
+          <label className="form-field full-width checkbox-row">
+            <input type="checkbox" name="website_published" defaultChecked={row.website_published} disabled={disabled||row.status!=="PUBLISHABLE"}/>
+            <span>Auf der öffentlichen Webseite zeigen</span>
+          </label>
+          <div className="form-field inline-actions"><button className="secondary-button" type="submit" disabled={disabled||row.status!=="PUBLISHABLE"}>Veröffentlichung speichern</button></div>
+          <p className="form-field full-width subtle">
+            {row.status!=="PUBLISHABLE"
+              ? "Erst auf „Öffentlich verwendbar“ setzen. Solange der Status etwas anderes sagt, ist die Veröffentlichung gesperrt."
+              : row.website_published
+                ? `Steht seit ${formatDay(row.website_published_at)} unter /referenzen. Wird der Status geändert, verschwindet der Eintrag dort automatisch.`
+                : "Die Fallstudie darf veröffentlicht werden, steht aber noch nicht auf der Webseite."}
+          </p>
         </Form>
       </section>
 

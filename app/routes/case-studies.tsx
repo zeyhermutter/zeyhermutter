@@ -24,6 +24,10 @@ export function caseStudyErrorMessage(message:string){
   if(message.includes("CASE_STUDY_RELEASE_CONTACT_UNRELATED"))return"Die Freigabe kann nur von jemandem kommen, der an diesem Verkauf beteiligt war — Käufer oder Eigentümer.";
   if(message.includes("CASE_STUDY_MEDIA_NOT_RELEASED"))return"Mindestens ein ausgewähltes Bild ist in der Mediathek nicht öffentlich freigegeben. Ohne diese Freigabe wird die Case Study nicht öffentlich verwendbar.";
   if(message.includes("CASE_STUDY_MEDIA_FOREIGN_PROPERTY"))return"Das Bild gehört zu einer anderen Immobilie.";
+  if(message.includes("CASE_STUDY_WEBSITE_APPROVE_REQUIRED"))return"Das Veröffentlichen auf der Webseite darf nur die Geschäftsführung entscheiden.";
+  if(message.includes("CASE_STUDY_WEBSITE_REQUIRES_PUBLISHABLE"))return"Auf die Webseite kommt nur, was auf „Öffentlich verwendbar“ steht — und das setzt eine erteilte Freigabe voraus.";
+  if(message.includes("sale_case_studies_website_publishable_check"))return"Auf die Webseite kommt nur, was auf „Öffentlich verwendbar“ steht.";
+  if(message.includes("sale_case_studies_website_dated_check"))return"Zur Veröffentlichung gehört ihr Zeitpunkt. Das setzt das System selbst — melden Sie den Fehler, wenn er auftritt.";
   if(message.includes("CASE_STUDY_APPROVE_REQUIRED"))return"Die Marketingfreigabe darf nur die Geschäftsführung entscheiden.";
   if(message.includes("sale_case_studies_publishable_release_check"))return"Ohne erteilte Marketingfreigabe lässt sich die Case Study nicht auf öffentlich verwendbar setzen.";
   if(message.includes("sale_case_studies_publishable_scope_check"))return"Die Freigabe gilt nur anonymisiert. Eine nicht anonymisierte Fassung braucht eine Freigabe mit Namen und Objekt.";
