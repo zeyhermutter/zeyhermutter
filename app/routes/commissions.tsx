@@ -50,7 +50,7 @@ export async function loader({request,context}:Route.LoaderArgs){
 export default function Commissions(){
   const {profile,rows,summary,canWrite,properties,filters}=useLoaderData<typeof loader>();
   return <main className="editor-shell">
-    <header className="editor-header"><div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">Objekte & Verkauf</p><h1 className="editor-title">Provisionen</h1><p className="editor-meta">Erwartete, fällige, abgerechnete und bezahlte Provisionen je Verkaufsimmobilie.</p></div><div className="header-actions">{canWrite?<Link className="primary-button link-button" to={filters.propertyId?`/commissions/new?property_id=${encodeURIComponent(filters.propertyId)}`:"/commissions/new"}>+ Provision</Link>:null}<span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div></header>
+    <header className="editor-header"><div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">Verkauf</p><h1 className="editor-title">Provisionen</h1><p className="editor-meta">Erwartete, fällige, abgerechnete und bezahlte Provisionen je Verkaufsimmobilie.</p></div><div className="header-actions">{canWrite?<Link className="primary-button link-button" to={filters.propertyId?`/commissions/new?property_id=${encodeURIComponent(filters.propertyId)}`:"/commissions/new"}>+ Provision</Link>:null}<span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div></header>
 
     <section className="metric-grid">
       <article className="metric-card"><span>Erwartet</span><strong>{summary.expected}</strong><small>aktive erwartete Provisionen</small></article>

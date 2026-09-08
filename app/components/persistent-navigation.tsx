@@ -9,10 +9,24 @@ const GROUPS: NavGroup[] = [
   { label: "Arbeitsplatz", items: [
     { label: "Übersicht", to: "/crm", exact: true }, { label: "Dashboard & Auswertung", to: "/reports" }, { label: "Suche", to: "/crm/search" }, { label: "Aufgaben", to: "/crm/tasks" }, { label: "E-Mail", to: "/crm/email" }, { label: "Kalender", to: "/crm/calendar" },
   ]},
-  { label: "Objekte & Verkauf", items: [
-    { label: "Verkaufsprojekte", to: "/projects" }, { label: "Immobilien", to: "/properties" }, { label: "Verkäufer-Leads", to: "/leads" }, { label: "Kampagnen & Gebiete", to: "/acquisition" }, { label: "Verkaufsstrategie-Check", to: "/crm/sales-readiness" }, { label: "Makleraufträge", to: "/mandates" }, { label: "Kaufangebote", to: "/purchase-offers" }, { label: "Reservierungen", to: "/reservations" }, { label: "Abschlüsse & Notar", to: "/closings" }, { label: "Provisionen", to: "/commissions" },
+  // Die Reihenfolge folgt dem Ablauf eines Vorgangs, mit einer bewussten
+  // Ausnahme: "Immobilien" steht oben in der Verkaufsgruppe, obwohl das Objekt
+  // erst nach dem Auftrag entsteht. Es ist der Eintrag, der am haeufigsten
+  // angeklickt wird; ihn mitten in eine Zehnerliste zu setzen wuerde die
+  // Navigation jeden Tag ein Stueck langsamer machen.
+  //
+  // "Objekte & Verkauf" hatte zehn Eintraege in einer Gruppe. Ab etwa sieben
+  // liest man eine solche Liste nicht mehr, man sucht darin. Deshalb zwei
+  // kurze Gruppen: was zum Auftrag fuehrt, und was danach kommt.
+  { label: "Akquise", items: [
+    { label: "Kampagnen & Gebiete", to: "/acquisition" }, { label: "Verkäufer-Leads", to: "/leads" }, { label: "Verkaufsstrategie-Check", to: "/crm/sales-readiness" },
   ]},
-  { label: "Interessenten", items: [ { label: "Suchprofile", to: "/search-profiles" }, { label: "Anfragen", to: "/inquiries" }, { label: "Besichtigungen", to: "/viewings" } ]},
+  { label: "Verkauf", items: [
+    { label: "Immobilien", to: "/properties" }, { label: "Verkaufsprojekte", to: "/projects" }, { label: "Makleraufträge", to: "/mandates" }, { label: "Kaufangebote", to: "/purchase-offers" }, { label: "Reservierungen", to: "/reservations" }, { label: "Abschlüsse & Notar", to: "/closings" }, { label: "Provisionen", to: "/commissions" },
+  ]},
+  // Kaeuferseite in der Reihenfolge, in der sie entsteht: die Anfrage kommt
+  // herein, daraus wird ein Suchprofil, daraus eine Besichtigung.
+  { label: "Interessenten", items: [ { label: "Anfragen", to: "/inquiries" }, { label: "Suchprofile", to: "/search-profiles" }, { label: "Besichtigungen", to: "/viewings" } ]},
   { label: "Nach dem Verkauf", items: [ { label: "Nachbetreuung", to: "/after-sales" }, { label: "Empfehlungen", to: "/referrals" }, { label: "Case Studies", to: "/case-studies" } ]},
   { label: "Verwaltung", items: [ { label: "Website-CMS", to: "/crm/website" }, { label: "Geldwäsche & Aufbewahrung", to: "/compliance" }, { label: "Organisationen", to: "/crm/organizations" }, { label: "Benutzer & Rollen", to: "/crm/users" }, { label: "Weiterbildung", to: "/crm/training" }, { label: "Archiv", to: "/crm/archive" }, { label: "Systemhistorie", to: "/crm/history" }, { label: "Anleitung", to: "/crm/hilfe" } ]},
 ];

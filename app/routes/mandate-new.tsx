@@ -53,7 +53,7 @@ export default function MandateNew(){
   const {profile,userId,propertyId,properties,leads,profiles}=useLoaderData<typeof loader>();
   const result=useActionData<typeof action>();
   return <main className="editor-shell">
-    <header className="editor-header"><div><Link className="back-link" to="/mandates">← Makleraufträge</Link><p className="eyebrow">Objekte & Verkauf</p><h1 className="editor-title">Maklerauftrag anlegen</h1><p className="editor-meta">Der Auftrag startet als Entwurf. Laufzeit, Form, Provisionsvereinbarung und Widerruf werden anschließend in der Auftragsakte erfasst.</p></div><div className="header-user"><span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div></header>
+    <header className="editor-header"><div><Link className="back-link" to="/mandates">← Makleraufträge</Link><p className="eyebrow">Verkauf</p><h1 className="editor-title">Maklerauftrag anlegen</h1><p className="editor-meta">Der Auftrag startet als Entwurf. Laufzeit, Form, Provisionsvereinbarung und Widerruf werden anschließend in der Auftragsakte erfasst.</p></div><div className="header-user"><span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div></header>
     {result?.error?<div className="form-error">{result.error}</div>:null}
     <section className="editor-card"><div className="card-head"><div><p className="eyebrow">Neuer Auftrag</p><h2>Grunddaten</h2></div></div>
       <Form method="post">

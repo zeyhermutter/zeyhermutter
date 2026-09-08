@@ -55,8 +55,12 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         + "Glocke mit der Anzahl ungelesener Benachrichtigungen." },
       { art: "absatz", text:
         "Die Navigation am linken Rand ist auf jeder Seite dieselbe und in fünf "
-        + "Gruppen geteilt: Arbeitsplatz, Objekte & Verkauf, Interessenten, Nach dem "
-        + "Verkauf und Verwaltung. Der aktuelle Bereich ist hervorgehoben." },
+        + "Gruppen geteilt, die dem Ablauf eines Vorgangs folgen: Arbeitsplatz, "
+        + "Akquise, Verkauf, Interessenten, Nach dem Verkauf und Verwaltung. Der "
+        + "aktuelle Bereich ist hervorgehoben. Eine Ausnahme von der Reihenfolge "
+        + "ist Absicht: **Immobilien** steht oben in der Gruppe Verkauf, obwohl "
+        + "die Objektakte erst nach dem Maklerauftrag entsteht — es ist der "
+        + "Eintrag, der am häufigsten gebraucht wird." },
       { art: "liste", punkte: [
         "Die Glocke oben links zeigt ungelesene Benachrichtigungen. Ein Klick öffnet die Liste, ein Klick auf einen Eintrag springt zum betroffenen Vorgang und markiert ihn als gelesen.",
         "„Suche\" findet Kontakte, Immobilien, Leads und Vorgänge über Namen und Nummern.",
