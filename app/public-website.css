@@ -451,6 +451,44 @@
 .zm-abwaegung ul { list-style: none; margin: 26px 0 0; padding: 0; display: grid; gap: 20px; }
 .zm-abwaegung li { padding-left: 20px; border-left: 2px solid var(--zm-gold); color: var(--zm-text-leise); line-height: 1.72; }
 
+/* --- Ratgeber ------------------------------------------------------ */
+
+.zm-punkte { width: var(--zm-breite); margin: 0 auto; padding: clamp(48px, 6vw, 76px) 0; border-top: 1px solid var(--zm-linie); }
+.zm-punkte-kopf { max-width: 62ch; margin-bottom: 34px; }
+.zm-punkte-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.zm-punkte-liste li { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 24px; padding: 26px 0; border-top: 1px solid var(--zm-linie); }
+.zm-punkte-liste li:last-child { border-bottom: 1px solid var(--zm-linie); }
+.zm-punkte-liste span { font-family: var(--zm-serif); font-size: 21px; color: var(--zm-gold-tief); }
+.zm-punkte-liste p { margin: 0; color: var(--zm-text-leise); max-width: 76ch; }
+
+/* Zwei gleich große Felder. Der rechte benennt, was wir nicht tun; ihn
+   kleiner zu setzen als den linken wäre eine Aussage für sich. */
+.zm-grenze {
+  width: var(--zm-breite); margin: 0 auto;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px;
+  padding: 0 0 clamp(48px, 6vw, 76px);
+}
+.zm-grenze article { padding: clamp(28px, 3vw, 40px); }
+.zm-grenze h2 { margin-top: 0; font-size: clamp(22px, 2.2vw, 28px); }
+.zm-grenze p { color: var(--zm-text-leise); margin: 0 0 12px; }
+.zm-grenze-wir { background: var(--zm-karte); border: 1px solid var(--zm-linie); }
+.zm-grenze-andere { background: var(--zm-sand); border: 1px solid var(--zm-linie); }
+
+.zm-ratgeber-gitter { width: var(--zm-breite); margin: 0 auto; padding: 0 0 clamp(40px, 5vw, 60px); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.zm-ratgeber-gitter a { display: grid; align-content: start; gap: 10px; padding: clamp(28px, 3vw, 38px); background: var(--zm-karte); border: 1px solid var(--zm-linie); text-decoration: none; color: inherit; transition: border-color .18s ease, transform .18s ease; }
+.zm-ratgeber-gitter a:hover { border-color: var(--zm-gold); transform: translateY(-2px); }
+.zm-ratgeber-gitter h2 { margin: 0; font-size: clamp(22px, 2.2vw, 28px); }
+.zm-ratgeber-gitter p { margin: 0; color: var(--zm-text-leise); }
+.zm-ratgeber-gitter strong { font-size: 13px; font-weight: 600; letter-spacing: .04em; color: var(--zm-text); border-bottom: 1px solid var(--zm-gold); padding-bottom: 3px; justify-self: start; margin-top: 6px; }
+/* Linksbuendig wie alles andere. Mit margin:auto stand der Kasten mittig und
+   war das einzige Element der Seite, das aus der Flucht faellt. */
+.zm-ratgeber-hinweis {
+  max-width: min(76ch, var(--zm-breite));
+  margin: 0 auto clamp(48px, 6vw, 76px) max(24px, calc((100% - 1180px) / 2));
+  padding: 20px 22px;
+  background: var(--zm-sand); border-left: 2px solid var(--zm-gold-tief); color: var(--zm-text);
+}
+
 /* --- Formulare ----------------------------------------------------- */
 
 .public-inquiry-form { display: grid; gap: 16px; margin-top: 28px; max-width: 820px; }
@@ -610,6 +648,7 @@
   .zm-service-grid article:last-child { border-bottom: 0; }
   .zm-check-band, .zm-trust, .public-story-section, .public-faq-section,
   .public-situations-section, .sales-check-hero, .sales-check-process, .zm-warum, .zm-abwaegung,
+  .zm-grenze, .zm-ratgeber-gitter,
   .sales-check-measures, .sales-check-form-section, .public-contact-page,
   .public-detail-grid, .public-detail-hero { grid-template-columns: 1fr; gap: 32px; }
   .public-property-grid, .public-property-grid.compact { grid-template-columns: 1fr; }

@@ -160,3 +160,58 @@ export function PrivateSaleSections({ content: c }: { content: WebsiteContent })
     </section>
   </>;
 }
+
+/**
+ * Eine Anlassseite des Ratgebers.
+ *
+ * Alle vier haben denselben Aufbau, und das ist Absicht: wer die zweite Seite
+ * liest, soll sich nicht neu zurechtfinden müssen. Der letzte Abschnitt
+ * gehört dazu und ist nicht das Kleingedruckte — er sagt, wofür man Notar,
+ * Anwältin oder Steuerberatung braucht. Eine Maklerseite, die diese Grenze
+ * verwischt, erteilt Rechtsberatung.
+ */
+export function RatgeberSections({ content: c }: { content: WebsiteContent }) {
+  const punkte = [c.effect_1, c.effect_2, c.effect_3, c.effect_4]
+    .filter((wert) => (wert ?? "").trim().length > 0);
+  return <>
+    <section className="public-hero">
+      <p className="public-eyebrow">{c.eyebrow}</p>
+      <h1>{c.title}</h1>
+      <p>{c.lead}</p>
+    </section>
+
+    <section className="zm-warum">
+      <div><p className="public-eyebrow">Ausgangslage</p><h2>{c.situation_title}</h2></div>
+      <div className="public-prose-large">
+        {paragraphs(c.situation_body ?? "").map((text, index) => <p key={index}>{text}</p>)}
+      </div>
+    </section>
+
+    <section className="zm-punkte">
+      <div className="zm-punkte-kopf">
+        <p className="public-eyebrow">Für den Verkauf</p>
+        <h2>{c.effects_title}</h2>
+      </div>
+      <ol className="zm-punkte-liste">
+        {punkte.map((text, index) => (
+          <li key={index}><span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span><p>{text}</p></li>
+        ))}
+      </ol>
+    </section>
+
+    <section className="zm-grenze">
+      <article className="zm-grenze-wir">
+        <p className="public-eyebrow">Unsere Aufgabe</p>
+        <h2>{c.we_title}</h2>
+        {paragraphs(c.we_body ?? "").map((text, index) => <p key={index}>{text}</p>)}
+      </article>
+      {/* Bewusst gleich groß wie der Abschnitt daneben. Wer die Grenze klein
+          setzt, meint sie nicht ernst. */}
+      <article className="zm-grenze-andere">
+        <p className="public-eyebrow">Nicht unsere Aufgabe</p>
+        <h2>{c.limits_title}</h2>
+        {paragraphs(c.limits_body ?? "").map((text, index) => <p key={index}>{text}</p>)}
+      </article>
+    </section>
+  </>;
+}

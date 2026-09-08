@@ -12,6 +12,8 @@ export default [
   route("immobilien", "routes/public-properties.tsx"),
   route("immobilien/medien/:mediaId/:version", "routes/public-media.ts"),
   route("immobilien/:slug", "routes/public-property-detail.tsx"),
+  route("ratgeber", "routes/public-guide.tsx"),
+  route("ratgeber/:thema", "routes/public-guide-topic.tsx"),
   route("ueber-uns", "routes/public-about.tsx"),
   route("ohne-makler-verkaufen", "routes/public-private-sale.tsx"),
   route("bewertung", "routes/public-valuation.tsx"),
