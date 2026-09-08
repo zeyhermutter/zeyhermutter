@@ -120,9 +120,13 @@
   padding: 0 max(24px, calc((100% - 1180px) / 2));
 }
 .public-brand { display: inline-flex; align-items: center; text-decoration: none; padding: 14px 0; }
-/* Die Logodatei bringt ihren Navy-Grund mit. Er ist auf denselben Wert
-   geglättet wie diese Fläche, deshalb ist die Kante unsichtbar. */
-.public-brand img { display: block; width: 188px; height: auto; }
+/* Die Logodatei bringt ihren Navy-Grund mit. Er trägt exakt den Wert dieser
+   Fläche, deshalb ist die Kante unsichtbar; scripts/check-brand-logo.mjs
+   vergleicht beide Werte bei jedem Build.
+   240 Pixel, nicht weniger: die liegende Fassung bringt drei Textzeilen in
+   dieselbe Breite, und unterhalb von etwa 220 Pixeln sind "IMMOBILIEN" und
+   "MÜNCHEN" nicht mehr zu lesen. */
+.public-brand img { display: block; width: 240px; height: auto; }
 
 .public-nav { display: flex; gap: 28px; align-items: center; }
 .public-nav a {
@@ -524,7 +528,7 @@
      Ein Klappmenue waere ein zusaetzlicher Klick fuer drei Eintraege. */
   .public-header { padding: 0 14px; flex-wrap: wrap; justify-content: flex-start; gap: 0; }
   .public-brand { padding: 12px 0 4px; }
-  .public-brand img { width: 150px; }
+  .public-brand img { width: 200px; }
   .public-nav { width: 100%; flex-wrap: wrap; gap: 6px 18px; padding-bottom: 10px; }
   .public-nav a { font-size: 13px; }
   .zm-hero, .zm-check-band, .public-situations-section, .sales-check-measures,
