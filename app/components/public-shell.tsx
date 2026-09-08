@@ -46,6 +46,7 @@ export function PublicHeader() {
         <Link to="/verkaufsfertig-check">Verkaufsstrategie-Check</Link>
         <Link to="/immobilien">Immobilien</Link>
         <Link to="/referenzen">Referenzen</Link>
+        <Link to="/ueber-uns">Über uns</Link>
         <Link to="/kontakt">Kontakt</Link>
       </nav>
     </header>
@@ -61,8 +62,10 @@ export function PublicFooter() {
         <Link to="/suchauftrag">Suchauftrag</Link>
         <Link to="/verkaufsfertig-check">Verkaufsstrategie-Check</Link>
         <Link to="/referenzen">Referenzen</Link>
+        <Link to="/ohne-makler-verkaufen">Ohne Makler verkaufen?</Link>
         <Link to="/impressum">Impressum</Link>
         <Link to="/datenschutz">Datenschutz</Link>
+        <Link to="/widerruf">Widerruf</Link>
         <Link className="public-internal-link" to="/login">Intern</Link>
       </div>
     </footer>

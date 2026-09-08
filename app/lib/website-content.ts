@@ -1,4 +1,4 @@
-export type WebsitePageKey = "HOME" | "CONTACT" | "IMPRINT" | "PRIVACY";
+export type WebsitePageKey = "HOME" | "CONTACT" | "IMPRINT" | "PRIVACY" | "ABOUT" | "WITHDRAWAL" | "PRIVATE_SALE";
 export type WebsiteContent = Record<string, string>;
 export type WebsiteFieldDefinition = { key: string; label: string; multiline?: boolean; rows?: number };
 
@@ -83,6 +83,64 @@ export const WEBSITE_PAGE_DEFINITIONS: Record<WebsitePageKey, { label: string; p
       { key: "note_body", label: "Zusatzhinweis · Text", multiline: true, rows: 5 },
     ],
   },
+  ABOUT: {
+    label: "Über uns",
+    path: "/ueber-uns",
+    fields: [
+      { key: "eyebrow", label: "Eyebrow" },
+      { key: "title", label: "Überschrift", multiline: true, rows: 2 },
+      { key: "lead", label: "Einleitung", multiline: true, rows: 4 },
+      { key: "story_eyebrow", label: "Haus · Eyebrow" },
+      { key: "story_title", label: "Haus · Überschrift", multiline: true, rows: 2 },
+      { key: "story_body", label: "Haus · Text", multiline: true, rows: 10 },
+      { key: "people_eyebrow", label: "Personen · Eyebrow" },
+      { key: "people_title", label: "Personen · Überschrift" },
+      { key: "person_1_name", label: "Person 1 · Name" },
+      { key: "person_1_role", label: "Person 1 · Rolle" },
+      { key: "person_1_body", label: "Person 1 · Text", multiline: true, rows: 5 },
+      { key: "person_2_name", label: "Person 2 · Name" },
+      { key: "person_2_role", label: "Person 2 · Rolle" },
+      { key: "person_2_body", label: "Person 2 · Text", multiline: true, rows: 5 },
+      { key: "person_3_name", label: "Person 3 · Name" },
+      { key: "person_3_role", label: "Person 3 · Rolle" },
+      { key: "person_3_body", label: "Person 3 · Text", multiline: true, rows: 5 },
+      { key: "cta_title", label: "Abschluss · Überschrift", multiline: true, rows: 2 },
+    ],
+  },
+  WITHDRAWAL: {
+    label: "Widerrufsbelehrung",
+    path: "/widerruf",
+    fields: [
+      { key: "eyebrow", label: "Eyebrow" },
+      { key: "title", label: "Überschrift" },
+      { key: "notice_title", label: "Hinweis · Überschrift" },
+      { key: "body", label: "Inhalt", multiline: true, rows: 16 },
+      { key: "note_title", label: "Muster-Widerrufsformular · Überschrift" },
+      { key: "note_body", label: "Muster-Widerrufsformular · Text", multiline: true, rows: 12 },
+    ],
+  },
+  PRIVATE_SALE: {
+    label: "Ohne Makler verkaufen",
+    path: "/ohne-makler-verkaufen",
+    fields: [
+      { key: "eyebrow", label: "Eyebrow" },
+      { key: "title", label: "Überschrift", multiline: true, rows: 2 },
+      { key: "lead", label: "Einleitung", multiline: true, rows: 4 },
+      { key: "for_eyebrow", label: "Dafür · Eyebrow" },
+      { key: "for_title", label: "Dafür · Überschrift", multiline: true, rows: 2 },
+      { key: "for_1", label: "Dafür · Punkt 1", multiline: true, rows: 3 },
+      { key: "for_2", label: "Dafür · Punkt 2", multiline: true, rows: 3 },
+      { key: "for_3", label: "Dafür · Punkt 3", multiline: true, rows: 3 },
+      { key: "against_eyebrow", label: "Dagegen · Eyebrow" },
+      { key: "against_title", label: "Dagegen · Überschrift", multiline: true, rows: 2 },
+      { key: "against_1", label: "Dagegen · Punkt 1", multiline: true, rows: 3 },
+      { key: "against_2", label: "Dagegen · Punkt 2", multiline: true, rows: 3 },
+      { key: "against_3", label: "Dagegen · Punkt 3", multiline: true, rows: 3 },
+      { key: "closing_eyebrow", label: "Fazit · Eyebrow" },
+      { key: "closing_title", label: "Fazit · Überschrift", multiline: true, rows: 2 },
+      { key: "closing_body", label: "Fazit · Text", multiline: true, rows: 6 },
+    ],
+  },
 };
 
 export const DEFAULT_WEBSITE_CONTENT: Record<WebsitePageKey, WebsiteContent> = {
@@ -150,10 +208,70 @@ export const DEFAULT_WEBSITE_CONTENT: Record<WebsitePageKey, WebsiteContent> = {
     note_title: "Kontaktformulare in BETA",
     note_body: "Formulare sind technisch an das bestehende CRM-Anfragesystem angebunden. Die endgültige Datenschutzerklärung muss diesen Verarbeitungsvorgang vor einer produktiven Veröffentlichung ausdrücklich beschreiben.",
   },
+
+  // Über uns: die Seite, die alle fünfzehn untersuchten Makler haben. Der
+  // Aufbau steht, der Inhalt nicht — Namen, Werdegang, Qualifikationen und
+  // Jahreszahlen kenne ich nicht, und erfundene Angaben über ein Unternehmen
+  // sind schlimmer als eine leere Seite. Was hier steht, ist wahr: dass die
+  // Angaben fehlen.
+  ABOUT: {
+    eyebrow: "Über uns",
+    title: "Wer hinter Zeyher & Mutter steht.",
+    lead: "Diese Seite ist vorbereitet, aber noch nicht gefüllt. Die Angaben über das Unternehmen und die Personen werden im CRM unter Website-CMS eingetragen; erfunden wird hier nichts.",
+    story_eyebrow: "Das Haus",
+    story_title: "Noch zu hinterlegen.",
+    story_body: "An dieser Stelle steht, seit wann es das Büro gibt, wie es entstanden ist und wofür es steht. Der Text wird im CRM eingetragen.",
+    people_eyebrow: "Die Personen",
+    people_title: "Noch zu hinterlegen.",
+    person_1_name: "",
+    person_1_role: "",
+    person_1_body: "",
+    person_2_name: "",
+    person_2_role: "",
+    person_2_body: "",
+    person_3_name: "",
+    person_3_role: "",
+    person_3_body: "",
+    cta_title: "Sprechen wir über Ihre Immobilie.",
+  },
+
+  // Widerrufsbelehrung: eine Belehrung ist ein Rechtstext. Die Software
+  // erzeugt keine. Die Seite steht, der Text kommt aus der Rechtsberatung.
+  WITHDRAWAL: {
+    eyebrow: "Rechtliches",
+    title: "Widerrufsbelehrung",
+    notice_title: "Finaler Inhalt noch zu hinterlegen.",
+    body: "Die Seite ist technisch vorbereitet. Die Widerrufsbelehrung ist ein Rechtstext: Fristbeginn, Form, Folgen des Widerrufs und der Umgang mit bereits erbrachten Leistungen hängen davon ab, wie die Verträge im Einzelnen geschlossen werden. Der verbindliche Text wird von der Rechtsberatung erstellt und hier im CRM eingetragen. Es werden keine Formulierungen erfunden.",
+    note_title: "Muster-Widerrufsformular",
+    note_body: "Auch das Muster-Widerrufsformular gehört zum Rechtstext und wird gemeinsam mit der Belehrung hinterlegt.",
+  },
+
+  // Ohne Makler verkaufen: Argumentation, kein Rechtstext und keine Angabe
+  // über das Unternehmen. Deshalb hier ausformuliert -- und ausdrücklich mit
+  // beiden Seiten, denn eine Seite, die nur die eigene Leistung verteidigt,
+  // beantwortet die Frage nicht, die jemand tatsächlich hat.
+  PRIVATE_SALE: {
+    eyebrow: "Die ehrliche Frage",
+    title: "Brauchen Sie überhaupt einen Makler?",
+    lead: "Manchmal nicht. Wer diese Frage stellt, verdient eine Antwort und keine Verkaufsbroschüre — deshalb stehen hier beide Seiten.",
+    for_eyebrow: "Dafür spricht",
+    for_title: "Wann der Verkauf in Eigenregie sinnvoll ist.",
+    for_1: "Der Käufer steht schon fest. Verkauf innerhalb der Familie, an Nachbarn oder an den Mieter: der Markt muss nicht gefunden werden, es geht um Abwicklung. Dafür brauchen Sie einen Notar, keinen Makler.",
+    for_2: "Die Immobilie verkauft sich von selbst. In sehr gefragten Lagen mit klarem Objekt und vollständigen Unterlagen ist die Nachfrage groß genug, dass auch ein unbeholfenes Inserat Interessenten bringt.",
+    for_3: "Sie haben Zeit und Nerven. Besichtigungen an Abenden und Wochenenden, Rückfragen, Absagen, Verhandlungen — wer das gerne selbst macht und die Zeit hat, spart die Provision.",
+    against_eyebrow: "Dagegen spricht",
+    against_title: "Wo es in Eigenregie regelmäßig teuer wird.",
+    against_1: "Der Preis wird am Anfang festgelegt, nicht am Ende. Ein zu hoher Einstiegspreis führt fast immer zu einer langen Vermarktung und danach zu einem Abschlag, der größer ist als die Provision. Ein zu niedriger fällt gar nicht auf.",
+    against_2: "Die Unterlagen entscheiden über den Abschluss. Fehlender Energieausweis, unvollständige Teilungserklärung, offene Beschlüsse der Eigentümergemeinschaft: das fällt spätestens beim Notar auf und kostet dann Zeit oder Preis.",
+    against_3: "Verhandeln über die eigene Immobilie ist schwer. Wer selbst darin gewohnt hat, hört Kritik am Objekt anders — und gibt in der Sache nach, wo man hätte stehen bleiben können, oder umgekehrt.",
+    closing_eyebrow: "Unser Standpunkt",
+    closing_title: "Fragen Sie uns, bevor Sie uns beauftragen.",
+    closing_body: "Wenn wir nach dem ersten Gespräch den Eindruck haben, dass Sie die Immobilie gut selbst verkaufen können, sagen wir das. Das kostet uns einen Auftrag und erspart Ihnen eine Provision, die Ihnen nichts bringt. Umgekehrt sagen wir genauso deutlich, wenn wir glauben, dass ein Alleingang Sie mehr kostet als er spart.",
+  },
 };
 
 export function isWebsitePageKey(value: string): value is WebsitePageKey {
-  return value === "HOME" || value === "CONTACT" || value === "IMPRINT" || value === "PRIVACY";
+  return Object.hasOwn(WEBSITE_PAGE_DEFINITIONS, value);
 }
 
 export function normalizeWebsiteContent(pageKey: WebsitePageKey, raw: unknown): WebsiteContent {

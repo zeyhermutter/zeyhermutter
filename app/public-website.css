@@ -58,10 +58,26 @@
   --zm-serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
   --zm-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 
-  /* Ein Foto im Kopfbereich ist vorgesehen, aber keines gesetzt: das
-     bisherige stammte von einem Bilddienst und zeigte irgendein Haus.
-     Sobald eine eigene Aufnahme vorliegt, genügt hier eine Zeile. */
-  --zm-hero-bild: none;
+  /* Das Foto im Kopfbereich: München mit der Frauenkirche und der Alpenkette
+     dahinter. Vorher stand hier ein Bild von einem Bilddienst, das irgendein
+     Haus zeigte — bei einem Makler ist das eine Behauptung.
+
+     Die Verläufe davor sind nicht Dekoration, sondern die Voraussetzung dafür,
+     dass die Schrift lesbar bleibt. Links, wo Überschrift und Einleitung
+     stehen, deckt Navy fast vollständig; nach rechts wird das Bild frei. Ein
+     Foto ohne diese Abdeckung trägt keinen hellen Text: der Himmel oben links
+     ist heller als die Schrift.
+
+     Gemessen wird das nicht am Farbwert, sondern an den fertig gezeichneten
+     Bildpunkten hinter der Schrift — der Kontrastprüfer sieht ein Hintergrund-
+     bild nicht und würde hier fälschlich Entwarnung geben. */
+  --zm-hero-bild:
+    linear-gradient(100deg,
+      rgba(6, 32, 55, .94) 0%,
+      rgba(6, 32, 55, .90) 45%,
+      rgba(6, 32, 55, .78) 70%,
+      rgba(6, 32, 55, .42) 100%),
+    url("/marke/muenchen-alpen.webp");
 
   --zm-breite: min(1180px, calc(100% - 48px));
 
@@ -243,6 +259,11 @@
   padding: clamp(60px, 8vw, 96px) max(24px, calc((100% - 1180px) / 2));
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, .8fr); gap: 64px; align-items: center;
 }
+/* Das Band ist zweispaltig angelegt: links die Aussage, rechts die Punkte.
+   Wer es mit nur einem Kind benutzt, bekommt sonst eine leere rechte Haelfte
+   und einen Text, der auf halber Breite klebt. */
+.zm-check-band.zm-einspaltig { grid-template-columns: minmax(0, 1fr); }
+.zm-check-band.zm-einspaltig p { max-width: 74ch; color: var(--zm-auf-navy-leise); }
 .zm-check-band h2 { color: var(--zm-auf-navy); }
 .zm-check-band .public-eyebrow { color: var(--zm-gold); }
 .zm-check-band .public-eyebrow::before { background: var(--zm-gold); }
@@ -406,6 +427,30 @@
    Feld. Er steht deshalb unter beiden, nicht in einem der beiden Etiketten. */
 .zm-feldhinweis { margin: -6px 0 0; font-size: 13px; color: var(--zm-text-leise); }
 
+/* --- Personen und Abwägung ----------------------------------------- */
+
+.zm-personen { width: var(--zm-breite); margin: 0 auto; padding: 0 0 clamp(56px, 7vw, 84px); }
+.zm-personen-kopf { max-width: 60ch; margin-bottom: 34px; }
+.zm-personen-gitter { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.zm-personen-gitter article { padding: clamp(26px, 3vw, 34px); background: var(--zm-karte); border: 1px solid var(--zm-linie); }
+.zm-personen-gitter h3 { margin: 0; }
+.zm-personen-rolle { margin: 4px 0 16px; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--zm-text-leise); }
+.zm-personen-gitter p:not(.zm-personen-rolle) { color: var(--zm-text-leise); margin: 0 0 10px; }
+
+/* Beide Spalten gleich breit und gleich gestaltet. Das ist der Inhalt der
+   Seite: wer den Einwand aufgreift und ihn dann kleiner setzt als die eigene
+   Antwort, hat ihn nicht aufgegriffen. */
+.zm-abwaegung {
+  width: var(--zm-breite); margin: 0 auto;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px;
+  padding: clamp(48px, 6vw, 76px) 0;
+  border-top: 1px solid var(--zm-linie);
+}
+.zm-abwaegung article { padding: clamp(28px, 3vw, 40px); background: var(--zm-karte); border: 1px solid var(--zm-linie); }
+.zm-abwaegung h2 { margin-top: 0; font-size: clamp(23px, 2.4vw, 30px); }
+.zm-abwaegung ul { list-style: none; margin: 26px 0 0; padding: 0; display: grid; gap: 20px; }
+.zm-abwaegung li { padding-left: 20px; border-left: 2px solid var(--zm-gold); color: var(--zm-text-leise); line-height: 1.72; }
+
 /* --- Formulare ----------------------------------------------------- */
 
 .public-inquiry-form { display: grid; gap: 16px; margin-top: 28px; max-width: 820px; }
@@ -559,12 +604,12 @@
 }
 
 @media (max-width: 860px) {
-  .zm-choice-grid, .zm-service-grid, .public-decision-grid,
+  .zm-choice-grid, .zm-service-grid, .public-decision-grid, .zm-personen-gitter,
   .sales-check-scenario-grid, .sales-check-roles { grid-template-columns: 1fr; }
   .zm-service-grid article, .zm-service-grid article:not(:first-child) { border-right: 0; border-bottom: 1px solid var(--zm-linie); padding: 26px 0; }
   .zm-service-grid article:last-child { border-bottom: 0; }
   .zm-check-band, .zm-trust, .public-story-section, .public-faq-section,
-  .public-situations-section, .sales-check-hero, .sales-check-process, .zm-warum,
+  .public-situations-section, .sales-check-hero, .sales-check-process, .zm-warum, .zm-abwaegung,
   .sales-check-measures, .sales-check-form-section, .public-contact-page,
   .public-detail-grid, .public-detail-hero { grid-template-columns: 1fr; gap: 32px; }
   .public-property-grid, .public-property-grid.compact { grid-template-columns: 1fr; }

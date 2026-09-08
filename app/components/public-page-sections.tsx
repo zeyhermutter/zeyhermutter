@@ -67,3 +67,96 @@ export function PublicLegalSection({ content: c, privacy = false }: { content: W
     {privacy && c.note_body ? <div className="public-legal-note"><h2>{c.note_title}</h2>{paragraphs(c.note_body).map((p, index) => <p key={index}>{p}</p>)}</div> : null}
   </section>;
 }
+
+/**
+ * Über uns.
+ *
+ * Personen werden nur ausgegeben, wenn sie einen Namen tragen. Eine leere
+ * Karte mit einer Rolle und ohne Menschen dahinter wäre schlimmer als ein
+ * kürzerer Abschnitt — und solange im CRM niemand eingetragen ist, ist das
+ * hier tatsächlich die Wahrheit über diese Seite.
+ */
+export function AboutSections({ content: c }: { content: WebsiteContent }) {
+  const personen = [1, 2, 3]
+    .map((n) => ({
+      name: c[`person_${n}_name`] ?? "",
+      rolle: c[`person_${n}_role`] ?? "",
+      text: c[`person_${n}_body`] ?? "",
+    }))
+    .filter((p) => p.name.trim().length > 0);
+
+  return <>
+    <section className="public-hero">
+      <p className="public-eyebrow">{c.eyebrow}</p>
+      <h1>{c.title}</h1>
+      <p>{c.lead}</p>
+    </section>
+
+    <section className="zm-warum">
+      <div><p className="public-eyebrow">{c.story_eyebrow}</p><h2>{c.story_title}</h2></div>
+      <div className="public-prose-large">
+        {paragraphs(c.story_body ?? "").map((text, index) => <p key={index}>{text}</p>)}
+      </div>
+    </section>
+
+    <section className="zm-personen">
+      <div className="zm-personen-kopf">
+        <p className="public-eyebrow">{c.people_eyebrow}</p>
+        <h2>{c.people_title}</h2>
+      </div>
+      {personen.length ? (
+        <div className="zm-personen-gitter">
+          {personen.map((person) => (
+            <article key={person.name}>
+              <h3>{person.name}</h3>
+              {person.rolle ? <p className="zm-personen-rolle">{person.rolle}</p> : null}
+              {paragraphs(person.text).map((text, index) => <p key={index}>{text}</p>)}
+            </article>
+          ))}
+        </div>
+      ) : (
+        <p className="zm-referenz-hinweis">Die Personen werden im CRM unter Website-CMS eingetragen. Solange dort niemand hinterlegt ist, steht hier niemand.</p>
+      )}
+    </section>
+  </>;
+}
+
+/**
+ * Ohne Makler verkaufen.
+ *
+ * Beide Seiten stehen gleichwertig nebeneinander — das ist der Punkt der
+ * Seite. Würde die eine Spalte nur als Aufwärmer für die andere dienen, wäre
+ * es wieder eine Verkaufsbroschüre.
+ */
+export function PrivateSaleSections({ content: c }: { content: WebsiteContent }) {
+  const dafuer = [c.for_1, c.for_2, c.for_3].filter((wert) => (wert ?? "").trim().length > 0);
+  const dagegen = [c.against_1, c.against_2, c.against_3].filter((wert) => (wert ?? "").trim().length > 0);
+  return <>
+    <section className="public-hero">
+      <p className="public-eyebrow">{c.eyebrow}</p>
+      <h1>{c.title}</h1>
+      <p>{c.lead}</p>
+    </section>
+
+    <section className="zm-abwaegung">
+      <article>
+        <p className="public-eyebrow">{c.for_eyebrow}</p>
+        <h2>{c.for_title}</h2>
+        <ul>{dafuer.map((text, index) => <li key={index}>{text}</li>)}</ul>
+      </article>
+      <article>
+        <p className="public-eyebrow">{c.against_eyebrow}</p>
+        <h2>{c.against_title}</h2>
+        <ul>{dagegen.map((text, index) => <li key={index}>{text}</li>)}</ul>
+      </article>
+    </section>
+
+    <section className="zm-check-band zm-einspaltig zm-auf-navy">
+      <div>
+        <p className="public-eyebrow">{c.closing_eyebrow}</p>
+        <h2>{c.closing_title}</h2>
+        {paragraphs(c.closing_body ?? "").map((text, index) => <p key={index}>{text}</p>)}
+      </div>
+    </section>
+  </>;
+}
