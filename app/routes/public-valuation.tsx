@@ -1,8 +1,8 @@
 import { data, Form, Link, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/public-valuation";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
-import { PublicFooter, PublicHeader } from "~/components/public-shell";
-import { IMMOBILIENARTEN, IMMOBILIENARTEN_SCHLUESSEL, ZUSTAENDE, ZEITRAEUME } from "~/lib/public-intake";
+import { Honigtopf, PublicFooter, PublicHeader } from "~/components/public-shell";
+import { HONIGTOPF_FELD, IMMOBILIENARTEN, IMMOBILIENARTEN_SCHLUESSEL, ZUSTAENDE, ZEITRAEUME } from "~/lib/public-intake";
 import {
   aufnahmewegOffen, einsendeSchluessel, epostGueltig, sendeAufnahme, textFeld,
 } from "~/lib/public-intake.server";
@@ -41,7 +41,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 export async function action({ request, context }: Route.ActionArgs) {
   const fd = await request.formData();
-  if (textFeld(fd, "company", 120)) return data<ActionResult>({ ok: "Vielen Dank. Ihre Anfrage wurde entgegengenommen." });
+  if (textFeld(fd, HONIGTOPF_FELD, 120)) return data<ActionResult>({ ok: "Vielen Dank. Ihre Anfrage wurde entgegengenommen." });
 
   const vorname = textFeld(fd, "first_name", 100);
   const nachname = textFeld(fd, "last_name", 100);
@@ -151,7 +151,7 @@ export default function PublicValuation() {
             <label><span>Nachricht <small>(optional)</small></span>
               <textarea name="message" rows={4} maxLength={4000} placeholder="Was sollten wir vorab über die Immobilie wissen?" disabled={!offen} />
             </label>
-            <label className="public-honeypot" aria-hidden="true"><span>Firma</span><input name="company" tabIndex={-1} autoComplete="off" /></label>
+            <Honigtopf />
             <label className="public-consent light">
               <input type="checkbox" name="consent" required disabled={!offen} />
               <span>Ich stimme zu, dass meine Angaben zur Bearbeitung dieser Anfrage gespeichert und verarbeitet werden. *</span>

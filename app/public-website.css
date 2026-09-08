@@ -527,7 +527,12 @@
 .public-consent { grid-template-columns: auto 1fr !important; align-items: start; font-weight: 400 !important; color: var(--zm-auf-navy-leise); line-height: 1.55; }
 .public-consent.light { color: var(--zm-text-leise); }
 .public-consent input { width: auto; margin-top: 4px; }
-.public-honeypot { position: absolute !important; left: -10000px !important; width: 1px !important; height: 1px !important; overflow: hidden !important; }
+/* Der Honigtopf gegen Formular-Roboter.
+   display:none, nicht mehr weit links ausserhalb des Bildes. Ein Feld ausserhalb
+   des Bildes ist fuer den Browser sichtbar und wird von Chrome ausgefuellt -- so
+   sind hier echte Anfragen still verschwunden. Ein Feld, das nicht dargestellt
+   wird, fuellt kein Browser aus; Roboter ohne CSS-Auswertung sehen es weiter. */
+.public-honeypot { display: none !important; }
 .public-form-message { padding: 13px 15px; border-left: 2px solid var(--zm-gold-tief); background: var(--zm-sand); color: var(--zm-text); margin-top: 16px; }
 .public-form-success { display: grid; gap: 5px; padding: 17px; border-left: 2px solid #2F6B45; background: #EDF3EE; color: #1F4430; margin-top: 18px; }
 

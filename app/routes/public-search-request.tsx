@@ -1,8 +1,8 @@
 import { data, Form, Link, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/public-search-request";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
-import { PublicFooter, PublicHeader } from "~/components/public-shell";
-import { IMMOBILIENARTEN, IMMOBILIENARTEN_SCHLUESSEL, ART_DER_SUCHE } from "~/lib/public-intake";
+import { Honigtopf, PublicFooter, PublicHeader } from "~/components/public-shell";
+import { ART_DER_SUCHE, HONIGTOPF_FELD, IMMOBILIENARTEN, IMMOBILIENARTEN_SCHLUESSEL } from "~/lib/public-intake";
 import {
   aufnahmewegOffen, einsendeSchluessel, epostGueltig, sendeAufnahme, textFeld, zahlFeld,
 } from "~/lib/public-intake.server";
@@ -40,7 +40,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 export async function action({ request, context }: Route.ActionArgs) {
   const fd = await request.formData();
-  if (textFeld(fd, "company", 120)) return data<ActionResult>({ ok: "Vielen Dank. Ihr Suchauftrag wurde entgegengenommen." });
+  if (textFeld(fd, HONIGTOPF_FELD, 120)) return data<ActionResult>({ ok: "Vielen Dank. Ihr Suchauftrag wurde entgegengenommen." });
 
   const vorname = textFeld(fd, "first_name", 100);
   const nachname = textFeld(fd, "last_name", 100);
@@ -148,7 +148,7 @@ export default function PublicSearchRequest() {
             <label><span>Nachricht <small>(optional)</small></span>
               <textarea name="message" rows={4} maxLength={4000} placeholder="Was ist Ihnen wichtig? Was kommt nicht infrage?" disabled={!offen} />
             </label>
-            <label className="public-honeypot" aria-hidden="true"><span>Firma</span><input name="company" tabIndex={-1} autoComplete="off" /></label>
+            <Honigtopf />
             <label className="public-consent light">
               <input type="checkbox" name="consent" required disabled={!offen} />
               <span>Ich stimme zu, dass meine Angaben zur Bearbeitung dieses Suchauftrags gespeichert und verarbeitet werden. *</span>

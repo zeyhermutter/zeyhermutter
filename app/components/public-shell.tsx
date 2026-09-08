@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { HONIGTOPF_FELD } from "~/lib/public-intake";
 import "~/public-website.css";
 
 // Der Kopfbereich trägt das Logo als Vektordatei aus public/marke/.
@@ -71,5 +72,23 @@ export function PublicFooter() {
         <Link className="public-internal-link" to="/login">Intern</Link>
       </div>
     </footer>
+  );
+}
+
+/**
+ * Das versteckte Feld gegen Formular-Roboter — einmal geschrieben, von allen
+ * oeffentlichen Formularen verwendet.
+ *
+ * Es stand frueher fuenfmal kopiert im Markup, jedes Mal als `company` mit der
+ * Beschriftung „Firma“. Chrome hat es deshalb als Firmenfeld ausgefuellt und
+ * echte Anfragen sind still verschwunden. Die Begruendung fuer Name und
+ * Beschriftung steht bei HONIGTOPF_FELD in app/lib/public-intake.ts.
+ */
+export function Honigtopf() {
+  return (
+    <label className="public-honeypot" aria-hidden="true">
+      <span>Zusatzangabe</span>
+      <input name={HONIGTOPF_FELD} tabIndex={-1} autoComplete="off" />
+    </label>
   );
 }
