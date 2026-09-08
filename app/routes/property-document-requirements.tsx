@@ -19,14 +19,20 @@ function text(fd:FormData,key:string){return String(fd.get(key)??"").trim();}
 function dateOrNull(fd:FormData,key:string){const value=text(fd,key);return /^\d{4}-\d{2}-\d{2}$/.test(value)?value:null;}
 function contactLabel(contact:any){if(!contact)return null;return `${contact.last_name}, ${contact.first_name}`;}
 
+// Die Reihenfolge ist hier keine Geschmacksfrage: "fehlt das Anforderungsdatum"
+// und "Anforderungsdatum darf nicht in der Zukunft liegen" enthalten beide das
+// Wort Anforderungsdatum. In der Live-Abnahme stand deshalb beim Speichern
+// ohne Datum die Meldung "darf nicht in der Zukunft liegen" — richtig
+// blockiert, falsch begruendet. Erst das Fehlen pruefen, dann die Zukunft.
 function errorMessage(error:any){
   const message=String(error?.message??"");
-  if(message.includes("Anforderungsdatum"))return"Das Anforderungsdatum darf nicht in der Zukunft liegen.";
-  if(message.includes("Eingangsdatum der Unterlage"))return"Für diesen Stand fehlt das Eingangsdatum der Unterlage.";
-  if(message.includes("Eingangsdatum"))return"Das Eingangsdatum darf nicht in der Zukunft liegen.";
-  if(message.includes("Pruefdatum")||message.includes("Prüfdatum"))return"Für den Stand „Geprüft“ fehlt das Prüfdatum, und es darf nicht in der Zukunft liegen.";
+  if(message.includes("fehlt das Anforderungsdatum"))return"Für den Stand „Angefordert“ fehlt das Anforderungsdatum.";
+  if(message.includes("fehlt das Eingangsdatum"))return"Für diesen Stand fehlt das Eingangsdatum der Unterlage.";
+  if(message.includes("fehlt das Pruefdatum"))return"Für den Stand „Geprüft“ fehlt das Prüfdatum.";
   if(message.includes("vor dem Eingang"))return"Die Prüfung kann nicht vor dem Eingang der Unterlage liegen.";
-  if(message.includes("Anforderungsdatum")||message.includes("angefordert"))return"Für den Stand „Angefordert“ fehlt das Anforderungsdatum.";
+  if(message.includes("Anforderungsdatum darf nicht"))return"Das Anforderungsdatum darf nicht in der Zukunft liegen.";
+  if(message.includes("Eingangsdatum darf nicht"))return"Das Eingangsdatum darf nicht in der Zukunft liegen.";
+  if(message.includes("Pruefdatum darf nicht"))return"Das Prüfdatum darf nicht in der Zukunft liegen.";
   if(message.includes("gehoert nicht zu dieser Immobilie"))return"Das gewählte Dokument gehört nicht zu dieser Immobilie.";
   if(message.includes("property_document_requirements_template_unique"))return"Diese Unterlage steht bereits auf der Liste dieser Akte.";
   if(message.includes("property_document_requirements_title_check"))return"Die Unterlage braucht eine Bezeichnung.";
