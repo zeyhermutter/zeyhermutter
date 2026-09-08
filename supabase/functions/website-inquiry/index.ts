@@ -4,10 +4,25 @@ import { createClient } from "npm:@supabase/supabase-js@2.112.4";
 const jsonHeaders = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" };
 const INQUIRY_CONSENT_VERSION = "website-inquiry-v1-2026-08-31";
 const SELLER_CHECK_CONSENT_VERSION = "seller-check-v1-2026-09-01";
+const VALUATION_CONSENT_VERSION = "valuation-v1-2026-09-08";
+const SEARCH_PROFILE_CONSENT_VERSION = "search-profile-v1-2026-09-08";
 const SELLER_CHECK_KINDS = new Set(["DETACHED_HOUSE", "SEMI_DETACHED_HOUSE", "TERRACED_HOUSE", "APARTMENT_BUILDING", "APARTMENT", "PENTHOUSE", "MAISONETTE", "LAND", "COMMERCIAL", "OFFICE", "RETAIL", "OTHER"]);
 const SELLER_CHECK_SUPPORT = new Set(["ASSESSMENT", "COORDINATION", "DOCUMENTS", "MARKETING"]);
 
-type IntakeKind = "GENERAL" | "PROPERTY" | "SELLER_CHECK";
+const SEARCH_TRANSACTIONS = new Set(["BUY", "RENT"]);
+
+// Welcher Weg legt was an, und welche Zeile der Zielsteuerung gilt dafuer.
+// Frueher stand das an vier Stellen verstreut im Ablauf; mit drei Wegen mehr
+// waere daraus eine Sammlung von Sonderfaellen geworden.
+const WEGE = {
+  GENERAL:        { tabelle: "inquiries",       konfig: null,             einwilligung: INQUIRY_CONSENT_VERSION },
+  PROPERTY:       { tabelle: "inquiries",       konfig: null,             einwilligung: INQUIRY_CONSENT_VERSION },
+  SELLER_CHECK:   { tabelle: "leads",           konfig: "SELLER_CHECK",   einwilligung: SELLER_CHECK_CONSENT_VERSION },
+  VALUATION:      { tabelle: "leads",           konfig: "VALUATION",      einwilligung: VALUATION_CONSENT_VERSION },
+  SEARCH_PROFILE: { tabelle: "search_profiles", konfig: "SEARCH_PROFILE", einwilligung: SEARCH_PROFILE_CONSENT_VERSION },
+} as const;
+
+type IntakeKind = keyof typeof WEGE;
 
 function response(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: jsonHeaders });
@@ -43,7 +58,7 @@ Deno.serve(async (request: Request) => {
   }
 
   const rawKind = clean(body.kind, 40) || "PROPERTY";
-  if (!new Set(["GENERAL", "PROPERTY", "SELLER_CHECK"]).has(rawKind)) {
+  if (!Object.hasOwn(WEGE, rawKind)) {
     return response({ ok: false, error: "INVALID_INPUT" }, 400);
   }
   const kind = rawKind as IntakeKind;
@@ -62,7 +77,7 @@ Deno.serve(async (request: Request) => {
   if (!firstName || !lastName || !validEmail(email) || !submissionKey || body.consent !== true) {
     return response({ ok: false, error: "INVALID_INPUT" }, 400);
   }
-  if (kind !== "SELLER_CHECK" && message.length < 10) return response({ ok: false, error: "INVALID_INPUT" }, 400);
+  if (WEGE[kind].tabelle === "inquiries" && message.length < 10) return response({ ok: false, error: "INVALID_INPUT" }, 400);
   if (kind === "PROPERTY" && !slug) return response({ ok: false, error: "INVALID_INPUT" }, 400);
 
   const postalCode = clean(body.postal_code, 5);
@@ -81,6 +96,34 @@ Deno.serve(async (request: Request) => {
     || propertyCondition.length < 2
     || saleTimeframe.length < 2
     || requestedSupport.length === 0
+  )) return response({ ok: false, error: "INVALID_INPUT" }, 400);
+
+  // Die Bewertungsanfrage fragt dasselbe ab wie der Check, ohne die Auswahl
+  // der gewuenschten Unterstuetzung: wer eine Einschaetzung will, hat sich
+  // ueber Massnahmen noch keine Gedanken gemacht.
+  if (kind === "VALUATION" && (
+    !/^\d{5}$/.test(postalCode)
+    || city.length < 2
+    || !SELLER_CHECK_KINDS.has(propertyType)
+    || propertyCondition.length < 2
+    || saleTimeframe.length < 2
+  )) return response({ ok: false, error: "INVALID_INPUT" }, 400);
+
+  const transactionType = clean(body.transaction_type, 10);
+  const searchTypes = Array.isArray(body.property_types)
+    ? [...new Set(body.property_types.map((value) => clean(value, 40)).filter((value) => SELLER_CHECK_KINDS.has(value)))]
+    : [];
+  const maxPrice = Number(body.max_price);
+  const minRooms = Number(body.min_rooms);
+  const minLivingArea = Number(body.min_living_area);
+
+  // Ein Suchprofil ohne Ort laesst sich in der Datenbank gar nicht anlegen --
+  // ein aufgeschobener Ausloeser verlangt mindestens eine Ortsangabe. Deshalb
+  // wird hier schon abgelehnt statt spaeter mit einem Fehler zu enden.
+  if (kind === "SEARCH_PROFILE" && (
+    !SEARCH_TRANSACTIONS.has(transactionType)
+    || searchTypes.length === 0
+    || (!/^\d{5}$/.test(postalCode) && city.length < 2)
   )) return response({ ok: false, error: "INVALID_INPUT" }, 400);
 
   const db = createClient(supabaseUrl, serviceRole, { auth: { persistSession: false, autoRefreshToken: false } });
@@ -109,14 +152,17 @@ Deno.serve(async (request: Request) => {
     responsibleUser = property.primary_responsible_user ?? null;
   }
 
-  if (kind === "SELLER_CHECK") {
+  const konfigSchluessel = WEGE[kind].konfig;
+  if (konfigSchluessel) {
     const { data: config, error: configError } = await db
       .from("sales_readiness_public_intake_config")
       .select("enabled,responsible_user")
-      .eq("id", "SELLER_CHECK")
+      .eq("id", konfigSchluessel)
       .maybeSingle();
+    // Ein Formular ohne eingetragenen Empfaenger nimmt Anfragen entgegen, die
+    // niemandem auffallen. Lieber sagen, dass der Weg zu ist.
     if (configError || !config?.enabled || !config.responsible_user) {
-      return response({ ok: false, error: "SELLER_CHECK_NOT_ENABLED" }, 503);
+      return response({ ok: false, error: "INTAKE_NOT_ENABLED", intake: konfigSchluessel }, 503);
     }
     responsibleUser = String(config.responsible_user);
     const { data: responsibleProfile, error: responsibleError } = await db
@@ -126,29 +172,19 @@ Deno.serve(async (request: Request) => {
       .eq("status", "ACTIVE")
       .maybeSingle();
     if (responsibleError || !responsibleProfile) {
-      return response({ ok: false, error: "SELLER_CHECK_ROUTING_NOT_CONFIGURED" }, 503);
+      return response({ ok: false, error: "INTAKE_ROUTING_NOT_CONFIGURED", intake: konfigSchluessel }, 503);
     }
   }
 
-  if (kind === "SELLER_CHECK") {
-    const { data: existingLead, error: existingLeadError } = await db
-      .from("leads")
-      .select("id")
-      .eq("website_submission_key", submissionKey)
-      .maybeSingle();
-    if (existingLeadError) return processingFailed("seller_deduplication", existingLeadError);
-    if (existingLead) return response({ ok: true, deduplicated: true });
-  } else {
-    const { data: existingInquiry, error: existingInquiryError } = await db
-      .from("inquiries")
-      .select("id")
-      .eq("website_submission_key", submissionKey)
-      .maybeSingle();
-    if (existingInquiryError) return processingFailed("inquiry_deduplication", existingInquiryError);
-    if (existingInquiry) return response({ ok: true, deduplicated: true });
-  }
+  const { data: bereitsDa, error: dublettenFehler } = await db
+    .from(WEGE[kind].tabelle)
+    .select("id")
+    .eq("website_submission_key", submissionKey)
+    .maybeSingle();
+  if (dublettenFehler) return processingFailed(`${WEGE[kind].tabelle}_deduplication`, dublettenFehler);
+  if (bereitsDa) return response({ ok: true, deduplicated: true });
 
-  const fingerprint = await sha256(`${email}|${kind}|${propertyId ?? (postalCode || "GENERAL")}`);
+  const fingerprint = await sha256(`${email}|${kind}|${propertyId ?? (postalCode || city || "GENERAL")}`);
   const { data: allowed, error: rateError } = await db.rpc("consume_public_form_rate_limit", {
     p_fingerprint: fingerprint,
     p_limit: 3,
@@ -163,8 +199,8 @@ Deno.serve(async (request: Request) => {
     p_mobile: phone || null,
     p_street: null,
     p_house_number: null,
-    p_postal_code: kind === "SELLER_CHECK" ? postalCode : null,
-    p_city: kind === "SELLER_CHECK" ? city : null,
+    p_postal_code: postalCode || null,
+    p_city: city || null,
     p_exclude_contact_id: null,
   });
   if (duplicateError) return processingFailed("contact_deduplication", duplicateError);
@@ -187,43 +223,85 @@ Deno.serve(async (request: Request) => {
     contactId = createdContact.id;
   }
 
-  if (kind === "SELLER_CHECK") {
+  if (kind === "SEARCH_PROFILE") {
+    const ortText = [postalCode, city].filter(Boolean).join(" ") || "ohne Ortsangabe";
+    const { data: result, error: profileError } = await db.rpc("create_public_search_profile", {
+      p_contact_id: contactId,
+      p_responsible_user: responsibleUser,
+      p_submission_key: submissionKey,
+      p_source_url: sourceUrl || "/suchauftrag",
+      p_transaction_type: transactionType,
+      p_property_types: searchTypes,
+      p_max_price: Number.isFinite(maxPrice) && maxPrice > 0 ? maxPrice : null,
+      p_min_rooms: Number.isFinite(minRooms) && minRooms > 0 ? minRooms : null,
+      p_min_living_area: Number.isFinite(minLivingArea) && minLivingArea > 0 ? minLivingArea : null,
+      p_postal_code: postalCode || null,
+      p_city: city || null,
+      p_message: message,
+      p_consent_text_version: SEARCH_PROFILE_CONSENT_VERSION,
+    });
+    if (profileError || !result?.[0]) return processingFailed("search_profile_creation", profileError);
+    const profile = result[0];
+    if (!profile.out_deduplicated) {
+      await db.from("activity_events").insert({
+        activity_type: "WEBSITE_SEARCH_PROFILE",
+        title: "Suchauftrag über die Website",
+        description: `Neuer Suchauftrag für ${ortText}`,
+        actor_user_id: null,
+        contact_id: contactId,
+        metadata: { source: "PUBLIC_WEBSITE", kind, consent_version: SEARCH_PROFILE_CONSENT_VERSION, property_types: searchTypes, transaction_type: transactionType },
+      });
+      await db.from("notifications").insert({
+        user_id: responsibleUser,
+        type: "WEBSITE_SEARCH_PROFILE",
+        title: "Neuer Suchauftrag",
+        message: `Suchauftrag ${profile.out_profile_number} für ${ortText}`,
+        entity_type: "SEARCH_PROFILE",
+        entity_id: profile.out_profile_id,
+      });
+    }
+    return response({ ok: true, deduplicated: Boolean(profile.out_deduplicated) });
+  }
+
+  if (kind === "SELLER_CHECK" || kind === "VALUATION") {
+    const istBewertung = kind === "VALUATION";
     const sellerMessage = [
       message || "Keine zusätzliche Nachricht.",
       `Immobilie: ${propertyType} · ${postalCode} ${city}`,
       `Zustand: ${propertyCondition}`,
       `Verkaufszeitraum: ${saleTimeframe}`,
-      `Gewünschte Unterstützung: ${requestedSupport.join(", ")}`,
-    ].join("\n");
+      istBewertung ? null : `Gewünschte Unterstützung: ${requestedSupport.join(", ")}`,
+    ].filter(Boolean).join("\n");
     const { data: result, error: leadError } = await db.rpc("create_public_seller_check_lead", {
       p_contact_id: contactId,
       p_responsible_user: responsibleUser,
       p_submission_key: submissionKey,
-      p_source_url: sourceUrl || "/verkaufsfertig-check",
+      p_source_url: sourceUrl || (istBewertung ? "/bewertung" : "/verkaufsfertig-check"),
       p_message: sellerMessage,
       p_property_postal_code: postalCode,
       p_property_city: city,
       p_property_type: propertyType,
       p_property_condition: propertyCondition,
       p_desired_sale_horizon: saleTimeframe,
-      p_consent_text_version: SELLER_CHECK_CONSENT_VERSION,
+      p_consent_text_version: WEGE[kind].einwilligung,
+      p_source_detail: istBewertung ? "Bewertungsanfrage · Website" : "Verkaufsstrategie-Check · Website",
     });
     if (leadError || !result?.[0]) return processingFailed("seller_lead_creation", leadError);
     const lead = result[0];
     if (!lead.out_deduplicated) {
       await db.from("activity_events").insert({
-        activity_type: "WEBSITE_SELLER_CHECK",
-        title: "Verkaufsstrategie-Check angefragt",
+        activity_type: istBewertung ? "WEBSITE_VALUATION" : "WEBSITE_SELLER_CHECK",
+        title: istBewertung ? "Bewertung angefragt" : "Verkaufsstrategie-Check angefragt",
         description: `Neue Website-Anfrage aus ${postalCode} ${city}`,
         actor_user_id: null,
         contact_id: contactId,
         lead_id: lead.out_lead_id,
-        metadata: { source: "PUBLIC_WEBSITE", kind, consent_version: SELLER_CHECK_CONSENT_VERSION, requested_support: requestedSupport },
+        metadata: { source: "PUBLIC_WEBSITE", kind, consent_version: WEGE[kind].einwilligung, requested_support: istBewertung ? [] : requestedSupport },
       });
       await db.from("notifications").insert({
         user_id: responsibleUser,
-        type: "WEBSITE_SELLER_CHECK",
-        title: "Neuer Verkaufsstrategie-Check",
+        type: istBewertung ? "WEBSITE_VALUATION" : "WEBSITE_SELLER_CHECK",
+        title: istBewertung ? "Neue Bewertungsanfrage" : "Neuer Verkaufsstrategie-Check",
         message: `Neue Anfrage ${lead.out_lead_number} aus ${postalCode} ${city}`,
         entity_type: "LEAD",
         entity_id: lead.out_lead_id,

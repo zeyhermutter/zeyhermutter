@@ -12,6 +12,8 @@ export default [
   route("immobilien", "routes/public-properties.tsx"),
   route("immobilien/medien/:mediaId/:version", "routes/public-media.ts"),
   route("immobilien/:slug", "routes/public-property-detail.tsx"),
+  route("bewertung", "routes/public-valuation.tsx"),
+  route("suchauftrag", "routes/public-search-request.tsx"),
   route("referenzen", "routes/public-references.tsx"),
   route("kontakt", "routes/public-contact.tsx"),
   route("impressum", "routes/public-imprint.tsx"),

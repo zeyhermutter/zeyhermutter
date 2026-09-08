@@ -42,6 +42,7 @@ export function PublicHeader() {
         <img src={LOGO} alt="Zeyher &amp; Mutter Immobilien München" width={LOGO_BREITE} height={LOGO_HOEHE} />
       </Link>
       <nav className="public-nav" aria-label="Hauptnavigation">
+        <Link to="/bewertung">Bewertung</Link>
         <Link to="/verkaufsfertig-check">Verkaufsstrategie-Check</Link>
         <Link to="/immobilien">Immobilien</Link>
         <Link to="/referenzen">Referenzen</Link>
@@ -56,6 +57,8 @@ export function PublicFooter() {
     <footer className="public-footer">
       <span>Zeyher &amp; Mutter · Immobilien · München</span>
       <div>
+        <Link to="/bewertung">Bewertung</Link>
+        <Link to="/suchauftrag">Suchauftrag</Link>
         <Link to="/verkaufsfertig-check">Verkaufsstrategie-Check</Link>
         <Link to="/referenzen">Referenzen</Link>
         <Link to="/impressum">Impressum</Link>
