@@ -3,6 +3,7 @@ import type { Route } from "./+types/contact-detail";
 import { requireActiveUser } from "~/lib/auth.server";
 import { REFERRAL_STATUS } from "./referrals";
 import { zeitpunkt as formatDate } from "~/lib/format";
+import { LeerOderFehler } from "~/components/leer-oder-fehler";
 
 type FieldChange = { old?: unknown; new?: unknown };
 type ActionResult = { error?: string; conflict?: boolean };
@@ -44,7 +45,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   const contactId = params.contactId;
   if (!contactId) throw new Response("Kontakt fehlt.", { status: 404 });
 
-  const [{ data: contact, error: contactError }, { data: history, error: historyError }, { data: referrals }] =
+  const [{ data: contact, error: contactError }, { data: history, error: historyError }, { data: referrals, error: referralsFehler }] =
     await Promise.all([
       supabase
         .from("contacts")
@@ -74,7 +75,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 
   const url = new URL(request.url);
   return data(
-    { contact, history: history ?? [], referrals: referrals ?? [], profile, saved: url.searchParams.get("saved") === "1" },
+    { contact, history: history ?? [], referrals: referrals ?? [], ladefehler: referralsFehler ? ["referrals"] : [], profile, saved: url.searchParams.get("saved") === "1" },
     { headers: responseHeaders() },
   );
 }
@@ -155,7 +156,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 }
 
 export default function ContactDetail() {
-  const { contact, history, referrals, profile, saved } = useLoaderData<typeof loader>();
+  const { contact, history, referrals, ladefehler, profile, saved } = useLoaderData<typeof loader>();
   const result = useActionData<typeof action>();
 
   return (
@@ -196,7 +197,7 @@ export default function ContactDetail() {
         <aside className="history-card">
           <div className="card-head"><div><p className="eyebrow">Nach dem Verkauf</p><h2>Empfehlungen</h2></div><Link className="subtle-link" to="/referrals">Alle →</Link></div>
           {referrals.length === 0
-            ? <p className="empty-state">Von dieser Person ist keine Empfehlung erfasst.</p>
+            ? <LeerOderFehler fehler={ladefehler} name="referrals">Von dieser Person ist keine Empfehlung erfasst.</LeerOderFehler>
             : <div className="data-list">{referrals.map((referral: any) => {
                 const referred = Array.isArray(referral.referred_contact) ? referral.referred_contact[0] : referral.referred_contact;
                 const lead = Array.isArray(referral.leads) ? referral.leads[0] : referral.leads;

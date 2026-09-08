@@ -2,6 +2,7 @@ import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-
 import type { Route } from "./+types/property-compliance";
 import { requirePermission } from "~/lib/auth.server";
 import { tag as formatDate } from "~/lib/format";
+import { LeerOderFehler } from "~/components/leer-oder-fehler";
 
 type ActionResult={error?:string};
 
@@ -52,8 +53,8 @@ export async function loader({request,context,params}:Route.LoaderArgs){
   const {data:gwgCase,error:caseError}=await supabase.from("gwg_cases").select("*").eq("property_id",propertyId).order("created_at",{ascending:false}).limit(1).maybeSingle();
   if(caseError)throw new Response("Geldwäscheakte konnte nicht geladen werden.",{status:500,headers:responseHeaders()});
   if(gwgCase)await supabase.rpc("log_gwg_case_access",{p_case_id:gwgCase.id});
-  const [{data:identifications},{data:contacts},{data:owners},{data:closings},{data:documents},{data:profiles},{data:canWrite},{data:canArchive}]=await Promise.all([
-    gwgCase?supabase.from("gwg_identifications").select("*,contacts!gwg_identifications_contact_id_fkey(id,contact_number,first_name,last_name),represents:contacts!gwg_identifications_represents_contact_id_fkey(id,first_name,last_name)").eq("gwg_case_id",gwgCase.id).order("party_role").order("created_at"):Promise.resolve({data:[]}),
+  const [{data:identifications,error:identificationsFehler},{data:contacts},{data:owners},{data:closings},{data:documents,error:documentsFehler},{data:profiles},{data:canWrite},{data:canArchive}]=await Promise.all([
+    gwgCase?supabase.from("gwg_identifications").select("*,contacts!gwg_identifications_contact_id_fkey(id,contact_number,first_name,last_name),represents:contacts!gwg_identifications_represents_contact_id_fkey(id,first_name,last_name)").eq("gwg_case_id",gwgCase.id).order("party_role").order("created_at"):Promise.resolve({data:[],error:null}),
     supabase.from("contacts").select("id,contact_number,first_name,last_name").is("archived_at",null).order("last_name").limit(1000),
     supabase.from("property_owners").select("contact_id,primary_contact").eq("property_id",propertyId),
     supabase.from("sale_closings").select("id,closing_number,status,buyer_contact_id,notary_appointment_at,notarized_date").eq("property_id",propertyId).is("archived_at",null).order("created_at",{ascending:false}),
@@ -62,7 +63,7 @@ export async function loader({request,context,params}:Route.LoaderArgs){
     supabase.rpc("current_user_has_permission",{p_permission:"gwg.write"}),
     supabase.rpc("current_user_has_permission",{p_permission:"gwg.archive"}),
   ]);
-  return data({profile,property,gwgCase,identifications:identifications??[],contacts:contacts??[],owners:owners??[],closings:closings??[],documents:documents??[],profiles:profiles??[],canWrite:canWrite===true,canArchive:canArchive===true},{headers:responseHeaders()});
+  return data({ladefehler:[identificationsFehler&&"identifications",documentsFehler&&"documents"].filter(Boolean) as string[],profile,property,gwgCase,identifications:identifications??[],contacts:contacts??[],owners:owners??[],closings:closings??[],documents:documents??[],profiles:profiles??[],canWrite:canWrite===true,canArchive:canArchive===true},{headers:responseHeaders()});
 }
 
 export async function action({request,context,params}:Route.ActionArgs){
@@ -285,7 +286,7 @@ export default function PropertyCompliance(){
     </section>
 
     <section className="data-card"><div className="card-head"><div><p className="eyebrow">Beteiligte</p><h2>{d.identifications.length} Identifizierungen</h2></div><Link className="subtle-link" to={`/properties/${d.property.id}/documents`}>Dokumente öffnen →</Link></div>
-      {d.identifications.length===0?<p className="empty-state">Noch keine Person erfasst.</p>:<div className="data-list">
+      {d.identifications.length===0?<LeerOderFehler fehler={d.ladefehler} name="identifications">Noch keine Person erfasst.</LeerOderFehler>:<div className="data-list">
         {d.identifications.map((row:any)=>{const contact=one(row.contacts);const represents=one(row.represents);return <div className="data-row" key={row.id}>
           <div><strong>{contactLabel(contact)} · {PARTY_ROLE[row.party_role]??row.party_role}</strong><small>{row.identified_on?`identifiziert am ${formatDate(row.identified_on)} · ${METHOD[row.identification_method]??"Verfahren offen"}`:"Identifizierung noch nicht abgeschlossen"}{represents?` · handelt für ${contactLabel(represents)}`:""}{ownerIds.has(row.contact_id)?" · als Eigentümer geführt":""}</small></div>
           <div className="row-meta"><span>{row.document_type?DOCUMENT_TYPE[row.document_type]:"Ausweis offen"}</span><small>{row.document_valid_until?`gültig bis ${formatDate(row.document_valid_until)}`:"Gültigkeit nicht erfasst"}</small></div>
@@ -299,7 +300,7 @@ export default function PropertyCompliance(){
 
     <div className="dashboard-grid property-section">
       <section className="data-card"><div className="card-head"><div><p className="eyebrow">Ablage</p><h2>Identitätsnachweise</h2></div><Link className="subtle-link" to={`/properties/${d.property.id}/documents`}>Hochladen →</Link></div>
-        {d.documents.length===0?<p className="empty-state">Noch keine Ausweiskopie abgelegt. Dokumente der Kategorie „Identitätsnachweis“ werden automatisch als vertraulich geführt und fünf Jahre aufbewahrt.</p>:<div className="data-list">{d.documents.map((document:any)=><div className="data-row" key={document.id}><div><strong>{document.title}</strong><small>Aufbewahrung bis {formatDate(document.retention_until)}{document.legal_hold?" · Löschsperre":""}</small></div></div>)}</div>}
+        {d.documents.length===0?<LeerOderFehler fehler={d.ladefehler} name="documents">Noch keine Ausweiskopie abgelegt. Dokumente der Kategorie „Identitätsnachweis“ werden automatisch als vertraulich geführt und fünf Jahre aufbewahrt.</LeerOderFehler>:<div className="data-list">{d.documents.map((document:any)=><div className="data-row" key={document.id}><div><strong>{document.title}</strong><small>Aufbewahrung bis {formatDate(document.retention_until)}{document.legal_hold?" · Löschsperre":""}</small></div></div>)}</div>}
       </section>
       <section className="data-card"><div className="card-head"><div><p className="eyebrow">Verwaltung</p><h2>Archiv</h2></div></div>
         <p className="subtle">Archivieren beendet die Bearbeitung. Die Akte und ihre Nachweise bleiben bis zum Ablauf der Aufbewahrungsfrist lesbar.</p>

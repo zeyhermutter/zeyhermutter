@@ -4,6 +4,7 @@ import { requirePermission } from "~/lib/auth.server";
 import { crmDateAtTimeToIso } from "~/lib/local-time";
 import { euroGenau as money, tag as formatDate, zeitpunkt } from "~/lib/format";
 import { AUFGABENSTATUS, PROVISIONSSTATUS, beschrifte } from "~/lib/labels";
+import { LeerOderFehler } from "~/components/leer-oder-fehler";
 
 type ActionResult={error?:string;ok?:string};
 
@@ -69,7 +70,7 @@ export async function loader({request,context,params}:Route.LoaderArgs){
   const id=params.mandateId!;
   const {data:row,error}=await supabase.from("brokerage_mandates").select("*,properties(id,property_number,internal_title,status,purchase_price),leads(id,lead_number)").eq("id",id).maybeSingle();
   if(error||!row)throw new Response("Maklerauftrag nicht gefunden.",{status:404,headers:responseHeaders()});
-  const [{data:clients},{data:terms},{data:transitions},{data:commissions},{data:tasks},{data:contacts},{data:profiles},{data:canWrite},{data:canArchive},{data:canTask},{data:canAudit}]=await Promise.all([
+  const [{data:clients,error:clientsFehler},{data:terms},{data:transitions,error:transitionsFehler},{data:commissions,error:commissionsFehler},{data:tasks,error:tasksFehler},{data:contacts},{data:profiles},{data:canWrite},{data:canArchive},{data:canTask},{data:canAudit}]=await Promise.all([
     supabase.from("brokerage_mandate_clients").select("id,contact_id,signed_on,note,contacts(id,contact_number,first_name,last_name)").eq("mandate_id",id).order("created_at"),
     supabase.from("brokerage_mandate_commission_terms").select("*").eq("mandate_id",id).order("side"),
     supabase.from("brokerage_mandate_status_transitions").select("to_status,description").eq("from_status",row.status).order("to_status"),
@@ -87,7 +88,7 @@ export async function loader({request,context,params}:Route.LoaderArgs){
     const result=await supabase.from("audit_events").select("id,occurred_at,actor_display_name_snapshot,action,field_changes,entity_type").eq("entity_type","BROKERAGE_MANDATE").eq("entity_id",id).order("occurred_at",{ascending:false}).limit(60);
     if(!result.error)audit=result.data??[];
   }
-  return data({row,profile,clients:clients??[],terms:terms??[],transitions:transitions??[],commissions:commissions??[],tasks:tasks??[],contacts:contacts??[],profiles:profiles??[],canWrite:canWrite===true,canArchive:canArchive===true,canTask:canTask===true,audit},{headers:responseHeaders()});
+  return data({ladefehler:[clientsFehler&&"clients",transitionsFehler&&"transitions",commissionsFehler&&"commissions",tasksFehler&&"tasks"].filter(Boolean) as string[],row,profile,clients:clients??[],terms:terms??[],transitions:transitions??[],commissions:commissions??[],tasks:tasks??[],contacts:contacts??[],profiles:profiles??[],canWrite:canWrite===true,canArchive:canArchive===true,canTask:canTask===true,audit},{headers:responseHeaders()});
 }
 
 export async function action({request,context,params}:Route.ActionArgs){
@@ -280,7 +281,7 @@ function TermForm({side,term,disabled}:{side:"SELLER"|"BUYER";term:any;disabled:
 }
 
 export default function MandateDetail(){
-  const {row,profile,clients,terms,transitions,commissions,tasks,contacts,profiles,canWrite,canArchive,canTask,audit}=useLoaderData<typeof loader>();
+  const {row,profile,clients,terms,transitions,commissions,tasks,contacts,profiles,canWrite,canArchive,canTask,audit,ladefehler}=useLoaderData<typeof loader>();
   const result=useActionData<typeof action>();
   const property=one(row.properties),lead=one(row.leads),locked=Boolean(row.archived_at);
   const seller=terms.find((term:any)=>term.side==="SELLER"),buyer=terms.find((term:any)=>term.side==="BUYER");
@@ -321,7 +322,7 @@ export default function MandateDetail(){
           if(transition.to_status==="TERMINATED")return <Form method="post" className="inline-actions" key={transition.to_status}><input type="hidden" name="_intent" value="status"/><input type="hidden" name="version" value={row.version}/><input type="hidden" name="target_status" value={transition.to_status}/><input name="terminated_on" type="date" defaultValue={row.terminated_on??today()} required/><input name="termination_reason" placeholder="Kündigungsgrund · optional"/><button className="secondary-button" type="submit">→ {STATUS[transition.to_status]}</button></Form>;
           return <Form method="post" key={transition.to_status}><input type="hidden" name="_intent" value="status"/><input type="hidden" name="version" value={row.version}/><input type="hidden" name="target_status" value={transition.to_status}/><button className={transition.to_status==="ACTIVE"?"primary-button":"secondary-button"} type="submit" title={transition.description??""}>→ {STATUS[transition.to_status]??transition.to_status}</button></Form>;
         })}
-        {transitions.length===0?<p className="empty-state">Für diesen Status ist aktuell kein weiterer Statuswechsel vorgesehen.</p>:null}
+        {transitions.length===0?<LeerOderFehler fehler={ladefehler} name="transitions">Für diesen Status ist aktuell kein weiterer Statuswechsel vorgesehen.</LeerOderFehler>:null}
       </div>:<p className="empty-state">Keine Berechtigung zum Bearbeiten von Makleraufträgen.</p>}
       <p className="subtle">Vor dem Aktivieren prüft das System Vertragsschluss, Laufzeitbeginn, mindestens einen Auftraggeber und die Provisionsvereinbarung. Rechtliche Wirksamkeit wird dabei nicht beurteilt.</p>
     </section>
@@ -366,7 +367,7 @@ export default function MandateDetail(){
             {editable?<Form method="post"><input type="hidden" name="_intent" value="client_remove"/><input type="hidden" name="client_id" value={client.id}/><button className="secondary-button" type="submit">Entfernen</button></Form>:null}
           </div>
         </div>;})}
-        {clients.length===0?<p className="empty-state">Noch kein Auftraggeber hinterlegt. Vor dem Aktivieren wird mindestens einer benötigt.</p>:null}
+        {clients.length===0?<LeerOderFehler fehler={ladefehler} name="clients">Noch kein Auftraggeber hinterlegt. Vor dem Aktivieren wird mindestens einer benötigt.</LeerOderFehler>:null}
       </div>
       {editable?<Form method="post" className="inline-actions">
         <input type="hidden" name="_intent" value="client_add"/>
@@ -406,7 +407,7 @@ export default function MandateDetail(){
       {editable&&canTask?<Form method="post" className="inline-actions"><input type="hidden" name="_intent" value="reminder"/><button className="secondary-button" type="submit">Wiedervorlage zur Widerrufsfrist anlegen</button></Form>:null}
       <div className="data-list">
         {tasks.map((task:any)=><Link className="data-row data-row-link" to="/crm/tasks" key={task.id}><div><strong>{task.title}</strong><small>{task.task_number} · {beschrifte(AUFGABENSTATUS,task.status)}</small></div><div className="row-meta"><span>Fällig {formatDate(task.due_at)}</span></div><span className="subtle-link">Aufgaben öffnen →</span></Link>)}
-        {tasks.length===0?<p className="empty-state">Keine offene Wiedervorlage zu diesem Auftrag.</p>:null}
+        {tasks.length===0?<LeerOderFehler fehler={ladefehler} name="tasks">Keine offene Wiedervorlage zu diesem Auftrag.</LeerOderFehler>:null}
       </div>
     </section>
 
@@ -429,7 +430,7 @@ export default function MandateDetail(){
       <div className="card-head"><div><p className="eyebrow">Provisionen</p><h2>{commissions.length} verknüpfte Vorgänge</h2></div><Link className="subtle-link" to={`/commissions?property_id=${encodeURIComponent(row.property_id)}`}>Alle Provisionen →</Link></div>
       <div className="data-list">
         {commissions.map((commission:any)=><Link className="data-row data-row-link" to={`/commissions/${commission.id}`} key={commission.id}><div><strong>{commission.commission_number} · {SIDE[commission.side]??commission.side}</strong><small>{beschrifte(PROVISIONSSTATUS,commission.status)}</small></div><div className="row-meta"><span>{money(commission.actual_amount??commission.expected_amount)}</span><small>{commission.due_date?`Fällig ${formatDate(commission.due_date)}`:"Fälligkeit offen"}</small></div><span className="subtle-link">Öffnen →</span></Link>)}
-        {commissions.length===0?<p className="empty-state">Diesem Auftrag ist noch keine Provision zugeordnet. Die Zuordnung erfolgt in der Provisionsakte.</p>:null}
+        {commissions.length===0?<LeerOderFehler fehler={ladefehler} name="commissions">Diesem Auftrag ist noch keine Provision zugeordnet. Die Zuordnung erfolgt in der Provisionsakte.</LeerOderFehler>:null}
       </div>
     </section>
 
