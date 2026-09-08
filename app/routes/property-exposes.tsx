@@ -2,10 +2,10 @@ import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-
 import type { Route } from "./+types/property-exposes";
 import { requirePermission } from "~/lib/auth.server";
 import { euroGenau as money, zeitpunkt as formatDate } from "~/lib/format";
+import { EXPOSESTATUS as STATUS } from "~/lib/labels";
 import "~/publication.css";
 
 type ActionResult={error?:string};
-const STATUS:Record<string,string>={DRAFT:"Entwurf",GENERATED:"PDF erzeugt",APPROVED:"Freigegeben",RELEASED:"Zur Verwendung freigegeben",ARCHIVED:"Archiviert"};
 
 export async function loader({request,context,params}:Route.LoaderArgs){
  const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"property.read");const propertyId=params.propertyId!;

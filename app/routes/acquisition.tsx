@@ -2,11 +2,12 @@ import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-
 import type { Route } from "./+types/acquisition";
 import { requirePermission } from "~/lib/auth.server";
 import { euroRund as money, tag as formatDate } from "~/lib/format";
+import { KAMPAGNENSTATUS as CAMPAIGN_STATUS } from "~/lib/labels";
 
 type ActionResult={error?:string};
 
 const AREA_TYPE:Record<string,string>={CITY:"Stadt",DISTRICT:"Stadtteil",QUARTER:"Quartier",REGION:"Region",OTHER:"Sonstiges"};
-const CAMPAIGN_STATUS:Record<string,string>={PLANNED:"Geplant",RUNNING:"Läuft",COMPLETED:"Abgeschlossen",CANCELLED:"Abgebrochen"};
+
 const CAMPAIGN_CLASS:Record<string,string>={PLANNED:"status-draft",RUNNING:"status-sold",COMPLETED:"status-archived",CANCELLED:"status-lost"};
 
 function text(fd:FormData,key:string){return String(fd.get(key)??"").trim();}

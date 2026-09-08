@@ -2,11 +2,9 @@ import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-
 import type { Route } from "./+types/acquisition-campaign";
 import { requirePermission } from "~/lib/auth.server";
 import { euroRund as money, tag as formatDate } from "~/lib/format";
+import { ANTWORTKANAL as RESPONSE_CHANNEL, KAMPAGNENSTATUS as CAMPAIGN_STATUS } from "~/lib/labels";
 
 type ActionResult={error?:string};
-
-const CAMPAIGN_STATUS:Record<string,string>={PLANNED:"Geplant",RUNNING:"Läuft",COMPLETED:"Abgeschlossen",CANCELLED:"Abgebrochen"};
-const RESPONSE_CHANNEL:Record<string,string>={QR_CODE:"QR-Code",PHONE:"Telefon",EMAIL:"E-Mail",WEB_FORM:"Formular",LETTER:"Brief",IN_PERSON:"Persönlich",EVENT:"Veranstaltung",OTHER:"Sonstiges"};
 
 function text(fd:FormData,key:string){return String(fd.get(key)??"").trim();}
 function dateOrNull(fd:FormData,key:string){const v=text(fd,key);return /^\d{4}-\d{2}-\d{2}$/.test(v)?v:null;}

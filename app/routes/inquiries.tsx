@@ -2,6 +2,7 @@ import { data, Form, Link, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/inquiries";
 import { requirePermission } from "~/lib/auth.server";
 import { zeitpunktKurz as formatDate } from "~/lib/format";
+import { ANFRAGEKANAL as CHANNEL, ANFRAGESTATUS as STATUS } from "~/lib/labels";
 import "~/inquiry.css";
 
 type ActionResult={error?:string;ok?:string};
@@ -22,8 +23,6 @@ export function elapsedLabel(hours:any){
  return `${days} ${days===1?"Tag":"Tage"}`;
 }
 
-const STATUS:Record<string,string>={NEW:"Neu",CONTACTED:"Kontaktiert",QUALIFIED:"Qualifiziert",VIEWING_PLANNED:"Besichtigung geplant",CLOSED:"Erledigt",LOST:"Kein weiteres Interesse"};
-const CHANNEL:Record<string,string>={WEBSITE:"Website",PORTAL:"Immobilienportal",PHONE:"Telefon",EMAIL:"E-Mail",REFERRAL:"Empfehlung",WALK_IN:"Persönlich",OTHER:"Sonstige"};
 function one(v:any){return Array.isArray(v)?v[0]:v;}
 
 export async function loader({request,context}:Route.LoaderArgs){

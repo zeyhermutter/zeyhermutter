@@ -3,13 +3,19 @@ import type { Route } from "./+types/project-detail";
 import { requirePermission } from "~/lib/auth.server";
 import { BLOCKER_AREA, PHASE, PROJECT_STATUS, STATUS_CLASS, formatDay, nextAction, projectErrorMessage } from "./projects";
 import { euroRund as money, zeitpunkt as formatMoment } from "~/lib/format";
+import { CHECKSTATUS as CHECK_STATUS, MAKLERAUFTRAGSTATUS as MANDATE_STATUS } from "~/lib/labels";
+import { OWNER_DECISION_LABELS } from "~/lib/sales-readiness";
+// Die Entscheidung des Eigentuemers wird in app/lib/sales-readiness.ts gefuehrt.
+// Diese Seite hatte dafuer eine eigene Tabelle mit vier Werten (OPEN, ACCEPTED,
+// PARTIALLY_ACCEPTED, DECLINED). Die Spalte kennt aber sieben andere; drei der
+// vier Schluessel trafen nie, und ab der ersten echten Entscheidung haette hier
+// AS_IS_SALE gestanden.
+const OWNER_DECISION: Record<string, string> = OWNER_DECISION_LABELS;
 
 type ActionResult={error?:string};
 
 const MEASURE_STATUS:Record<string,string>={PROPOSED:"Vorgeschlagen",QUOTE_REQUIRED:"Angebot nötig",QUOTE_REQUESTED:"Angebot angefragt",QUOTE_RECEIVED:"Angebot da",WAITING_OWNER:"Wartet auf Eigentümer",APPROVED:"Freigegeben",COMMISSIONED:"Beauftragt",PLANNED:"Geplant",IN_PROGRESS:"In Arbeit",BLOCKED:"Blockiert",DONE:"Erledigt",CHECKED:"Abgenommen",DISMISSED:"Verworfen"};
-const CHECK_STATUS:Record<string,string>={DRAFT:"Entwurf",READY_FOR_REVIEW:"Prüfbereit",FINALIZED:"Finalisiert"};
-const OWNER_DECISION:Record<string,string>={OPEN:"Entscheidung offen",ACCEPTED:"Empfehlung angenommen",PARTIALLY_ACCEPTED:"Teilweise angenommen",DECLINED:"Empfehlung abgelehnt"};
-const MANDATE_STATUS:Record<string,string>={DRAFT:"Entwurf",ACTIVE:"Aktiv",WITHDRAWN:"Widerrufen",TERMINATED:"Gekündigt",EXPIRED:"Abgelaufen",FULFILLED:"Erfüllt",CANCELLED:"Verworfen"};
+
 const CLOSING_STATUS:Record<string,string>={PREPARATION:"Abschlussvorbereitung",NOTARY_INSTRUCTED:"Notariat beauftragt",DRAFT_RECEIVED:"Entwurf eingegangen",APPOINTMENT_SCHEDULED:"Beurkundung terminiert",NOTARIZED:"Beurkundet",PURCHASE_PRICE_DUE:"Kaufpreis fällig",PURCHASE_PRICE_PAID:"Kaufpreis bezahlt",HANDOVER_COMPLETED:"Übergabe erfolgt",COMPLETED:"Abgeschlossen",CANCELLED:"Abgebrochen"};
 
 function text(fd:FormData,key:string){return String(fd.get(key)??"").trim();}

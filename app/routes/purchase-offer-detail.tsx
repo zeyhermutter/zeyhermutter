@@ -3,12 +3,11 @@ import type { Route } from "./+types/purchase-offer-detail";
 import { ConcurrencyConflictModal } from "~/components/concurrency-conflict-modal";
 import { requirePermission } from "~/lib/auth.server";
 import { euroGenau as money, tag, zeitpunkt } from "~/lib/format";
-import { ABSCHLUSSSTATUS, IMMOBILIENSTATUS, beschrifte } from "~/lib/labels";
+import { ABSCHLUSSSTATUS, IMMOBILIENSTATUS, NACHWEISBESTAETIGUNG as DISCLOSURE_ACK, NACHWEISKANAL as DISCLOSURE_CHANNEL, beschrifte } from "~/lib/labels";
 
 type ActionResult={error?:string;ok?:string};
 const STATUS:Record<string,string>={DRAFT:"Entwurf",SUBMITTED:"Abgegeben",COUNTERED:"Gegenangebot",ACCEPTED:"Angenommen",REJECTED:"Abgelehnt",WITHDRAWN:"Zurückgezogen",REPLACED:"Ersetzt / nicht mehr aktuell",FAILED:"Abschluss gescheitert"};
-const DISCLOSURE_CHANNEL:Record<string,string>={EXPOSE_EMAIL:"Exposé per E-Mail",PORTAL:"Portal",WEBSITE:"Website",IN_PERSON:"Persönlich",VIEWING:"Besichtigung",PHONE:"Telefon",POSTAL:"Post",OTHER:"Sonstiges"};
-const DISCLOSURE_ACK:Record<string,string>={NONE:"Keine Bestätigung",EMAIL_REPLY:"Antwort per E-Mail",READ_RECEIPT:"Lesebestätigung",SIGNATURE:"Unterschrift",PORTAL_LOG:"Portalprotokoll",VERBAL:"Mündlich bestätigt",OTHER:"Sonstiges"};
+
 const FINANCING:Record<string,string>={OPEN:"Offen",IN_PROGRESS:"In Klärung",CONFIRMED:"Bestätigt",NOT_REQUIRED:"Nicht erforderlich"};
 function one(v:any){return Array.isArray(v)?v[0]:v;}function text(fd:FormData,k:string){return String(fd.get(k)??"").trim();}function num(v:string){if(!v)return null;const n=Number(v.includes(",")?v.replace(/\./g,"").replace(",","."):v);return Number.isFinite(n)?n:NaN;}function formatDate(v:string|null,withTime=false){return withTime?zeitpunkt(v):tag(v);}
 

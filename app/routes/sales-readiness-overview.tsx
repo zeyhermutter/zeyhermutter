@@ -3,26 +3,20 @@ import type { Route } from "./+types/sales-readiness-overview";
 import { requirePermission } from "~/lib/auth.server";
 import { requireSalesReadinessBackend } from "~/lib/sales-readiness.server";
 import { tag as formatDate } from "~/lib/format";
-import { LEADSTATUS, beschrifte } from "~/lib/labels";
+import { CHECKSTATUS as CHECK_STATUS, LEADSTATUS, beschrifte } from "~/lib/labels";
+import { OWNER_DECISION_LABELS } from "~/lib/sales-readiness";
+// Die Entscheidung des Eigentuemers wird in app/lib/sales-readiness.ts gefuehrt.
+// Diese Seite hatte dafuer eine eigene Tabelle mit vier Werten (OPEN, ACCEPTED,
+// PARTIALLY_ACCEPTED, DECLINED). Die Spalte kennt aber sieben andere; drei der
+// vier Schluessel trafen nie, und ab der ersten echten Entscheidung haette hier
+// AS_IS_SALE gestanden.
+const OWNER_DECISION: Record<string, string> = OWNER_DECISION_LABELS;
 import "~/lead.css";
-
-const CHECK_STATUS: Record<string, string> = {
-  DRAFT: "Entwurf",
-  READY_FOR_REVIEW: "Prüfbereit",
-  FINALIZED: "Finalisiert",
-};
 
 const CHECK_STATUS_CLASS: Record<string, string> = {
   DRAFT: "status-draft",
   READY_FOR_REVIEW: "status-marketing",
   FINALIZED: "status-sold",
-};
-
-const OWNER_DECISION: Record<string, string> = {
-  OPEN: "Entscheidung offen",
-  ACCEPTED: "Empfehlung angenommen",
-  PARTIALLY_ACCEPTED: "Teilweise angenommen",
-  DECLINED: "Empfehlung abgelehnt",
 };
 
 function one(value: any) {

@@ -9,6 +9,7 @@ import { groupMatchingRows, isDeprioritizedDecision, MATCH_DECISION_LABELS } fro
 import { euroRund, istLeer, zeitpunkt as formatDate } from "~/lib/format";
 import { crmLocalDateTimeToIso as berlinLocalToIso } from "~/lib/local-time";
 import { LeerOderFehler } from "~/components/leer-oder-fehler";
+import { BESICHTIGUNGSSTATUS as VIEWING_STATUS } from "~/lib/labels";
 import "~/search-profile.css";
 import "~/inquiry.css";
 
@@ -17,7 +18,7 @@ const TYPES=[["DETACHED_HOUSE","Einfamilienhaus"],["SEMI_DETACHED_HOUSE","Doppel
 const STATUS_LABELS:Record<string,string>={ACTIVE:"Aktiv",PAUSED:"Pausiert",CLOSED:"Abgeschlossen"};
 const FIELD_LABELS:Record<string,string>={title:"Titel",status:"Status",transaction_type:"Kauf / Miete",property_types:"Immobilientypen",min_price:"Preis von €",max_price:"Preis bis €",min_living_area:"Wohnfläche ab m²",max_living_area:"Wohnfläche bis m²",min_plot_area:"Grundstück ab m²",min_rooms:"Zimmer ab",min_construction_year:"Baujahr ab",move_in_from:"Gewünschter Einzug",financing_status:"Finanzierung",desired_features:"Gewünschte Merkmale",internal_notes:"Interne Notizen",primary_responsible_user:"Verantwortlich",archived_at:"Archivstatus"};
 const TASK_STATUS:Record<string,string>={OPEN:"Offen",IN_PROGRESS:"In Bearbeitung",DONE:"Erledigt",CANCELLED:"Abgebrochen"};
-const VIEWING_STATUS:Record<string,string>={PLANNED:"Geplant",CONFIRMED:"Bestätigt",COMPLETED:"Durchgeführt",CANCELLED:"Abgesagt",NO_SHOW:"Nicht erschienen"};
+
 function one(v:any){return Array.isArray(v)?v[0]:v;}
 function text(fd:FormData,k:string){return String(fd.get(k)??"").trim();}
 function num(v:string){if(!v)return null;const normalized=v.includes(",")?v.replace(/\./g,"").replace(",","."):v;const n=Number(normalized);return Number.isFinite(n)?n:NaN;}

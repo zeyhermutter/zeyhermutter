@@ -154,6 +154,87 @@ export const DOKUMENTKATEGORIE: Beschriftungen = {
   TRAINING_CERTIFICATE: "Weiterbildungsnachweis",
 };
 
+// --- Weitere Wertebereiche ------------------------------------------------
+
+/** Stand einer Akquisekampagne. */
+export const KAMPAGNENSTATUS: Beschriftungen = {
+  PLANNED: "Geplant",
+  RUNNING: "Läuft",
+  COMPLETED: "Abgeschlossen",
+  CANCELLED: "Abgebrochen",
+};
+
+/** Weg, auf dem eine Rückmeldung aus der Akquise kam. */
+export const ANTWORTKANAL: Beschriftungen = {
+  QR_CODE: "QR-Code",
+  PHONE: "Telefon",
+  EMAIL: "E-Mail",
+  WEB_FORM: "Formular",
+  LETTER: "Brief",
+  IN_PERSON: "Persönlich",
+  EVENT: "Veranstaltung",
+  OTHER: "Sonstiges",
+};
+
+/** Risikoeinstufung in der Geldwäscheakte. */
+export const GELDWAESCHERISIKO: Beschriftungen = {
+  LOW: "Gering",
+  MEDIUM: "Mittel",
+  HIGH: "Hoch",
+};
+
+/** Stand eines Verkaufsstrategie-Checks. */
+export const CHECKSTATUS: Beschriftungen = {
+  DRAFT: "Entwurf",
+  READY_FOR_REVIEW: "Prüfbereit",
+  FINALIZED: "Finalisiert",
+};
+
+/** Rolle einer Person bei der Verfügungsberechtigung. */
+export const VERFUEGUNGSROLLE: Beschriftungen = {
+  OWNER: "Eigentümer",
+  CO_HEIR: "Miterbe",
+  EXECUTOR: "Testamentsvollstrecker",
+  ATTORNEY_IN_FACT: "Bevollmächtigter",
+  LEGAL_GUARDIAN: "Betreuer",
+  SUPPLEMENTARY_CURATOR: "Ergänzungspfleger",
+  SPOUSE: "Ehegatte",
+};
+
+/** Stand eines Exposés. */
+export const EXPOSESTATUS: Beschriftungen = {
+  DRAFT: "Entwurf",
+  GENERATED: "PDF erzeugt",
+  APPROVED: "Freigegeben",
+  RELEASED: "Zur Verwendung freigegeben",
+  ARCHIVED: "Archiviert",
+};
+
+/** Art der Empfangsbestätigung zu einem Objektnachweis. */
+export const NACHWEISBESTAETIGUNG: Beschriftungen = {
+  NONE: "Keine Bestätigung",
+  EMAIL_REPLY: "Antwort per E-Mail",
+  READ_RECEIPT: "Lesebestätigung",
+  SIGNATURE: "Unterschrift",
+  PORTAL_LOG: "Portalprotokoll",
+  VERBAL: "Mündlich bestätigt",
+  OTHER: "Sonstiges",
+};
+
+// --- Weitere Wertebereiche ------------------------------------------------
+
+/** Weg, auf dem ein Objektnachweis erbracht wurde. */
+export const NACHWEISKANAL: Beschriftungen = {
+  EXPOSE_EMAIL: "Exposé per E-Mail",
+  PORTAL: "Portal",
+  WEBSITE: "Website",
+  IN_PERSON: "Persönlich",
+  VIEWING: "Besichtigung",
+  PHONE: "Telefon",
+  POSTAL: "Post",
+  OTHER: "Sonstiges",
+};
+
 /**
  * Beschriftung nachschlagen. Ohne Treffer bleibt der gespeicherte Wert stehen:
  * ein unbekannter Zustand soll sichtbar sein, nicht verschwinden.

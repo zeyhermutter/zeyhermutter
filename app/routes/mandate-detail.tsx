@@ -3,14 +3,13 @@ import type { Route } from "./+types/mandate-detail";
 import { requirePermission } from "~/lib/auth.server";
 import { crmDateAtTimeToIso } from "~/lib/local-time";
 import { euroGenau as money, tag as formatDate, zeitpunkt } from "~/lib/format";
-import { AUFGABENSTATUS, PROVISIONSSTATUS, beschrifte } from "~/lib/labels";
+import { AUFGABENSTATUS, MAKLERAUFTRAGART as TYPE, MAKLERAUFTRAGSTATUS as STATUS, PROVISIONSSTATUS, beschrifte } from "~/lib/labels";
 import { LeerOderFehler } from "~/components/leer-oder-fehler";
 
 type ActionResult={error?:string;ok?:string};
 
-const STATUS: Record<string,string> = {DRAFT:"Entwurf",ACTIVE:"Aktiv",WITHDRAWN:"Widerrufen",TERMINATED:"Gekündigt",EXPIRED:"Abgelaufen",FULFILLED:"Erfüllt",CANCELLED:"Verworfen"};
 const STATUS_CLASS: Record<string,string> = {DRAFT:"status-draft",ACTIVE:"status-marketing",WITHDRAWN:"status-lost",TERMINATED:"status-lost",EXPIRED:"status-archived",FULFILLED:"status-sold",CANCELLED:"status-archived"};
-const TYPE: Record<string,string> = {SIMPLE:"Einfacher Auftrag",EXCLUSIVE:"Alleinauftrag",QUALIFIED_EXCLUSIVE:"Qualifizierter Alleinauftrag"};
+
 const CLIENT_SIDE: Record<string,string> = {SELLER:"Verkäufer beauftragt",BUYER:"Käufer beauftragt (Suchauftrag)",BOTH:"Doppeltätigkeit für beide Seiten"};
 const CHANNEL: Record<string,string> = {IN_PERSON:"Persönlich",POSTAL:"Post",EMAIL:"E-Mail",WEB_FORM:"Webformular",PHONE:"Telefon",OTHER:"Sonstiges"};
 const INSTRUCTION_FORM: Record<string,string> = {TEXT_FORM:"Textform",WRITTEN:"Schriftlich",HANDED_OVER:"Persönlich übergeben",EMAIL:"E-Mail",OTHER:"Sonstiges"};

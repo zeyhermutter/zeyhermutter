@@ -20,7 +20,8 @@
     "check:anzeigeformate": "node scripts/check-anzeigeformate.mjs",
     "check:rohe-enums": "node scripts/check-rohe-enums.mjs",
     "check:leerbehauptung": "node scripts/check-leerbehauptung.mjs",
-    "check:beta": "pnpm run check:brand-logo && pnpm run check:anzeigeformate && pnpm run check:rohe-enums && pnpm run check:leerbehauptung && pnpm run typecheck && pnpm run build:beta && wrangler deploy --dry-run",
+    "check:tote-beschriftungen": "node scripts/check-tote-beschriftungen.mjs",
+    "check:beta": "pnpm run check:brand-logo && pnpm run check:anzeigeformate && pnpm run check:rohe-enums && pnpm run check:leerbehauptung && pnpm run check:tote-beschriftungen && pnpm run typecheck && pnpm run build:beta && wrangler deploy --dry-run",
     "check:production": "pnpm run typecheck && pnpm run build:production && wrangler deploy --dry-run",
     "anleitung:docx": "node --experimental-strip-types scripts/build-anleitung-docx.mjs"
   },

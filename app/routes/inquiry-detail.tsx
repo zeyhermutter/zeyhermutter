@@ -7,13 +7,13 @@ import { requirePermission } from "~/lib/auth.server";
 import { zeitpunkt as formatDate } from "~/lib/format";
 import { crmLocalDateTimeToIso as berlinLocalToIso } from "~/lib/local-time";
 import { LeerOderFehler } from "~/components/leer-oder-fehler";
+import { ANFRAGEKANAL as CHANNEL, ANFRAGESTATUS as STATUS, BESICHTIGUNGSSTATUS as VIEWING_STATUS } from "~/lib/labels";
 import "~/inquiry.css";
 
 type ActionResult={error?:string;ok?:string};
-const STATUS:Record<string,string>={NEW:"Neu",CONTACTED:"Kontaktiert",QUALIFIED:"Qualifiziert",VIEWING_PLANNED:"Besichtigung geplant",CLOSED:"Erledigt",LOST:"Kein weiteres Interesse"};
-const CHANNEL:Record<string,string>={WEBSITE:"Website",PORTAL:"Immobilienportal",PHONE:"Telefon",EMAIL:"E-Mail",REFERRAL:"Empfehlung",WALK_IN:"Persönlich",OTHER:"Sonstige"};
+
 const TASK_STATUS:Record<string,string>={OPEN:"Offen",IN_PROGRESS:"In Bearbeitung",DONE:"Erledigt",CANCELLED:"Abgebrochen"};
-const VIEWING_STATUS:Record<string,string>={PLANNED:"Geplant",CONFIRMED:"Bestätigt",COMPLETED:"Durchgeführt",CANCELLED:"Abgesagt",NO_SHOW:"Nicht erschienen"};
+
 const MAIN_FLOW=["NEW","CONTACTED","QUALIFIED","VIEWING_PLANNED","CLOSED"];
 function one(v:any){return Array.isArray(v)?v[0]:v;}function text(fd:FormData,k:string){return String(fd.get(k)??"").trim();}
 

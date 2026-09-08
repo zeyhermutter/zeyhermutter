@@ -2,6 +2,7 @@ import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-
 import type { Route } from "./+types/after-sales";
 import { requirePermission } from "~/lib/auth.server";
 import { tag } from "~/lib/format";
+import { AUFGABENPRIORITAET } from "~/lib/labels";
 
 type ActionResult={error?:string};
 
@@ -11,7 +12,7 @@ export const AUDIENCE:Record<string,string>={BUYER:"Käufer",SELLER:"Verkäufer"
 // darueber laesst sich aendern, der Schluessel nicht — deshalb wird er weiterhin
 // gezeigt, jetzt aber benannt.
 export const STEP_KEY:Record<string,string>={FOLLOW_UP:"Nachfassen nach der Übergabe",REFERRAL_REQUEST:"Empfehlungsanfrage",ANNIVERSARY:"Jahrestag der Übergabe"};
-export const TASK_PRIORITY:Record<string,string>={LOW:"Niedrig",NORMAL:"Normal",HIGH:"Hoch",URGENT:"Dringend"};
+export const TASK_PRIORITY = AUFGABENPRIORITAET;
 export const TASK_STATUS:Record<string,string>={OPEN:"Offen",IN_PROGRESS:"In Arbeit",DONE:"Erledigt",CANCELLED:"Verworfen"};
 
 function one(v:any){return Array.isArray(v)?v[0]:v;}

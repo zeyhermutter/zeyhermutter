@@ -3,6 +3,7 @@ import type { Route } from "./+types/property-compliance";
 import { requirePermission } from "~/lib/auth.server";
 import { tag as formatDate } from "~/lib/format";
 import { LeerOderFehler } from "~/components/leer-oder-fehler";
+import { GELDWAESCHERISIKO as RISK } from "~/lib/labels";
 
 type ActionResult={error?:string};
 
@@ -10,7 +11,7 @@ const PARTY_ROLE:Record<string,string>={SELLER:"Verkäuferseite",BUYER:"Käufers
 const DOCUMENT_TYPE:Record<string,string>={PASSPORT:"Reisepass",ID_CARD:"Personalausweis",RESIDENCE_PERMIT:"Aufenthaltstitel",OTHER:"Sonstiges Dokument"};
 const METHOD:Record<string,string>={IN_PERSON:"Persönlich vor Ort",VIDEO:"Video-Identifizierung",ELECTRONIC:"Elektronischer Identitätsnachweis",NOTARY:"Über das Notariat",OTHER:"Sonstiges Verfahren"};
 const SCREENING:Record<string,string>={NO_MATCH:"Kein Treffer",POSSIBLE_MATCH:"Möglicher Treffer",MATCH:"Treffer",UNCLEAR:"Unklar"};
-const RISK:Record<string,string>={LOW:"Gering",MEDIUM:"Mittel",HIGH:"Hoch"};
+
 const RISK_CLASS:Record<string,string>={LOW:"status-sold",MEDIUM:"status-marketing",HIGH:"status-lost"};
 
 function one(value:any){return Array.isArray(value)?value[0]:value;}

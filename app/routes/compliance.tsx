@@ -2,8 +2,8 @@ import { data, Form, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/compliance";
 import { requirePermission } from "~/lib/auth.server";
 import { tag as formatDate } from "~/lib/format";
+import { GELDWAESCHERISIKO as RISK } from "~/lib/labels";
 
-const RISK:Record<string,string>={LOW:"Gering",MEDIUM:"Mittel",HIGH:"Hoch"};
 const RISK_CLASS:Record<string,string>={LOW:"status-sold",MEDIUM:"status-marketing",HIGH:"status-lost"};
 const RETENTION_CATEGORY:Record<string,string>={
   GWG_IDENTIFICATION:"Geldwäsche · Identifizierung",

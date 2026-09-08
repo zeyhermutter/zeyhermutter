@@ -3,12 +3,13 @@ import type { Route } from "./+types/property-disposition";
 import { requirePermission } from "~/lib/auth.server";
 import { crmDateAtTimeToIso } from "~/lib/local-time";
 import { tag as formatDate } from "~/lib/format";
+import { VERFUEGUNGSROLLE as PARTY_ROLE } from "~/lib/labels";
 
 type ActionResult={error?:string};
 
 const STRUCTURE:Record<string,string>={SOLE:"Alleineigentum",FRACTIONAL:"Miteigentum nach Bruchteilen",COMMUNITY_OF_HEIRS:"Erbengemeinschaft",MARITAL_COMMUNITY:"Gütergemeinschaft",OTHER:"Andere Form",UNKNOWN:"Noch nicht geklärt"};
 const PROOF:Record<string,string>={CERTIFICATE_OF_INHERITANCE:"Erbschein",NOTARIAL_WILL:"Notarielles Testament mit Eröffnungsprotokoll",EUROPEAN_CERTIFICATE:"Europäisches Nachlasszeugnis",OTHER:"Sonstiger Nachweis"};
-const PARTY_ROLE:Record<string,string>={OWNER:"Eigentümer",CO_HEIR:"Miterbe",EXECUTOR:"Testamentsvollstrecker",ATTORNEY_IN_FACT:"Bevollmächtigter",LEGAL_GUARDIAN:"Betreuer",SUPPLEMENTARY_CURATOR:"Ergänzungspfleger",SPOUSE:"Ehegatte"};
+
 const CONSENT:Record<string,string>={NOT_REQUIRED:"Nicht erforderlich",OPEN:"Offen",GIVEN:"Erteilt",REFUSED:"Verweigert"};
 const CONSENT_CLASS:Record<string,string>={NOT_REQUIRED:"status-archived",OPEN:"status-draft",GIVEN:"status-sold",REFUSED:"status-lost"};
 const FORM:Record<string,string>={PRIVATE_WRITTEN:"Privatschriftlich",CERTIFIED:"Beglaubigt",NOTARIAL:"Notariell",VERBAL:"Mündlich"};

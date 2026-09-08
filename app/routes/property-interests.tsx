@@ -4,13 +4,12 @@ import { requirePermission } from "~/lib/auth.server";
 import { crmLocalDateTimeToIso } from "~/lib/local-time";
 import { groupMatchingRows, isDeprioritizedDecision, MATCH_DECISION_LABELS } from "~/lib/matching-priority";
 import { euroRund as money, istLeer, tag, zahl, zeitpunkt as formatDate } from "~/lib/format";
+import { BESICHTIGUNGSSTATUS as VIEWING_STATUS, NACHWEISBESTAETIGUNG as DISCLOSURE_ACK, NACHWEISKANAL as DISCLOSURE_CHANNEL } from "~/lib/labels";
 import "~/inquiry.css";
 
 type ActionResult={error?:string;ok?:string};
 const PROFILE_STATUS:Record<string,string>={ACTIVE:"Aktiv",PAUSED:"Pausiert",CLOSED:"Geschlossen"};
-const DISCLOSURE_CHANNEL:Record<string,string>={EXPOSE_EMAIL:"Exposé per E-Mail",PORTAL:"Portal",WEBSITE:"Website",IN_PERSON:"Persönlich",VIEWING:"Besichtigung",PHONE:"Telefon",POSTAL:"Post",OTHER:"Sonstiges"};
-const DISCLOSURE_ACK:Record<string,string>={NONE:"Keine Bestätigung",EMAIL_REPLY:"Antwort per E-Mail",READ_RECEIPT:"Lesebestätigung",SIGNATURE:"Unterschrift",PORTAL_LOG:"Portalprotokoll",VERBAL:"Mündlich bestätigt",OTHER:"Sonstiges"};
-const VIEWING_STATUS:Record<string,string>={PLANNED:"Geplant",CONFIRMED:"Bestätigt",COMPLETED:"Durchgeführt",CANCELLED:"Abgesagt",NO_SHOW:"Nicht erschienen"};
+
 function one(v:any){return Array.isArray(v)?v[0]:v;}
 function text(fd:FormData,k:string){return String(fd.get(k)??"").trim();}
 

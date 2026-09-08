@@ -7,10 +7,11 @@ import { requirePermission } from "~/lib/auth.server";
 import { euroGenau as money, zeitpunkt as formatDate } from "~/lib/format";
 import { crmIsoToLocalDateTime as isoToBerlinLocal, crmLocalDateTimeToIso as berlinLocalToIso } from "~/lib/local-time";
 import { LeerOderFehler } from "~/components/leer-oder-fehler";
+import { BESICHTIGUNGSSTATUS as STATUS } from "~/lib/labels";
 import "~/inquiry.css";
 
 type ActionResult={error?:string;ok?:string};
-const STATUS:Record<string,string>={PLANNED:"Geplant",CONFIRMED:"Bestätigt",COMPLETED:"Durchgeführt",CANCELLED:"Abgesagt",NO_SHOW:"Nicht erschienen"};
+
 const OFFER:Record<string,string>={DRAFT:"Entwurf",SUBMITTED:"Abgegeben",COUNTERED:"Gegenangebot",ACCEPTED:"Angenommen",REJECTED:"Abgelehnt",WITHDRAWN:"Zurückgezogen",REPLACED:"Ersetzt / nicht mehr aktuell"};
 const TASK_STATUS:Record<string,string>={OPEN:"Offen",IN_PROGRESS:"In Bearbeitung",DONE:"Erledigt",CANCELLED:"Abgebrochen"};
 function one(v:any){return Array.isArray(v)?v[0]:v;}function text(fd:FormData,k:string){return String(fd.get(k)??"").trim();}function num(v:string){if(!v)return null;const n=Number(v.includes(",")?v.replace(/\./g,"").replace(",","."):v);return Number.isFinite(n)?n:NaN;}

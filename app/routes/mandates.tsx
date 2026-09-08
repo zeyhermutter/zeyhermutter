@@ -2,10 +2,10 @@ import { data, Form, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/mandates";
 import { requirePermission } from "~/lib/auth.server";
 import { euroRund, prozent, tag as formatDate } from "~/lib/format";
+import { MAKLERAUFTRAGART as TYPE, MAKLERAUFTRAGSTATUS as STATUS } from "~/lib/labels";
 
-const STATUS: Record<string,string> = {DRAFT:"Entwurf",ACTIVE:"Aktiv",WITHDRAWN:"Widerrufen",TERMINATED:"Gekündigt",EXPIRED:"Abgelaufen",FULFILLED:"Erfüllt",CANCELLED:"Verworfen"};
 const STATUS_CLASS: Record<string,string> = {DRAFT:"status-draft",ACTIVE:"status-marketing",WITHDRAWN:"status-lost",TERMINATED:"status-lost",EXPIRED:"status-archived",FULFILLED:"status-sold",CANCELLED:"status-archived"};
-const TYPE: Record<string,string> = {SIMPLE:"Einfacher Auftrag",EXCLUSIVE:"Alleinauftrag",QUALIFIED_EXCLUSIVE:"Qualifizierter Alleinauftrag"};
+
 const CLIENT_SIDE: Record<string,string> = {SELLER:"Verkäuferauftrag",BUYER:"Käuferauftrag",BOTH:"Doppeltätigkeit"};
 
 function one(value:any){return Array.isArray(value)?value[0]:value;}

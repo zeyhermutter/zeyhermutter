@@ -4,7 +4,7 @@ import { requirePermission } from "~/lib/auth.server";
 import { grossYield } from "./property-hoa-tenancy";
 import { PHASE as PROJECT_PHASE_LABELS, PROJECT_STATUS as PROJECT_STATUS_LABELS } from "./projects";
 import { euroRund as euro, tag, tag as formatDay, zeitpunkt as formatDate } from "~/lib/format";
-import { CHECKLISTENKATEGORIE, beschrifte } from "~/lib/labels";
+import { CHECKLISTENKATEGORIE, MAKLERAUFTRAGART as MANDATE_TYPE, MAKLERAUFTRAGSTATUS as MANDATE_STATUS, VERFUEGUNGSROLLE as DISPOSITION_ROLE, beschrifte } from "~/lib/labels";
 
 type FeatureChoice = { key:string; label:string };
 type ActionResult = { error?: string; success?: string; featurePreview?: { entered:string; formatted:string; exact?:FeatureChoice; suggestion?:FeatureChoice } };
@@ -33,10 +33,9 @@ const STATUS_LABELS: Record<string,string> = {
 function labelStatus(value:string){return STATUS_LABELS[value]??value.replaceAll("_"," ");}
 function auditValueLabel(value:unknown){if(value===null||value===undefined||value==="")return"—";const raw=typeof value==="object"?JSON.stringify(value):String(value);return raw.length>140?`${raw.slice(0,137)}…`:raw;}
 
-const MANDATE_TYPE: Record<string,string> = {SIMPLE:"Einfacher Auftrag",EXCLUSIVE:"Alleinauftrag",QUALIFIED_EXCLUSIVE:"Qualifizierter Alleinauftrag"};
 const GWG_RISK: Record<string,string> = {LOW:"gering",MEDIUM:"mittel",HIGH:"hoch"};
 const DISPOSITION_STRUCTURE: Record<string,string> = {SOLE:"Alleineigentum",FRACTIONAL:"Miteigentum nach Bruchteilen",COMMUNITY_OF_HEIRS:"Erbengemeinschaft",MARITAL_COMMUNITY:"Gütergemeinschaft",OTHER:"Andere Form",UNKNOWN:"noch nicht geklärt"};
-const DISPOSITION_ROLE: Record<string,string> = {OWNER:"Eigentümer",CO_HEIR:"Miterbe",EXECUTOR:"Testamentsvollstrecker",ATTORNEY_IN_FACT:"Bevollmächtigter",LEGAL_GUARDIAN:"Betreuer",SUPPLEMENTARY_CURATOR:"Ergänzungspfleger",SPOUSE:"Ehegatte"};
+
 const DISPOSITION_CONSENT: Record<string,string> = {NOT_REQUIRED:"Nicht erforderlich",OPEN:"Zustimmung offen",GIVEN:"Zustimmung erteilt",REFUSED:"Zustimmung verweigert"};
 const ENCUMBRANCE_SECTION: Record<string,string> ={LAND_REGISTER_II:"Abt. II",LAND_REGISTER_III:"Abt. III",BUILDING_ENCUMBRANCE:"Baulast"};
 const ENCUMBRANCE_KIND: Record<string,string> = {RESIDENCE_RIGHT:"Wohnrecht",USUFRUCT:"Nießbrauch",RIGHT_OF_WAY:"Wegerecht",UTILITY_EASEMENT:"Leitungsrecht",PRE_EMPTION_RIGHT:"Vorkaufsrecht",REAL_CHARGE:"Reallast",HERITABLE_BUILDING_RIGHT:"Erbbaurecht",PRIORITY_NOTICE:"Auflassungsvormerkung",REDEVELOPMENT_NOTE:"Sanierungsvermerk",REALLOCATION_NOTE:"Umlegungsvermerk",INSOLVENCY_NOTE:"Insolvenzvermerk",LAND_CHARGE:"Grundschuld",MORTGAGE:"Hypothek",ANNUITY_CHARGE:"Rentenschuld",ACCESS:"Zufahrtsbaulast",DISTANCE_AREA:"Abstandsflächenbaulast",PARKING:"Stellplatzbaulast",UNION:"Vereinigungsbaulast",DEVELOPMENT:"Erschließungsbaulast",CHILDREN_PLAYGROUND:"Spielplatzbaulast",OTHER:"Sonstiges"};
@@ -46,7 +45,6 @@ const ENERGY_CERTIFICATE_TYPE: Record<string,string> = {DEMAND:"Bedarfsausweis",
 const ENERGY_EXEMPTION: Record<string,string> = {MONUMENT_PROTECTION:"Denkmalschutz",SMALL_BUILDING:"Kleines Gebäude",NOT_REGULARLY_HEATED:"Nicht regelmäßig beheizt",DEMOLITION_PLANNED:"Abriss vorgesehen",OTHER:"Anderer Grund"};
 const LEVY_STATUS: Record<string,string> = {EXPECTED:"absehbar",RESOLVED:"beschlossen",PAID:"gezahlt",CANCELLED:"aufgehoben"};
 const TENANCY_STATUS: Record<string,string> = {ACTIVE:"laufend",ENDED:"beendet",TERMINATED:"gekündigt"};
-const MANDATE_STATUS: Record<string,string> = {DRAFT:"Entwurf",ACTIVE:"Aktiv",WITHDRAWN:"Widerrufen",TERMINATED:"Gekündigt",EXPIRED:"Abgelaufen",FULFILLED:"Erfüllt",CANCELLED:"Verworfen"};
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
   const { supabase, responseHeaders, profile } = await requirePermission(request, context.cloudflare.env, "property.read");

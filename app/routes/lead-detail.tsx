@@ -6,7 +6,7 @@ import { requirePermission } from "~/lib/auth.server";
 import { PHASE as PROJECT_PHASE_LABELS, PROJECT_STATUS as PROJECT_STATUS_LABELS } from "./projects";
 import { zeitpunkt as fmt } from "~/lib/format";
 import { crmIsoToLocalDateTime as local, crmLocalDateTimeToIso as toIso } from "~/lib/local-time";
-import { MAKLERAUFTRAGART, MAKLERAUFTRAGSTATUS, beschrifte } from "~/lib/labels";
+import { ANTWORTKANAL as RESPONSE_CHANNEL, MAKLERAUFTRAGART, MAKLERAUFTRAGSTATUS, beschrifte } from "~/lib/labels";
 import "~/lead.css";
 
 type ActionResult={error?:string};
@@ -26,7 +26,7 @@ function acquisitionError(error:any){
   if(message.includes("lead_acquisitions_wave_needs_campaign_check"))return"Eine Welle lässt sich nur zusammen mit ihrer Kampagne zuordnen.";
   return "Die Herkunft konnte nicht gespeichert werden.";
 }
-const RESPONSE_CHANNEL:Record<string,string>={QR_CODE:"QR-Code",PHONE:"Telefon",EMAIL:"E-Mail",WEB_FORM:"Formular",LETTER:"Brief",IN_PERSON:"Persönlich",EVENT:"Veranstaltung",OTHER:"Sonstiges"};
+
 function show(v:any){if(v===null||v===undefined||v==="")return"—";if(typeof v==="boolean")return v?"Ja":"Nein";return typeof v==="object"?JSON.stringify(v):String(v);}
 
 export async function loader({request,context,params}:Route.LoaderArgs){

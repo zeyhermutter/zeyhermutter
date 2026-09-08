@@ -2,6 +2,7 @@ import { data, Form, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/audit-history";
 import { requirePermission } from "~/lib/auth.server";
 import { zeitpunkt as formatDate } from "~/lib/format";
+import { AUFGABENPRIORITAET as PRIORITY_LABELS } from "~/lib/labels";
 import "~/module04-fixes.css";
 
 const PAGE_SIZE = 50;
@@ -52,7 +53,7 @@ const STATUS_LABELS:Record<string,string>={
   DRAFT:"Entwurf",SUBMITTED:"Abgegeben",COUNTERED:"Gegenangebot",ACCEPTED:"Angenommen",REJECTED:"Abgelehnt",WITHDRAWN:"Zurückgezogen",REPLACED:"Ersetzt / nicht mehr aktuell",
   OPEN:"Offen",IN_PROGRESS:"In Bearbeitung",DONE:"Erledigt",
 };
-const PRIORITY_LABELS:Record<string,string>={LOW:"Niedrig",NORMAL:"Normal",HIGH:"Hoch",URGENT:"Dringend"};
+
 const TRANSACTION_LABELS:Record<string,string>={BUY:"Kauf",RENT:"Miete",SALE:"Verkauf"};
 const FINANCING_LABELS:Record<string,string>={OPEN:"Noch offen",IN_PROGRESS:"In Klärung",CONFIRMED:"Bestätigt",NOT_REQUIRED:"Nicht erforderlich"};
 const TYPE_LABELS:Record<string,string>={DETACHED_HOUSE:"Einfamilienhaus",SEMI_DETACHED_HOUSE:"Doppelhaushälfte",TERRACED_HOUSE:"Reihenhaus",APARTMENT_BUILDING:"Mehrfamilienhaus",APARTMENT:"Wohnung",PENTHOUSE:"Penthouse",MAISONETTE:"Maisonette",LAND:"Grundstück",COMMERCIAL:"Gewerbe",OFFICE:"Büro",RETAIL:"Einzelhandel",GARAGE:"Garage",PARKING_SPACE:"Stellplatz",OTHER:"Sonstige"};

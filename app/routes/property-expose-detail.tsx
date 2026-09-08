@@ -4,10 +4,11 @@ import { ConcurrencyConflictModal } from "~/components/concurrency-conflict-moda
 import { requirePermission } from "~/lib/auth.server";
 import { euroGenau as money, zeitpunkt as formatDate } from "~/lib/format";
 import { LeerOderFehler } from "~/components/leer-oder-fehler";
+import { EXPOSESTATUS as STATUS } from "~/lib/labels";
 import "~/publication.css";
 
 type ActionResult={error?:string;ok?:string};
-const STATUS:Record<string,string>={DRAFT:"Entwurf",GENERATED:"PDF erzeugt",APPROVED:"Freigegeben",RELEASED:"Zur Verwendung freigegeben",ARCHIVED:"Archiviert"};
+
 function text(fd:FormData,k:string){return String(fd.get(k)??"").trim();}
 function num(v:string){if(!v)return null;const n=Number(v.includes(",")?v.replace(/\./g,"").replace(",","."):v);return Number.isFinite(n)?n:NaN;}
 function one(v:any){return Array.isArray(v)?v[0]:v;}
