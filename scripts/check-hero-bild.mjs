@@ -47,9 +47,17 @@ function fehler(text) {
   process.exit(1);
 }
 
-const css = await readFile(BLATT, "utf8");
+// Zeilenenden vereinheitlichen, bevor irgendetwas gesucht wird.
+//
+// Diese Pruefung ist genau daran schon einmal gescheitert: sie suchte nach
+// einem Semikolon, auf das unmittelbar ein Zeilenumbruch folgt. Auf Windows
+// checkt Git standardmaessig mit CRLF aus, dort steht zwischen beiden ein
+// Wagenruecklauf -- und die Pruefung meldete, die Variable fehle, obwohl sie
+// unveraendert im Blatt stand. Auf Linux lief sie gruen. Ein Pruefer, der auf
+// zwei Rechnern verschiedene Antworten gibt, ist schlimmer als keiner.
+const css = (await readFile(BLATT, "utf8")).replace(/\r\n/g, "\n");
 
-const block = css.match(/--zm-hero-bild:\s*([\s\S]*?);\n/);
+const block = css.match(/--zm-hero-bild:\s*([\s\S]*?);/);
 if (!block) fehler("In app/public-website.css fehlt --zm-hero-bild.");
 const wert = block[1];
 
