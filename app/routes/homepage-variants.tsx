@@ -6,8 +6,14 @@ import "~/public-website.css";
 import "~/homepage-variants.css";
 import "~/homepage-variants-image.css";
 
+// Diese Seiten sind Entwuerfe aus der Gestaltungsphase. Sie sind oeffentlich
+// erreichbar, tragen die alten Farben und sind von der eigentlichen Webseite
+// nirgends verlinkt -- eine Suchmaschine wuerde sie trotzdem aufnehmen und
+// unter dem Namen der Firma anzeigen. Deshalb ausdruecklich kein Index.
+const KEIN_INDEX = { name: "robots", content: "noindex, nofollow" };
+
 export function meta() {
-  return [{ title: "Homepage-Varianten · BETA · ZeyherMutter" }];
+  return [{ title: "Homepage-Varianten · BETA · ZeyherMutter" }, KEIN_INDEX];
 }
 
 export async function loader({ context }: Route.LoaderArgs) {

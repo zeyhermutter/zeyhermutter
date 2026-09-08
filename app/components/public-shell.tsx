@@ -1,30 +1,34 @@
 import { Link } from "react-router";
-import "~/brand-identity.css";
-import "~/public-ci-overrides.css";
+import "~/public-website.css";
 
-// Die eingebettete Logodatei im Repository ist beschädigt: das ausgelieferte
-// JPEG hat SOS vor SOF, die daneben liegende PNG-Fassung eine falsche
-// IDAT-Prüfsumme. Kein Browser konnte das Bild dekodieren, im Kopfbereich stand
-// deshalb das Symbol für ein kaputtes Bild. Bis die Originaldatei vorliegt
-// steht hier die Wortmarke in der Hausschrift — kein erfundenes Logo, sondern
-// der Name in Cormorant Garamond und Montserrat.
-// scripts/check-brand-logo.mjs prüft die Bilddaten jetzt wirklich; sobald eine
-// intakte Datei eingebunden ist, kann die Wortmarke wieder durch das Bild
-// ersetzt werden.
-export function BrandWordmark() {
-  return (
-    <span className="public-brand-wordmark">
-      <span className="public-brand-wordmark-name">Zeyher &amp; Mutter</span>
-      <span className="public-brand-wordmark-kind">Immobilien · München</span>
-    </span>
-  );
+// Der Kopfbereich trägt das Logo als Bilddatei aus public/marke/.
+//
+// Vorher stand hier eine Wortmarke aus Text: die im Repository abgelegte
+// Logodatei war beschädigt (das JPEG hatte SOS vor SOF, die PNG-Fassung eine
+// falsche IDAT-Prüfsumme), kein Browser konnte sie dekodieren, und im Kopf
+// stand das Symbol für ein kaputtes Bild. Statt ein Logo zu erfinden stand
+// dort der Name in der Hausschrift.
+//
+// Jetzt liegt die Originaldatei vor. Sie wird als Datei ausgeliefert und nicht
+// als Data-URI in das Programmbündel eingebettet: so lädt sie der Browser
+// einmal und behält sie, statt sie bei jedem Aufruf mitzuschleppen.
+//
+// Der Navy-Grund der Datei ist auf denselben Wert geglättet wie die Fläche des
+// Kopfbereichs (#062037), deshalb ist die Kante des Bildes unsichtbar.
+// scripts/check-brand-logo.mjs prüft bei jedem Build, dass die Datei wirklich
+// dekodierbar ist und die erwarteten Maße hat.
+const LOGO = "/marke/zeyher-mutter-logo.png";
+
+/** Nur das Logo, ohne Kopfbereich — für die interne Veröffentlichungsvorschau. */
+export function BrandMark() {
+  return <img src={LOGO} alt="Zeyher &amp; Mutter Immobilien München" width={377} height={183} />;
 }
 
 export function PublicHeader() {
   return (
     <header className="public-header">
       <Link className="public-brand" to="/" aria-label="Zeyher & Mutter Immobilien München – Startseite">
-        <BrandWordmark />
+        <img src={LOGO} alt="Zeyher &amp; Mutter Immobilien München" width={377} height={183} />
       </Link>
       <nav className="public-nav" aria-label="Hauptnavigation">
         <Link to="/verkaufsfertig-check">Verkaufsstrategie-Check</Link>
@@ -38,7 +42,7 @@ export function PublicHeader() {
 export function PublicFooter() {
   return (
     <footer className="public-footer">
-      <span>Zeyher & Mutter · Immobilien · München</span>
+      <span>Zeyher &amp; Mutter · Immobilien · München</span>
       <div>
         <Link to="/verkaufsfertig-check">Verkaufsstrategie-Check</Link>
         <Link to="/impressum">Impressum</Link>

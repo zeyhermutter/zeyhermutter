@@ -5,8 +5,14 @@ import "~/public-website.css";
 import "~/homepage-variants.css";
 import "~/homepage-v7-realtor.css";
 
+// Diese Seiten sind Entwuerfe aus der Gestaltungsphase. Sie sind oeffentlich
+// erreichbar, tragen die alten Farben und sind von der eigentlichen Webseite
+// nirgends verlinkt -- eine Suchmaschine wuerde sie trotzdem aufnehmen und
+// unter dem Namen der Firma anzeigen. Deshalb ausdruecklich kein Index.
+const KEIN_INDEX = { name: "robots", content: "noindex, nofollow" };
+
 export function meta() {
-  return [{ title: "Makler & Verkaufsstrategie-Check · Homepage-Vorschau 7 · ZeyherMutter" }];
+  return [{ title: "Makler & Verkaufsstrategie-Check · Homepage-Vorschau 7 · ZeyherMutter" }, KEIN_INDEX];
 }
 
 export async function loader({ context }: Route.LoaderArgs) {

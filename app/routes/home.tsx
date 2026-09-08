@@ -4,8 +4,6 @@ import { HomePageSections } from "~/components/public-page-sections";
 import { PublicFooter, PublicHeader } from "~/components/public-shell";
 import { loadPublicWebsitePage } from "~/lib/website-content.server";
 import "~/public-website.css";
-import "~/homepage-variants.css";
-import "~/homepage-v7-realtor.css";
 
 export function meta({ data: loaderData }: Route.MetaArgs) {
   return [
@@ -21,5 +19,5 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 export default function Home() {
   const { content } = useLoaderData<typeof loader>();
-  return <main className="public-site hv-site hv7r-site"><PublicHeader/><HomePageSections content={content}/><PublicFooter/></main>;
+  return <main className="public-site"><PublicHeader/><HomePageSections content={content}/><PublicFooter/></main>;
 }

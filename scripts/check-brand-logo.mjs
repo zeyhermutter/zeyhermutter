@@ -7,8 +7,8 @@ import { inflateSync } from "node:zlib";
 // Dateien part1..part8 an — die importiert niemand. Sie wurde damit grün,
 // ohne das ausgelieferte Bild je anzufassen.
 
-const EXPECTED_WIDTH = 378;
-const EXPECTED_HEIGHT = 185;
+const EXPECTED_WIDTH = 377;
+const EXPECTED_HEIGHT = 183;
 
 function fail(message) {
   throw new Error(message);
@@ -101,7 +101,39 @@ function inspectPng(image, label) {
     if (filter > 4) fail(`${label}: Zeile ${row} hat den unzulässigen Filtertyp ${filter}.`);
   }
 
-  return { ...header, bytesPerPixel, rawBytes: raw.length };
+  // Die Zeilenfilter aufloesen, damit sich einzelne Bildpunkte lesen lassen.
+  // Ohne das koennte diese Pruefung nur die Masse vergleichen — und der
+  // Grundton des Logos ist genau die Stelle, an der ein Fehler sichtbar wird.
+  const bild = Buffer.alloc(header.height * bytesPerRow);
+  for (let row = 0; row < header.height; row += 1) {
+    const filter = raw[row * (1 + bytesPerRow)];
+    const quelle = raw.subarray(row * (1 + bytesPerRow) + 1, (row + 1) * (1 + bytesPerRow));
+    const ziel = bild.subarray(row * bytesPerRow, (row + 1) * bytesPerRow);
+    const oben = row > 0 ? bild.subarray((row - 1) * bytesPerRow, row * bytesPerRow) : null;
+    for (let i = 0; i < bytesPerRow; i += 1) {
+      const a = i >= bytesPerPixel ? ziel[i - bytesPerPixel] : 0;
+      const b = oben ? oben[i] : 0;
+      const c = oben && i >= bytesPerPixel ? oben[i - bytesPerPixel] : 0;
+      let wert = quelle[i];
+      if (filter === 1) wert += a;
+      else if (filter === 2) wert += b;
+      else if (filter === 3) wert += (a + b) >> 1;
+      else if (filter === 4) {
+        const p = a + b - c;
+        const pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c);
+        wert += pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
+      }
+      ziel[i] = wert & 0xff;
+    }
+  }
+
+  const hex = (n) => n.toString(16).toUpperCase().padStart(2, "0");
+  const punkt = (x, y) => {
+    const i = y * bytesPerRow + x * bytesPerPixel;
+    return `${hex(bild[i])}${hex(bild[i + 1])}${hex(bild[i + 2])}`;
+  };
+
+  return { ...header, bytesPerPixel, rawBytes: raw.length, punkt };
 }
 
 // --- JPEG: Segmente durchlaufen, Masse aus dem SOF lesen ---------------------
@@ -160,63 +192,69 @@ function inspectJpeg(image, label) {
   return { ...frame, scanBytes };
 }
 
-// --- Wird ueberhaupt ein Bild ausgeliefert? ---------------------------------
-// Ausschlaggebend ist, was der oeffentliche Kopfbereich einbindet. Solange dort
-// die Wortmarke steht, gibt es kein Bild, das kaputt sein koennte — dann darf
-// diese Pruefung den Build nicht blockieren, muss den Zustand aber benennen.
+// --- Das ausgelieferte Logo --------------------------------------------------
+// Geprueft wird die Datei, die der Kopfbereich wirklich einbindet.
+//
+// Die frueheren Fassungen dieser Pruefung sahen sich Dateien an, die niemand
+// importierte, und wurden gruen, ohne das ausgelieferte Bild je anzufassen.
+// Deshalb steht hier beides: der Pfad wird aus public-shell.tsx gelesen, und
+// die Datei an diesem Pfad wird dekodiert.
+
 const shellSource = await readFile(new URL("../app/components/public-shell.tsx", import.meta.url), "utf8");
-const shipsImage = /import\s*\{[^}]*brandLogoDataUri[^}]*\}\s*from\s*"~\/brand-logo-data"/.test(shellSource);
+const pfadTreffer = shellSource.match(/const LOGO = "(\/[^"]+\.(?:png|jpg|jpeg))";/);
 
-if (shipsImage) {
-  const indexSource = await readFile(new URL("../app/brand-logo-data/index.ts", import.meta.url), "utf8");
-  const uriMatch = indexSource.match(/export const brandLogoDataUri = "data:image\/(png|jpeg);base64,([A-Za-z0-9+/=]+)";/);
-  if (!uriMatch) fail("app/brand-logo-data/index.ts hat ein unerwartetes Format.");
-
-  const shippedType = uriMatch[1];
-  const shipped = Buffer.from(uriMatch[2], "base64");
-  if (shipped.length < 1000) fail("Das ausgelieferte Logo ist unerwartet klein.");
-
-  const info = shippedType === "png"
-    ? inspectPng(shipped, "Ausgeliefertes Logo")
-    : inspectJpeg(shipped, "Ausgeliefertes Logo");
-
-  if (info.width !== EXPECTED_WIDTH || info.height !== EXPECTED_HEIGHT) {
-    fail(`Ausgeliefertes Logo hat ${info.width}x${info.height}, erwartet waren ${EXPECTED_WIDTH}x${EXPECTED_HEIGHT}.`);
-  }
-
-  console.log(
-    `Ausgeliefertes Logo geprüft: ${shippedType.toUpperCase()} ${info.width}x${info.height}, ${shipped.length} Bytes`
-    + `${shippedType === "png" ? `, ${info.rawBytes} Bytes entpackt` : `, ${info.scanBytes} Bytes Bilddaten`}.`,
-  );
-} else {
-  console.log("Kein Bildlogo eingebunden: der öffentliche Kopfbereich zeigt die Wortmarke.");
+if (!pfadTreffer) {
+  fail("app/components/public-shell.tsx bindet kein Logo ueber `const LOGO = \"/…\"` ein.");
 }
 
-// --- Zustand der abgelegten Logodateien -------------------------------------
-// Beide Fassungen im Repository sind beschädigt. Das wird bei jedem Lauf
-// benannt, damit es nicht in Vergessenheit gerät — der Build bricht deswegen
-// nicht ab, solange kein beschädigtes Bild ausgeliefert wird.
-async function describeStoredAsset() {
-  const partFiles = ["part1.ts", "part1-tail.ts", "part2.ts", "part3.ts", "part4.ts", "part5.ts", "part6.ts", "part7.ts", "part8.ts"];
-  const parts = [];
-  for (const file of partFiles) {
-    const source = await readFile(new URL(`../app/brand-logo-data/${file}`, import.meta.url), "utf8");
-    const match = source.match(/^export default "([A-Za-z0-9+/=]+)";\s*$/);
-    if (!match) return `Brand-Logo-Teil ${file} hat ein unerwartetes Format.`;
-    parts.push(match[1]);
+const logoPfad = pfadTreffer[1];
+let datei;
+try {
+  datei = await readFile(new URL(`../public${logoPfad}`, import.meta.url));
+} catch {
+  fail(`Der Kopfbereich verweist auf ${logoPfad}, aber public${logoPfad} gibt es nicht.`);
+}
+
+if (datei.length < 1000) fail(`public${logoPfad} ist nur ${datei.length} Bytes gross — das ist kein Logo.`);
+
+const istPng = datei.subarray(0, 8).toString("hex") === "89504e470d0a1a0a";
+const info = istPng
+  ? inspectPng(datei, `public${logoPfad}`)
+  : inspectJpeg(datei, `public${logoPfad}`);
+
+if (info.width !== EXPECTED_WIDTH || info.height !== EXPECTED_HEIGHT) {
+  fail(`public${logoPfad} hat ${info.width}x${info.height}, erwartet waren ${EXPECTED_WIDTH}x${EXPECTED_HEIGHT}.`);
+}
+
+// Der Kopfbereich ist eine Navy-Flaeche. Bringt das Logo seinen eigenen Grund
+// mit, muss dieser exakt derselbe Ton sein, sonst zeichnet sich ein Rechteck
+// ab. Geprueft werden die vier Eckpunkte gegen den Wert aus dem Stylesheet.
+const cssQuelle = await readFile(new URL("../app/public-website.css", import.meta.url), "utf8");
+const navyTreffer = cssQuelle.match(/--zm-navy:\s*#([0-9A-Fa-f]{6});/);
+if (!navyTreffer) fail("app/public-website.css definiert kein --zm-navy.");
+const navy = navyTreffer[1].toUpperCase();
+
+if (istPng) {
+  if (info.bitDepth !== 8 || ![2, 6].includes(info.colorType)) {
+    fail(`public${logoPfad}: Grundton nicht pruefbar (Farbtyp ${info.colorType}, ${info.bitDepth} Bit). Erwartet wird RGB oder RGBA mit 8 Bit.`);
   }
-  try {
-    const spare = Buffer.from(parts.join(""), "base64");
-    const info = inspectPng(spare, "Abgelegte PNG-Fassung");
-    return `Abgelegte PNG-Fassung ist intakt: ${info.width}x${info.height}, ${info.rawBytes} Bytes entpackt.`;
-  } catch (error) {
-    return error.message;
+  const ecken = [
+    info.punkt(0, 0),
+    info.punkt(info.width - 1, 0),
+    info.punkt(0, info.height - 1),
+    info.punkt(info.width - 1, info.height - 1),
+  ];
+  const abweichend = ecken.filter((farbe) => farbe !== navy);
+  if (abweichend.length) {
+    fail(
+      `Der Grund des Logos passt nicht zum Kopfbereich: Ecken ${ecken.join(", ")}, `
+      + `erwartet war ueberall #${navy}. Die Kante des Bildes waere sichtbar.`,
+    );
   }
 }
 
-const storedState = await describeStoredAsset();
-if (storedState.includes("intakt")) {
-  console.log(storedState);
-} else {
-  console.warn(`HINWEIS: ${storedState} Solange keine unbeschädigte Originaldatei vorliegt, bleibt die Wortmarke im Kopfbereich.`);
-}
+console.log(
+  `Ausgeliefertes Logo geprueft: public${logoPfad}, ${istPng ? "PNG" : "JPEG"} `
+  + `${info.width}x${info.height}, ${datei.length} Bytes`
+  + `${istPng ? `, ${info.rawBytes} Bytes entpackt, Grund #${navy}` : ""}.`,
+);

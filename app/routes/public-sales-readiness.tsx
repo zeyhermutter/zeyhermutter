@@ -3,7 +3,6 @@ import type { Route } from "./+types/public-sales-readiness";
 import { PublicFooter, PublicHeader } from "~/components/public-shell";
 import { isSellerCheckPublicEnabled } from "~/lib/sales-readiness.server";
 import "~/public-website.css";
-import "~/homepage-v7-realtor.css";
 
 const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "::1"]);
 const PROPERTY_TYPES = new Set(["DETACHED_HOUSE", "SEMI_DETACHED_HOUSE", "TERRACED_HOUSE", "APARTMENT_BUILDING", "APARTMENT", "PENTHOUSE", "MAISONETTE", "LAND", "COMMERCIAL", "OFFICE", "RETAIL", "OTHER"]);

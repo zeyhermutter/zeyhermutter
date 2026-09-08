@@ -5,8 +5,6 @@ import { ContactIntroSections, ContactPersonal, HomePageSections, PublicLegalSec
 import { requirePermission } from "~/lib/auth.server";
 import { isWebsitePageKey, normalizeWebsiteContent } from "~/lib/website-content";
 import "~/public-website.css";
-import "~/homepage-variants.css";
-import "~/homepage-v7-realtor.css";
 import "~/website-cms.css";
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
