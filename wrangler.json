@@ -1,6 +1,12 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "zeyhermutter",
+  // Das Cloudflare-Konto ist festgeschrieben, damit ein Deploy mit der falschen
+  // Anmeldung abbricht statt still einen neuen Worker im fremden Konto anzulegen.
+  // Das ist real moeglich: auf demselben Rechner laeuft ein zweites Projekt in
+  // einem anderen Cloudflare-Konto, und "wrangler login" gilt fuer den ganzen
+  // Windows-Benutzer. Eine Konto-ID ist kein Geheimnis.
+  "account_id": "4196e568b62dcabd2125646072b6c4aa",
   "main": "./workers/app.ts",
   "compatibility_date": "2026-08-29",
   "compatibility_flags": ["nodejs_compat"],
