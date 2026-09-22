@@ -1,5 +1,6 @@
 import { data, Form, Link, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/public-search-request";
+import { seitenkopf } from "~/lib/seitenkopf";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
 import { Honigtopf, PublicFooter, PublicHeader } from "~/components/public-shell";
 import { ART_DER_SUCHE, HONIGTOPF_FELD, IMMOBILIENARTEN, IMMOBILIENARTEN_SCHLUESSEL } from "~/lib/public-intake";
@@ -20,7 +21,7 @@ import "~/public-website.css";
 
 type ActionResult = { ok?: string; error?: string };
 
-export function meta({ data: routeData }: Route.MetaArgs) {
+function seitenMeta({ data: routeData }: Route.MetaArgs) {
   const canonicalUrl = (routeData as { canonicalUrl?: string } | undefined)?.canonicalUrl;
   return [
     { title: "Suchauftrag · ZeyherMutter" },
@@ -28,6 +29,10 @@ export function meta({ data: routeData }: Route.MetaArgs) {
     { name: "robots", content: "index,follow" },
     ...(canonicalUrl ? [{ tagName: "link" as const, rel: "canonical", href: canonicalUrl }] : []),
   ];
+}
+
+export function meta(args: Route.MetaArgs) {
+  return seitenkopf(args, seitenMeta(args));
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {

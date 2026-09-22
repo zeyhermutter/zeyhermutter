@@ -1,5 +1,6 @@
 import { data, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/public-private-sale";
+import { seitenkopf } from "~/lib/seitenkopf";
 import { loadPublicWebsitePage } from "~/lib/website-content.server";
 import { PublicFooter, PublicHeader } from "~/components/public-shell";
 import { PrivateSaleSections } from "~/components/public-page-sections";
@@ -13,13 +14,17 @@ import "~/public-website.css";
 // nebeneinander. Eine Seite, die den Einwand nur aufwirft, um ihn wegzuwischen,
 // ist schlechter als gar keine.
 
-export function meta({ data: routeData }: Route.MetaArgs) {
+function seitenMeta({ data: routeData }: Route.MetaArgs) {
   const seite = routeData as { seoTitle?: string | null; seoDescription?: string | null } | undefined;
   return [
     { title: seite?.seoTitle || "Ohne Makler verkaufen? · ZeyherMutter" },
     { name: "description", content: seite?.seoDescription || "Wann sich der Verkauf in Eigenregie lohnt und wann er teuer wird — beide Seiten." },
     { name: "robots", content: "index,follow" },
   ];
+}
+
+export function meta(args: Route.MetaArgs) {
+  return seitenkopf(args, seitenMeta(args));
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {

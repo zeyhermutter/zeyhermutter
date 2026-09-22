@@ -1,5 +1,6 @@
 import { data, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/public-guide-topic";
+import { seitenkopf } from "~/lib/seitenkopf";
 import { loadPublicWebsitePage } from "~/lib/website-content.server";
 import { WEBSITE_PAGE_DEFINITIONS, RATGEBER_SEITEN, type RatgeberSeite } from "~/lib/website-content";
 import { PublicFooter, PublicHeader } from "~/components/public-shell";
@@ -14,13 +15,17 @@ const PFAD_ZU_SCHLUESSEL = new Map<string, RatgeberSeite>(
   RATGEBER_SEITEN.map((key) => [WEBSITE_PAGE_DEFINITIONS[key].path.replace("/ratgeber/", ""), key]),
 );
 
-export function meta({ data: routeData }: Route.MetaArgs) {
+function seitenMeta({ data: routeData }: Route.MetaArgs) {
   const seite = routeData as { seoTitle?: string | null; seoDescription?: string | null; content?: Record<string, string> } | undefined;
   return [
     { title: seite?.seoTitle || `${seite?.content?.eyebrow ?? "Ratgeber"} · ZeyherMutter` },
     { name: "description", content: seite?.seoDescription || seite?.content?.lead || "" },
     { name: "robots", content: "index,follow" },
   ];
+}
+
+export function meta(args: Route.MetaArgs) {
+  return seitenkopf(args, seitenMeta(args), { typ: "article" });
 }
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {

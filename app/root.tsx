@@ -20,6 +20,18 @@ import "./auth-light-theme.css";
 
 declare const __BUILD_COMMIT__: string;
 
+// Die Herkunft der Anfrage, fuer absolute Adressen im Seitenkopf: kanonische
+// Adresse und Vorschaubild geteilter Links muessen absolut sein, und die
+// meta-Funktionen der Seiten kennen die Anfrage selbst nicht. Keine Abfrage,
+// kein Zustand -- deshalb muss der Loader auch nie neu laufen.
+export function loader({ request }: Route.LoaderArgs) {
+  return { origin: new URL(request.url).origin };
+}
+
+export function shouldRevalidate() {
+  return false;
+}
+
 export function links() {
   return [{ rel: "icon", href: "/favicon.svg", type: "image/svg+xml" }];
 }

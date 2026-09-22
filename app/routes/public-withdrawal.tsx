@@ -1,5 +1,6 @@
 import { data, useLoaderData } from "react-router";
 import type { Route } from "./+types/public-withdrawal";
+import { seitenkopf } from "~/lib/seitenkopf";
 import { loadPublicWebsitePage } from "~/lib/website-content.server";
 import { PublicFooter, PublicHeader } from "~/components/public-shell";
 import { PublicLegalSection } from "~/components/public-page-sections";
@@ -16,12 +17,16 @@ import "~/public-website.css";
 // Ohne veroeffentlichte Fassung steht hier der Standardtext, und der sagt, dass
 // die Belehrung fehlt. Kein Index, und auch nicht in der Sitemap -- siehe
 // SEITEN_OHNE_HINTERLEGTEN_TEXT in app/lib/public-pages.ts.
-export function meta({ data: routeData }: Route.MetaArgs) {
+function seitenMeta({ data: routeData }: Route.MetaArgs) {
   const seite = routeData as { seoTitle?: string | null; version?: number | null } | undefined;
   return [
     { title: seite?.seoTitle || "Widerrufsbelehrung · ZeyherMutter" },
     { name: "robots", content: seite?.version ? "index,follow" : "noindex,follow" },
   ];
+}
+
+export function meta(args: Route.MetaArgs) {
+  return seitenkopf(args, seitenMeta(args));
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {

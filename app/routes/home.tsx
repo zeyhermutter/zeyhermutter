@@ -1,15 +1,21 @@
 import { data, useLoaderData } from "react-router";
 import type { Route } from "./+types/home";
+import { herkunft, organisation, seitenkopf } from "~/lib/seitenkopf";
 import { HomePageSections } from "~/components/public-page-sections";
 import { PublicFooter, PublicHeader } from "~/components/public-shell";
 import { loadPublicWebsitePage } from "~/lib/website-content.server";
 import "~/public-website.css";
 
-export function meta({ data: loaderData }: Route.MetaArgs) {
+function seitenMeta({ data: loaderData }: Route.MetaArgs) {
   return [
     { title: loaderData?.seoTitle ?? "Immobilien verkaufen · Zeyher & Mutter Immobilien" },
     { name: "description", content: loaderData?.seoDescription ?? "Zeyher & Mutter begleitet Eigentümer beim Immobilienverkauf von der Positionierung über die Vermarktung bis zum Abschluss. Der Verkaufsstrategie-Check ergänzt die Maklerleistung bei offenen Fragen vor dem Marktstart." },
   ];
+}
+
+export function meta(args: Route.MetaArgs) {
+  const origin = herkunft(args.matches);
+  return [...seitenkopf(args, seitenMeta(args)), ...(origin ? [organisation(origin)] : [])];
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {

@@ -1,5 +1,6 @@
 import { data, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/public-about";
+import { seitenkopf } from "~/lib/seitenkopf";
 import { loadPublicWebsitePage } from "~/lib/website-content.server";
 import { PublicFooter, PublicHeader } from "~/components/public-shell";
 import { AboutSections } from "~/components/public-page-sections";
@@ -15,13 +16,17 @@ import "~/public-website.css";
 // gehoert nicht in den Index; sie steht aus demselben Grund auch nicht in der
 // Sitemap (SEITEN_OHNE_HINTERLEGTEN_TEXT in app/lib/public-pages.ts). Sobald
 // eine Fassung veroeffentlicht ist, faellt die Sperre von selbst weg.
-export function meta({ data: routeData }: Route.MetaArgs) {
+function seitenMeta({ data: routeData }: Route.MetaArgs) {
   const seite = routeData as { seoTitle?: string | null; seoDescription?: string | null; version?: number | null } | undefined;
   return [
     { title: seite?.seoTitle || "Über uns · ZeyherMutter" },
     { name: "description", content: seite?.seoDescription || "Wer hinter Zeyher & Mutter Immobilien in München steht." },
     { name: "robots", content: seite?.version ? "index,follow" : "noindex,follow" },
   ];
+}
+
+export function meta(args: Route.MetaArgs) {
+  return seitenkopf(args, seitenMeta(args));
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {

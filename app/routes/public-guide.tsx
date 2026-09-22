@@ -1,5 +1,6 @@
 import { data, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/public-guide";
+import { seitenkopf } from "~/lib/seitenkopf";
 import { loadPublicWebsitePage } from "~/lib/website-content.server";
 import { WEBSITE_PAGE_DEFINITIONS, RATGEBER_SEITEN } from "~/lib/website-content";
 import { PublicFooter, PublicHeader } from "~/components/public-shell";
@@ -9,13 +10,17 @@ import "~/public-website.css";
 // statt sie ein zweites Mal als eigene Felder zu führen. Sonst ändert jemand
 // eine Überschrift und die Karte auf der Übersicht sagt weiter das Alte.
 
-export function meta({ data: routeData }: Route.MetaArgs) {
+function seitenMeta({ data: routeData }: Route.MetaArgs) {
   const seite = routeData as { seoTitle?: string | null; seoDescription?: string | null } | undefined;
   return [
     { title: seite?.seoTitle || "Ratgeber · ZeyherMutter" },
     { name: "description", content: seite?.seoDescription || "Vier Situationen, in denen ein Immobilienverkauf anders läuft — und was das konkret bedeutet." },
     { name: "robots", content: "index,follow" },
   ];
+}
+
+export function meta(args: Route.MetaArgs) {
+  return seitenkopf(args, seitenMeta(args));
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {

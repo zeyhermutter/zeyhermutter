@@ -1,5 +1,6 @@
 import { data, Form, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/public-property-detail";
+import { seitenkopf } from "~/lib/seitenkopf";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
 import { Honigtopf, PublicFooter, PublicHeader } from "~/components/public-shell";
 import { HONIGTOPF_FELD } from "~/lib/public-intake";
@@ -17,7 +18,13 @@ function mediaUrl(item:any){return item?.id&&item?.source_version?`/immobilien/m
 function formatDate(value:any){return tag(value,"Auf Anfrage");}
 function clean(fd:FormData,key:string,max:number){return String(fd.get(key)??"").trim().replace(/\s+/g," ").slice(0,max);}
 async function sha256(value:string){const bytes=new TextEncoder().encode(value);const hash=await crypto.subtle.digest("SHA-256",bytes);return Array.from(new Uint8Array(hash)).map(v=>v.toString(16).padStart(2,"0")).join("");}
-export function meta({data:routeData}:Route.MetaArgs){const row=(routeData as any)?.row,s=row?.snapshot??{},canonicalUrl=(routeData as any)?.canonicalUrl;return[{title:`${s.seo?.title||row?.public_title||"Immobilie"} · ZeyherMutter`},{name:"description",content:s.seo?.description||row?.teaser||"Immobilienangebot von ZeyherMutter"},{name:"robots",content:"index,follow"},...(canonicalUrl?[{tagName:"link" as const,rel:"canonical",href:canonicalUrl}]:[])]}
+function seitenMeta({data:routeData}:Route.MetaArgs){const row=(routeData as any)?.row,s=row?.snapshot??{},canonicalUrl=(routeData as any)?.canonicalUrl;return[{title:`${s.seo?.title||row?.public_title||"Immobilie"} · ZeyherMutter`},{name:"description",content:s.seo?.description||row?.teaser||"Immobilienangebot von ZeyherMutter"},{name:"robots",content:"index,follow"},...(canonicalUrl?[{tagName:"link" as const,rel:"canonical",href:canonicalUrl}]:[])]}
+
+// Das Vorschaubild geteilter Expose-Links ist das Titelfoto der Immobilie, nicht das Logo.
+export function meta(args: Route.MetaArgs) {
+  const titelbild = mediaUrl(((args.data as any)?.row?.snapshot?.media ?? [])[0]);
+  return seitenkopf(args, seitenMeta(args), { bild: titelbild });
+}
 export async function loader({request,context,params}:Route.LoaderArgs){const {supabase}=createSupabaseServerClient(request,context.cloudflare.env);const {data:rows,error}=await supabase.rpc("public_property_by_slug",{p_slug:params.slug!});if(error)throw new Response("Immobilie konnte nicht geladen werden.",{status:500});const row=rows?.[0];if(!row)throw new Response("Immobilie nicht gefunden.",{status:404,headers:{"Cache-Control":"public, max-age=30"}});const requestUrl=new URL(request.url),submitted=requestUrl.searchParams.get("anfrage")==="gesendet",canonicalUrl=new URL(`/immobilien/${encodeURIComponent(row.public_slug)}`,requestUrl.origin).toString();return data({row,submitted,canonicalUrl},{headers:{"Cache-Control":submitted?"private, no-store":"public, max-age=60, s-maxage=120"}});}
 export async function action({request,context,params}:Route.ActionArgs){
  const fd=await request.formData();const slug=String(params.slug??"");const honigtopf=clean(fd,HONIGTOPF_FELD,120);

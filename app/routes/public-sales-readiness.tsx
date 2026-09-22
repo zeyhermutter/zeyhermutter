@@ -1,5 +1,6 @@
 import { data, Form, Link, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/public-sales-readiness";
+import { seitenkopf } from "~/lib/seitenkopf";
 import { Honigtopf, PublicFooter, PublicHeader } from "~/components/public-shell";
 import { HONIGTOPF_FELD } from "~/lib/public-intake";
 import { isSellerCheckPublicEnabled } from "~/lib/sales-readiness.server";
@@ -12,7 +13,7 @@ type ActionResult = { ok?: string; error?: string };
 function text(fd: FormData, key: string, max = 4000) { return String(fd.get(key) ?? "").trim().replace(/\s+/g, " ").slice(0, max); }
 function emailValid(value: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && value.length <= 254; }
 
-export function meta({ data: routeData }: Route.MetaArgs) {
+function seitenMeta({ data: routeData }: Route.MetaArgs) {
   const canonicalUrl = (routeData as { canonicalUrl?: string } | undefined)?.canonicalUrl;
   return [
     { title: "Verkaufspotenzial prüfen · Verkaufsstrategie-Check · ZeyherMutter" },
@@ -20,6 +21,10 @@ export function meta({ data: routeData }: Route.MetaArgs) {
     { name: "robots", content: "index,follow" },
     ...(canonicalUrl ? [{ tagName: "link" as const, rel: "canonical", href: canonicalUrl }] : []),
   ];
+}
+
+export function meta(args: Route.MetaArgs) {
+  return seitenkopf(args, seitenMeta(args));
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {

@@ -1,5 +1,6 @@
 import { data, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/public-references";
+import { seitenkopf } from "~/lib/seitenkopf";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
 import { PublicFooter, PublicHeader } from "~/components/public-shell";
 import { tag } from "~/lib/format";
@@ -24,11 +25,15 @@ const ZITAT_QUELLE: Record<string, string> = {
   REVIEW: "öffentliche Bewertung",
 };
 
-export function meta() {
+function seitenMeta(_args: Route.MetaArgs) {
   return [
     { title: "Referenzen · ZeyherMutter" },
     { name: "description", content: "Abgeschlossene Verkäufe, die wir mit ausdrücklicher Freigabe der Eigentümer zeigen dürfen." },
   ];
+}
+
+export function meta(args: Route.MetaArgs) {
+  return seitenkopf(args, seitenMeta(args));
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
