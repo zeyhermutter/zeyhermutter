@@ -131,11 +131,11 @@
 
 /* Root enthält noch den historischen Objekt-Untermenü-Mount; im internen Layout gilt nur die neue Instanz. */
 .property-context-nav:not(.persistent-property-context-nav) { display: none; }
-.persistent-app-main > .persistent-property-context-nav { max-width: 1320px; }
+.persistent-app-main > .persistent-property-context-nav { max-width: var(--crm-content-max); }
 
 /* Der einmalige Lead→Objekt-Hinweis sitzt ebenfalls im Hauptinhalt und nicht unter der Sidebar. */
 body > [aria-label="Nächste Schritte nach Lead-Übernahme"] {
-  width: min(1320px, calc(100% - 308px));
+  width: min(var(--crm-content-max), calc(100% - 308px));
   margin-left: max(272px, calc((100vw - 236px - 1320px) / 2 + 236px));
   margin-right: 36px;
 }

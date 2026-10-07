@@ -1,10 +1,10 @@
 .property-workflow-section {
-  max-width: 1320px;
+  max-width: var(--crm-content-max);
   margin: 14px auto 0;
 }
 
 .editor-shell > .property-section + .property-section {
-  max-width: 1180px;
+  max-width: var(--crm-content-max);
 }
 
 .property-workflow-heading {

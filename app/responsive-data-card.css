@@ -1,6 +1,5 @@
 /* Beta – gemeinsame Fluchtlinien und responsive data-card-Abstände */
 :root {
-  --crm-content-max: 1320px;
   --crm-page-gutter: clamp(18px, 2.1vw, 36px);
   --crm-section-gap: clamp(14px, 1.25vw, 20px);
   --crm-block-gap: clamp(16px, 1.35vw, 22px);

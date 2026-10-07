@@ -14,16 +14,6 @@ body {
 button, input { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 .shell { min-height: 100vh; }
-.topbar {
-  height: 76px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 0 28px;
-  border-bottom: 1px solid #2e393a;
-}
 .top-actions { display: flex; align-items: center; gap: 10px; }
 .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: -.02em; text-decoration: none; }
 .brand-mark {
@@ -43,8 +33,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
   padding: 8px 11px;
   color: #bbc6c7;
 }
-.hero, .modules { max-width: 1180px; margin: 0 auto; padding: 84px 28px; }
-.hero { border-bottom: 1px solid #2e393a; }
 .eyebrow {
   margin: 0 0 14px;
   text-transform: uppercase;
@@ -128,14 +116,14 @@ h1 { max-width: 850px; margin: 0; font-size: clamp(42px, 7vw, 82px); line-height
 .sidebar-footer { margin-top: auto; display: grid; gap: 6px; padding: 14px 12px 2px; color: #9ba6a7; }
 .sidebar-footer small { color: #687476; font-size: 10px; letter-spacing: .14em; }
 .app-content { min-width: 0; padding: 36px; }
-.app-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; max-width: 1320px; margin: 0 auto; }
+.app-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; max-width: var(--crm-content-max); margin: 0 auto; }
 .app-title { font-size: clamp(34px, 4vw, 56px); line-height: 1; }
-.metric-grid { max-width: 1320px; margin: 34px auto 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.metric-grid { max-width: var(--crm-content-max); margin: 34px auto 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .metric-card, .data-card { border: 1px solid #293536; border-radius: 16px; background: #141a1b; }
 .metric-card { padding: 20px; }
 .metric-card span, .metric-card small { display: block; color: #7e8b8d; }
 .metric-card strong { display: block; margin: 12px 0 5px; font-size: 28px; }
-.dashboard-grid { max-width: 1320px; margin: 12px auto 0; display: grid; grid-template-columns: 1.35fr 1fr; gap: 12px; }
+.dashboard-grid { max-width: var(--crm-content-max); margin: 12px auto 0; display: grid; grid-template-columns: 1.35fr 1fr; gap: 12px; }
 .data-card { min-width: 0; padding: 22px; }
 .card-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
 .card-head h2 { margin: 0; font-size: 24px; }

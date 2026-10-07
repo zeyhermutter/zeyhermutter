@@ -8,13 +8,13 @@
 .row-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
 
 .editor-shell { min-height: 100vh; padding: 36px; background: #0e1314; }
-.editor-header { max-width: 1320px; margin: 0 auto 24px; display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+.editor-header { max-width: var(--crm-content-max); margin: 0 auto 24px; display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
 .editor-title { font-size: clamp(34px, 5vw, 58px); line-height: 1; letter-spacing: -.045em; }
 .editor-meta { margin: 14px 0 0; color: #758284; font-size: 13px; }
 .back-link { display: inline-block; margin-bottom: 28px; color: #8b989a; text-decoration: none; font-size: 13px; }
 .editor-card, .history-card { border: 1px solid #293536; border-radius: 18px; background: #141a1b; }
 .editor-card { max-width: 980px; margin: 0 auto; padding: 28px; }
-.contact-layout { max-width: 1320px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(320px, .75fr); gap: 14px; align-items: start; }
+.contact-layout { max-width: var(--crm-content-max); margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(320px, .75fr); gap: 14px; align-items: start; }
 .contact-layout .editor-card { width: 100%; max-width: none; margin: 0; }
 .history-card { padding: 24px; position: sticky; top: 24px; }
 
@@ -56,9 +56,9 @@
 .history-change span { color: #aab5b6; font-size: 12px; }
 .history-change small { color: #748183; overflow-wrap: anywhere; }
 
-.property-summary-grid { max-width: 1320px; margin: 0 auto 14px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; }
-.property-section { max-width: 1320px; margin-top: 14px; margin-left: auto; margin-right: auto; }
-.editor-card.property-section { max-width: 1320px; }
+.property-summary-grid { max-width: var(--crm-content-max); margin: 0 auto 14px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; }
+.property-section { max-width: var(--crm-content-max); margin-top: 14px; margin-left: auto; margin-right: auto; }
+.editor-card.property-section { max-width: var(--crm-content-max); }
 .section-separator { margin: 28px 0 18px; padding-top: 20px; border-top: 1px solid #283334; }
 .checklist-row { display: grid; grid-template-columns: minmax(0, 1fr) 150px; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid #263031; }
 .checklist-row:last-child { border-bottom: 0; }

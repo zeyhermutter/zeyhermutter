@@ -156,7 +156,7 @@
 
 /* Deutlich sichtbare Abschnittsnavigation für Anfragen, Suchprofile und Besichtigungen. */
 .record-section-nav {
-  width: min(1320px, calc(100% - 72px));
+  width: min(var(--crm-content-max), calc(100% - 72px));
   margin: 22px auto -12px;
   display: flex;
   align-items: center;
