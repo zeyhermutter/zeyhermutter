@@ -129,8 +129,6 @@
 }
 .persistent-app-frame .app-shell > .sidebar { display: none; }
 
-/* Root enthält noch den historischen Objekt-Untermenü-Mount; im internen Layout gilt nur die neue Instanz. */
-.property-context-nav:not(.persistent-property-context-nav) { display: none; }
 .persistent-app-main > .persistent-property-context-nav { max-width: var(--crm-content-max); }
 
 /* Der einmalige Lead→Objekt-Hinweis sitzt ebenfalls im Hauptinhalt und nicht unter der Sidebar. */

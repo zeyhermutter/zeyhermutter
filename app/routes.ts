@@ -70,6 +70,7 @@ export default [
     route("commissions", "routes/commissions.tsx"),
     route("commissions/new", "routes/commission-new.tsx"),
     route("commissions/:commissionId", "routes/commission-detail.tsx"),
+    route("pipeline", "routes/pipeline.tsx"),
     route("purchase-offers", "routes/purchase-offers.tsx"),
     route("purchase-offers/new", "routes/purchase-offer-new.tsx"),
     route("purchase-offers/:offerId", "routes/purchase-offer-detail.tsx"),

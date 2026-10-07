@@ -1,0 +1,50 @@
+/* "In Bewegung" -- die Zusammenschau aus Kaufangeboten, Reservierungen und
+ * Abschluessen.
+ *
+ * Die Seite erbt Kartenraster, Zeilen und Abstaende vom CRM. Eigen ist nur
+ * die Herkunftsmarke: welcher der drei Vorgaenge eine Zeile ist, muss man
+ * ohne Lesen sehen, sonst ist die Zusammenschau wieder eine Liste, die man
+ * durchgeht.
+ *
+ * Unterschieden wird nach Helligkeit UND Farbe, nicht nach Farbe allein --
+ * sonst sind die drei fuer rund acht Prozent der Maenner dieselbe Marke.
+ *
+ * Kontrast nachgerechnet:
+ *   #1F4E6B auf #E4EFF5   6.0:1
+ *   #6A4A14 auf #F6EEDC   6.2:1
+ *   #1F5134 auf #E2F0E6   6.6:1
+ */
+
+.pipeline-breite {
+  width: min(var(--crm-content-max), 100%);
+  margin: 0 auto;
+}
+
+.pipeline-art {
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.pipeline-art-angebot {
+  background: #e4eff5;
+  color: #1f4e6b;
+  box-shadow: inset 0 0 0 1px #bdd6e3;
+}
+
+.pipeline-art-reservierung {
+  background: #f6eedc;
+  color: #6a4a14;
+  box-shadow: inset 0 0 0 1px #e0cfa8;
+}
+
+.pipeline-art-abschluss {
+  background: #e2f0e6;
+  color: #1f5134;
+  box-shadow: inset 0 0 0 1px #b6d6c1;
+}

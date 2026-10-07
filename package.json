@@ -33,13 +33,14 @@
     "check:sitemap": "node scripts/check-sitemap.mjs",
     "check:seitenkopf": "node scripts/check-seitenkopf.mjs",
     "check:hero-bild": "node scripts/check-hero-bild.mjs",
-    "check:quellen": "pnpm run check:brand-logo && pnpm run check:goldschrift && pnpm run check:hero-bild && pnpm run check:anzeigeformate && pnpm run check:rohe-enums && pnpm run check:leerbehauptung && pnpm run check:tote-beschriftungen && pnpm run check:honigtopf && pnpm run check:sitemap && pnpm run check:seitenkopf && pnpm run check:pruefketten && pnpm run check:edge-funktionen && pnpm run check:wrangler-konfig && pnpm run check:inhaltsbreite && pnpm run check:workflows && pnpm run check:formular-geschlossen",
+    "check:quellen": "pnpm run check:brand-logo && pnpm run check:goldschrift && pnpm run check:hero-bild && pnpm run check:anzeigeformate && pnpm run check:rohe-enums && pnpm run check:leerbehauptung && pnpm run check:tote-beschriftungen && pnpm run check:honigtopf && pnpm run check:sitemap && pnpm run check:seitenkopf && pnpm run check:pruefketten && pnpm run check:edge-funktionen && pnpm run check:wrangler-konfig && pnpm run check:inhaltsbreite && pnpm run check:workflows && pnpm run check:formular-geschlossen && pnpm run check:objektakte-navigation",
     "check:pruefketten": "node scripts/check-pruefketten.mjs",
     "check:edge-funktionen": "node scripts/check-edge-funktionen.mjs",
     "check:wrangler-konfig": "node scripts/check-wrangler-konfig.mjs",
     "check:inhaltsbreite": "node scripts/check-inhaltsbreite.mjs",
     "check:workflows": "node scripts/check-workflows.mjs",
-    "check:formular-geschlossen": "node scripts/check-formular-geschlossen.mjs"
+    "check:formular-geschlossen": "node scripts/check-formular-geschlossen.mjs",
+    "check:objektakte-navigation": "node scripts/check-objektakte-navigation.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.5",

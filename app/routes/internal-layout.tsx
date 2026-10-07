@@ -8,6 +8,8 @@ import { HelpEntry } from "~/components/help-entry";
 import { LiveListFilters } from "~/components/live-list-filters";
 import { PersistentNavigation } from "~/components/persistent-navigation";
 import { RecordSectionNavigation } from "~/components/record-section-navigation";
+import { PropertyContextNavigation } from "~/components/property-context-navigation";
+import { objektakteAusPfad } from "~/lib/objektakte-navigation";
 import { ViewingDetailEnhancements } from "~/components/viewing-detail-enhancements";
 import { ViewingReplanModal } from "~/components/viewing-replan-modal";
 import "~/crm-form-guardrails.css";
@@ -33,15 +35,34 @@ const NAV_STACK_KEY = "zm_internal_navigation_stack";
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { supabase } = createSupabaseServerClient(request, context.cloudflare.env);
   const { data: claims } = await supabase.auth.getClaims();
-  if (!claims?.claims?.sub) return { notifications: null, unreadCount: 0 };
+  if (!claims?.claims?.sub) return { notifications: null, unreadCount: 0, immobilienStatus: null };
 
   const [{ count, error: countError }, { data: rows, error: rowError }] = await Promise.all([
     supabase.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null),
     supabase.from("notifications").select("id,type,title,message,entity_type,entity_id,created_at,read_at").order("created_at", { ascending: false }).limit(8),
   ]);
-  if (countError || rowError) return { notifications: null, unreadCount: 0 };
+  if (countError || rowError) return { notifications: null, unreadCount: 0, immobilienStatus: null };
 
-  return { notifications: (rows ?? []) as HeaderNotification[], unreadCount: count ?? 0 };
+  // Der Status der Immobilie, aber nur auf einer Objektakte. Die Leiste
+  // darueber faltet danach; ohne Status faltet sie nicht, und das ist die
+  // richtige Vorgabe -- lieber eine volle Leiste als eine, die den gesuchten
+  // Abschnitt grundlos wegraeumt.
+  //
+  // Eine Abfrage auf den Primaerschluessel, und nur auf Objektseiten. Faellt
+  // sie aus, bleibt der Status null; die Leiste zeigt dann alles.
+  const akte = objektakteAusPfad(new URL(request.url).pathname);
+  let immobilienStatus: string | null = null;
+  if (akte) {
+    const { data: immobilie } = await supabase
+      .from("properties").select("status").eq("id", akte.propertyId).maybeSingle();
+    immobilienStatus = (immobilie?.status as string | undefined) ?? null;
+  }
+
+  return {
+    notifications: (rows ?? []) as HeaderNotification[],
+    unreadCount: count ?? 0,
+    immobilienStatus,
+  };
 }
 
 function readStack() {
@@ -114,38 +135,6 @@ function SalesReadinessLeadEntryEnhancer() {
   return null;
 }
 
-function PropertyContextNavigation() {
-  const location = useLocation();
-  const match = location.pathname.match(/^\/properties\/([^/]+)(?:\/(documents|document-requirements|media|interests|publication|exposes|marketing|compliance|legal|disposition|pricing|hoa-tenancy|mandatory-data)(?:\/.*)?)?\/?$/);
-  if (!match) return null;
-
-  const propertyId = match[1];
-  const section = match[2] ?? "record";
-  return (
-    <nav className="property-context-nav persistent-property-context-nav" aria-label="Immobilienakte">
-      <Link className={section === "record" ? "active" : ""} to={`/properties/${propertyId}`}>Objektakte</Link>
-      <Link className={section === "legal" ? "active" : ""} to={`/properties/${propertyId}/legal`}>Recht & Lasten</Link>
-      <Link className={section === "disposition" ? "active" : ""} to={`/properties/${propertyId}/disposition`}>Verfügungsberechtigung</Link>
-      <Link className={section === "pricing" ? "active" : ""} to={`/properties/${propertyId}/pricing`}>Preis & Wert</Link>
-      <Link className={section === "hoa-tenancy" ? "active" : ""} to={`/properties/${propertyId}/hoa-tenancy`}>WEG & Miete</Link>
-      <Link className={section === "mandatory-data" ? "active" : ""} to={`/properties/${propertyId}/mandatory-data`}>Pflichtangaben</Link>
-      <Link className={section === "interests" ? "active" : ""} to={`/properties/${propertyId}/interests`}>Interessenten & Besichtigungen</Link>
-      <Link className={section === "publication" ? "active" : ""} to={`/properties/${propertyId}/publication`}>Website</Link>
-      <Link className={section === "exposes" ? "active" : ""} to={`/properties/${propertyId}/exposes`}>Exposés</Link>
-      <Link className={section === "marketing" ? "active" : ""} to={`/properties/${propertyId}/marketing`}>Vermarktung & Portale</Link>
-      <Link className={section === "documents" ? "active" : ""} to={`/properties/${propertyId}/documents`}>Dokumente</Link>
-      <Link className={section === "document-requirements" ? "active" : ""} to={`/properties/${propertyId}/document-requirements`}>Unterlagenliste</Link>
-      <Link className={section === "media" ? "active" : ""} to={`/properties/${propertyId}/media`}>Medien</Link>
-      <Link className={section === "compliance" ? "active" : ""} to={`/properties/${propertyId}/compliance`}>Geldwäsche</Link>
-      <Link to={`/mandates?property_id=${encodeURIComponent(propertyId)}`}>Maklerauftrag</Link>
-      <Link to={`/purchase-offers?property_id=${encodeURIComponent(propertyId)}`}>Kaufangebote</Link>
-      <Link to={`/reservations?property_id=${encodeURIComponent(propertyId)}`}>Reservierungen</Link>
-      <Link to={`/closings?property_id=${encodeURIComponent(propertyId)}`}>Abschluss & Notar</Link>
-      <Link to={`/commissions?property_id=${encodeURIComponent(propertyId)}`}>Provisionen</Link>
-    </nav>
-  );
-}
-
 export default function InternalLayout({ loaderData }: Route.ComponentProps) {
   return (
     <div className="persistent-app-frame">
@@ -157,7 +146,7 @@ export default function InternalLayout({ loaderData }: Route.ComponentProps) {
       <PersistentNavigation notifications={loaderData?.notifications ?? undefined} unreadCount={loaderData?.unreadCount ?? 0} />
       <div className="persistent-app-main">
         <LiveListFilters />
-        <PropertyContextNavigation />
+        <PropertyContextNavigation immobilienStatus={loaderData?.immobilienStatus ?? null} />
         <RecordSectionNavigation />
         <HelpEntry />
         <Outlet />

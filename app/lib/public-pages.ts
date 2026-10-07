@@ -76,8 +76,8 @@ export const NICHT_IN_DIE_SITEMAP: Record<string, string> = {
 export const INTERNE_PRAEFIXE = [
   "/acquisition", "/after-sales", "/case-studies", "/closings", "/commissions",
   "/compliance", "/crm", "/inquiries", "/leads", "/mandates", "/projects",
-  "/properties", "/purchase-offers", "/referrals", "/reports", "/reservations",
-  "/search-profiles", "/viewings",
+  "/pipeline", "/properties", "/purchase-offers", "/referrals", "/reports",
+  "/reservations", "/search-profiles", "/viewings",
 ];
 
 /** Weitere Pfade, die robots.txt sperrt, ohne zum internen Bereich zu gehoeren. */
