@@ -122,8 +122,21 @@ const skripte = paket.scripts ?? {};
 for (const umgebung of ["beta", "production"]) {
   const kette = skripte[`deploy:${umgebung}`] ?? "";
   const schritte = kette.split("&&").map((s) => s.trim());
+  const zugaenge = schritte.findIndex((s) => s === `pnpm run deploy:zugaenge:${umgebung}`);
   const funktionen = schritte.findIndex((s) => s === `pnpm run deploy:funktionen:${umgebung}`);
   const worker = schritte.findIndex((s) => /^wrangler deploy\b/.test(s));
+
+  // Die Zugangspruefung steht ganz vorn, nicht irgendwo. Am 07.10.2026 fiel
+  // das fehlende CLOUDFLARE_API_TOKEN erst auf, nachdem die Edge-Funktionen
+  // auf PRODUKTION schon ausgespielt waren -- halber Stand, und das fehlende
+  // Token stand von Anfang an im Protokoll.
+  pruefe(zugaenge === 0,
+    `"deploy:${umgebung}" beginnt nicht mit "pnpm run deploy:zugaenge:${umgebung}", `
+    + `sondern mit "${schritte[0]}".\n`
+    + "  Ein Deploy, dem ein Zugang fehlt, muss scheitern, bevor er etwas anfasst,\n"
+    + "  nicht zwischen zwei Schreibvorgaengen.");
+  pruefe(skripte[`deploy:zugaenge:${umgebung}`],
+    `In package.json fehlt das Skript "deploy:zugaenge:${umgebung}".`);
 
   pruefe(funktionen >= 0,
     `"deploy:${umgebung}" spielt die Edge-Funktionen nicht aus.\n`
