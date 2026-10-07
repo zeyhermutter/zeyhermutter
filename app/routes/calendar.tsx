@@ -3,9 +3,10 @@ import type { Route } from "./+types/calendar";
 import { requireActiveUser } from "~/lib/auth.server";
 import { uhrzeit as formatTime } from "~/lib/format";
 import { ABSCHLUSSSTATUS, AUFGABENSTATUS, BESICHTIGUNGSSTATUS, beschrifte } from "~/lib/labels";
+import { TERMINKATEGORIEN, kategorie, type Terminkategorie } from "~/lib/terminkategorien";
 import "~/calendar.css";
 
-type CalendarKind = "TASK" | "LEAD_FOLLOWUP" | "LEAD_VALUATION" | "VIEWING" | "CLOSING_NOTARY";
+type CalendarKind = Terminkategorie;
 type CalendarEvent = {
   key: string;
   kind: CalendarKind;
@@ -88,6 +89,114 @@ function dateKey(value: string) {
 
 function formatDay(value: string) {
   return new Intl.DateTimeFormat("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", timeZone: "Europe/Berlin" }).format(new Date(`${value}T12:00:00Z`));
+}
+
+function heuteBerlin() {
+  const parts = berlinParts(new Date());
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+const WOCHENTAGE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+
+type Rasterzelle = { tagSchluessel: string; tagZahl: number; imMonat: boolean; wochenende: boolean };
+
+/**
+ * Das Monatsraster: volle Wochen von Montag bis Sonntag, mit den angrenzenden
+ * Tagen des Vor- und Folgemonats aufgefuellt.
+ *
+ * Gerechnet wird in UTC, weil hier nur Kalenderdaten vorkommen -- der 14. ist
+ * der 14., unabhaengig von der Zeitzone. Die Zuordnung eines Termins zu einem
+ * Tag passiert vorher in dateKey(), und zwar in Europe/Berlin.
+ */
+function monatsraster(month: string): Rasterzelle[][] {
+  const [jahr, monatsNummer] = month.split("-").map(Number);
+  const erster = new Date(Date.UTC(jahr, monatsNummer - 1, 1));
+  const versatz = (erster.getUTCDay() + 6) % 7;
+  const tageImMonat = new Date(Date.UTC(jahr, monatsNummer, 0)).getUTCDate();
+  const zellen = Math.ceil((versatz + tageImMonat) / 7) * 7;
+  const wochen: Rasterzelle[][] = [];
+  for (let i = 0; i < zellen; i += 1) {
+    const tag = new Date(Date.UTC(jahr, monatsNummer - 1, 1 - versatz + i));
+    const tagSchluessel = `${tag.getUTCFullYear()}-${String(tag.getUTCMonth() + 1).padStart(2, "0")}-${String(tag.getUTCDate()).padStart(2, "0")}`;
+    if (i % 7 === 0) wochen.push([]);
+    wochen[wochen.length - 1].push({
+      tagSchluessel,
+      tagZahl: tag.getUTCDate(),
+      imMonat: tagSchluessel.startsWith(`${month}-`),
+      wochenende: i % 7 >= 5,
+    });
+  }
+  return wochen;
+}
+
+/**
+ * Wie viele Marken in eine Tageszelle passen -- eine Rechnung, keine Setzung.
+ * Die Spalte ist 452 Pixel breit, auf schmaleren Bildschirmen 430; sieben Tage
+ * ergeben 61 bis 64 Pixel je Zelle, davon 8 Innenabstand. Fuer Marken bleiben
+ * 53 Pixel -- drei Marken von 15 Pixeln mit 2 Pixeln Abstand ergeben 49. Ab dem
+ * vierten Termin stehen zwei Marken und eine Zahl da, damit die Zeile nicht
+ * umbricht und die Wochen gleich hoch bleiben.
+ */
+const MARKEN_JE_TAG = 3;
+
+function Monatsraster({ month, grouped }: { month: string; grouped: Record<string, CalendarEvent[]> }) {
+  const wochen = monatsraster(month);
+  const heute = heuteBerlin();
+  const anzahl = new Map(TERMINKATEGORIEN.map((k) => [k.schluessel, 0]));
+  for (const tagesTermine of Object.values(grouped)) {
+    for (const termin of tagesTermine) anzahl.set(termin.kind, (anzahl.get(termin.kind) ?? 0) + 1);
+  }
+
+  return <aside className="calendar-monat" aria-label={`Monatsübersicht ${monthLabel(month)}`}>
+    <div className="calendar-monat-kopf">
+      <strong>Monatsübersicht</strong>
+      <small>{Object.values(grouped).reduce((summe, tag) => summe + tag.length, 0)} Termine</small>
+    </div>
+
+    <div className="monatsraster-rahmen">
+      <table className="monatsraster">
+        <caption className="sr-only">Termine im Monat {monthLabel(month)}, nach Kategorie gekennzeichnet</caption>
+        <thead>
+          <tr>{WOCHENTAGE.map((tag) => <th key={tag} scope="col">{tag}</th>)}</tr>
+        </thead>
+        <tbody>
+          {wochen.map((woche) => <tr key={woche[0].tagSchluessel}>
+            {woche.map((zelle) => {
+              const tagesTermine = grouped[zelle.tagSchluessel] ?? [];
+              const sichtbar = tagesTermine.length > MARKEN_JE_TAG ? MARKEN_JE_TAG - 1 : MARKEN_JE_TAG;
+              const klassen = ["monatsraster-tag"];
+              if (!zelle.imMonat) klassen.push("monatsraster-fremd");
+              if (zelle.wochenende) klassen.push("monatsraster-wochenende");
+              if (zelle.tagSchluessel === heute) klassen.push("monatsraster-heute");
+              const inhalt = <>
+                <span className="monatsraster-zahl">{zelle.tagZahl}</span>
+                {tagesTermine.length > 0 ? <span className="monatsraster-marken">
+                  {tagesTermine.slice(0, sichtbar).map((termin) => {
+                    const art = kategorie(termin.kind);
+                    return <span className={`termin-marke ${art.klasse}`} key={termin.key} title={`${formatTime(termin.startsAt)} · ${art.beschriftung}: ${termin.title}`}>{art.kuerzel}</span>;
+                  })}
+                  {tagesTermine.length > sichtbar ? <span className="termin-weitere">+{tagesTermine.length - sichtbar}</span> : null}
+                </span> : null}
+              </>;
+              return <td key={zelle.tagSchluessel}>
+                {tagesTermine.length > 0
+                  ? <a className={klassen.join(" ")} href={`#tag-${zelle.tagSchluessel}`} aria-label={`${formatDay(zelle.tagSchluessel)}, ${tagesTermine.length} ${tagesTermine.length === 1 ? "Termin" : "Termine"}`}>{inhalt}</a>
+                  : <span className={klassen.join(" ")}>{inhalt}</span>}
+              </td>;
+            })}
+          </tr>)}
+        </tbody>
+      </table>
+    </div>
+
+    <ul className="monatsraster-legende">
+      {TERMINKATEGORIEN.map((art) => <li key={art.schluessel}>
+        <span className={`termin-marke ${art.klasse}`} aria-hidden="true">{art.kuerzel}</span>
+        <span className="monatsraster-legende-text">{art.beschriftung}</span>
+        <span className="monatsraster-legende-zahl">{anzahl.get(art.schluessel) ?? 0}</span>
+      </li>)}
+    </ul>
+  </aside>;
 }
 
 function minuteKey(value: string) {
@@ -192,7 +301,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       startsAt: task.due_at,
       endsAt: null,
       sourcePath: taskSourcePath(task),
-      sourceLabel: "Aufgabe / interner Termin",
+      sourceLabel: kategorie("TASK").beschriftung,
       exportUrl: exportUrl("task", task.id),
       statusLabel: beschrifte(AUFGABENSTATUS, task.status),
     });
@@ -209,7 +318,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       startsAt: row.follow_up_at,
       endsAt: null,
       sourcePath: `/leads/${row.id}`,
-      sourceLabel: "Wiedervorlage",
+      sourceLabel: kategorie("LEAD_FOLLOWUP").beschriftung,
       exportUrl: exportUrl("lead_followup", row.id),
       statusLabel: null,
     });
@@ -227,7 +336,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       startsAt: row.valuation_appointment_at,
       endsAt: null,
       sourcePath: `/leads/${row.id}`,
-      sourceLabel: "Eigentümertermin",
+      sourceLabel: kategorie("LEAD_VALUATION").beschriftung,
       exportUrl: exportUrl("lead_valuation", row.id),
       statusLabel: null,
     });
@@ -244,7 +353,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       startsAt: row.starts_at,
       endsAt: row.ends_at,
       sourcePath: `/viewings/${row.id}`,
-      sourceLabel: "Besichtigung",
+      sourceLabel: kategorie("VIEWING").beschriftung,
       exportUrl: exportUrl("viewing", row.id),
       statusLabel: beschrifte(BESICHTIGUNGSSTATUS, row.status),
     });
@@ -261,7 +370,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       startsAt: row.notary_appointment_at,
       endsAt: null,
       sourcePath: `/closings/${row.id}`,
-      sourceLabel: "Notartermin",
+      sourceLabel: kategorie("CLOSING_NOTARY").beschriftung,
       exportUrl: exportUrl("closing_notary", row.id),
       statusLabel: beschrifte(ABSCHLUSSSTATUS, row.status),
     });
@@ -324,18 +433,22 @@ export default function CalendarPage() {
         <Link className="subtle-link" to="/closings">Abschlüsse & Notar öffnen</Link>
       </div>
 
-      <div className="calendar-agenda">
-        {Object.entries(grouped).map(([day, dayEvents]) => <section className="calendar-day" key={day}>
-          <div className="calendar-day-label"><strong>{formatDay(day)}</strong><small>{dayEvents.length} {dayEvents.length === 1 ? "Termin" : "Termine"}</small></div>
-          <div className="calendar-day-events">
-            {dayEvents.map((event) => <article className="calendar-event" key={event.key}>
-              <div className="calendar-event-time"><strong>{formatTime(event.startsAt)}</strong>{event.endsAt ? <small>bis {formatTime(event.endsAt)}</small> : null}</div>
-              <div className="calendar-event-main"><strong>{event.title}</strong><p>{event.subtitle}</p><span className="calendar-kind">{event.sourceLabel}{event.statusLabel ? ` · ${event.statusLabel}` : ""}</span></div>
-              <div className="calendar-event-actions"><Link className="subtle-link" to={event.sourcePath}>CRM öffnen →</Link><a className="secondary-button link-button compact" href={event.exportUrl}>.ics</a></div>
-            </article>)}
-          </div>
-        </section>)}
-        {events.length === 0 ? <p className="empty-state">Im gewählten Monat sind für diese Ansicht keine CRM-Termine vorhanden.</p> : null}
+      <div className="calendar-ansichten">
+        <div className="calendar-agenda">
+          {Object.entries(grouped).map(([day, dayEvents]) => <section className="calendar-day" key={day} id={`tag-${day}`}>
+            <div className="calendar-day-label"><strong>{formatDay(day)}</strong><small>{dayEvents.length} {dayEvents.length === 1 ? "Termin" : "Termine"}</small></div>
+            <div className="calendar-day-events">
+              {dayEvents.map((event) => <article className="calendar-event" key={event.key}>
+                <div className="calendar-event-time"><strong>{formatTime(event.startsAt)}</strong>{event.endsAt ? <small>bis {formatTime(event.endsAt)}</small> : null}</div>
+                <div className="calendar-event-main"><strong>{event.title}</strong><p>{event.subtitle}</p><span className={`calendar-kind ${kategorie(event.kind).klasse}`}>{event.sourceLabel}{event.statusLabel ? ` · ${event.statusLabel}` : ""}</span></div>
+                <div className="calendar-event-actions"><Link className="subtle-link" to={event.sourcePath}>CRM öffnen →</Link><a className="secondary-button link-button compact" href={event.exportUrl}>.ics</a></div>
+              </article>)}
+            </div>
+          </section>)}
+          {events.length === 0 ? <p className="empty-state">Im gewählten Monat sind für diese Ansicht keine CRM-Termine vorhanden.</p> : null}
+        </div>
+
+        <Monatsraster month={month} grouped={grouped} />
       </div>
     </section>
   </main>;

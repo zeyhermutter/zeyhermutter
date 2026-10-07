@@ -73,10 +73,53 @@
   font-size: .92rem;
 }
 
+/* --- Zwei Ansichten desselben Monats, nebeneinander ---------------------
+ *
+ * Links die Agenda: jeder Termin mit Zeit, Betreff, Quelle und Ausgang ins
+ * CRM. Rechts das Monatsraster: der ganze Monat auf einen Blick, ohne Text.
+ *
+ * Die Breite der rechten Spalte ist keine Geschmacksfrage, sondern eine
+ * Rechnung. Sieben Spalten in 420 Pixeln ergeben 60 Pixel je Tag. Ein
+ * Terminfeld mit Uhrzeit und Betreff braucht rund 110. Darum stehen im Raster
+ * Marken und nicht Texte -- und der Text steht links daneben, wo Platz ist.
+ * Ein Klick auf einen Tag im Raster springt zu diesem Tag in der Agenda.
+ */
+
+.calendar-ansichten {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(400px, 452px);
+  gap: 18px;
+  align-items: start;
+  margin-top: 18px;
+}
+
 .calendar-agenda {
   display: grid;
   gap: 18px;
-  margin-top: 18px;
+  min-width: 0;
+}
+
+/* Neben dem Raster hat die Agenda rund 500 bis 700 Pixel statt der vollen
+ * Breite. Gemessen bei 1260 Pixeln Fensterbreite mit der alten, weiten Form:
+ * 150 Pixel Tagesstreifen, 92 Uhrzeit, 153 fuer die beiden Ausgaenge -- fuer
+ * den Betreff blieb nichts, und "Unterlagen nachfordern" brach Buchstabe fuer
+ * Buchstabe um. Darum hier die enge Form: schmaler Tagesstreifen, Ausgaenge
+ * unter dem Text. Unter 1240 Pixeln steht die Agenda wieder allein und bekommt
+ * weiter unten ihre weite Form zurueck.
+ */
+.calendar-day {
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 12px;
+  scroll-margin-top: 18px;
+}
+
+.calendar-ansichten .calendar-event {
+  grid-template-columns: 78px minmax(0, 1fr);
+}
+
+.calendar-ansichten .calendar-event-actions {
+  grid-column: 1 / -1;
+  justify-content: flex-start;
 }
 
 .calendar-day {
@@ -177,6 +220,286 @@
   line-height: 1.45;
 }
 
+/* --- Das Monatsraster ---------------------------------------------------
+ *
+ * Eine echte Tabelle: Spalten sind Wochentage, Zeilen sind Wochen. Das ist
+ * nicht Formsache -- ein Vorleseprogramm nennt damit beim Vorlesen einer
+ * Zelle den Wochentag dazu.
+ *
+ * FARBE ALLEIN REICHT NICHT
+ *
+ * Fuenf Kategorien sind mehr, als sich ueber den Farbton zuverlaessig trennen
+ * laesst: Violett, Blau und Gruen liegen in der Helligkeit nur den Faktor 1,1
+ * auseinander. Jede Marke traegt darum zusaetzlich den Anfangsbuchstaben --
+ * A, W, E, B, N. Wer die Farben nicht unterscheidet, liest die Buchstaben.
+ *
+ * Kontrast nachgerechnet, Schrift auf der jeweiligen Flaeche
+ * (scripts/check-terminfarben.mjs rechnet das bei jedem Build nach):
+ *   #3A4849 auf #ECEFEE   8.2:1   Aufgabe
+ *   #45316F auf #ECE8F4   9.1:1   Wiedervorlage
+ *   #6A4A14 auf #F6EEDC   7.0:1   Eigentuemertermin
+ *   #1F4E6B auf #E4EFF5   7.6:1   Besichtigung
+ *   #1F5134 auf #E2F0E6   7.8:1   Notartermin
+ */
+
+.calendar-monat {
+  position: sticky;
+  top: 16px;
+  min-width: 0;
+}
+
+.calendar-monat-kopf {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 9px;
+}
+
+.calendar-monat-kopf strong {
+  color: #263536;
+}
+
+.calendar-monat-kopf small {
+  color: #758283;
+}
+
+.monatsraster-rahmen {
+  border: 1px solid #d8e0de;
+  border-radius: var(--crm-card-radius-sm);
+  background: #fff;
+  overflow: hidden;
+}
+
+.monatsraster {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.monatsraster th {
+  padding: 7px 0;
+  border-bottom: 1px solid #e3eae8;
+  background: #f8faf9;
+  color: #6b7a7b;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.monatsraster td {
+  height: 62px;
+  border-top: 1px solid #e9efed;
+  border-left: 1px solid #e9efed;
+  vertical-align: top;
+}
+
+.monatsraster td:first-child {
+  border-left: 0;
+}
+
+.monatsraster tbody tr:first-child td {
+  border-top: 0;
+}
+
+/* Die Zelle selbst: entweder ein Verweis in die Agenda oder ein stiller Tag. */
+.monatsraster-tag {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 100%;
+  padding: 4px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.monatsraster-wochenende {
+  background: #fafcfb;
+}
+
+a.monatsraster-tag:hover {
+  background: #f3f8f6;
+}
+
+a.monatsraster-tag:focus-visible {
+  outline: 2px solid #4a5a5b;
+  outline-offset: -2px;
+}
+
+.monatsraster-zahl {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+  border-radius: var(--crm-pill-radius);
+  color: #43524f;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.monatsraster-wochenende .monatsraster-zahl {
+  color: #7c8a89;
+}
+
+.monatsraster-fremd .monatsraster-zahl {
+  color: #adbab8;
+}
+
+.monatsraster-heute .monatsraster-zahl {
+  background: #172425;
+  color: #fff;
+}
+
+.monatsraster-marken {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* Marke einer Kategorie: feste Groesse, kein Innenabstand -- ein Zeichen,
+ * kein Kasten. Farbe und Rahmen kommen aus der Kategorieklasse. */
+.termin-marke {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  border-radius: var(--crm-pill-radius);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.termin-weitere {
+  display: inline-flex;
+  align-items: center;
+  height: 15px;
+  color: #6b7a7b;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* --- Die Legende: Farbe, Name, Anzahl im Monat ------------------------- */
+
+.monatsraster-legende {
+  display: grid;
+  gap: 5px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.monatsraster-legende li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.monatsraster-legende-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: #53625f;
+  font-size: 12px;
+}
+
+.monatsraster-legende-zahl {
+  flex: 0 0 auto;
+  color: #43524f;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Die fuenf Kategorien ----------------------------------------------
+ *
+ * Dieselben Klassen traegt die Pille .calendar-kind in der Agenda, damit
+ * derselbe Termin links und rechts dieselbe Farbe hat. Die Regeln setzen nur
+ * Farben: Innenabstand und Rundung bleiben bei der Flaeche, auf der sie
+ * sitzen -- 16px Marke im Raster, Pillenmass in der Agenda.
+ */
+
+.termin-aufgabe {
+  background: #ecefee;
+  color: #3a4849;
+  box-shadow: inset 0 0 0 1px #cfd9d7;
+}
+
+.termin-wiedervorlage {
+  background: #ece8f4;
+  color: #45316f;
+  box-shadow: inset 0 0 0 1px #cfc6e4;
+}
+
+.termin-eigentuemer {
+  background: #f6eedc;
+  color: #6a4a14;
+  box-shadow: inset 0 0 0 1px #e0cfa8;
+}
+
+.termin-besichtigung {
+  background: #e4eff5;
+  color: #1f4e6b;
+  box-shadow: inset 0 0 0 1px #bdd6e3;
+}
+
+.termin-notar {
+  background: #e2f0e6;
+  color: #1f5134;
+  box-shadow: inset 0 0 0 1px #b6d6c1;
+}
+
+/* Die Pille in der Agenda traegt die Kategoriefarbe; der eigene Rahmen aus
+ * .calendar-kind wuerde sonst zweimal zeichnen. */
+.calendar-kind.termin-aufgabe,
+.calendar-kind.termin-wiedervorlage,
+.calendar-kind.termin-eigentuemer,
+.calendar-kind.termin-besichtigung,
+.calendar-kind.termin-notar {
+  border-color: transparent;
+}
+
+/* Bis 1400 Pixel wird die rechte Spalte etwas schmaler, damit links Platz
+ * bleibt. Darunter traegt es nicht mehr. */
+@media (max-width: 1400px) {
+  .calendar-ansichten {
+    grid-template-columns: minmax(0, 1fr) minmax(400px, 430px);
+  }
+}
+
+/* Darunter steht das Raster oben: es ist die Uebersicht, und die kommt zuerst.
+ * Die Agenda hat dann die ganze Breite und nimmt wieder ihre weite Form an --
+ * breiter Tagesstreifen, Ausgaenge rechts neben dem Text. */
+@media (max-width: 1240px) {
+  .calendar-ansichten {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .calendar-monat {
+    position: static;
+    order: -1;
+    max-width: 452px;
+  }
+
+  .calendar-day {
+    grid-template-columns: 150px minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .calendar-ansichten .calendar-event {
+    grid-template-columns: 92px minmax(0, 1fr) auto;
+  }
+
+  .calendar-ansichten .calendar-event-actions {
+    grid-column: auto;
+    justify-content: flex-end;
+  }
+}
+
 @media (max-width: 900px) {
   .calendar-shell {
     width: min(100% - 24px, 780px);
@@ -206,11 +529,11 @@
     margin-top: 12px;
   }
 
-  .calendar-event {
+  .calendar-ansichten .calendar-event {
     grid-template-columns: 72px minmax(0, 1fr);
   }
 
-  .calendar-event-actions {
+  .calendar-ansichten .calendar-event-actions {
     grid-column: 1 / -1;
     justify-content: flex-start;
   }
