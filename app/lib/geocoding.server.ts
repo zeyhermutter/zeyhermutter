@@ -93,6 +93,7 @@ export async function geocodeSearchLocation(
   const postalCode = location.postalCode?.trim() || "";
   const city = location.city?.trim() || "";
   const district = location.district?.trim() || "";
+  const country = (location.country || "DE").toLowerCase();
   if (!postalCode && !city) return null;
 
   let cached = supabase
@@ -109,10 +110,32 @@ export async function geocodeSearchLocation(
     return { latitude: Number(cachedRow.latitude), longitude: Number(cachedRow.longitude), source: "cache" };
   }
 
+  // Nominatim akzeptiert freie q-Suche und strukturierte city/postalcode-Parameter
+  // nicht zuverlässig gemeinsam. Ortsteile werden deshalb ausschließlich frei gesucht.
+  if (district) {
+    await reserveSlot(supabase);
+    const free = new URLSearchParams({
+      q: [district, city, postalCode, "Deutschland"].filter(Boolean).join(", "),
+      countrycodes: country,
+    });
+    const result = await fetchFirstCoordinates(free, appBaseUrl);
+    if (result) return result;
+  }
+
+  // Für PLZ/Ort bewusst keine layer=address-Einschränkung: Gesucht wird der
+  // Mittelpunkt des Suchortes, nicht zwingend eine konkrete Straßenadresse.
   await reserveSlot(supabase);
-  const params = new URLSearchParams({ countrycodes: (location.country || "DE").toLowerCase(), layer: "address" });
-  if (postalCode) params.set("postalcode", postalCode);
-  if (city) params.set("city", city);
-  if (district) params.set("q", [district, city, postalCode].filter(Boolean).join(", "));
-  return fetchFirstCoordinates(params, appBaseUrl);
+  const structured = new URLSearchParams({ countrycodes: country });
+  if (postalCode) structured.set("postalcode", postalCode);
+  if (city) structured.set("city", city);
+  const structuredResult = await fetchFirstCoordinates(structured, appBaseUrl);
+  if (structuredResult) return structuredResult;
+
+  // Robuster Fallback, falls Nominatim eine strukturierte Ortsabfrage nicht auflöst.
+  await reserveSlot(supabase);
+  const free = new URLSearchParams({
+    q: [postalCode, city, "Deutschland"].filter(Boolean).join(" "),
+    countrycodes: country,
+  });
+  return fetchFirstCoordinates(free, appBaseUrl);
 }

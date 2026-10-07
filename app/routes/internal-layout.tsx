@@ -8,6 +8,8 @@ import { HelpEntry } from "~/components/help-entry";
 import { LiveListFilters } from "~/components/live-list-filters";
 import { PersistentNavigation } from "~/components/persistent-navigation";
 import { RecordSectionNavigation } from "~/components/record-section-navigation";
+import { ViewingDetailEnhancements } from "~/components/viewing-detail-enhancements";
+import { ViewingReplanModal } from "~/components/viewing-replan-modal";
 import "~/crm-form-guardrails.css";
 import "~/responsive-data-card.css";
 import "~/crm-light-theme.css";
@@ -149,6 +151,8 @@ export default function InternalLayout({ loaderData }: Route.ComponentProps) {
     <div className="persistent-app-frame">
       <CrmFormGuardrails />
       <SmartBackNavigation />
+      <ViewingDetailEnhancements />
+      <ViewingReplanModal />
       <SalesReadinessLeadEntryEnhancer />
       <PersistentNavigation notifications={loaderData?.notifications ?? undefined} unreadCount={loaderData?.unreadCount ?? 0} />
       <div className="persistent-app-main">

@@ -306,7 +306,6 @@ function AddressGeocodingEnhancer() {
     const longitude = form.querySelector<HTMLInputElement>('input[name="longitude"]');
     if (!street || !houseNumber || !postalCode || !city || !latitude || !longitude) return;
 
-    // Keep the DOM lookup result stable for the nested event handlers below.
     const streetInput = street;
     const houseNumberInput = houseNumber;
     const postalCodeInput = postalCode;

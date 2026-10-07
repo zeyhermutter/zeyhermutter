@@ -1,5 +1,5 @@
 .property-context-nav {
-  width: min(1120px, calc(100% - 72px));
+  width: min(1320px, calc(100% - 72px));
   margin: 22px auto -12px;
   display: flex;
   align-items: center;
