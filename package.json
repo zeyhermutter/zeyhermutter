@@ -10,8 +10,10 @@
     "build:beta": "node scripts/with-cloudflare-env.mjs beta react-router build",
     "build:production": "node scripts/with-cloudflare-env.mjs production react-router build",
     "deploy": "node scripts/require-explicit-deploy-target.mjs",
-    "deploy:beta": "pnpm run check:beta && wrangler deploy",
-    "deploy:production": "node scripts/guard-production-deploy.mjs && pnpm run check:production && wrangler deploy",
+    "deploy:funktionen:beta": "node scripts/deploy-edge-funktionen.mjs beta",
+    "deploy:funktionen:production": "node scripts/deploy-edge-funktionen.mjs production",
+    "deploy:beta": "pnpm run check:beta && pnpm run deploy:funktionen:beta && wrangler deploy",
+    "deploy:production": "node scripts/guard-production-deploy.mjs && pnpm run check:production && pnpm run deploy:funktionen:production && wrangler deploy",
     "typegen": "react-router typegen",
     "cf-typegen": "wrangler types --include-runtime=false",
     "typecheck": "react-router typegen && tsc -b",
@@ -29,8 +31,9 @@
     "check:sitemap": "node scripts/check-sitemap.mjs",
     "check:seitenkopf": "node scripts/check-seitenkopf.mjs",
     "check:hero-bild": "node scripts/check-hero-bild.mjs",
-    "check:quellen": "pnpm run check:brand-logo && pnpm run check:goldschrift && pnpm run check:hero-bild && pnpm run check:anzeigeformate && pnpm run check:rohe-enums && pnpm run check:leerbehauptung && pnpm run check:tote-beschriftungen && pnpm run check:honigtopf && pnpm run check:sitemap && pnpm run check:seitenkopf && pnpm run check:pruefketten",
-    "check:pruefketten": "node scripts/check-pruefketten.mjs"
+    "check:quellen": "pnpm run check:brand-logo && pnpm run check:goldschrift && pnpm run check:hero-bild && pnpm run check:anzeigeformate && pnpm run check:rohe-enums && pnpm run check:leerbehauptung && pnpm run check:tote-beschriftungen && pnpm run check:honigtopf && pnpm run check:sitemap && pnpm run check:seitenkopf && pnpm run check:pruefketten && pnpm run check:edge-funktionen",
+    "check:pruefketten": "node scripts/check-pruefketten.mjs",
+    "check:edge-funktionen": "node scripts/check-edge-funktionen.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.5",
