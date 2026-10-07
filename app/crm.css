@@ -13,9 +13,9 @@
 .editor-meta { margin: 14px 0 0; color: #758284; font-size: 13px; }
 .back-link { display: inline-block; margin-bottom: 28px; color: #8b989a; text-decoration: none; font-size: 13px; }
 .editor-card, .history-card { border: 1px solid #293536; border-radius: var(--crm-card-radius); background: #141a1b; }
-.editor-card { max-width: 980px; margin: 0 auto; padding: var(--crm-card-padding); }
+.editor-card { padding: var(--crm-card-padding); }
 .contact-layout { max-width: var(--crm-content-max); margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(320px, .75fr); gap: 14px; align-items: start; }
-.contact-layout .editor-card { width: 100%; max-width: none; margin: 0; }
+.contact-layout > * { max-width: none; }
 .history-card { padding: var(--crm-card-padding); position: sticky; top: 24px; }
 
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
@@ -58,7 +58,6 @@
 
 .property-summary-grid { max-width: var(--crm-content-max); margin: 0 auto 14px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; }
 .property-section { max-width: var(--crm-content-max); margin-top: 14px; margin-left: auto; margin-right: auto; }
-.editor-card.property-section { max-width: var(--crm-content-max); }
 .section-separator { margin: 28px 0 18px; padding-top: 20px; border-top: 1px solid #283334; }
 .checklist-row { display: grid; grid-template-columns: minmax(0, 1fr) 150px; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid #263031; }
 .checklist-row:last-child { border-bottom: 0; }

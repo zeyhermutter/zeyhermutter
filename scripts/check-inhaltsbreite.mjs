@@ -45,7 +45,7 @@ const WURZEL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const STIL = path.join(WURZEL, "app");
 
 const MERKMAL = "--crm-content-max";
-const UNTEN = 1000;
+const UNTEN = 900;
 const OBEN = 1400;
 
 /** Selektor -> Begruendung. Nur Flaechen, die absichtlich anders breit sind. */
@@ -64,6 +64,11 @@ const AUSNAHMEN = {
     "Entwurfsgalerie fuer die Startseite, eigenes Raster.",
   ".hv2-hero h1":
     "Zeilenlaenge einer Ueberschrift, keine Seitenbreite.",
+  ".hv-overview-hero h1":
+    "Zeilenlaenge einer Ueberschrift, keine Seitenbreite.",
+  ".hv5-hero": "Entwurfsgalerie fuer die Startseite, eigenes Raster.",
+  ".help-modal":
+    "Fenster ueber der Seite, nicht Teil des Seitenflusses -- und ein Lesetext, der schmal bleiben soll.",
 };
 
 const fehler = [];

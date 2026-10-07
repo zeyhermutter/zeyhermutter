@@ -21,29 +21,44 @@
   padding-right: var(--crm-page-gutter);
 }
 
-/* Alle wesentlichen Arbeitsbereiche liegen auf exakt denselben Fluchtlinien. */
+/* Alle wesentlichen Arbeitsbereiche liegen auf exakt denselben Fluchtlinien.
+ *
+ * WAS HIER SCHIEFGING
+ *
+ * Diese Regel stand frueher als Aufzaehlung von 19 Selektoren da -- und das
+ * ist die falsche Form fuer "alle". Wer eine Seite baut, muesste daran
+ * denken, sein Bauteil hier einzutragen; wer es vergisst, bekommt eine Seite,
+ * die fast stimmt.
+ *
+ * .editor-card stand nicht drin. Sie trug ihre eigene Breite, max-width:
+ * 980px, und war damit 340px schmaler als alles andere auf derselben Seite
+ * -- auf der Reservierungsseite sichtbar als eingerueckte Karte
+ * "Reservierung anlegen" unter lauter buendigen. Zwei Ausnahmen
+ * (.editor-card.property-section, .contact-layout .editor-card) waren schon
+ * dazugebaut worden, um der 980px wieder zu entkommen.
+ *
+ * Jetzt gilt die Flucht fuer JEDES unmittelbare Kind der Seitencontainer.
+ * Wer ausbrechen will, sagt das ausdruecklich -- das ist seltener und
+ * sichtbarer als das Gegenteil. Den Seitenrand macht die Innenflaeche des
+ * Containers (--crm-page-gutter), nicht das Bauteil.
+ */
+.app-content > *,
+.editor-shell > *,
 .app-header,
-.editor-header,
-.metric-grid,
-.dashboard-grid,
-.app-content > .data-card,
-.editor-shell > .data-card,
-.editor-shell > .property-section,
-.editor-shell > .property-summary-grid,
-.editor-shell > .property-workflow-section,
-.module04-content,
-.crm-search-page,
-.audit-page,
-.inquiry-page,
-.search-profile-page,
-.module04-context-card,
-.module04-wide-card,
-.tasks-page,
-.sales-readiness-overview-width {
+.editor-header {
   width: 100%;
-  max-width: var(--crm-content-max) !important;
+  max-width: var(--crm-content-max);
   margin-left: auto;
   margin-right: auto;
+}
+
+/* Ein Rasterkind bestimmt seine Breite durch das Raster, nicht durch die
+   Seitenspalte -- sonst sprengt max-width die Spalte. */
+.sales-readiness-overview-width > *,
+.lead-page-width > *,
+.lead-detail-width > *,
+.notifications-page-width > * {
+  max-width: none;
 }
 
 /* Verkaufsfertig-Übersicht: gleiche Flucht wie der CRM-Header, kein 1120px-Sondereinzug. */
@@ -154,13 +169,6 @@
   overflow-wrap: anywhere;
 }
 
-/* Dashboard: vier KPIs nur, wenn die reale Contentbreite dafür reicht. */
-@container crm-main (max-width: 1100px) {
-  .metric-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 /* Normale Mehrspaltenkarten: Lesbarkeit vor maximaler Spaltenzahl. */
 .dashboard-grid,
 .property-summary-grid {
@@ -188,13 +196,5 @@
     --crm-section-gap: 14px;
     --crm-block-gap: 14px;
   }
-  .metric-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
-@media (max-width: 520px) {
-  .metric-grid {
-    grid-template-columns: 1fr;
-  }
-}
