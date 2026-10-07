@@ -30,11 +30,11 @@
 
 .workflow-rule-badge {
   flex: 0 0 auto;
-  padding: 8px 11px;
+  padding: var(--crm-pill-padding-sm);
   border: 1px solid #3b494b;
-  border-radius: 999px;
+  border-radius: var(--crm-pill-radius);
   color: #9ba7a9;
-  font-size: 11px;
+  font-size: var(--crm-pill-font-sm);
   white-space: nowrap;
 }
 
@@ -138,9 +138,9 @@
 
 .workflow-status-card {
   min-width: 0;
-  padding: 15px;
+  padding: var(--crm-card-padding-sm);
   border: 1px solid #303c3d;
-  border-radius: 13px;
+  border-radius: var(--crm-card-radius-sm);
   background: #111718;
 }
 

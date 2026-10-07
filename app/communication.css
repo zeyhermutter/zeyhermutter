@@ -46,9 +46,9 @@
 .communication-status > div,
 .communication-context-summary > div {
   border: 1px solid #d8e0de;
-  border-radius: 10px;
+  border-radius: var(--crm-card-radius-sm);
   background: #f8faf9;
-  padding: 13px 14px;
+  padding: var(--crm-card-padding-sm);
 }
 
 .communication-status span,

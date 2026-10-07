@@ -87,12 +87,12 @@
   display:inline-flex;
   align-items:center;
   min-height:26px;
-  padding:4px 8px;
+  padding: var(--crm-pill-padding-sm);
   border:1px solid #344143;
-  border-radius:999px;
+  border-radius: var(--crm-pill-radius);
   background:#172021;
   color:#cbd4d5;
-  font-size:10px;
+  font-size: var(--crm-pill-font-sm);
   font-weight:700;
   white-space:nowrap;
 }
