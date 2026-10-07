@@ -44,12 +44,12 @@ button, a { -webkit-tap-highlight-color: transparent; }
 h1 { max-width: 850px; margin: 0; font-size: clamp(42px, 7vw, 82px); line-height: .98; letter-spacing: -.055em; }
 .lead { max-width: 720px; margin: 28px 0 0; color: #aeb9ba; font-size: 18px; line-height: 1.65; }
 .status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 52px; }
-.status { border: 1px solid #344143; border-radius: 16px; padding: 20px; background: #151c1d99; }
+.status { border: 1px solid #344143; border-radius: var(--crm-card-radius-sm); padding: var(--crm-card-padding-sm); background: #151c1d99; }
 .status strong, .status span { display: block; }
 .status span { margin-top: 7px; color: #91a0a2; font-size: 13px; }
 .section-head h2 { margin: 0; font-size: 34px; letter-spacing: -.04em; }
 .module-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 34px; }
-.module { min-height: 188px; padding: 22px; border-radius: 18px; border: 1px solid #303c3d; background: #151b1c; }
+.module { min-height: 188px; padding: var(--crm-card-padding-sm); border-radius: var(--crm-card-radius-sm); border: 1px solid #303c3d; background: #151b1c; }
 .module span { color: #718083; font: 700 11px/1 monospace; }
 .module h3 { margin: 38px 0 8px; font-size: 20px; }
 .module p { color: #8f9b9d; line-height: 1.5; margin: 0; }
@@ -97,15 +97,15 @@ h1 { max-width: 850px; margin: 0; font-size: clamp(42px, 7vw, 82px); line-height
 .auth-form label { display: grid; gap: 8px; color: #b7c1c2; font-size: 13px; }
 .auth-form input {
   width: 100%;
-  padding: 13px 14px;
-  border-radius: 11px;
+  padding: var(--crm-field-padding);
+  border-radius: var(--crm-field-radius);
   border: 1px solid #3c484a;
   background: #0f1415;
   color: #f2f5f5;
   outline: none;
 }
 .auth-form input:focus { border-color: #869496; box-shadow: 0 0 0 3px #8796981c; }
-.form-error { margin: 0; padding: 12px 13px; border: 1px solid #6d3f42; border-radius: 10px; color: #f2b8bc; background: #341b1d; font-size: 13px; }
+.form-error { margin: 0; padding: var(--crm-card-padding-sm); border: 1px solid #6d3f42; border-radius: var(--crm-card-radius-sm); color: #f2b8bc; background: #341b1d; font-size: 13px; }
 
 .app-shell { min-height: 100vh; display: grid; grid-template-columns: 250px minmax(0, 1fr); background: #0e1314; }
 .sidebar { position: sticky; top: 0; height: 100vh; padding: 26px 20px; border-right: 1px solid #283334; background: #121819; display: flex; flex-direction: column; }
@@ -136,7 +136,7 @@ h1 { max-width: 850px; margin: 0; font-size: clamp(42px, 7vw, 82px); line-height
 .row-meta { text-align: right; font-size: 13px; }
 .row-meta span, .row-meta small { display: block; }
 .error-shell { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
-.panel { max-width: 600px; padding: 36px; border: 1px solid #303c3d; border-radius: 18px; }
+.panel { max-width: 600px; padding: var(--crm-card-padding-sm); border: 1px solid #303c3d; border-radius: var(--crm-card-radius-sm); }
 
 .app-date-picker {
   cursor: pointer;
@@ -198,6 +198,16 @@ h1 { max-width: 850px; margin: 0; font-size: clamp(42px, 7vw, 82px); line-height
   --crm-pill-radius: 999px;
   --crm-pill-font: 12px;
   --crm-pill-font-sm: 11px;
+
+  /* Eingabefelder: eine eigene Familie, sie muessen anfassbar sein statt
+   * ruhig. Vorher 11 verschiedene Wertepaare. */
+  --crm-field-padding: 12px 13px;
+  --crm-field-radius: 10px;
+
+  /* Fenster ueber der Seite: grosszuegiger als eine Karte, weil nichts
+   * daneben steht. Vorher 7 verschiedene Wertepaare. */
+  --crm-modal-padding: 24px;
+  --crm-modal-radius: 18px;
 }
 
 /* Arbeitsbereiche nutzen auf Laptopbreite die tatsächlich verfügbare Fläche. */

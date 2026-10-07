@@ -91,8 +91,8 @@
   top: 16px;
   border: 1px solid #d8e0de;
   background: #f8faf9;
-  border-radius: 10px;
-  padding: 12px 13px;
+  border-radius: var(--crm-card-radius-sm);
+  padding: var(--crm-card-padding-sm);
 }
 
 .calendar-day-label strong {
@@ -115,9 +115,9 @@
   gap: 14px;
   align-items: center;
   border: 1px solid #d8e0de;
-  border-radius: 10px;
+  border-radius: var(--crm-card-radius-sm);
   background: #fff;
-  padding: 13px 14px;
+  padding: var(--crm-card-padding-sm);
 }
 
 .calendar-event-time strong {
@@ -155,11 +155,11 @@
   display: inline-flex;
   width: fit-content;
   margin-top: 7px;
-  border-radius: 999px;
+  border-radius: var(--crm-pill-radius);
   border: 1px solid #cfd9d7;
   background: #f6f9f8;
   color: #536364;
-  padding: 3px 8px;
+  padding: var(--crm-pill-padding-sm);
   font-size: .74rem;
 }
 

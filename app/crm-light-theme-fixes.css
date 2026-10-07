@@ -216,9 +216,9 @@
   width: min(760px, 100%);
   max-height: calc(100vh - 40px);
   overflow: auto;
-  padding: 24px;
+  padding: var(--crm-modal-padding);
   border: 1px solid #cbd6d4;
-  border-radius: 18px;
+  border-radius: var(--crm-modal-radius);
   background: #ffffff;
   color: #1d2a2b;
   box-shadow: 0 28px 90px rgba(38, 58, 55, .22);

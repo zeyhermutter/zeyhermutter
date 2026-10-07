@@ -67,9 +67,9 @@
 }
 
 .reporting-preset {
-  padding: 9px 11px;
+  padding: var(--crm-card-padding-sm);
   border: 1px solid #cbd6d4;
-  border-radius: 10px;
+  border-radius: var(--crm-card-radius-sm);
   background: #ffffff;
   color: #526263;
   font-size: 12px;
@@ -104,9 +104,9 @@
 
 .reporting-period-form input {
   min-width: 132px;
-  padding: 9px 10px;
+  padding: var(--crm-field-padding);
   border: 1px solid #bcc9c7;
-  border-radius: 10px;
+  border-radius: var(--crm-field-radius);
   background: #ffffff;
   color: #1d2a2b;
   font: inherit;
@@ -119,9 +119,9 @@
 }
 
 .reporting-section {
-  padding: 24px;
+  padding: var(--crm-card-padding-sm);
   border: 1px solid #d4dddb;
-  border-radius: 18px;
+  border-radius: var(--crm-card-radius-sm);
   background: #ffffff;
 }
 
@@ -144,13 +144,13 @@
 
 .reporting-metric {
   min-height: 132px;
-  padding: 18px;
+  padding: var(--crm-card-padding-sm);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   gap: 8px;
   border: 1px solid #dbe3e1;
-  border-radius: 14px;
+  border-radius: var(--crm-card-radius-sm);
   background: #f8faf9;
   color: #1d2a2b;
   text-decoration: none;
@@ -197,11 +197,11 @@
 }
 
 .reporting-source-row {
-  padding: 16px 18px;
+  padding: var(--crm-card-padding-sm);
   display: grid;
   gap: 8px;
   border: 1px solid #dde5e3;
-  border-radius: 14px;
+  border-radius: var(--crm-card-radius-sm);
   background: #f8faf9;
 }
 
@@ -237,9 +237,9 @@
 
 .reporting-quality-note {
   margin: 14px 0 0;
-  padding: 12px 14px;
+  padding: var(--crm-card-padding-sm);
   border: 1px solid #e2d8b8;
-  border-radius: 12px;
+  border-radius: var(--crm-card-radius-sm);
   background: #fbf8ee;
   color: #6e6241;
   font-size: 12px;
@@ -253,9 +253,9 @@
 }
 
 .reporting-pipeline {
-  padding: 18px;
+  padding: var(--crm-card-padding-sm);
   border: 1px solid #dde5e3;
-  border-radius: 14px;
+  border-radius: var(--crm-card-radius-sm);
   background: #f8faf9;
 }
 
@@ -305,8 +305,8 @@
 }
 
 .reporting-definition code {
-  padding: 1px 4px;
-  border-radius: 5px;
+  padding: var(--crm-card-padding-sm);
+  border-radius: var(--crm-card-radius-sm);
   background: #edf2f0;
   color: #334443;
   font-size: .92em;

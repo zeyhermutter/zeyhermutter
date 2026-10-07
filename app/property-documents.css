@@ -15,7 +15,7 @@
 .document-summary-main span { color: #899597; font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
 .document-edit-hint { color: #98a5a6; font-size: 12px; white-space: nowrap; }
 .document-detail-body { display: grid; gap: 18px; padding: 16px; }
-.document-metadata-section, .document-version-section { padding: 16px; border: 1px solid #293536; border-radius: 12px; background: #111718; }
+.document-metadata-section, .document-version-section { padding: var(--crm-card-padding-sm); border: 1px solid #293536; border-radius: var(--crm-card-radius-sm); background: #111718; }
 .document-subhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
 .document-subhead h3 { margin: 0; font-size: 18px; }
 .document-metadata-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -23,9 +23,9 @@
 .document-metadata-form textarea,
 .document-metadata-form select {
   width: 100%;
-  padding: 12px 13px;
+  padding: var(--crm-field-padding);
   border: 1px solid #3a4748;
-  border-radius: 10px;
+  border-radius: var(--crm-field-radius);
   background: #0e1415;
   color: #eef2f3;
   font: inherit;

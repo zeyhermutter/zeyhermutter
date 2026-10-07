@@ -9,7 +9,7 @@
 .readiness-media-card-copy small{color:#667085}
 .readiness-media-card-copy p{margin:0;color:#475467;font-size:.92rem}
 .readiness-media-tags{display:flex;gap:6px;flex-wrap:wrap}
-.readiness-media-tags span{display:inline-flex;padding:4px 8px;border-radius:999px;background:#eef2f5;color:#344054;font-size:.75rem;font-weight:700}
+.readiness-media-tags span{display:inline-flex;padding: var(--crm-pill-padding-sm);border-radius: var(--crm-pill-radius);background:#eef2f5;color:#344054;font-size:.75rem;font-weight:700}
 .readiness-media-edit-form{border-top:1px solid var(--border-color,#d8dde3);padding:14px;background:#fbfcfd}
 .readiness-media-add-form{border-top:1px solid var(--border-color,#d8dde3);padding-top:18px}
 @media(max-width:720px){.readiness-media-grid{grid-template-columns:1fr}.readiness-media-thumb{height:220px}.readiness-media-source-links>*{width:100%;justify-content:center}}

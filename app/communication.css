@@ -94,9 +94,9 @@
 
 .communication-history article {
   border: 1px solid #d8e0de;
-  border-radius: 10px;
+  border-radius: var(--crm-card-radius-sm);
   background: #fff;
-  padding: 13px 14px;
+  padding: var(--crm-card-padding-sm);
 }
 
 .communication-history-head {
@@ -126,8 +126,8 @@
   width: fit-content;
   margin-top: 8px;
   border: 1px solid #cfd9d7;
-  border-radius: 999px;
-  padding: 3px 8px;
+  border-radius: var(--crm-pill-radius);
+  padding: var(--crm-pill-padding-sm);
   font-size: .76rem;
   color: #536364;
   background: #f6f9f8;

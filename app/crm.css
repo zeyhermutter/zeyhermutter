@@ -23,9 +23,9 @@
 .form-field input, .form-field select, .form-field textarea,
 .search-bar input, .search-bar select, .filter-grid input, .filter-grid select, .data-card select {
   width: 100%;
-  padding: 12px 13px;
+  padding: var(--crm-field-padding);
   border: 1px solid #3a4748;
-  border-radius: 10px;
+  border-radius: var(--crm-field-radius);
   background: #0e1415;
   color: #eef2f3;
   font: inherit;
@@ -48,7 +48,7 @@
 .pagination { display: flex; justify-content: space-between; gap: 12px; margin-top: 18px; padding-top: 18px; border-top: 1px solid #283334; }
 
 .history-list { margin-top: 18px; display: grid; gap: 10px; }
-.history-event { padding: 14px; border: 1px solid #283334; border-radius: 12px; background: #111718; }
+.history-event { padding: var(--crm-card-padding-sm); border: 1px solid #283334; border-radius: var(--crm-card-radius-sm); background: #111718; }
 .history-head { display: flex; justify-content: space-between; gap: 12px; }
 .history-head small, .history-event > p { color: #738082; }
 .history-event > p { margin: 6px 0 0; font-size: 12px; }
@@ -80,7 +80,7 @@
 .version-row small { overflow-wrap: anywhere; }
 .inline-upload { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) auto; gap: 10px; align-items: end; margin-top: 14px; padding-top: 14px; border-top: 1px solid #263031; }
 .inline-upload label { display: grid; gap: 7px; color: #aeb9ba; font-size: 13px; }
-.inline-upload input { width: 100%; padding: 10px; border: 1px solid #3a4748; border-radius: 10px; background: #0e1415; color: #eef2f3; }
+.inline-upload input { width: 100%; padding: var(--crm-field-padding); border: 1px solid #3a4748; border-radius: var(--crm-field-radius); background: #0e1415; color: #eef2f3; }
 
 .media-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .media-card { overflow: hidden; border: 1px solid #293536; border-radius: var(--crm-card-radius-sm); background: #111718; }
@@ -120,7 +120,7 @@
 
 /* Immobilien – Statusampel und Abschnittsnavigation */
 #status, #checkliste, #stammdaten, #adresse, #eigentuemer, #ausstattung, #energie { scroll-margin-top: 24px; }
-.checklist-row { margin: 4px 0; padding: 10px 12px; border: 1px solid transparent; border-radius: 10px; }
+.checklist-row { margin: 4px 0; padding: var(--crm-card-padding-sm); border: 1px solid transparent; border-radius: var(--crm-card-radius-sm); }
 .checklist-todo { background: #351919; border-color: #6a3030; }
 .checklist-in-progress { background: #3a3117; border-color: #74642d; }
 .checklist-done { background: #173524; border-color: #326b49; }
@@ -158,9 +158,9 @@
   left: 26px;
   top: 64px;
   z-index: 1000;
-  padding: 5px 8px;
+  padding: var(--crm-card-padding-sm);
   border: 1px solid #334041;
-  border-radius: 8px;
+  border-radius: var(--crm-card-radius-sm);
   background: rgba(13,18,19,.88);
   color: #7f8b8d;
   font: 600 10px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -226,9 +226,9 @@
 .media-metadata-form input,
 .media-metadata-form textarea {
   width: 100%;
-  padding: 12px 13px;
+  padding: var(--crm-field-padding);
   border: 1px solid #3a4748;
-  border-radius: 10px;
+  border-radius: var(--crm-field-radius);
   background: #0e1415;
   color: #eef2f3;
   font: inherit;

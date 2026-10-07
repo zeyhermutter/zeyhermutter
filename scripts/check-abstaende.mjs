@@ -1,37 +1,57 @@
 #!/usr/bin/env node
-// Bewacht die Abstaende der Kaesten und Pillen im CRM.
+// Bewacht die Abstaende aller Flaechen im CRM.
 //
-// WAS HIER SCHIEFGING
+// WAS HIER SCHIEFGING -- ZWEIMAL
 //
-// Gemessen ueber alle Stylesheets in app/:
+// Erst die Sache selbst. Gemessen ueber alle Stylesheets in app/:
 //
 //   padding         181 verschiedene Werte in 417 Deklarationen,  1 ueber ein Merkmal
 //   gap              43 verschiedene Werte in 372 Deklarationen,  7 ueber ein Merkmal
 //   border-radius    25 verschiedene Werte in 225 Deklarationen,  0 ueber ein Merkmal
 //
-// Bei den Kaesten allein: 23 verschiedene Innenabstaende und 9 Eckenradien.
-// .data-card hatte drei konkurrierende Werte (22px, var(--crm-card-padding),
-// 16px), je nachdem welche Regel zuletzt gewann. Bei den Pillen: 20
-// verschiedene Innenabstaende und Schriftgroessen von 10px bis 14px, dazu
-// .78rem, .8rem und .82rem dazwischen.
+// .data-card hatte drei konkurrierende Werte, je nachdem welche Regel zuletzt
+// gewann. Einzeln faellt keiner dieser Werte auf -- sie sind alle ungefaehr
+// richtig. Zusammen sieht es unaufgeraeumt aus.
 //
-// Sichtbar ist das als Unruhe: zwei Kaesten nebeneinander, deren Inhalt
-// unterschiedlich weit vom Rand steht, und Statuspillen, die in jeder Liste
-// eine andere Groesse haben. Einzeln faellt keiner dieser Werte auf -- sie
-// sind ja alle ungefaehr richtig. Zusammen sieht es unaufgeraeumt aus.
+// Dann der Fehler in der ersten Fassung DIESER PRUEFUNG. Sie suchte nach
+// NAMEN: card, pill, badge, chip, status. Damit hat sie 94 Stellen gefunden
+// und gemeldet, alles sei in Ordnung -- waehrend 111 weitere Flaechen
+// unberuehrt blieben, weil sie anders heissen:
 //
-// Dieselbe Geschichte wie bei der Inhaltsbreite: ein Merkmal gab es
-// (--crm-card-padding), benutzt hat es fast niemand.
+//   .calendar-kind, .communication-direction    Pillen, nur anders benannt
+//   .history-event, .calendar-event             Flaechen in einer Karte
+//   .form-field input, .inline-upload input     Eingabefelder
+//   .task-create-modal                          Fenster
+//
+// Allein die Flaechen in Karten: 70 Stellen mit 42 verschiedenen Wertepaaren.
+//
+// Eine Pruefung, die nach Namen sucht, prueft die Benennungsdisziplin und
+// nicht die Sache. Sie schaut jetzt auf die FORM: was einen Rahmen oder
+// Hintergrund hat, dazu eine Rundung und einen Innenabstand, ist eine
+// Flaeche -- unabhaengig davon, wie es heisst.
 //
 // WAS DIESE PRUEFUNG SICHERSTELLT
 //
-// In den INTERNEN Stylesheets nimmt jeder Kasten und jede Pille ihre
-// Innenabstaende, Eckenradien und Pillenschrift aus den Merkmalen. Wer einen
-// Sonderwert braucht, traegt ihn unten mit Begruendung ein.
+// Jede Flaeche in den internen Stylesheets nimmt Innenabstand und Rundung aus
+// den Merkmalen ihrer Familie:
 //
-// Die oeffentliche Webseite ist ausgenommen: sie hat ein eigenes Raster mit
-// clamp()-Abstaenden ueber mehrere Bildschirmbreiten. Das ist kein
-// Versehen, sondern ein anderer Entwurf.
+//   Karte gross   gliedert eine Seite
+//   Karte klein   Kachel in einem Raster, Flaeche in einer Karte
+//   Pille         Rundung 999px
+//   Eingabefeld   input, select, textarea
+//   Fenster       modal, dialog, popover
+//
+// Die Familie haengt am LETZTEN Teil des Selektors, nicht am Vorfahren:
+// ".lead-task-modal-meta span" ist ein kleiner Kasten IM Fenster und bekam
+// beim ersten Umbau dessen 24px statt seiner 10px.
+//
+// NICHT GEPRUEFT, mit Absicht:
+//
+//   - die oeffentliche Webseite und die Entwurfsgalerie: eigenes Raster mit
+//     clamp()-Abstaenden ueber mehrere Bildschirmbreiten.
+//   - Navigationsleisten, Reiter und Listenzeilen: feste Zeilenhoehe, oft
+//     Innenabstand nur seitlich ("0 14px"). Eine andere Form.
+//   - Knoepfe: eine eigene Familie, noch nicht an der Reihe.
 
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
@@ -40,43 +60,42 @@ import { fileURLToPath } from "node:url";
 const WURZEL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const STIL = path.join(WURZEL, "app");
 
-/** Die oeffentliche Webseite und die Entwurfsgalerie haben ihr eigenes Raster. */
 const NICHT_INTERN = new Set([
   "public-website.css", "homepage-variants.css", "homepage-variants-image.css",
   "homepage-v7-realtor.css", "auth-light-theme.css",
 ]);
 
-/** Woran ein Kasten zu erkennen ist. */
-const KASTEN = /(^|[\s>+~.])([a-z0-9-]*-)?(card|kachel)\b|\b(metric-card|data-card|editor-card|history-card|lead-stage|lead-prep-item|publication-check|workflow-status-card)\b/i;
-/** Woran eine Pille zu erkennen ist -- Navigationseintraege zaehlen nicht dazu. */
-const PILLE = /(pill|badge|chip|-status\b|status-\w*pill)/i;
-const KEINE_PILLE = /(nav-item|objektakte-|persistent-nav|-status-card|status-pill-)/i;
+/** Navigation, Reiter, Listenzeilen, Knoepfe: eine andere Form. */
+const ANDERE_FORM = /(nav-item|objektakte-|persistent-nav|record-section-nav|-tab\b|tab-|button|lead-stage|data-row|backdrop|\bsummary\b)/i;
+/** Innenabstand nur seitlich -- eine Zeile fester Hoehe, kein Kasten. */
+const NUR_SEITLICH = /^0(px)? \S+$/;
+/** Berechnete Werte gehoeren ihrer Stelle, nicht einer Familie. */
+const BERECHNET = /calc|clamp|var\(/;
 
-/**
- * Selektor -> Begruendung. Nur, was wirklich anders sein soll.
- * Der Grund ist Pflicht: eine Ausnahme ohne Begruendung ist ein Versehen.
- */
+const FAMILIEN = {
+  feld: { padding: "--crm-field-padding", radius: "--crm-field-radius" },
+  fenster: { padding: "--crm-modal-padding", radius: "--crm-modal-radius" },
+  pille: { padding: "--crm-pill-padding-sm", radius: "--crm-pill-radius" },
+  klein: { padding: "--crm-card-padding-sm", radius: "--crm-card-radius-sm" },
+};
+
+const MERKMALE = [
+  "--crm-card-padding", "--crm-card-padding-sm", "--crm-card-radius", "--crm-card-radius-sm",
+  "--crm-pill-padding", "--crm-pill-padding-sm", "--crm-pill-radius",
+  "--crm-pill-font", "--crm-pill-font-sm",
+  "--crm-field-padding", "--crm-field-radius", "--crm-modal-padding", "--crm-modal-radius",
+];
+
+/** Selektor -> Begruendung. Nur, was wirklich anders sein soll. */
 const AUSNAHMEN = {
-  ".asset-modal": "Fenster ueber der Seite, nicht Teil des Seitenflusses -- eigene Rundung.",
-  ".lead-modal": "Fenster ueber der Seite, nicht Teil des Seitenflusses -- eigene Rundung.",
-  ".asset-modal-backdrop": "Abdunkelung hinter dem Fenster, kein Kasten.",
-  ".lead-modal-backdrop": "Abdunkelung hinter dem Fenster, kein Kasten.",
+  ".asset-modal": "Bildfenster, randlos bis an die Kante -- eigene Rundung.",
   ".asset-modal-header": "Kopfzeile im Fenster, buendig mit dessen Rand.",
-  ".asset-modal-close": "Schliessknopf, folgt den Knoepfen und nicht den Kaesten.",
+  ".asset-modal-close": "Schliessknopf, folgt den Knoepfen und nicht den Flaechen.",
   ".media-disclosure.owner-card": "Aufklapper ohne eigene Flaeche -- bewusst ohne Rundung.",
 };
 
 const fehler = [];
 const pruefe = (bedingung, text) => { if (!bedingung) fehler.push(text); };
-
-// --- Die Merkmale --------------------------------------------------------
-
-const MERKMALE = [
-  "--crm-card-padding", "--crm-card-padding-sm",
-  "--crm-card-radius", "--crm-card-radius-sm",
-  "--crm-pill-padding", "--crm-pill-padding-sm",
-  "--crm-pill-radius", "--crm-pill-font", "--crm-pill-font-sm",
-];
 
 const dateien = (await readdir(STIL)).filter((n) => n.endsWith(".css")).sort();
 const inhalte = new Map();
@@ -84,11 +103,12 @@ for (const datei of dateien) {
   inhalte.set(datei, (await readFile(path.join(STIL, datei), "utf8")).replace(/\r\n/g, "\n"));
 }
 
+// --- 1. Jedes Merkmal genau einmal ---------------------------------------
+
 for (const merkmal of MERKMALE) {
   const stellen = [];
   for (const datei of dateien) {
-    const treffer = inhalte.get(datei).match(new RegExp(`${merkmal}\\s*:`, "g"));
-    for (const _ of treffer ?? []) stellen.push(datei);
+    for (const _ of inhalte.get(datei).match(new RegExp(`${merkmal}\\s*:`, "g")) ?? []) stellen.push(datei);
   }
   pruefe(stellen.length === 1,
     `${merkmal} ist ${stellen.length}-mal definiert${stellen.length ? ` (${[...new Set(stellen)].join(", ")})` : ""}.\n`
@@ -96,64 +116,71 @@ for (const merkmal of MERKMALE) {
     + "  welcher gewinnt, haengt an der Reihenfolge der Regeln oder der Stylesheets.");
 }
 
-// --- Jeder Kasten und jede Pille nimmt die Merkmale ----------------------
+// --- 2. Jede Flaeche nimmt die Merkmale ihrer Familie --------------------
 
 const schluessel = (sel) => sel
   .replace(/\/\*[\s\S]*?\*\//g, "").replace(/@import[^;]*;/g, "")
   .replace(/\s*([>+~,])\s*/g, "$1").replace(/\s+/g, " ").trim();
 
+function familie(sel, radius) {
+  const letztes = sel.split(",")[0].split(/[\s>+~]+/).filter(Boolean).at(-1) ?? "";
+  if (/\b(input|select|textarea)\b/.test(letztes)) return "feld";
+  if (/modal|dialog|popover/i.test(letztes)) return "fenster";
+  if (radius.trim() === "999px" || radius.includes("--crm-pill-radius")) return "pille";
+  return "klein";
+}
+
 const befunde = [];
+let flaechen = 0;
 
 for (const datei of dateien) {
   if (NICHT_INTERN.has(datei)) continue;
-  const text = inhalte.get(datei).replace(/\/\*[\s\S]*?\*\//g, "");
+  const text = inhalte.get(datei).replace(/\/\*[\s\S]*?\*\//g, (m) => " ".repeat(m.length));
   for (const regel of text.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
     if (regel[1].trimStart().startsWith("@")) continue;
     const sel = schluessel(regel[1]);
-    if (Object.hasOwn(AUSNAHMEN, sel)) continue;
-
-    // Eine Regel kann mehrere Selektoren tragen. Gezaehlt wird jeder fuer
-    // sich: ".data-card select" ist ein Auswahlfeld, kein Kasten, auch wenn
-    // "card" darin vorkommt. Und ".calendar-provider-status span" ist die
-    // Beschriftung IN einer Pille, nicht die Pille.
-    const einzeln = sel.split(",").map((s) => s.trim()).filter(Boolean);
-    const letztesStueck = (s) => s.split(/[\s>+~]+/).filter(Boolean).at(-1) ?? "";
-    const istInneres = (s) => /^[a-z][a-z0-9]*(:[a-z-]+)?$/.test(letztesStueck(s));
-
-    const kasten = einzeln.some((s) => KASTEN.test(letztesStueck(s)) && !istInneres(s));
-    const pille = einzeln.some((s) => PILLE.test(letztesStueck(s)) && !KEINE_PILLE.test(s) && !istInneres(s));
-    const istKasten = kasten;
-    const istPille = pille && !kasten;
-    if (!istKasten && !istPille) continue;
+    if (Object.hasOwn(AUSNAHMEN, sel) || ANDERE_FORM.test(sel)) continue;
 
     const block = regel[2];
-    const pruefbar = istKasten
-      ? [["padding", /(?<![-\w])padding\s*:\s*([^;!]+)/], ["border-radius", /border-radius\s*:\s*([^;!]+)/]]
-      : [["padding", /(?<![-\w])padding\s*:\s*([^;!]+)/], ["border-radius", /border-radius\s*:\s*([^;!]+)/],
-         ["font-size", /font-size\s*:\s*([^;!]+)/]];
+    if (!/(?<!-)border\s*:|background\s*:/.test(block)) continue;
+    const radius = /border-radius\s*:\s*([^;!}]+)/.exec(block);
+    const padding = /(?<![-\w])padding\s*:\s*([^;!}]+)/.exec(block);
+    if (!radius || !padding) continue;
+    if (NUR_SEITLICH.test(padding[1].trim())) continue;
+    if (BERECHNET.test(padding[1]) && !padding[1].includes("var(--crm-")) continue;
 
-    for (const [eigenschaft, muster] of pruefbar) {
-      const treffer = muster.exec(block);
-      if (!treffer) continue;
-      const wert = treffer[1].trim();
-      if (wert.includes("var(--crm-")) continue;
-      if (/^(0|inherit|unset|revert|50%)$/.test(wert)) continue;
-      befunde.push({ datei, sel, art: istKasten ? "Kasten" : "Pille", eigenschaft, wert });
+    flaechen += 1;
+    const art = familie(sel, radius[1]);
+    // Eine grosse Karte darf das grosse Merkmal nehmen -- das ist dieselbe Familie.
+    const BEIDE_GROESSEN = {
+      klein: ["--crm-card-padding-sm", "--crm-card-padding"],
+      pille: ["--crm-pill-padding-sm", "--crm-pill-padding"],
+    };
+    const erlaubtPadding = BEIDE_GROESSEN[art] ?? [FAMILIEN[art].padding];
+    const erlaubtRadius = art === "klein"
+      ? ["--crm-card-radius-sm", "--crm-card-radius"]
+      : [FAMILIEN[art].radius];
+
+    if (!erlaubtPadding.some((m) => padding[1].includes(m))) {
+      befunde.push({ datei, sel, art, eigenschaft: "padding", wert: padding[1].trim(), soll: FAMILIEN[art].padding });
+    }
+    if (!erlaubtRadius.some((m) => radius[1].includes(m))) {
+      befunde.push({ datei, sel, art, eigenschaft: "border-radius", wert: radius[1].trim(), soll: FAMILIEN[art].radius });
     }
   }
 }
 
 pruefe(befunde.length === 0,
-  `${befunde.length} Stellen setzen Abstand, Rundung oder Pillenschrift als Zahl statt ueber ein Merkmal:\n`
-  + befunde.slice(0, 24).map((b) => `    ${b.art.padEnd(6)} app/${b.datei}  ${b.sel}  ${b.eigenschaft}: ${b.wert}`).join("\n")
-  + (befunde.length > 24 ? `\n    ... und ${befunde.length - 24} weitere` : "") + "\n"
-  + "  Zwei Kaesten nebeneinander, deren Inhalt unterschiedlich weit vom Rand steht,\n"
-  + "  sieht unaufgeraeumt aus, ohne dass man sagen koennte welcher falsch ist.\n"
-  + "  Entweder var(--crm-card-padding) und Verwandte benutzen, oder -- wenn die\n"
-  + "  Flaeche wirklich anders sein soll -- in AUSNAHMEN in scripts/check-abstaende.mjs\n"
-  + "  eintragen, mit Begruendung.");
+  `${befunde.length} Flaechen setzen Innenabstand oder Rundung als Zahl statt ueber ein Merkmal:\n`
+  + befunde.slice(0, 20).map((b) => `    ${b.art.padEnd(8)} app/${b.datei}  ${b.sel}\n`
+    + `             ${b.eigenschaft}: ${b.wert}   ->   var(${b.soll})`).join("\n")
+  + (befunde.length > 20 ? `\n    ... und ${befunde.length - 20} weitere` : "") + "\n"
+  + "  Zwei Flaechen nebeneinander, deren Inhalt unterschiedlich weit vom Rand steht,\n"
+  + "  sehen unaufgeraeumt aus, ohne dass man sagen koennte welche falsch ist.\n"
+  + "  Entweder das Merkmal der Familie benutzen, oder -- wenn die Flaeche wirklich\n"
+  + "  anders sein soll -- in AUSNAHMEN in scripts/check-abstaende.mjs eintragen.");
 
-// --- Keine Leiche in der Ausnahmeliste -----------------------------------
+// --- 3. Keine Leiche in der Ausnahmeliste --------------------------------
 
 const alleSelektoren = new Set();
 for (const datei of dateien) {
@@ -174,9 +201,5 @@ if (fehler.length > 0) {
   process.exit(1);
 }
 
-let nutzungen = 0;
-for (const datei of dateien) {
-  nutzungen += [...inhalte.get(datei).matchAll(/var\(--crm-(?:card|pill)-/g)].length;
-}
-console.log(`Abstaende: ${MERKMALE.length} Merkmale je einmal definiert, ${nutzungen} Stellen benutzen sie, `
-  + `${Object.keys(AUSNAHMEN).length} begruendete Ausnahmen.`);
+console.log(`Abstaende: ${MERKMALE.length} Merkmale je einmal definiert, ${flaechen} Flaechen nach Form geprueft `
+  + `(Karte, Pille, Eingabefeld, Fenster), ${Object.keys(AUSNAHMEN).length} begruendete Ausnahmen.`);

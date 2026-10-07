@@ -60,9 +60,9 @@
   display: grid;
   align-content: center;
   gap: 7px;
-  padding: 12px 14px;
+  padding: var(--crm-card-padding-sm);
   border: 1px solid #384647;
-  border-radius: 13px;
+  border-radius: var(--crm-card-radius-sm);
   background: #121819;
 }
 
@@ -115,9 +115,9 @@
 .workflow-callout {
   display: grid;
   gap: 6px;
-  padding: 14px 15px;
+  padding: var(--crm-card-padding-sm);
   border: 1px solid #314041;
-  border-radius: 12px;
+  border-radius: var(--crm-card-radius-sm);
   background: #111718;
 }
 
@@ -153,8 +153,8 @@
 
 .workflow-status-card-head strong { font-size: 15px; }
 .workflow-status-card-head > span {
-  padding: 4px 7px;
-  border-radius: 999px;
+  padding: var(--crm-pill-padding-sm);
+  border-radius: var(--crm-pill-radius);
   background: #20292a;
   color: #9ca8aa;
   font-size: 10px;
@@ -177,9 +177,9 @@
 .workflow-transition {
   display: grid;
   gap: 2px;
-  padding: 8px 9px;
+  padding: var(--crm-card-padding-sm);
   border: 1px solid #293536;
-  border-radius: 9px;
+  border-radius: var(--crm-card-radius-sm);
   background: #0f1516;
 }
 
@@ -255,9 +255,9 @@
 .workflow-side-button.selected { border-color: #bc6b70; background: #30191b; color: #fff; }
 
 .workflow-inspector {
-  padding: 20px;
+  padding: var(--crm-card-padding-sm);
   border: 1px solid #354244;
-  border-radius: 15px;
+  border-radius: var(--crm-card-radius-sm);
   background: #101617;
 }
 .workflow-inspector-head {
@@ -272,13 +272,13 @@
 .workflow-inspector-head p:not(.eyebrow) { max-width: 760px; margin: 8px 0 0; color: #8b989a; line-height: 1.5; }
 .workflow-inspector-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(320px, .9fr); gap: 14px; margin-top: 18px; }
 .workflow-action-panel,
-.workflow-transition-panel { padding: 16px; border: 1px solid #293536; border-radius: 12px; background: #121819; }
+.workflow-transition-panel { padding: var(--crm-card-padding-sm); border: 1px solid #293536; border-radius: var(--crm-card-radius-sm); background: #121819; }
 .workflow-action-panel h4,
 .workflow-transition-panel h4 { margin: 0 0 13px; font-size: 14px; }
 .workflow-action-panel ol { margin: 0; padding-left: 22px; display: grid; gap: 10px; color: #c3cccd; }
 .workflow-action-panel li { padding-left: 3px; line-height: 1.45; }
 .workflow-action-panel li::marker { color: #788587; font-weight: 700; }
-.workflow-recommended { display: grid; gap: 3px; margin-bottom: 10px; padding: 11px 12px; border: 1px solid #506566; border-radius: 10px; background: #182122; }
+.workflow-recommended { display: grid; gap: 3px; margin-bottom: 10px; padding: var(--crm-card-padding-sm); border: 1px solid #506566; border-radius: var(--crm-card-radius-sm); background: #182122; }
 .workflow-recommended small { color: #859294; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
 .workflow-recommended strong { font-size: 13px; }
 .workflow-recommended.terminal { border-style: dashed; border-color: #3b4749; background: #111718; }
