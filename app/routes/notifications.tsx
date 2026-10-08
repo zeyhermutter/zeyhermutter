@@ -2,6 +2,7 @@ import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-
 import type { Route } from "./+types/notifications";
 import { requireActiveUser } from "~/lib/auth.server";
 import { zeitpunkt as formatDate } from "~/lib/format";
+import { benachrichtigungsZiel } from "~/lib/benachrichtigungsziele";
 import "~/notifications.css";
 
 type ActionResult = { error?: string };
@@ -23,18 +24,6 @@ export async function action({ request, context }: Route.ActionArgs) {
   return data<ActionResult>({ error: "Unbekannte Aktion." }, { status: 400, headers: responseHeaders() });
 }
 
-function entityTarget(entityType: string | null, entityId: string | null) {
-  if (entityType === "CONTACT" && entityId) return `/crm/contacts/${entityId}/collaboration`;
-  if (entityType === "ORGANIZATION" && entityId) return `/crm/organizations/${entityId}`;
-  if (entityType === "LEAD" && entityId) return `/leads/${entityId}`;
-  if (entityType === "PROPERTY" && entityId) return `/properties/${entityId}`;
-  if (entityType === "SEARCH_PROFILE" && entityId) return `/search-profiles/${entityId}`;
-  if (entityType === "INQUIRY" && entityId) return `/inquiries/${entityId}`;
-  if (entityType === "VIEWING" && entityId) return `/viewings/${entityId}`;
-  if (entityType === "TASK") return "/crm/tasks";
-  return "/crm";
-}
-
 export default function Notifications() {
   const { notifications, profile } = useLoaderData<typeof loader>(); const result = useActionData<typeof action>(); const unread = notifications.filter((item) => !item.read_at).length;
   return <main className="editor-shell notifications-shell">
@@ -42,7 +31,7 @@ export default function Notifications() {
     <div className="notifications-page-width">
       {result?.error ? <div className="form-error">{result.error}</div> : null}
       <section className="data-card"><div className="card-head"><div><p className="eyebrow">Inbox</p><h2>Letzte 100</h2></div>{unread > 0 ? <Form method="post"><button className="secondary-button compact" type="submit" name="_intent" value="read_all">Alle als gelesen</button></Form> : null}</div><div className="data-list notifications-list">{notifications.map((notification) => {
-        const target=entityTarget(notification.entity_type, notification.entity_id);
+        const target=benachrichtigungsZiel(notification.entity_type, notification.entity_id);
         return <div className={`data-row notification-row${notification.read_at ? "" : " is-unread"}`} key={notification.id}><div className="notification-copy"><strong>{notification.read_at ? notification.title : `● ${notification.title}`}</strong><small>{notification.message ?? notification.type} · {formatDate(notification.created_at)}</small></div><div className="notification-actions">{notification.read_at ? <Link className="secondary-button compact link-button" to={target}>Öffnen</Link> : <Form method="post"><input type="hidden" name="notification_id" value={notification.id}/><input type="hidden" name="redirect_to" value={target}/><button className="primary-button compact" type="submit" name="_intent" value="read">Öffnen</button></Form>}{!notification.read_at ? <Form method="post"><input type="hidden" name="notification_id" value={notification.id}/><input type="hidden" name="redirect_to" value="/crm/notifications"/><button className="secondary-button compact" type="submit" name="_intent" value="read">Als gelesen markieren</button></Form> : <span className="notification-read-state">Gelesen</span>}</div></div>;
       })}{notifications.length === 0 ? <p className="empty-state">Keine Benachrichtigungen vorhanden.</p> : null}</div></section>
     </div>

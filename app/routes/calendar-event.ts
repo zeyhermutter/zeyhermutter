@@ -10,6 +10,12 @@ type ExportEvent = {
   startsAt: string;
   endsAt: string | null;
   sourcePath: string;
+  /**
+   * Quelle ist eine Datumsspalte ohne Uhrzeit. Dann schreibt der Export
+   * DTSTART;VALUE=DATE -- die iCalendar-Form fuer einen ganztaegigen Termin.
+   * Eine erfundene Uhrzeit wuerde in jeder anderen Zeitzone verrutschen.
+   */
+  ganztags?: boolean;
 };
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -32,6 +38,34 @@ function utcStamp(value: string | Date) {
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) throw new Response("Terminzeit ist ungültig.", { status: 500 });
   return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+}
+
+/** Ein Tagesdatum als iCalendar-Datumswert: 2026-10-14 wird 20261014. */
+function datumsStempel(value: string) {
+  const treffer = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!treffer) throw new Response("Termindatum ist ungültig.", { status: 500 });
+  return `${treffer[1]}${treffer[2]}${treffer[3]}`;
+}
+
+/** Der Folgetag -- DTEND ist bei ganztaegigen Terminen ausschliessend. */
+function naechsterTag(value: string) {
+  const stempel = datumsStempel(value);
+  const tag = new Date(Date.UTC(+stempel.slice(0, 4), +stempel.slice(4, 6) - 1, +stempel.slice(6, 8) + 1));
+  return `${tag.getUTCFullYear()}${String(tag.getUTCMonth() + 1).padStart(2, "0")}${String(tag.getUTCDate()).padStart(2, "0")}`;
+}
+
+/** Die Zeilen DTSTART und DTEND -- mit Uhrzeit oder als ganzer Tag. */
+function zeitZeilen(event: ExportEvent) {
+  if (event.ganztags) {
+    return [
+      `DTSTART;VALUE=DATE:${datumsStempel(event.startsAt)}`,
+      `DTEND;VALUE=DATE:${naechsterTag(event.startsAt)}`,
+    ];
+  }
+  return [
+    `DTSTART:${utcStamp(event.startsAt)}`,
+    ...(event.endsAt ? [`DTEND:${utcStamp(event.endsAt)}`] : []),
+  ];
 }
 
 function safeBaseUrl(value: string | undefined) {
@@ -141,25 +175,28 @@ async function loadExportEvent(supabase: any, kind: string, id: string): Promise
   }
 
   if (kind === "project_followup") {
+    // next_step_due_on, nicht follow_up_at: siehe die Begruendung im
+    // Ladeteil von app/routes/calendar.tsx. Es ist ein Datum ohne Uhrzeit.
     const { data: row, error } = await supabase
       .from("sale_projects")
-      .select("id,project_number,follow_up_at,next_step,contacts(first_name,last_name),properties(property_number,internal_title)")
+      .select("id,project_number,next_step_due_on,next_step,contacts(first_name,last_name),properties(property_number,internal_title)")
       .eq("id", id)
       .is("archived_at", null)
       .maybeSingle();
-    if (error) throw new Response("Wiedervorlage konnte nicht exportiert werden.", { status: 500 });
-    if (!row?.follow_up_at) return null;
+    if (error) throw new Response("Fälliger Schritt konnte nicht exportiert werden.", { status: 500 });
+    if (!row?.next_step_due_on) return null;
     const contact = one(row.contacts) as { first_name: string; last_name: string } | null;
     const property = one(row.properties) as { property_number: string; internal_title: string } | null;
     return {
       kind,
       id,
-      summary: `Wiedervorlage ${row.project_number}`,
-      description: [contact ? `${contact.first_name} ${contact.last_name}` : null, property?.property_number, row.next_step].filter(Boolean).join(" · ") || null,
+      summary: row.next_step ? `${row.next_step} (${row.project_number})` : `Fälliger Schritt ${row.project_number}`,
+      description: [contact ? `${contact.first_name} ${contact.last_name}` : null, property?.property_number, property?.internal_title].filter(Boolean).join(" · ") || null,
       location: null,
-      startsAt: row.follow_up_at,
+      startsAt: row.next_step_due_on,
       endsAt: null,
       sourcePath: `/projects/${row.id}`,
+      ganztags: true,
     };
   }
 
@@ -275,8 +312,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     "BEGIN:VEVENT",
     `UID:${icsEscape(`${event.kind}-${event.id}@zeyhermutteros`)}`,
     `DTSTAMP:${utcStamp(new Date())}`,
-    `DTSTART:${utcStamp(event.startsAt)}`,
-    ...(event.endsAt ? [`DTEND:${utcStamp(event.endsAt)}`] : []),
+    ...zeitZeilen(event),
     `SUMMARY:${icsEscape(event.summary)}`,
     ...(event.description ? [`DESCRIPTION:${icsEscape(event.description)}`] : []),
     ...(event.location ? [`LOCATION:${icsEscape(event.location)}`] : []),

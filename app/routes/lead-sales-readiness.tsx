@@ -10,6 +10,7 @@ import {
 import { requirePermission } from "~/lib/auth.server";
 import { loadSalesReadiness, requireSalesReadinessBackend } from "~/lib/sales-readiness.server";
 import { DOKUMENTKATEGORIE, MEDIENART, beschrifte } from "~/lib/labels";
+import { crmLocalDateTimeToIso } from "~/lib/local-time";
 import "~/sales-readiness.css";
 import "~/sales-readiness-editor.css";
 import "~/sales-readiness-media.css";
@@ -40,10 +41,6 @@ function nullableInteger(value: string) {
 
 function dateOrNull(value: string) {
   return value || null;
-}
-
-function inspectionIso(value: string) {
-  return value ? `${value}T12:00:00.000Z` : null;
 }
 
 function mediaKind(path: string, mimeType = "", mediaType = ""): "image" | "video" | "pdf" | "file" {
@@ -356,7 +353,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       p_lead_id: leadId,
       p_check_id: checkId,
       p_expected_version: expectedVersion,
-      p_inspection_at: inspectionIso(text(fd, "inspection_date")),
+      p_inspection_at: crmLocalDateTimeToIso(text(fd, "inspection_at")),
       p_starting_situation: text(fd, "starting_situation"),
       p_sale_objective: text(fd, "sale_objective"),
       p_desired_timeframe: text(fd, "desired_timeframe"),

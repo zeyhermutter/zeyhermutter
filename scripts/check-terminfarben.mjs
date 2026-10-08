@@ -52,9 +52,20 @@ const typZeile = /export type Terminkategorie =([^;]+);/.exec(quelle);
 pruefe(typZeile, "app/lib/terminkategorien.ts hat keinen Typ Terminkategorie mehr.");
 const imTyp = [...(typZeile?.[1] ?? "").matchAll(/"([A-Z_]+)"/g)].map((m) => m[1]);
 
-const beschrieben = [...quelle.matchAll(
-  /\{\s*schluessel:\s*"([A-Z_]+)",\s*beschriftung:\s*"([^"]+)",\s*kuerzel:\s*"([^"]+)",\s*klasse:\s*"([a-z-]+)"\s*\}/g,
-)].map((m) => ({ schluessel: m[1], beschriftung: m[2], kuerzel: m[3], klasse: m[4] }));
+// Ein Eintrag von TERMINKATEGORIEN reicht ueber mehrere Zeilen, seit jede
+// Kategorie auch Uebersichtsweg, Berechtigung und Ganztagskennzeichen traegt.
+// Gelesen wird deshalb der ganze Eintrag von "{ schluessel:" bis "}," und
+// daraus jedes Feld einzeln -- nicht mehr eine feste Reihenfolge in einer
+// Zeile. Dass die Liste ueberhaupt gelesen wurde, prueft die Zeile darunter.
+const beschrieben = [...quelle.matchAll(/\{\s*schluessel:\s*"([A-Z_]+)"[\s\S]*?\},/g)].map((treffer) => {
+  const feld = (name, muster = '"([^"]+)"') => new RegExp(`${name}:\\s*${muster}`).exec(treffer[0])?.[1] ?? "";
+  return {
+    schluessel: treffer[1],
+    beschriftung: feld("beschriftung"),
+    kuerzel: feld("kuerzel"),
+    klasse: feld("klasse", '"([a-z-]+)"'),
+  };
+});
 
 pruefe(beschrieben.length > 0, "In app/lib/terminkategorien.ts ist keine Kategorie mehr beschrieben.\n"
   + "  Entweder ist die Liste leer, oder ihre Form hat sich geaendert und diese\n"

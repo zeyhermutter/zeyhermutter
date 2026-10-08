@@ -4,6 +4,7 @@ import { requirePermission } from "~/lib/auth.server";
 import { tag as formatDay, zeitpunkt as formatDate } from "~/lib/format";
 import { IMMOBILIENSTATUS, beschrifte } from "~/lib/labels";
 import "~/publication.css";
+import { crmDateAtTimeToIso } from "~/lib/local-time";
 
 type ActionResult={error?:string};
 const STATUS_LABELS:Record<string,string>={PLANNED:"Geplant",READY:"Bereit",LIVE:"Live dokumentiert",PAUSED:"Pausiert",ERROR:"Klärung erforderlich",ENDED:"Beendet"};
@@ -12,7 +13,11 @@ const DELIVERY_LABELS:Record<string,string>={MANUAL:"Manuelle Pflege",EXPORT:"Da
 function text(fd:FormData,key:string){return String(fd.get(key)??"").trim();}
 function nullable(fd:FormData,key:string){const value=text(fd,key);return value||null;}
 
-function plannedTimestamp(value:string){return value?`${value}T12:00:00Z`:null;}
+// Ein Datumsfeld, das in eine timestamptz-Spalte schreibt: die Uhrzeit
+// kommt aus der Haus-Umrechnung (09:00 Ortszeit, sommerzeitsicher), nicht
+// aus einer Zeichenkette mit angehaengtem Z. 12:00 UTC waere in Berlin
+// 14:00 gewesen -- eine Uhrzeit, die niemand eingegeben hat.
+function plannedTimestamp(value:string){return crmDateAtTimeToIso(value);}
 function dateInput(value:string|null){return value?new Date(value).toISOString().slice(0,10):"";}
 function errorMessage(message:string){
  if(message.includes("duplicate key")||message.includes("property_marketing_active_channel_unique"))return"Für diesen Kanal gibt es bereits einen nicht beendeten Vermarktungsstand.";

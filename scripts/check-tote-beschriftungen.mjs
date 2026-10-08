@@ -130,6 +130,11 @@ const AUSNAHMEN = {
   "app/routes/inquiries.tsx": ["RESPONSE_STATE", "RESPONSE_STATE_CLASS"],
   // Bereich eines Projekthindernisses, in der Route berechnet.
   "app/routes/projects.tsx": ["BLOCKER_AREA"],
+  // notifications.entity_type ist freier Text ohne CHECK-Bedingung: die Werte
+  // kommen aus Triggern und Edge-Funktionen. Dass trotzdem jeder geschriebene
+  // Wert ein Ziel hat, prueft scripts/check-benachrichtigungsziele.mjs --
+  // gegen die schreibenden Stellen statt gegen das Datenbankschema.
+  "app/lib/benachrichtigungsziele.ts": ["OHNE_KENNUNG", "MIT_KENNUNG"],
 };
 
 function dateien(ordner, gesammelt = []) {

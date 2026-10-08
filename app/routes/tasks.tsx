@@ -6,6 +6,7 @@ import { requireActiveUser } from "~/lib/auth.server";
 import { zeitpunkt as formatDate } from "~/lib/format";
 import { AUFGABENPRIORITAET as PRIORITY } from "~/lib/labels";
 import "~/inquiry.css";
+import { crmDateAtTimeToIso } from "~/lib/local-time";
 
 type ActionResult = { error?: string };
 const STATUS: Record<string, string> = { OPEN: "Offen", IN_PROGRESS: "In Bearbeitung", DONE: "Erledigt", CANCELLED: "Abgebrochen" };
@@ -63,7 +64,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     const title = text(fd, "title"), description = text(fd, "description"), priority = text(fd, "priority") || "NORMAL", dueDate = text(fd, "due_date"), responsibleUser = await validAssignee(text(fd, "responsible_user"));
     if (!title || !dueDate) return data<ActionResult>({ error: "Titel und Fälligkeitsdatum sind erforderlich." }, { status: 400, headers: responseHeaders() });
     if (!responsibleUser) return data<ActionResult>({ error: "Der ausgewählte Verantwortliche ist nicht aktiv." }, { status: 400, headers: responseHeaders() });
-    const { error } = await supabase.from("tasks").insert({ title, description: description || null, priority, due_at: `${dueDate}T12:00:00.000Z`, responsible_user: responsibleUser, contact_id: text(fd, "contact_id") || null, property_id: text(fd, "property_id") || null, lead_id: text(fd, "lead_id") || null, inquiry_id: text(fd, "inquiry_id") || null, search_profile_id: text(fd, "search_profile_id") || null, viewing_id: text(fd, "viewing_id") || null, created_by: userId, updated_by: userId });
+    const { error } = await supabase.from("tasks").insert({ title, description: description || null, priority, due_at: crmDateAtTimeToIso(dueDate), responsible_user: responsibleUser, contact_id: text(fd, "contact_id") || null, property_id: text(fd, "property_id") || null, lead_id: text(fd, "lead_id") || null, inquiry_id: text(fd, "inquiry_id") || null, search_profile_id: text(fd, "search_profile_id") || null, viewing_id: text(fd, "viewing_id") || null, created_by: userId, updated_by: userId });
     if (error) return data<ActionResult>({ error: "Aufgabe konnte nicht gespeichert werden." }, { status: 400, headers: responseHeaders() });
     return redirect("/crm/tasks", { headers: responseHeaders() });
   }
@@ -79,8 +80,8 @@ export async function action({ request, context }: Route.ActionArgs) {
 
   if (intent === "task_due") {
     const taskId = text(fd, "task_id"), version = Number(text(fd, "task_version")), dueDate = text(fd, "due_date");
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(dueDate) || Number.isNaN(Date.parse(`${dueDate}T12:00:00.000Z`))) return data<ActionResult>({ error: "Bitte ein gültiges Fälligkeitsdatum angeben." }, { status: 400, headers: responseHeaders() });
-    const { data: updated, error } = await supabase.from("tasks").update({ due_at: `${dueDate}T12:00:00.000Z` }).eq("id", taskId).eq("version", version).select("id").maybeSingle();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dueDate) || !crmDateAtTimeToIso(dueDate)) return data<ActionResult>({ error: "Bitte ein gültiges Fälligkeitsdatum angeben." }, { status: 400, headers: responseHeaders() });
+    const { data: updated, error } = await supabase.from("tasks").update({ due_at: crmDateAtTimeToIso(dueDate) }).eq("id", taskId).eq("version", version).select("id").maybeSingle();
     if (error) return data<ActionResult>({ error: "Fälligkeit konnte nicht geändert werden." }, { status: 400, headers: responseHeaders() });
     if (!updated) return data<ActionResult>({ error: "Die Aufgabe wurde zwischenzeitlich geändert. Bitte neu laden." }, { status: 409, headers: responseHeaders() });
     return redirect(back, { headers: responseHeaders() });

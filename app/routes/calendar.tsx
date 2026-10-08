@@ -7,7 +7,7 @@ import {
   beschrifte,
 } from "~/lib/labels";
 import { PHASE as VERKAUFSPHASE } from "./projects";
-import { TERMINKATEGORIEN, kategorie, type Terminkategorie } from "~/lib/terminkategorien";
+import { TERMINKATEGORIEN, kategorie, uebersichtsWege, type Terminkategorie } from "~/lib/terminkategorien";
 import "~/calendar.css";
 
 type CalendarKind = Terminkategorie;
@@ -18,6 +18,8 @@ type CalendarEvent = {
   subtitle: string;
   startsAt: string;
   endsAt: string | null;
+  /** Quellspalte ist ein Datum ohne Uhrzeit -- keine Uhrzeit erfinden. */
+  ganztags: boolean;
   sourcePath: string;
   sourceLabel: string;
   exportUrl: string;
@@ -78,7 +80,19 @@ function monthBounds(month: string) {
   const from = berlinLocalToIso(`${month}-01T00:00`);
   const to = berlinLocalToIso(`${next}-01T00:00`);
   if (!from || !to) throw new Response("Kalenderzeitraum ist ungültig.", { status: 400 });
-  return { from, to };
+  // Datumsspalten (date) brauchen Datumsgrenzen, keine Zeitpunkte: der
+  // 31.10. gehoert zum Oktober, auch wenn der Oktober in Berlin erst um
+  // 22:00 UTC endet.
+  return { from, to, vonTag: `${month}-01`, bisTag: `${next}-01` };
+}
+
+/**
+ * Der Tagesbeginn in Berlin als Zeitpunkt. Macht aus einer Datumsspalte
+ * einen Eintrag, den dateKey() wieder genau diesem Tag zuordnet -- ohne eine
+ * Uhrzeit zu behaupten, die in der Datenbank nicht steht.
+ */
+function tagesanfangIso(datum: string) {
+  return berlinLocalToIso(`${datum}T00:00`);
 }
 
 function monthLabel(month: string) {
@@ -143,9 +157,10 @@ function monatsraster(month: string): Rasterzelle[][] {
  */
 const MARKEN_JE_TAG = 3;
 
-function Monatsraster({ month, grouped }: { month: string; grouped: Record<string, CalendarEvent[]> }) {
+function Monatsraster({ month, grouped, sichtbareArten }: { month: string; grouped: Record<string, CalendarEvent[]>; sichtbareArten: Terminkategorie[] }) {
   const wochen = monatsraster(month);
   const heute = heuteBerlin();
+  const legende = TERMINKATEGORIEN.filter((art) => sichtbareArten.includes(art.schluessel));
   const anzahl = new Map(TERMINKATEGORIEN.map((k) => [k.schluessel, 0]));
   for (const tagesTermine of Object.values(grouped)) {
     for (const termin of tagesTermine) anzahl.set(termin.kind, (anzahl.get(termin.kind) ?? 0) + 1);
@@ -177,7 +192,7 @@ function Monatsraster({ month, grouped }: { month: string; grouped: Record<strin
                 {tagesTermine.length > 0 ? <span className="monatsraster-marken">
                   {tagesTermine.slice(0, sichtbar).map((termin) => {
                     const art = kategorie(termin.kind);
-                    return <span className={`termin-marke ${art.klasse}`} key={termin.key} title={`${formatTime(termin.startsAt)} · ${art.beschriftung}: ${termin.title}`}>{art.kuerzel}</span>;
+                    return <span className={`termin-marke ${art.klasse}`} key={termin.key} title={`${termin.ganztags ? "ganztägig" : formatTime(termin.startsAt)} · ${art.beschriftung}: ${termin.title}`}>{art.kuerzel}</span>;
                   })}
                   {tagesTermine.length > sichtbar ? <span className="termin-weitere">+{tagesTermine.length - sichtbar}</span> : null}
                 </span> : null}
@@ -194,7 +209,7 @@ function Monatsraster({ month, grouped }: { month: string; grouped: Record<strin
     </div>
 
     <ul className="monatsraster-legende">
-      {TERMINKATEGORIEN.map((art) => <li key={art.schluessel}>
+      {legende.map((art) => <li key={art.schluessel}>
         <span className={`termin-marke ${art.klasse}`} aria-hidden="true">{art.kuerzel}</span>
         <span className="monatsraster-legende-text">{art.beschriftung}</span>
         <span className="monatsraster-legende-zahl">{anzahl.get(art.schluessel) ?? 0}</span>
@@ -229,7 +244,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const month = validMonth(url.searchParams.get("month"));
   const scope = url.searchParams.get("scope") === "all" ? "all" : "mine";
-  const { from, to } = monthBounds(month);
+  const { from, to, vonTag, bisTag } = monthBounds(month);
 
   let taskQuery = supabase
     .from("tasks")
@@ -278,14 +293,25 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     .gte("appointment_at", from)
     .lt("appointment_at", to)
     .order("appointment_at", { ascending: true });
+  // Gelesen wird next_step_due_on, nicht follow_up_at.
+  //
+  // follow_up_at steht seit der Gruendungsmigration in sale_projects und wird
+  // von keiner Stelle der Anwendung geschrieben -- weder von projects.tsx noch
+  // von project-detail.tsx. Gepflegt wird der naechste Schritt mit Faelligkeit
+  // (next_step, next_step_due_on, next_step_user). Der Kalender las am
+  // 08.10.2026 die leere Spalte: eine Kategorie mit Farbe, Kuerzel und
+  // Legendenzeile, die nie einen Eintrag erzeugen konnte.
+  //
+  // next_step_due_on ist ein Datum ohne Uhrzeit. Der Eintrag laeuft deshalb
+  // als ganztaegig; eine Uhrzeit waere erfunden.
   let projectQuery = supabase
     .from("sale_projects")
-    .select("id,project_number,phase,follow_up_at,primary_responsible_user,contacts(first_name,last_name),properties(property_number,internal_title)")
+    .select("id,project_number,phase,next_step,next_step_due_on,next_step_user,primary_responsible_user,contacts(first_name,last_name),properties(property_number,internal_title)")
     .is("archived_at", null)
-    .not("follow_up_at", "is", null)
-    .gte("follow_up_at", from)
-    .lt("follow_up_at", to)
-    .order("follow_up_at", { ascending: true });
+    .not("next_step_due_on", "is", null)
+    .gte("next_step_due_on", vonTag)
+    .lt("next_step_due_on", bisTag)
+    .order("next_step_due_on", { ascending: true });
   // Das Uebergabeprotokoll hat selbst keinen Verantwortlichen und kein
   // Archivkennzeichen -- beides haengt am Abschluss, zu dem es gehoert.
   let inspectionQuery = supabase
@@ -307,7 +333,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   if (scope === "mine") {
     inspectionQuery = inspectionQuery.eq("responsible_user", userId);
     measurementQuery = measurementQuery.eq("primary_responsible_user", userId);
-    projectQuery = projectQuery.eq("primary_responsible_user", userId);
+    // Der faellige Schritt hat einen eigenen Verantwortlichen. Hat er keinen,
+    // zaehlt der des Projekts -- sonst waere ein Schritt ohne Zuweisung in
+    // "Meine Termine" fuer niemanden sichtbar.
+    projectQuery = projectQuery.or(`next_step_user.eq.${userId},and(next_step_user.is.null,primary_responsible_user.eq.${userId})`);
     handoverQuery = handoverQuery.eq("sale_closings.primary_responsible_user", userId);
     taskQuery = taskQuery.eq("responsible_user", userId);
     viewingQuery = viewingQuery.eq("primary_responsible_user", userId);
@@ -316,20 +345,34 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     closingQuery = closingQuery.eq("primary_responsible_user", userId);
   }
 
-  const [taskResult, viewingResult, followupResult, valuationResult, closingResult, measurementResult, projectResult, inspectionResult, handoverResult] = await Promise.all([
-    taskQuery,
-    viewingQuery,
-    followupQuery,
-    valuationQuery,
-    closingQuery,
-    measurementQuery,
-    projectQuery,
-    inspectionQuery,
-    handoverQuery,
+  // Die Rechte, ohne die eine Quelle gar nicht lesbar ist, stehen an der
+  // Kategorie. Fehlt eines, verschwindet die Kategorie aus Legende und
+  // Agenda -- statt als farbige Zeile zu stehen, die nie etwas beschriftet.
+  const benoetigteRechte = [...new Set(TERMINKATEGORIEN.map((art) => art.berechtigung).filter(Boolean))] as string[];
+
+  const [ergebnisse, rechteErgebnisse] = await Promise.all([
+    Promise.all([taskQuery, viewingQuery, followupQuery, valuationQuery, closingQuery, measurementQuery, projectQuery, inspectionQuery, handoverQuery]),
+    Promise.all(benoetigteRechte.map((recht) => supabase.rpc("current_user_has_permission", { p_permission: recht }))),
   ]);
-  const firstError = [taskResult.error, viewingResult.error, followupResult.error, valuationResult.error, closingResult.error,
-    measurementResult.error, projectResult.error, inspectionResult.error, handoverResult.error].find(Boolean);
-  if (firstError) throw new Response("CRM-Kalender konnte nicht geladen werden.", { status: 500, headers: responseHeaders() });
+  const [taskResult, viewingResult, followupResult, valuationResult, closingResult, measurementResult, projectResult, inspectionResult, handoverResult] = ergebnisse;
+
+  const erlaubt = new Map(benoetigteRechte.map((recht, i) => [recht, rechteErgebnisse[i]?.data === true]));
+  const sichtbareArten = TERMINKATEGORIEN
+    .filter((art) => !art.berechtigung || erlaubt.get(art.berechtigung) === true)
+    .map((art) => art.schluessel);
+
+  // Neun Quellen an einem 500 aufzuhaengen war bei fuenf eine Entscheidung
+  // und ist bei neun eine Wette: eine stillgelegte Tabelle oder ein fehlendes
+  // Recht haette den ganzen Kalender dunkel gemacht. Faellt eine Quelle aus,
+  // steht das als Hinweis ueber der Agenda -- der Rest bleibt lesbar.
+  const quellen: Array<[Terminkategorie, { error: unknown } | undefined]> = [
+    ["TASK", taskResult], ["VIEWING", viewingResult], ["LEAD_FOLLOWUP", followupResult],
+    ["LEAD_VALUATION", valuationResult], ["CLOSING_NOTARY", closingResult], ["MEASUREMENT", measurementResult],
+    ["PROJECT_FOLLOWUP", projectResult], ["READINESS_INSPECTION", inspectionResult], ["HANDOVER", handoverResult],
+  ];
+  const quellenfehler = quellen
+    .filter(([art, ergebnis]) => ergebnis?.error && sichtbareArten.includes(art))
+    .map(([art]) => kategorie(art).beschriftung);
 
   const tasks = taskResult.data ?? [];
   const taskLeadTimes = new Set(
@@ -347,6 +390,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       subtitle: contextDescription([task.task_number, task.description]),
       startsAt: task.due_at,
       endsAt: null,
+      ganztags: false,
       sourcePath: taskSourcePath(task),
       sourceLabel: kategorie("TASK").beschriftung,
       exportUrl: exportUrl("task", task.id),
@@ -364,6 +408,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       subtitle: contact ? `${contact.first_name} ${contact.last_name}` : row.lead_number,
       startsAt: row.follow_up_at,
       endsAt: null,
+      ganztags: false,
       sourcePath: `/leads/${row.id}`,
       sourceLabel: kategorie("LEAD_FOLLOWUP").beschriftung,
       exportUrl: exportUrl("lead_followup", row.id),
@@ -382,6 +427,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       subtitle: contextDescription([contact ? `${contact.first_name} ${contact.last_name}` : null, address]),
       startsAt: row.valuation_appointment_at,
       endsAt: null,
+      ganztags: false,
       sourcePath: `/leads/${row.id}`,
       sourceLabel: kategorie("LEAD_VALUATION").beschriftung,
       exportUrl: exportUrl("lead_valuation", row.id),
@@ -399,6 +445,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       subtitle: contextDescription([contact ? `${contact.first_name} ${contact.last_name}` : null, property?.property_number, row.meeting_point]),
       startsAt: row.starts_at,
       endsAt: row.ends_at,
+      ganztags: false,
       sourcePath: `/viewings/${row.id}`,
       sourceLabel: kategorie("VIEWING").beschriftung,
       exportUrl: exportUrl("viewing", row.id),
@@ -416,6 +463,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       subtitle: contextDescription([property?.property_number, property?.internal_title]),
       startsAt: row.notary_appointment_at,
       endsAt: null,
+      ganztags: false,
       sourcePath: `/closings/${row.id}`,
       sourceLabel: kategorie("CLOSING_NOTARY").beschriftung,
       exportUrl: exportUrl("closing_notary", row.id),
@@ -440,6 +488,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       ]),
       startsAt: row.appointment_at,
       endsAt: null,
+      ganztags: false,
       sourcePath: `/measurements/${row.id}`,
       sourceLabel: kategorie("MEASUREMENT").beschriftung,
       exportUrl: exportUrl("measurement", row.id),
@@ -448,19 +497,21 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   }
 
   for (const row of (projectResult.data ?? []) as any[]) {
-    if (!row.follow_up_at) continue;
+    const beginn = row.next_step_due_on ? tagesanfangIso(row.next_step_due_on) : null;
+    if (!beginn) continue;
     const contact = one(row.contacts) as { first_name: string; last_name: string } | null;
     const property = one(row.properties) as { property_number: string; internal_title: string } | null;
     events.push({
       key: `PROJECT_FOLLOWUP:${row.id}`,
       kind: "PROJECT_FOLLOWUP",
-      title: `Wiedervorlage ${row.project_number}`,
+      title: row.next_step ? `${row.next_step} (${row.project_number})` : `Fälliger Schritt ${row.project_number}`,
       subtitle: contextDescription([
         contact ? `${contact.first_name} ${contact.last_name}` : null,
         property?.property_number,
       ]),
-      startsAt: row.follow_up_at,
+      startsAt: beginn,
       endsAt: null,
+      ganztags: true,
       sourcePath: `/projects/${row.id}`,
       sourceLabel: kategorie("PROJECT_FOLLOWUP").beschriftung,
       exportUrl: exportUrl("project_followup", row.id),
@@ -483,6 +534,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       ]),
       startsAt: row.inspection_at,
       endsAt: null,
+      ganztags: false,
       sourcePath: `/leads/${row.lead_id}/sales-readiness`,
       sourceLabel: kategorie("READINESS_INSPECTION").beschriftung,
       exportUrl: exportUrl("readiness_inspection", row.id),
@@ -501,6 +553,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       subtitle: contextDescription([property?.property_number, property?.internal_title]),
       startsAt: row.handover_at,
       endsAt: null,
+      ganztags: false,
       sourcePath: `/closings/${closing.id}/milestones`,
       sourceLabel: kategorie("HANDOVER").beschriftung,
       exportUrl: exportUrl("handover", row.id),
@@ -508,18 +561,26 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     });
   }
 
-  events.sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime());
-  const grouped = events.reduce<Record<string, CalendarEvent[]>>((acc, event) => {
+  const sichtbar = events.filter((event) => sichtbareArten.includes(event.kind));
+  sichtbar.sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime());
+  const grouped = sichtbar.reduce<Record<string, CalendarEvent[]>>((acc, event) => {
     const key = dateKey(event.startsAt);
     (acc[key] ??= []).push(event);
     return acc;
   }, {});
 
-  return data({ month, scope, events, grouped, profile }, { headers: responseHeaders() });
+  return data({ month, scope, events: sichtbar, grouped, profile, sichtbareArten, quellenfehler }, { headers: responseHeaders() });
 }
 
 export default function CalendarPage() {
-  const { month, scope, events, grouped, profile } = useLoaderData<typeof loader>();
+  const { month, scope, events, grouped, profile, sichtbareArten, quellenfehler } = useLoaderData<typeof loader>();
+  const wege = uebersichtsWege(sichtbareArten);
+  // Die Kachel nennt die Anzahl, nicht die Namen: ausgeschrieben waren die
+  // neun Kategorien rund 180 Zeichen und zogen die Nachbarkacheln auf die
+  // doppelte Hoehe (siehe die Begruendung in app/calendar.css). Die Namen
+  // stehen als Verweise unter der Werkzeugleiste und in der Legende des
+  // Monatsrasters -- zweimal reicht.
+  const quellenText = `${sichtbareArten.length} Terminarten aus ${wege.length} ${wege.length === 1 ? "Übersicht" : "Übersichten"}`;
   const previousMonth = shiftMonth(month, -1);
   const nextMonth = shiftMonth(month, 1);
   const currentMonth = currentBerlinMonth();
@@ -538,7 +599,7 @@ export default function CalendarPage() {
       <div className="card-head"><div><p className="eyebrow">Integrationsarchitektur</p><h2>CRM ist die führende Terminquelle</h2></div></div>
       <div className="calendar-provider-status">
         <div><span>Kalender-Provider</span><strong>Nicht verbunden</strong></div>
-        <div><span>Terminquellen</span><strong>Aufgaben · Leads · Besichtigungen · Abschlüsse</strong></div>
+        <div><span>Terminquellen</span><strong>{quellenText}</strong></div>
         <div><span>Externer Kalender</span><strong>iCalendar (.ics) Export</strong></div>
       </div>
       <p className="calendar-note">Ein Export erzeugt eine Kalenderdatei aus dem bestehenden CRM-Termin. Änderungen werden weiterhin im zugehörigen CRM-Datensatz vorgenommen; es entsteht kein zweiter synchroner Terminbestand.</p>
@@ -559,11 +620,12 @@ export default function CalendarPage() {
       </div>
 
       <div className="calendar-source-links">
-        <Link className="subtle-link" to="/crm/tasks">Aufgaben öffnen</Link>
-        <Link className="subtle-link" to="/viewings">Besichtigungen öffnen</Link>
-        <Link className="subtle-link" to="/leads">Verkäufer-Leads öffnen</Link>
-        <Link className="subtle-link" to="/closings">Abschlüsse & Notar öffnen</Link>
+        {wege.map((weg) => <Link className="subtle-link" key={weg.pfad} to={weg.pfad}>{weg.beschriftung} öffnen</Link>)}
       </div>
+
+      {quellenfehler.length > 0 ? <p className="form-error">
+        Diese Terminquellen konnten nicht gelesen werden: {quellenfehler.join(", ")}. Die übrigen Termine stehen vollständig unten.
+      </p> : null}
 
       <div className="calendar-ansichten">
         <div className="calendar-agenda">
@@ -571,7 +633,9 @@ export default function CalendarPage() {
             <div className="calendar-day-label"><strong>{formatDay(day)}</strong><small>{dayEvents.length} {dayEvents.length === 1 ? "Termin" : "Termine"}</small></div>
             <div className="calendar-day-events">
               {dayEvents.map((event) => <article className="calendar-event" key={event.key}>
-                <div className="calendar-event-time"><strong>{formatTime(event.startsAt)}</strong>{event.endsAt ? <small>bis {formatTime(event.endsAt)}</small> : null}</div>
+                <div className="calendar-event-time">{event.ganztags
+                  ? <strong className="calendar-event-ganztags">ganztägig</strong>
+                  : <><strong>{formatTime(event.startsAt)}</strong>{event.endsAt ? <small>bis {formatTime(event.endsAt)}</small> : null}</>}</div>
                 <div className="calendar-event-main"><strong>{event.title}</strong><p>{event.subtitle}</p><span className={`calendar-kind ${kategorie(event.kind).klasse}`}>{event.sourceLabel}{event.statusLabel ? ` · ${event.statusLabel}` : ""}</span></div>
                 <div className="calendar-event-actions"><Link className="subtle-link" to={event.sourcePath}>CRM öffnen →</Link><a className="secondary-button link-button compact" href={event.exportUrl}>.ics</a></div>
               </article>)}
@@ -580,7 +644,7 @@ export default function CalendarPage() {
           {events.length === 0 ? <p className="empty-state">Im gewählten Monat sind für diese Ansicht keine CRM-Termine vorhanden.</p> : null}
         </div>
 
-        <Monatsraster month={month} grouped={grouped} />
+        <Monatsraster month={month} grouped={grouped} sichtbareArten={sichtbareArten} />
       </div>
     </section>
   </main>;

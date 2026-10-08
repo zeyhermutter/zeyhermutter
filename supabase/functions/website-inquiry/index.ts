@@ -290,7 +290,12 @@ Deno.serve(async (request: Request) => {
       p_property_type: propertyType,
       p_object_postal_code: postalCode,
       p_object_city: city,
-      p_approx_area_sqm: Number.isFinite(approxArea) && approxArea > 0 ? approxArea : null,
+      // Obergrenze, weil approx_area_sqm in der Datenbank numeric(12,2) ist:
+      // ein direkt gesendetes 1e11 lief dort als Ueberlauf in einen Fehler 500,
+      // nachdem der Kontakt schon angelegt war. Ueber das Formular ist das nicht
+      // erreichbar (maxLength 6), ueber einen gebastelten Aufruf schon.
+      p_approx_area_sqm: Number.isFinite(approxArea) && approxArea > 0 && approxArea < 1e9
+        ? Math.round(approxArea * 100) / 100 : null,
       p_floor_count: Number.isFinite(floorCount) && floorCount >= 1 && floorCount <= 20 ? Math.round(floorCount) : null,
       p_message: message,
       p_consent_text_version: MEASUREMENT_CONSENT_VERSION,

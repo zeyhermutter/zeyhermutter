@@ -3,6 +3,7 @@ import type { Route } from "./+types/contact-relations";
 import { requireActiveUser } from "~/lib/auth.server";
 import { tag as dateOnly } from "~/lib/format";
 import { AUFGABENPRIORITAET, AUFGABENSTATUS, beschrifte } from "~/lib/labels";
+import { crmDateAtTimeToIso } from "~/lib/local-time";
 
 type ActionResult = { error?: string; success?: string };
 
@@ -196,7 +197,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       return data<ActionResult>({ error: "Titel, Fälligkeitsdatum und gültige Priorität sind erforderlich." }, { status: 400, headers: responseHeaders() });
     }
 
-    const dueAt = `${dueDate}T12:00:00.000Z`;
+    const dueAt = crmDateAtTimeToIso(dueDate);
     const { error } = await supabase.from("tasks").insert({
       title,
       priority,

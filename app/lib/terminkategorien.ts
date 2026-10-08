@@ -44,20 +44,61 @@ export type Kategoriebeschreibung = {
   kuerzel: string;
   /** Die Klasse, die Farbe und Rahmen in app/calendar.css setzt. */
   klasse: string;
+  /** Wohin der Verweis "Quelle oeffnen" unter dem Kalender fuehrt. */
+  uebersichtPfad: string;
+  /** Wie dieser Verweis heisst. Mehrere Kategorien duerfen denselben teilen. */
+  uebersichtBeschriftung: string;
+  /**
+   * Die Berechtigung, ohne die diese Quelle gar nicht gelesen werden kann.
+   * Steht hier null, entscheidet allein die Zeilensicherheit der Tabelle.
+   *
+   * Ohne diese Angabe stand eine Kategorie in der Legende, deren Zeilen die
+   * Zeilensicherheit fuer die meisten Rollen wegfiltert: kein Fehler, nur
+   * dauerhaft null Eintraege. Eine Farbe, die nie etwas beschriftet, ist eine
+   * Luege ueber den Datenbestand.
+   */
+  berechtigung: string | null;
+  /**
+   * true, wenn die Quellspalte ein reines Datum ohne Uhrzeit ist. Solche
+   * Termine laufen als ganztaegig -- in der Agenda ohne erfundene Uhrzeit,
+   * im .ics als DTSTART;VALUE=DATE.
+   */
+  ganztags: boolean;
 };
 
 /** In der Reihenfolge des Arbeitsvorgangs, nicht alphabetisch. */
 export const TERMINKATEGORIEN: Kategoriebeschreibung[] = [
-  { schluessel: "TASK", beschriftung: "Aufgabe / interner Termin", kuerzel: "A", klasse: "termin-aufgabe" },
-  { schluessel: "LEAD_FOLLOWUP", beschriftung: "Wiedervorlage", kuerzel: "W", klasse: "termin-wiedervorlage" },
-  { schluessel: "PROJECT_FOLLOWUP", beschriftung: "Wiedervorlage Verkaufsprojekt", kuerzel: "P", klasse: "termin-projekt" },
-  { schluessel: "LEAD_VALUATION", beschriftung: "Eigentümertermin", kuerzel: "E", klasse: "termin-eigentuemer" },
-  { schluessel: "READINESS_INSPECTION", beschriftung: "Begehung Verkaufsstrategie-Check", kuerzel: "V", klasse: "termin-begehung" },
-  { schluessel: "VIEWING", beschriftung: "Besichtigung", kuerzel: "B", klasse: "termin-besichtigung" },
-  { schluessel: "MEASUREMENT", beschriftung: "Aufmaßtermin", kuerzel: "M", klasse: "termin-aufmass" },
-  { schluessel: "CLOSING_NOTARY", beschriftung: "Notartermin", kuerzel: "N", klasse: "termin-notar" },
-  { schluessel: "HANDOVER", beschriftung: "Übergabe", kuerzel: "Ü", klasse: "termin-uebergabe" },
+  { schluessel: "TASK", beschriftung: "Aufgabe / interner Termin", kuerzel: "A", klasse: "termin-aufgabe",
+    uebersichtPfad: "/crm/tasks", uebersichtBeschriftung: "Aufgaben", berechtigung: null, ganztags: false },
+  { schluessel: "LEAD_FOLLOWUP", beschriftung: "Wiedervorlage", kuerzel: "W", klasse: "termin-wiedervorlage",
+    uebersichtPfad: "/leads", uebersichtBeschriftung: "Verkäufer-Leads", berechtigung: null, ganztags: false },
+  { schluessel: "PROJECT_FOLLOWUP", beschriftung: "Fälliger Schritt am Verkaufsprojekt", kuerzel: "P", klasse: "termin-projekt",
+    uebersichtPfad: "/projects", uebersichtBeschriftung: "Verkaufsprojekte", berechtigung: null, ganztags: true },
+  { schluessel: "LEAD_VALUATION", beschriftung: "Eigentümertermin", kuerzel: "E", klasse: "termin-eigentuemer",
+    uebersichtPfad: "/leads", uebersichtBeschriftung: "Verkäufer-Leads", berechtigung: null, ganztags: false },
+  { schluessel: "READINESS_INSPECTION", beschriftung: "Begehung Verkaufsstrategie-Check", kuerzel: "V", klasse: "termin-begehung",
+    uebersichtPfad: "/crm/sales-readiness", uebersichtBeschriftung: "Verkaufsstrategie-Checks", berechtigung: "sales_readiness.read", ganztags: false },
+  { schluessel: "VIEWING", beschriftung: "Besichtigung", kuerzel: "B", klasse: "termin-besichtigung",
+    uebersichtPfad: "/viewings", uebersichtBeschriftung: "Besichtigungen", berechtigung: null, ganztags: false },
+  { schluessel: "MEASUREMENT", beschriftung: "Aufmaßtermin", kuerzel: "M", klasse: "termin-aufmass",
+    uebersichtPfad: "/measurements", uebersichtBeschriftung: "Aufmaßaufträge", berechtigung: "measurement.read", ganztags: false },
+  { schluessel: "CLOSING_NOTARY", beschriftung: "Notartermin", kuerzel: "N", klasse: "termin-notar",
+    uebersichtPfad: "/closings", uebersichtBeschriftung: "Abschlüsse & Notar", berechtigung: null, ganztags: false },
+  { schluessel: "HANDOVER", beschriftung: "Übergabe", kuerzel: "Ü", klasse: "termin-uebergabe",
+    uebersichtPfad: "/closings", uebersichtBeschriftung: "Abschlüsse & Notar", berechtigung: null, ganztags: false },
 ];
+
+/** Die Verweise unter dem Kalender -- jeder Weg einmal, in Kategorienreihenfolge. */
+export function uebersichtsWege(sichtbar: Terminkategorie[]) {
+  const gesehen = new Set<string>();
+  const wege: Array<{ pfad: string; beschriftung: string }> = [];
+  for (const art of TERMINKATEGORIEN) {
+    if (!sichtbar.includes(art.schluessel) || gesehen.has(art.uebersichtPfad)) continue;
+    gesehen.add(art.uebersichtPfad);
+    wege.push({ pfad: art.uebersichtPfad, beschriftung: art.uebersichtBeschriftung });
+  }
+  return wege;
+}
 
 const NACH_SCHLUESSEL = new Map(TERMINKATEGORIEN.map((k) => [k.schluessel, k]));
 

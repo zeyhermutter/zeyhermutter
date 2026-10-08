@@ -44,6 +44,7 @@ export function errorMessage(error:any){
   if(message.includes("MEASUREMENT_MEASURED_DATE_REQUIRED"))return"Für „Aufgemessen“ wird das Datum des Aufmaßes benötigt.";
   if(message.includes("MEASUREMENT_DELIVERY_DATE_REQUIRED"))return"Für „Geliefert“ und alles danach wird das Lieferdatum benötigt.";
   if(message.includes("MEASUREMENT_INVOICE_DETAILS_REQUIRED"))return"Zum Abrechnen werden Honorar und Rechnungsdatum benötigt.";
+  if(message.includes("MEASUREMENT_FEE_REQUIRED"))return"Für „Bezahlt“ wird das vereinbarte Honorar benötigt — das Rechnungsdatum nicht.";
   if(message.includes("MEASUREMENT_PAYMENT_DATE_REQUIRED"))return"Für „Bezahlt“ wird das Zahlungsdatum benötigt.";
   if(message.includes("MEASUREMENT_AREA_REQUIRED_FOR_STANDARD"))return"Eine Flächengrundlage ohne Flächenangabe ergibt keine Aussage — bitte Wohn- oder Nutzfläche eintragen.";
   if(message.includes("MEASUREMENT_RESPONSIBLE_USER_INACTIVE"))return"Der ausgewählte Verantwortliche ist nicht aktiv.";
@@ -92,6 +93,26 @@ export async function loader({request,context,params}:Route.LoaderArgs){
     supabase.rpc("current_user_has_permission",{p_permission:"property.write"}),
     supabase.rpc("current_user_has_permission",{p_permission:"audit.read"}),
   ]);
+  // Die Auswahllisten sind gefiltert: Immobilien ohne Archiv und auf 500
+  // begrenzt, Kontakte ohne Archiv und auf 1000. Stand die verknuepfte
+  // Immobilie nicht darin -- archiviert oder abgeschnitten --, hatte das
+  // <select> keine passende Option. Der Browser nimmt dann die erste, und die
+  // erste ist "Nicht im eigenen Bestand" mit dem Wert "". Ein Klick auf
+  // "Grunddaten speichern" hat die Verknuepfung damit still geloescht; die
+  // Pruefung im Aktionsteil greift nur, wenn Immobilie *und* Kunde fehlen.
+  //
+  // Ein Auswahlfeld muss seinen eigenen Wert enthalten. Sonst ist das
+  // Formular nicht die Anzeige des Datensatzes, sondern sein Ueberschreiber.
+  const verknuepfterKontakt=one(row.contacts) as any;
+  const objektAuswahl:any[]=[...(properties??[])];
+  if(property&&!objektAuswahl.some((eintrag:any)=>eintrag.id===property.id)){
+    objektAuswahl.unshift({id:property.id,property_number:property.property_number,internal_title:property.internal_title,zusatz:"nicht in der Auswahl"});
+  }
+  const kontaktAuswahl:any[]=[...(contacts??[])];
+  if(verknuepfterKontakt&&!kontaktAuswahl.some((eintrag:any)=>eintrag.id===verknuepfterKontakt.id)){
+    kontaktAuswahl.unshift({id:verknuepfterKontakt.id,contact_number:verknuepfterKontakt.contact_number,first_name:verknuepfterKontakt.first_name,last_name:verknuepfterKontakt.last_name,zusatz:"nicht in der Auswahl"});
+  }
+
   let audit:any[]=[];
   if(canAudit===true){
     const result=await supabase.from("audit_events").select("id,occurred_at,actor_display_name_snapshot,action,field_changes,entity_type").eq("entity_type","MEASUREMENT_ORDER").eq("entity_id",id).order("occurred_at",{ascending:false}).limit(60);
@@ -100,7 +121,7 @@ export async function loader({request,context,params}:Route.LoaderArgs){
   return data({
     ladefehler:[transitionsFehler&&"transitions",unterlagenFehler&&"unterlagen",tasksFehler&&"tasks"].filter(Boolean) as string[],
     row,profile,transitions:transitions??[],unterlagen:unterlagen??[],tasks:tasks??[],objektDokumente:objektDokumente??[],
-    legal:legal??null,contacts:contacts??[],properties:properties??[],profiles:profiles??[],
+    legal:legal??null,contacts:kontaktAuswahl,properties:objektAuswahl,profiles:profiles??[],
     canWrite:canWrite===true,canArchive:canArchive===true,canTask:canTask===true,canProperty:canProperty===true,audit,
   },{headers:responseHeaders()});
 }
@@ -190,12 +211,31 @@ export async function action({request,context,params}:Route.ActionArgs){
   }
 
   if(intent==="status"){
+    // Ein Statusknopf bestaetigt einen Stand; er ist kein Datumsformular.
+    //
+    // Vorher stand hier `!text(fd,"measured_on_known")` und drei Geschwister.
+    // Diese Felder hat kein Formular je gesendet -- das Statusformular sendet
+    // _intent, version und target_status, sonst nichts. Die Bedingung war
+    // damit immer wahr, und jeder Klick setzte das Datum auf heute: aus einer
+    // Rechnung vom 01.09., im Honorarblock sauber erfasst, wurde beim Klick
+    // auf "Rechnung gestellt" eine vom Tag des Klicks. Stiller Datenverlust
+    // durch einen Schutzschalter, der nie angeschlossen war.
+    //
+    // Jetzt entscheidet der Datenbestand, nicht das Formular: ein Datum, das
+    // schon steht, bleibt stehen; nur ein fehlendes wird auf heute gesetzt,
+    // weil der Pruefungstrigger es fuer diesen Stand verlangt.
     const next=text(fd,"target_status");
+    const {data:stand,error:standFehler}=await supabase.from("measurement_orders")
+      .select("measured_on,delivered_on,invoiced_on,paid_on").eq("id",id).maybeSingle();
+    if(standFehler||!stand)return fail("Der aktuelle Stand des Auftrags konnte nicht gelesen werden.",500);
     const update:Record<string,unknown>={status:next};
-    if(next==="MEASURED"&&!text(fd,"measured_on_known"))update.measured_on=text(fd,"measured_on")||heute();
-    if(next==="DELIVERED"&&!text(fd,"delivered_on_known"))update.delivered_on=text(fd,"delivered_on")||heute();
-    if(next==="INVOICED"&&!text(fd,"invoiced_on_known"))update.invoiced_on=text(fd,"invoiced_on")||heute();
-    if(next==="PAID"&&!text(fd,"paid_on_known"))update.paid_on=text(fd,"paid_on")||heute();
+    const ergaenze=(feld:"measured_on"|"delivered_on"|"invoiced_on"|"paid_on")=>{
+      if(!(stand as Record<string,unknown>)[feld])update[feld]=heute();
+    };
+    if(next==="MEASURED")ergaenze("measured_on");
+    if(next==="DELIVERED")ergaenze("delivered_on");
+    if(next==="INVOICED")ergaenze("invoiced_on");
+    if(next==="PAID")ergaenze("paid_on");
     return speichere(update,"#status");
   }
 
@@ -311,8 +351,8 @@ export default function MeasurementDetail(){
           <div className="form-grid">
             <label className="form-field"><span>Leistungspaket</span><select name="service_package" defaultValue={row.service_package}>{Object.entries(PAKET).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
             <label className="form-field"><span>Quelle</span><select name="source" defaultValue={row.source}>{Object.entries(QUELLE).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
-            <label className="form-field"><span>Immobilie aus dem Bestand</span><select name="property_id" defaultValue={row.property_id??""}><option value="">Nicht im eigenen Bestand</option>{properties.map((item:any)=><option key={item.id} value={item.id}>{item.property_number} · {item.internal_title}</option>)}</select></label>
-            <label className="form-field"><span>Kunde</span><select name="contact_id" defaultValue={row.contact_id??""}><option value="">Kein Kontakt verknüpft</option>{contacts.map((item:any)=><option key={item.id} value={item.id}>{item.contact_number} · {item.first_name} {item.last_name}</option>)}</select></label>
+            <label className="form-field"><span>Immobilie aus dem Bestand</span><select name="property_id" defaultValue={row.property_id??""}><option value="">Nicht im eigenen Bestand</option>{properties.map((item:any)=><option key={item.id} value={item.id}>{item.property_number} · {item.internal_title}{item.zusatz?` (${item.zusatz})`:""}</option>)}</select></label>
+            <label className="form-field"><span>Kunde</span><select name="contact_id" defaultValue={row.contact_id??""}><option value="">Kein Kontakt verknüpft</option>{contacts.map((item:any)=><option key={item.id} value={item.id}>{item.contact_number} · {item.first_name} {item.last_name}{item.zusatz?` (${item.zusatz})`:""}</option>)}</select></label>
             <label className="form-field"><span>Immobilienart</span><select name="property_type" defaultValue={row.property_type??""}><option value="">Noch offen</option>{IMMOBILIENARTEN.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
             <label className="form-field"><span>Verantwortlich</span><select name="primary_responsible_user" defaultValue={row.primary_responsible_user}>{profiles.map((item:any)=><option key={item.user_id} value={item.user_id}>{item.display_name}</option>)}</select></label>
             <label className="form-field"><span>Straße</span><input name="object_street" defaultValue={row.object_street??""}/></label>

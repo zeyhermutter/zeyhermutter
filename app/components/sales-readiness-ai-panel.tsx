@@ -93,7 +93,7 @@ function fieldValue(root: ParentNode, name: string) {
 function basicSnapshot() {
   const root = document.querySelector(".readiness-workspace") ?? document;
   return {
-    inspection_date: fieldValue(root, "inspection_date"),
+    inspection_date: fieldValue(root, "inspection_at"),
     desired_timeframe: fieldValue(root, "desired_timeframe"),
     starting_situation: fieldValue(root, "starting_situation"),
     sale_objective: fieldValue(root, "sale_objective"),

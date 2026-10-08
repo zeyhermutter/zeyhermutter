@@ -46,6 +46,18 @@
   font-weight: 700;
 }
 
+/*
+ * Drei Statuswerte nebeneinander. Jede Kachel traegt eine kurze Angabe --
+ * keine Aufzaehlung.
+ *
+ * Als die Kachel "Terminquellen" am 08.10.2026 alle neun Kategorien ausschrieb,
+ * waren das rund 180 Zeichen in einem Drittel der Breite: vier Zeilen. Weil
+ * Rasterzellen gleich hoch werden, zog sie die beiden Nachbarn von 69 auf
+ * 129 Pixel -- zwei fast leere Kaesten neben einem vollen (gemessen bei 1366
+ * und 1024 Pixeln). Die Namen der Quellen stehen ohnehin zweimal auf der
+ * Seite: als Verweise unter der Werkzeugleiste und in der Legende des
+ * Monatsrasters. Die Kachel nennt deshalb nur noch die Anzahl.
+ */
 .calendar-provider-status {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -170,6 +182,17 @@
 
 .calendar-event-time small {
   color: #7b8788;
+}
+
+/*
+ * Ein Termin aus einer Datumsspalte hat keine Uhrzeit. "ganztägig" steht an
+ * derselben Stelle wie sonst die Zeit, nur schmaler gesetzt -- damit die
+ * Spalte nicht breiter wird als die Uhrzeiten darüber und darunter.
+ */
+.calendar-event-time strong.calendar-event-ganztags {
+  font-size: .78rem;
+  letter-spacing: .01em;
+  color: #51605f;
 }
 
 .calendar-event-main strong {

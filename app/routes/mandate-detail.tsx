@@ -167,7 +167,15 @@ export async function action({request,context,params}:Route.ActionArgs){
     const update:any={status:next};
     if(next==="WITHDRAWN")update.withdrawn_on=text(fd,"withdrawn_on")||today();
     if(next==="TERMINATED"){update.terminated_on=text(fd,"terminated_on")||today();update.termination_reason=text(fd,"termination_reason")||null;}
-    if(["WITHDRAWN","TERMINATED","EXPIRED","FULFILLED"].includes(next)&&!text(fd,"keep_actual_end"))update.actual_end_on=text(fd,"actual_end_on")||today();
+    // Derselbe Fall wie beim Aufmassauftrag: "keep_actual_end" hat kein
+    // Formular je gesendet, die Bedingung war immer wahr, und jeder Wechsel
+    // in einen Endzustand setzte das tatsaechliche Ende auf heute -- auch
+    // wenn dort schon ein erfasstes Datum stand. Entscheidend ist jetzt der
+    // Datenbestand, nicht ein Feld, das es nicht gibt.
+    if(["WITHDRAWN","TERMINATED","EXPIRED","FULFILLED"].includes(next)){
+      const {data:stand}=await supabase.from("brokerage_mandates").select("actual_end_on").eq("id",id).maybeSingle();
+      if(!stand?.actual_end_on)update.actual_end_on=text(fd,"actual_end_on")||today();
+    }
     const {data:updated,error}=await supabase.from("brokerage_mandates").update(update).eq("id",id).eq("version",version).select("id").maybeSingle();
     if(error)return fail(errorMessage(error));
     if(!updated)return conflict();

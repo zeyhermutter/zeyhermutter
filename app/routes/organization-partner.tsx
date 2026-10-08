@@ -111,6 +111,12 @@ export async function action({request,context,params}:Route.ActionArgs){
       ratings[key]=raw?Number.parseInt(raw,10):null;
       if(raw&&!Number.isFinite(ratings[key]))return invalid("Ungültige Bewertung.");
     }
+    // Der bisherige Stand der Compliance-Pruefung. Steht er schon fest, darf
+    // ein Speichern mit anderem Stand ihn nicht loeschen.
+    const vorhandeneProfilId=text(fd,"profile_id");
+    const {data:bisher}=vorhandeneProfilId
+      ? await supabase.from("partner_profiles").select("compliance_reviewed_on,compliance_reviewed_by").eq("id",vorhandeneProfilId).maybeSingle()
+      : {data:null};
     const payload:any={
       trade:text(fd,"trade")||null,
       service_area:text(fd,"service_area")||null,
@@ -126,11 +132,18 @@ export async function action({request,context,params}:Route.ActionArgs){
       // Wer die Freigabe erteilt, ist die angemeldete Person und das heutige
       // Datum. Kein Auswahlfeld, damit die Freigabe nicht versehentlich einer
       // anderen Person zugeschrieben wird.
-      compliance_reviewed_on:compliance==="COMMISSION_POSSIBLE"?today():dateOrNull(fd,"compliance_reviewed_on"),
-      compliance_reviewed_by:compliance==="COMMISSION_POSSIBLE"?userId:(text(fd,"compliance_reviewed_by")||null),
+      //
+      // Der andere Zweig las bis zum 08.10.2026 aus dem Formular -- aus
+      // Feldern, die es dort nie gab. Er lieferte deshalb immer null und
+      // loeschte bei jedem Speichern mit einem anderen Compliance-Stand die
+      // festgehaltene Pruefung mitsamt Pruefer. Wer die Freigabe
+      // zurueckstufte, verlor damit den Nachweis, dass sie je erteilt wurde.
+      // Der bisherige Eintrag bleibt jetzt stehen.
+      compliance_reviewed_on:compliance==="COMMISSION_POSSIBLE"?today():(bisher?.compliance_reviewed_on??null),
+      compliance_reviewed_by:compliance==="COMMISSION_POSSIBLE"?userId:(bisher?.compliance_reviewed_by??null),
       notes:text(fd,"notes")||null,
     };
-    const profileId=text(fd,"profile_id");
+    const profileId=vorhandeneProfilId;
     if(profileId){
       const {data:updated,error}=await supabase.from("partner_profiles").update(payload).eq("id",profileId).eq("version",Number(text(fd,"profile_version"))).select("id").maybeSingle();
       if(error)return fail(error); if(!updated)return conflict();

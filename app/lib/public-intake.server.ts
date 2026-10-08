@@ -75,10 +75,60 @@ export function textFeld(fd: FormData, key: string, max = 4000) {
   return String(fd.get(key) ?? "").trim().replace(/\s+/g, " ").slice(0, max);
 }
 
+/**
+ * Eine Zahl aus einem oeffentlichen Formularfeld.
+ *
+ * WARUM DAS NICHT TRIVIAL IST
+ *
+ * Hier stand `.replace(/\./g, "")` -- alle Punkte weg, dann Komma zu Punkt.
+ * Fuer "1.250.000" richtig, fuer "87.5" falsch: daraus wurden 875. Bei der
+ * ungefaehren Flaeche eines Aufmassauftrags also aus 87,5 m² eine Wohnung mit
+ * 875 m², ohne Fehlermeldung und ohne dass es jemandem auffaellt.
+ *
+ * Deutsche Eingaben schreiben den Punkt als Tausendertrenner und das Komma
+ * als Dezimaltrenner; viele Leute tippen aber die englische Form. Die Regeln,
+ * in dieser Reihenfolge:
+ *
+ *   1. Steht ein Komma drin, ist es der Dezimaltrenner. Punkte sind dann
+ *      Tausendertrenner und fallen weg.  "1.250,50" -> 1250.5
+ *   2. Ohne Komma: ein einzelner Punkt mit genau drei Ziffern dahinter ist
+ *      ein Tausendertrenner.             "1.250"    -> 1250
+ *   3. Ohne Komma, sonst: der Punkt ist der Dezimaltrenner.
+ *                                        "87.5"     -> 87.5
+ *   4. Mehrere Punkte sind immer Tausendertrenner. "1.250.000" -> 1250000
+ *
+ * Mehrdeutig bleibt allein "1.500" -- 1500 nach Regel 2. Wer eineinhalb
+ * meint, schreibt im Deutschen 1,5. Fuer Flaechen, Zimmer und Preise ist die
+ * Tausenderlesung die richtige Wette.
+ *
+ * Die Obergrenze ist kein Schoenheitsmittel: approx_area_sqm ist in der
+ * Datenbank numeric(12,2). Eine Eingabe von 10^11 lief dort als Ueberlauf in
+ * einen Fehler 500, nachdem der Kontakt schon angelegt war.
+ *
+ * scripts/check-zahlfeld.mjs rechnet die Faelle oben bei jedem Build nach.
+ */
 export function zahlFeld(fd: FormData, key: string) {
-  const roh = textFeld(fd, key, 20).replace(/\./g, "").replace(",", ".");
-  const zahl = Number(roh);
-  return Number.isFinite(zahl) && zahl > 0 ? zahl : null;
+  const roh = textFeld(fd, key, 20).replace(/\s/g, "");
+  // Nur Ziffern, Punkte und Kommas. Ohne diese Schranke nimmt Number() auch
+  // "1e5" an und macht daraus 100000 -- eine Schreibweise, die in einem
+  // Flaechenfeld niemand eintippt und die nur ein gebastelter Aufruf schickt.
+  if (!/^[\d.,]+$/.test(roh)) return null;
+
+  let normal: string;
+  if (roh.includes(",")) {
+    normal = roh.replace(/\./g, "").replace(",", ".");
+  } else {
+    const punkte = (roh.match(/\./g) ?? []).length;
+    const tausender = punkte > 1 || /\.\d{3}$/.test(roh);
+    normal = tausender ? roh.replace(/\./g, "") : roh;
+  }
+
+  const zahl = Number(normal);
+  if (!Number.isFinite(zahl) || zahl <= 0) return null;
+  // numeric(12,2) traegt zehn Ziffern vor dem Komma. Darueber hinaus ist
+  // keine Angabe mehr gemeint, sondern ein Tippfehler oder ein Versuch.
+  if (zahl >= 1e9) return null;
+  return Math.round(zahl * 100) / 100;
 }
 
 export function epostGueltig(wert: string) {

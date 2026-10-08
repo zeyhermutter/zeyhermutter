@@ -96,7 +96,7 @@ function reviewMissing(
 ) {
   const missing: string[] = [];
 
-  if (!check.inspectionAt) missing.push("Besichtigungsdatum erfassen");
+  if (!check.inspectionAt) missing.push("Begehungstermin erfassen");
   if (!present(check.startingSituation)) missing.push("Ausgangssituation beschreiben");
   if (!present(check.saleObjective)) missing.push("Verkaufsziel dokumentieren");
   if (!present(check.overallAssessment)) missing.push("Gesamtbeurteilung ergänzen");

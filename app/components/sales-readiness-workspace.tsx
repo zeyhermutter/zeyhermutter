@@ -9,6 +9,7 @@ import {
   SALES_READINESS_STATUS_LABELS,
 } from "~/lib/sales-readiness";
 import { euroRund as euro } from "~/lib/format";
+import { crmIsoToLocalDateTime } from "~/lib/local-time";
 
 const CATEGORIES = [
   ["CLEARANCE_DISPOSAL", "Entrümpelung & Entsorgung"],
@@ -29,10 +30,6 @@ const SCENARIO_LABELS = {
   RECOMMENDED_PREPARATION: "B · Optimierte Verkaufsaufbereitung",
   EXTENDED_MEASURES: "C · Umfangreichere Renovierung",
 } as const;
-
-function inputDate(value: string | null) {
-  return value ? value.slice(0, 10) : "";
-}
 
 function valueOrBlank(value: number | null) {
   return value ?? "";
@@ -178,8 +175,9 @@ export function SalesReadinessWorkspace({
         </div>
         <div className="readiness-form-grid">
           <label>
-            <span>Besichtigung *</span>
-            <input name="inspection_date" type="date" defaultValue={inputDate(check.inspectionAt)} disabled={!editable} />
+            <span>Begehung *</span>
+            <input name="inspection_at" type="datetime-local" defaultValue={crmIsoToLocalDateTime(check.inspectionAt)} disabled={!editable} />
+            <small className="subtle">Ortszeit. Die Begehung steht als Termin im CRM-Kalender und im .ics-Export.</small>
           </label>
           <label>
             <span>Gewünschter Zeitrahmen</span>
