@@ -25,6 +25,10 @@ import "~/public-website.css";
 // Einstiegspreise mit ausdruecklicher Grenze ("bis 100 m2"), nicht Festpreise
 // fuer jeden Fall; darueber steht, was den Preis bewegt.
 //
+// Der Umsatzsteuerzusatz steht an JEDER Zahl und nicht nur einmal unter dem
+// Raster. Eine Preisangabe wird gelesen, wo sie steht -- wer die Karte
+// "399 EUR bis 100 m2" ueberfliegt, scrollt nicht erst zur Fussnote.
+//
 // WAS DIESE SEITE NICHT TUT
 //
 // Sie rechnet nichts aus und verspricht keine behoerdliche Anerkennung. Der
@@ -87,13 +91,14 @@ const FRAGEN: [string, string][] = [
   ["Was ist der Unterschied zwischen WoFlV und DIN 277?", "Die Wohnflächenverordnung ist die übliche Grundlage für Wohnimmobilien und rechnet etwa Dachschrägen und Balkone nur anteilig an. Die DIN 277 erfasst Grundflächen des Bauwerks und kommt auf andere Zahlen. Welche Grundlage gilt, steht in der Berechnung ausdrücklich dabei."],
   ["Muss ich bei Ihnen verkaufen, um das zu beauftragen?", "Nein. Das Aufmaß ist eine eigenständige Leistung. Sie können es beauftragen, ohne dass ein Verkauf ansteht oder ein Maklerauftrag besteht."],
   ["Gilt der Preis auch für größere Objekte?", "Die genannten Preise gelten für die beschriebenen Leistungen in den angegebenen Grenzen. Größere Objekte, mehrere Einheiten, weite Anfahrt oder besondere Anforderungen rechnen wir nach Aufwand ab — den Preis nennen wir vor der Beauftragung."],
+  ["Sind die Preise mit oder ohne Umsatzsteuer?", "Alle genannten Beträge sind Nettopreise zuzüglich der gesetzlichen Umsatzsteuer. Im Angebot, das Sie vor der Beauftragung erhalten, stehen Netto- und Bruttobetrag nebeneinander."],
 ];
 
 function seitenMeta({ data: routeData }: Route.MetaArgs) {
   const canonicalUrl = (routeData as { canonicalUrl?: string } | undefined)?.canonicalUrl;
   return [
     { title: "Technisches Immobilienaufmaß · Grundrisse und Wohnflächenberechnung · ZeyherMutter" },
-    { name: "description", content: "Bestandsgrundrisse und Wohnflächenberechnung nach WoFlV vom Vermessungsingenieur. Grundriss-Refresh ab 149 €, Bestandsaufmaß ab 399 €." },
+    { name: "description", content: "Bestandsgrundrisse und Wohnflächenberechnung nach WoFlV vom Vermessungsingenieur. Grundriss-Refresh ab 149 €, Bestandsaufmaß ab 399 € — jeweils netto zzgl. USt." },
     { name: "robots", content: "index,follow" },
     ...(canonicalUrl ? [{ tagName: "link" as const, rel: "canonical", href: canonicalUrl }] : []),
   ];
@@ -192,17 +197,19 @@ export default function PublicMeasurement() {
         {PAKETE.map((paket) => <article key={paket.schluessel}>
           <span className="aufmass-paket-name">{AUFMASSPAKET[paket.schluessel]}</span>
           <strong className="aufmass-preis">{paket.preis}</strong>
+          <small className="aufmass-preis-zusatz">zzgl. gesetzlicher Umsatzsteuer</small>
           <p>{paket.einleitung}</p>
           <ul>
             {paket.leistungen.map((leistung) => <li key={leistung}><span aria-hidden="true">✓</span>{leistung}</li>)}
           </ul>
-          {paket.hinweis ? <small>{paket.hinweis}</small> : null}
+          {paket.hinweis ? <small className="aufmass-paket-hinweis">{paket.hinweis}</small> : null}
         </article>)}
       </div>
       <p className="sales-check-estimate-note">
-        <strong>Was die Preise bedeuten:</strong> Sie gelten für die beschriebenen Leistungen in den angegebenen Grenzen.
-        Größere Objekte, mehrere Einheiten, weite Anfahrt oder besondere Anforderungen rechnen wir nach Aufwand ab — den
-        Preis für Ihren Fall nennen wir vor der Beauftragung.
+        <strong>Was die Preise bedeuten:</strong> Alle genannten Beträge sind Nettopreise und verstehen sich zuzüglich der
+        gesetzlichen Umsatzsteuer. Sie gelten für die beschriebenen Leistungen in den angegebenen Grenzen. Größere Objekte,
+        mehrere Einheiten, weite Anfahrt oder besondere Anforderungen rechnen wir nach Aufwand ab — den Preis für Ihren Fall
+        nennen wir vor der Beauftragung.
       </p>
     </section>
 

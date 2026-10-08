@@ -27,6 +27,7 @@
 // 1. Die Pakete sind in Migration, Beschriftung und Edge-Funktion dieselben.
 // 2. Jedes Paket, das das oeffentliche Formular anbietet, hat auf der Seite
 //    eine Karte mit Preis -- oder steht hier mit Begruendung als Ausnahme.
+//    An jeder Zahl steht, dass sie netto ist.
 // 3. Die Zustaende sind in Migration und Beschriftung dieselben.
 // 4. Jeder Zustand ausser dem Startzustand ist ueber mindestens einen
 //    Uebergang erreichbar, und aus jedem Zustand ausser den Endzustaenden
@@ -153,6 +154,24 @@ for (const [paket, grund] of Object.entries(OHNE_KARTE)) {
   pruefe((paketeDb ?? []).includes(paket), `OHNE_KARTE nennt "${paket}", die Datenbank kennt das Paket nicht mehr.`);
 }
 
+// --- 2b. Jede Zahl traegt die Umsatzsteuerangabe --------------------------
+//
+// Die Preise sind Nettopreise. Steht das nicht an der Zahl, liest ein privater
+// Eigentuemer sie als Endpreis -- und das ist der Betrag, mit dem er rechnet.
+// Die Angabe gehoert in die Karte und nicht nur in eine Fussnote, weil eine
+// Preisangabe dort gelesen wird, wo sie steht.
+
+const preisZeile = /<strong className="aufmass-preis">\{paket\.preis\}<\/strong>\s*\n\s*<small className="aufmass-preis-zusatz">([^<]*)<\/small>/.exec(seite);
+pruefe(preisZeile,
+  "Auf /technisches-aufmass folgt auf den Preis keine Zeile .aufmass-preis-zusatz.\n"
+  + "  Ohne sie steht an jeder Karte eine Zahl ohne Angabe, ob die Umsatzsteuer\n"
+  + "  darin enthalten ist.");
+pruefe(preisZeile && /umsatzsteuer|ust\.|mwst/i.test(preisZeile[1]),
+  `Die Zeile unter dem Preis sagt nichts zur Umsatzsteuer ("${preisZeile?.[1] ?? ""}").`);
+pruefe(/sales-check-estimate-note[\s\S]{0,600}Umsatzsteuer/.test(seite),
+  "Der Hinweis unter dem Paketraster nennt die Umsatzsteuer nicht.\n"
+  + "  Dort steht, was die Preise bedeuten -- die Steuer gehoert dazu.");
+
 // --- 3./4. Zustaende und ihre Uebergaenge --------------------------------
 
 const statusDb = werteAusCheck("status");
@@ -225,6 +244,6 @@ if (fehler.length > 0) {
 }
 
 console.log(`Aufmass-Modul: ${paketeDb.length} Pakete in Datenbank, Beschriftung und Edge-Funktion gleich `
-  + `(${karten.length} mit Preis auf der Seite, ${Object.keys(OHNE_KARTE).length} begruendet ohne), `
+  + `(${karten.length} mit Preis und Umsatzsteuerangabe, ${Object.keys(OHNE_KARTE).length} begruendet ohne Karte), `
   + `${statusDb.length} Zustaende ueber ${uebergaenge.length} Uebergaenge alle erreichbar, `
   + `${standardDb.length} Flaechengrundlagen, Aufnahmeweg MEASUREMENT vollstaendig verdrahtet.`);

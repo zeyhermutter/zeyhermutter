@@ -671,11 +671,17 @@
 }
 .aufmass-paket-name { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--zm-text-leise); }
 .aufmass-preis { font-family: var(--zm-serif); font-size: 26px; font-weight: 400; color: var(--zm-gold-tief); }
+/* Der Steuerzusatz gehoert an die Zahl, nicht unter das Raster -- und er
+   steht direkt darunter, ohne den Abstand der uebrigen Kartenzeilen. */
+.aufmass-preis-zusatz { margin-top: -8px; color: var(--zm-text-leise); font-size: 12px; }
 .aufmass-paket-grid p { margin: 0; color: var(--zm-text-leise); font-size: 15px; line-height: 1.6; }
 .aufmass-paket-grid ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 7px; }
 .aufmass-paket-grid li { display: grid; grid-template-columns: auto 1fr; gap: 9px; font-size: 14px; line-height: 1.45; }
 .aufmass-paket-grid li span { color: var(--zm-gold-tief); }
-.aufmass-paket-grid small { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--zm-linie); color: var(--zm-text-leise); font-size: 13px; line-height: 1.5; }
+/* Nur der Paket-Hinweis wird nach unten geschoben -- nicht jedes <small> in
+   der Karte. Die Umsatzsteuerzeile hing sonst am Kartenfuss, mit Trennlinie
+   darueber, weil beide dasselbe Element sind. */
+.aufmass-paket-hinweis { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--zm-linie); color: var(--zm-text-leise); font-size: 13px; line-height: 1.5; }
 
 /* --- Schmalere Fenster --------------------------------------------- */
 
