@@ -168,7 +168,7 @@ export default function ReferralDetail(){
         </Form>
       </section>
 
-      <section className="data-card" style={{marginTop:"1rem"}}>
+      <section className="data-card">
         <div className="card-head"><div><p className="eyebrow">Überblick</p><h2>Stand</h2></div></div>
         <dl className="detail-list">
           <div><dt>Empfehlender</dt><dd>{referrerContact
@@ -210,7 +210,7 @@ export default function ReferralDetail(){
         </Form>
       </section>
 
-      <section className="data-card" id="dank" style={{marginTop:"1rem"}}>
+      <section className="data-card" id="dank">
         <div className="card-head"><div><p className="eyebrow">Rückmeldung an den Empfehlenden</p><h2>Dank</h2></div></div>
         <Form method="post" className="form-grid">
           <input type="hidden" name="_intent" value="thanks_save"/>

@@ -412,7 +412,7 @@ export default function CalendarPage() {
       <p className="calendar-note">Ein Export erzeugt eine Kalenderdatei aus dem bestehenden CRM-Termin. Änderungen werden weiterhin im zugehörigen CRM-Datensatz vorgenommen; es entsteht kein zweiter synchroner Terminbestand.</p>
     </section>
 
-    <section className="data-card" style={{ marginTop: 18 }}>
+    <section className="data-card">
       <div className="calendar-toolbar">
         <div className="calendar-toolbar-group">
           <Link className="secondary-button link-button compact" to={`/crm/calendar?month=${previousMonth}&scope=${scope}`}>←</Link>

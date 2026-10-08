@@ -3,7 +3,8 @@
   margin: 0 auto;
   padding: 36px;
   display: grid;
-  gap: 18px;
+  row-gap: 0;
+  column-gap: 18px;
   color: #1d2a2b;
 }
 

@@ -246,7 +246,7 @@ export default function CaseStudyDetail(){
         </Form>
       </section>
 
-      <section className="data-card" id="freigabe" style={{marginTop:"1rem"}}>
+      <section className="data-card" id="freigabe">
         <div className="card-head"><div><p className="eyebrow">Getrennt von der Anonymisierung</p><h2>Marketingfreigabe</h2></div></div>
         <dl className="detail-list">
           <div><dt>Stand</dt><dd>{RELEASE_STATUS[row.release_status]??row.release_status}</dd></div>

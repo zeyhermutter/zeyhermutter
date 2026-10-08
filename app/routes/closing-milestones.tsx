@@ -272,7 +272,7 @@ export default function ClosingMilestones(){
           </div>;
         })}
       </div>
-      {milestones.map((m:any)=><Form method="post" className="editor-card" style={{marginTop:"1rem"}} key={`f-${m.id}`}>
+      {milestones.map((m:any)=><Form method="post" className="editor-card" key={`f-${m.id}`}>
         <input type="hidden" name="_intent" value="milestone_save"/>
         <input type="hidden" name="milestone_id" value={m.id}/>
         <input type="hidden" name="version" value={m.version}/>

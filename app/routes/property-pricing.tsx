@@ -293,7 +293,7 @@ export default function PropertyPricing(){
           </div>;
         })}
       </div>}
-      {d.canWrite?<Form method="post" className="editor-card" style={{marginTop:"1rem"}}>
+      {d.canWrite?<Form method="post" className="editor-card">
         <input type="hidden" name="_intent" value="stage_add"/>
         <input type="hidden" name="is_initial" value={hasInitial?"no":"yes"}/>
         {hasInitial&&current?<input type="hidden" name="previous_price" value={current.price}/>:null}
@@ -328,7 +328,7 @@ export default function PropertyPricing(){
         const valuer=one(v.profiles);
         const comparables=(v.property_valuation_comparables??[]) as any[];
         const adjustments=(v.property_valuation_adjustments??[]) as any[];
-        return <section className="editor-card" style={{marginTop:"1rem"}} key={v.id}>
+        return <section className="editor-card" key={v.id}>
           <div className="card-head"><div><p className="eyebrow">{v.valuation_number} · {VALUATION_METHOD[v.method]??v.method}</p><h3>{v.result_value?money(v.result_value):v.range_from?`${money(v.range_from)} bis ${money(v.range_to)}`:"ohne Ergebnis"}</h3></div><span className="status-pill">{formatDate(v.valued_on)}</span></div>
           <dl className="detail-list">
             <div><dt>Bewertet von</dt><dd>{valuer?.display_name??v.valuer_name??"—"}</dd></div>
@@ -392,7 +392,7 @@ export default function PropertyPricing(){
         </section>;
       })}
 
-      {d.canValuation?<Form method="post" className="editor-card" style={{marginTop:"1rem"}}>
+      {d.canValuation?<Form method="post" className="editor-card">
         <input type="hidden" name="_intent" value="valuation_create"/>
         <div className="card-head"><div><p className="eyebrow">Neu</p><h3>Wertermittlung anlegen</h3></div></div>
         <div className="form-grid">

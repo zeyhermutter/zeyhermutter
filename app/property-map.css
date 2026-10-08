@@ -7,7 +7,8 @@
 .app-content > .metric-grid + .data-card {
   width: 100%;
   max-width: var(--crm-content-max);
-  margin: 12px auto 0;
+  margin-left: auto;
+  margin-right: auto;
 }
 .property-map-card .card-head { margin-bottom: 14px; }
 .property-map {

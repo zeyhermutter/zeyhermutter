@@ -198,7 +198,7 @@ export function complianceWarnings(gwgCase:any,identifications:any[],closings:an
 }
 
 function IdentificationForm({row,contacts,documents,caseId,disabled}:{row?:any;contacts:any[];documents:any[];caseId:string;disabled:boolean}){
-  return <Form method="post" className="editor-card" style={{marginTop:"1rem"}}>
+  return <Form method="post" className="editor-card">
     <input type="hidden" name="_intent" value="identification_save"/>
     <input type="hidden" name="case_id" value={caseId}/>
     {row?<input type="hidden" name="identification_id" value={row.id}/>:null}

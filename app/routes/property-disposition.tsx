@@ -252,7 +252,7 @@ export async function action({request,context,params}:Route.ActionArgs){
 }
 
 function PartyForm({row,contacts,dispositionId,disabled,formKey}:{row?:any;contacts:any[];dispositionId:string;disabled:boolean;formKey:string}){
-  return <Form method="post" className="editor-card" style={{marginTop:"1rem"}} key={formKey}>
+  return <Form method="post" className="editor-card" key={formKey}>
     <input type="hidden" name="_intent" value="party_save"/>
     <input type="hidden" name="disposition_id" value={dispositionId}/>
     {row?<input type="hidden" name="party_id" value={row.id}/>:null}

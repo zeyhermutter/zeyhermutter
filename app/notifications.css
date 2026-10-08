@@ -1,5 +1,5 @@
 .notifications-header{max-width:var(--crm-content-max);margin-left:auto;margin-right:auto;width:100%}
-.notifications-page-width{max-width:var(--crm-content-max);margin:0 auto;display:grid;gap:14px;width:100%}
+.notifications-page-width{max-width:var(--crm-content-max);margin-left: auto; margin-right: auto;display:grid;gap:14px;width:100%}
 .notifications-list{overflow:visible}
 .notification-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center}
 .notification-row.is-unread{background:rgba(139,160,162,.06)}

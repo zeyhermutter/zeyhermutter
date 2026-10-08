@@ -132,14 +132,14 @@ h1 { max-width: 850px; margin: 0; font-size: clamp(42px, 7vw, 82px); line-height
 .sidebar-footer { margin-top: auto; display: grid; gap: 6px; padding: 14px 12px 2px; color: #9ba6a7; }
 .sidebar-footer small { color: #687476; font-size: 10px; letter-spacing: .14em; }
 .app-content { min-width: 0; padding: 36px; }
-.app-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; max-width: var(--crm-content-max); margin: 0 auto; }
+.app-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; max-width: var(--crm-content-max); margin-left: auto; margin-right: auto; }
 .app-title { font-size: clamp(34px, 4vw, 56px); line-height: 1; }
-.metric-grid { margin: 34px auto 0; display: grid; gap: var(--crm-card-gap); }
+.metric-grid { margin-left: auto; margin-right: auto; display: grid; gap: var(--crm-card-gap); }
 .metric-card, .data-card { border: 1px solid #293536; border-radius: var(--crm-card-radius); background: #141a1b; }
 .metric-card { padding: var(--crm-card-padding); }
 .metric-card span, .metric-card small { display: block; color: #7e8b8d; }
 .metric-card strong { display: block; margin: 12px 0 5px; font-size: 28px; }
-.dashboard-grid { max-width: var(--crm-content-max); margin: 12px auto 0; display: grid; grid-template-columns: 1.35fr 1fr; gap: 12px; }
+.dashboard-grid { max-width: var(--crm-content-max); margin-left: auto; margin-right: auto; display: grid; grid-template-columns: 1.35fr 1fr; gap: 12px; }
 .data-card { min-width: 0; padding: var(--crm-card-padding); }
 .card-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
 .card-head h2 { margin: 0; font-size: 24px; }

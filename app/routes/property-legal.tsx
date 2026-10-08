@@ -225,7 +225,7 @@ export function legalWarnings(legal:any,encumbrances:any[]){
 
 function EncumbranceForm({row,section,contacts,disabled,formKey}:{row?:any;section:string;contacts:any[];disabled:boolean;formKey:string}){
   const isThird=section==="LAND_REGISTER_III";
-  return <Form method="post" className="editor-card" style={{marginTop:"1rem"}} key={formKey}>
+  return <Form method="post" className="editor-card" key={formKey}>
     <input type="hidden" name="_intent" value="encumbrance_save"/>
     <input type="hidden" name="section" value={section}/>
     {row?<input type="hidden" name="encumbrance_id" value={row.id}/>:null}

@@ -341,7 +341,7 @@ export default function PropertyHoaTenancy(){
       {tenancies.filter((t:any)=>t.status==="ACTIVE").map((t:any)=><TenancyForm key={`f-${t.id}`} row={t} contacts={d.contacts} disabled={locked} formKey={`f-${t.id}`}/>)}
       {d.canWrite&&!active?<TenancyForm contacts={d.contacts} disabled={false} formKey="new-tenancy"/>:null}
 
-      {d.canWrite&&active?<Form method="post" className="editor-card" style={{marginTop:"1rem"}}>
+      {d.canWrite&&active?<Form method="post" className="editor-card">
         <input type="hidden" name="_intent" value="tenancy_end"/>
         <input type="hidden" name="tenancy_id" value={active.id}/>
         <input type="hidden" name="tenancy_version" value={active.version}/>
@@ -367,7 +367,7 @@ export default function PropertyHoaTenancy(){
 }
 
 function TenancyForm({row,contacts,disabled,formKey}:{row?:any;contacts:any[];disabled:boolean;formKey:string}){
-  return <Form method="post" className="editor-card" style={{marginTop:"1rem"}} key={formKey}>
+  return <Form method="post" className="editor-card" key={formKey}>
     <input type="hidden" name="_intent" value="tenancy_save"/>
     {row?<input type="hidden" name="tenancy_id" value={row.id}/>:null}
     {row?<input type="hidden" name="tenancy_version" value={row.version}/>:null}

@@ -3,6 +3,11 @@
   --crm-page-gutter: clamp(18px, 2.1vw, 36px);
   --crm-section-gap: clamp(14px, 1.25vw, 20px);
   --crm-block-gap: clamp(16px, 1.35vw, 22px);
+  /* Nach dem Seitenkopf eine Stufe mehr: der Kopf traegt seine eigenen
+     14px zwischen Titel und Beschreibung -- waere der Abstand danach
+     derselbe wie zwischen zwei Karten, liesse sich nicht mehr sehen, wo der
+     Kopf aufhoert. */
+  --crm-header-gap: clamp(26px, 2.4vw, 36px);
   --crm-card-padding-x: clamp(18px, 1.45vw, 22px);
 }
 
@@ -82,26 +87,55 @@
   max-width: var(--crm-content-max) !important;
 }
 
-/*
- * Eigenständige Hauptblöcke erhalten überall denselben vertikalen Abstand.
- * Dadurch kleben z. B. Modul 04, Modul 03 und Immobilien auf /crm nicht
- * aneinander. Listenzeilen innerhalb einer Karte bleiben davon unberührt.
+/* Der senkrechte Rhythmus einer Seite.
+ *
+ * WAS HIER SCHIEFGING
+ *
+ * Hier stand eine Aufzaehlung von elf Paaren: ".editor-shell >
+ * .data-card + .data-card", ".app-content > .metric-grid + .data-card" und so
+ * weiter. Das ist dieselbe falsche Form wie frueher bei den Fluchtlinien --
+ * wer eine Seite baut, muesste daran denken, SEINE Kombination hier
+ * einzutragen.
+ *
+ * Gemessen am 08.10.2026 ueber sieben Seitengeruese ergab das vier
+ * verschiedene Abstaende zwischen zwei Hauptbloecken:
+ *
+ *    0,0 px   Kennzahlenreihe -> Karte      (das Paar stand nur unter
+ *             .app-content, nicht unter .editor-shell -- die Kennzahlen
+ *             klebten auf der Filterkarte)
+ *   20,3 px   Karte -> Karte                (aus dieser Regel)
+ *   24,0 px   Kopf -> Karte                 (margin-bottom des Kopfes)
+ *   34,0 px   Kopf -> Kennzahlenreihe       (margin-top der Kennzahlenreihe)
+ *
+ * Auf der Aufmass-Liste standen damit 34, 0 und 20 Pixel untereinander. Die
+ * Abstaende einzeln sind alle plausibel; nebeneinander sehen sie unruhig aus,
+ * ohne dass man sagen koennte welcher falsch ist.
+ *
+ * JETZT: ein Abstand zwischen zwei unmittelbaren Kindern eines
+ * Seitencontainers, unabhaengig davon, welche beiden Bausteine es sind. Wer
+ * einen neuen Baustein baut, muss nichts eintragen. Die Bausteine selbst
+ * tragen deshalb KEINEN eigenen senkrechten Aussenabstand mehr -- der kam
+ * sonst oben drauf. scripts/check-senkrechter-rhythmus.mjs prueft das.
  */
-.app-content > .metric-grid + .data-card,
-.app-content > .data-card + .data-card,
-.app-content > .data-card + .dashboard-grid,
-.app-content > .dashboard-grid + .data-card,
-.editor-shell > .editor-header + .data-card,
-.editor-shell > .data-card + .data-card,
-.editor-shell > .property-section + .property-section,
-.editor-shell > .property-summary-grid + .property-section,
-.editor-shell > .property-section + .property-summary-grid,
-.editor-shell > .property-workflow-section + .property-section,
-.editor-shell > .property-section + .property-workflow-section {
+.app-content > * + *,
+.editor-shell > * + *,
+.calendar-shell > * + *,
+.reporting-shell > * + * {
   margin-top: var(--crm-block-gap);
 }
 
-/* Seiten-Wrapper mit mehreren eigenständigen Karten bekommen denselben Rhythmus. */
+/* Die einzige Ausnahme, und auch sie gilt auf jeder Seite gleich. */
+.app-content > .app-header + *,
+.editor-shell > .editor-header + *,
+.calendar-shell > .calendar-header + *,
+.reporting-shell > .reporting-header + * {
+  margin-top: var(--crm-header-gap);
+}
+
+/* Seiten-Wrapper mit mehreren eigenstaendigen Karten sind Raster und regeln
+   ihren Abstand ueber row-gap. Hier stand zusaetzlich ein margin-top je Karte
+   -- in einem Raster addiert sich das auf den Zwischenraum, der Abstand war
+   doppelt so gross wie gewollt. */
 .tasks-page,
 .crm-search-page,
 .audit-page,
@@ -109,14 +143,6 @@
 .search-profile-page,
 .module04-content {
   row-gap: var(--crm-block-gap);
-}
-.tasks-page > .data-card + .data-card,
-.crm-search-page > .data-card + .data-card,
-.audit-page > .data-card + .data-card,
-.inquiry-page > .data-card + .data-card,
-.search-profile-page > .data-card + .data-card,
-.module04-content > .data-card + .data-card {
-  margin-top: var(--crm-block-gap);
 }
 
 /* Konsistente horizontale Abstände in Karten und zwischen Karten. */
