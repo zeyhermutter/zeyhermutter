@@ -45,6 +45,7 @@ export function PublicHeader() {
       <nav className="public-nav" aria-label="Hauptnavigation">
         <Link to="/bewertung">Bewertung</Link>
         <Link to="/verkaufsfertig-check">Verkaufsstrategie-Check</Link>
+        <Link to="/technisches-aufmass">Aufmaß &amp; Grundrisse</Link>
         <Link to="/immobilien">Immobilien</Link>
         <Link to="/ratgeber">Ratgeber</Link>
         <Link to="/referenzen">Referenzen</Link>
@@ -63,6 +64,7 @@ export function PublicFooter() {
         <Link to="/bewertung">Bewertung</Link>
         <Link to="/suchauftrag">Suchauftrag</Link>
         <Link to="/verkaufsfertig-check">Verkaufsstrategie-Check</Link>
+        <Link to="/technisches-aufmass">Aufmaß &amp; Grundrisse</Link>
         <Link to="/ratgeber">Ratgeber</Link>
         <Link to="/referenzen">Referenzen</Link>
         <Link to="/ohne-makler-verkaufen">Ohne Makler verkaufen?</Link>

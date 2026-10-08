@@ -29,6 +29,10 @@
 //
 // Die Werteliste stammt aus der BETA-Datenbank, Stand 08.09.2026. Kommen neue
 // Werte hinzu, gehoert sie ergaenzt; die Abfrage steht unten.
+//
+// Nachgetragen am 08.10.2026 aus 20261008014300_measurement_order_module.sql:
+// die Pakete und die Zustaende des Aufmass-Auftrags. Die uebrigen Werte dieses
+// Moduls (WOFLV, DIN_277, NONE, BOTH, WEBSITE, PHONE, ...) gab es schon.
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, sep } from "node:path";
@@ -98,7 +102,9 @@ UNPUBLISHED UNSUITABLE URGENT URGENTLY_RECOMMENDED USER USUFRUCT
 UTILITY_EASEMENT UTILITY_ROOM VACANT VALUATION VERBAL VIDEO VIEWED VIEWING
 VIEWING_PLANNED VIEWING_REQUESTED WAITING_OWNER WAIVED WALK_IN WATER_COLD
 WATER_HOT WEB_FORM WEBSITE WEG WINDOW WITHDRAWAL_INSTRUCTION WITHDRAWN WOFLV
-WON WRITTEN YES`.split(/\s+/).filter(Boolean));
+WON WRITTEN YES
+AS_BUILT DELIVERED FLOOR_PLAN_REFRESH HOUSE_PREMIUM INDIVIDUAL MEASURED OFFERED
+SALE_FINANCE SCHEDULED`.split(/\s+/).filter(Boolean));
 
 // Ganze Tabellen, deren Schluessel nicht aus einer CHECK-Bedingung stammen.
 // Sie beschriften etwas, das die Anwendung selbst bildet — dort kann diese

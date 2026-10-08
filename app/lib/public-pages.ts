@@ -31,6 +31,7 @@ export const SEITEN_OHNE_CMS = [
   "/bewertung",
   "/suchauftrag",
   "/referenzen",
+  "/technisches-aufmass",
 ] as const;
 
 /**
@@ -75,7 +76,7 @@ export const NICHT_IN_DIE_SITEMAP: Record<string, string> = {
  */
 export const INTERNE_PRAEFIXE = [
   "/acquisition", "/after-sales", "/case-studies", "/closings", "/commissions",
-  "/compliance", "/crm", "/inquiries", "/leads", "/mandates", "/projects",
+  "/compliance", "/crm", "/inquiries", "/leads", "/mandates", "/measurements", "/projects",
   "/pipeline", "/properties", "/purchase-offers", "/referrals", "/reports",
   "/reservations", "/search-profiles", "/viewings",
 ];

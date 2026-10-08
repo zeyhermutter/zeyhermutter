@@ -719,8 +719,59 @@ export const HELP_CHAPTERS: HelpChapter[] = [
     ],
   },
   {
-    id: "grundsaetze",
+    id: "aufmass",
     nummer: "24",
+    titel: "Technisches Immobilienaufmaß",
+    kurz: "Grundrisse und Wohnflächenberechnung als eigene Leistung — mit und ohne Maklerauftrag.",
+    pfade: ["/measurements", "/measurements/new", "/measurements/:orderId"],
+    bloecke: [
+      { art: "absatz", text:
+        "Das Aufmaß ist eine Dienstleistung neben der Vermittlung und deshalb ein "
+        + "eigener Vorgang mit eigener Nummer (ZM-AM-…). Es kann zu einer Immobilie "
+        + "aus dem Bestand gehören — muss es aber nicht: ein Auftrag für einen "
+        + "Eigentümer, der gar nicht verkauft, trägt statt der Objektakte seine "
+        + "Anschrift selbst. Eines von beidem, Immobilie oder Kunde, muss gesetzt sein." },
+      { art: "absatz", text:
+        "Anfragen über die öffentliche Seite /technisches-aufmass landen hier "
+        + "unmittelbar als Auftrag im Stand „Angefragt\" — mit Paket, Objektart, "
+        + "Ort und der ungefähren Fläche, die der Kunde angegeben hat. Das Formular "
+        + "nimmt erst Anfragen entgegen, wenn unter „Verkaufsstrategie-Check\" ein "
+        + "Empfänger für den Aufnahmeweg eingetragen ist." },
+      { art: "schritte", punkte: [
+        "**Angefragt** oder **Entwurf** — der Vorgang existiert, der Umfang steht noch nicht fest.",
+        "**Angebot abgegeben** — der Preis ist genannt.",
+        "**Beauftragt** — der Kunde hat zugesagt.",
+        "**Termin vereinbart** — das Aufmaß vor Ort steht im Kalender.",
+        "**Aufgemessen** — das Datum des Aufmaßes ist Pflicht für diesen Stand.",
+        "**Geliefert** — Lieferdatum ist Pflicht. Beim Grundriss-Refresh geht es ohne den Umweg über „Aufgemessen\".",
+        "**Abgerechnet** — Honorar und Rechnungsdatum sind Pflicht.",
+        "**Bezahlt** — Zahlungsdatum ist Pflicht.",
+      ]},
+      { art: "absatz", text:
+        "Das Ergebnis besteht aus der Flächengrundlage (WoFlV, DIN 277 oder beides) "
+        + "und den gemessenen Flächen. Eine Grundlage ohne Flächenangabe wird "
+        + "abgewiesen — sie wäre eine Aussage über nichts." },
+      { art: "hinweis", text:
+        "Gehört der Auftrag zu einer Immobilie aus dem Bestand, trägt der Knopf "
+        + "„Wohnfläche in die Objektakte übernehmen\" das Ergebnis dorthin: die "
+        + "Wohnfläche an die Immobilie, die Grundlage nach „Recht & Lasten\". Das "
+        + "passiert ausdrücklich und nicht automatisch, damit die Wohnfläche einer "
+        + "Immobilie sich nicht nebenbei ändert, während jemand einen Auftrag abhakt. "
+        + "Dafür wird zusätzlich die Berechtigung zum Bearbeiten von Immobilien benötigt." },
+      { art: "absatz", text:
+        "Unterlagen werden nicht ein zweites Mal gespeichert. Grundriss und "
+        + "Wohnflächenberechnung liegen wie alle anderen Dateien in der "
+        + "Dokumentenverwaltung der Immobilie — der Auftrag verweist nur darauf." },
+      { art: "warnung", text:
+        "Das System rechnet keine Wohnfläche aus und erzeugt keine Rechnung. Die "
+        + "Flächen kommen aus der Berechnung, die als Unterlage beiliegt; das "
+        + "Honorarfeld und die Rechnungsreferenz dokumentieren, was vereinbart und "
+        + "wo abgerechnet wurde." },
+    ],
+  },
+  {
+    id: "grundsaetze",
+    nummer: "25",
     titel: "Was das System nicht tut",
     kurz: "Die Grenzen, auf die man sich verlassen kann.",
     pfade: [],

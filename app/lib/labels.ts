@@ -235,6 +235,54 @@ export const NACHWEISKANAL: Beschriftungen = {
   OTHER: "Sonstiges",
 };
 
+// --- Technisches Immobilienaufmaß -----------------------------------------
+
+/** Leistungspaket eines Aufmaß-Auftrags. Entspricht den Paketen auf /technisches-aufmass. */
+export const AUFMASSPAKET: Beschriftungen = {
+  FLOOR_PLAN_REFRESH: "Grundriss-Refresh",
+  AS_BUILT: "Bestandsaufmaß",
+  SALE_FINANCE: "Verkauf & Finanzierung",
+  HOUSE_PREMIUM: "Haus Premium",
+  INDIVIDUAL: "Individuell",
+};
+
+/** Stand eines Aufmaß-Auftrags. */
+export const AUFMASSSTATUS: Beschriftungen = {
+  DRAFT: "Entwurf",
+  REQUESTED: "Angefragt",
+  OFFERED: "Angebot abgegeben",
+  ACCEPTED: "Beauftragt",
+  SCHEDULED: "Termin vereinbart",
+  MEASURED: "Aufgemessen",
+  DELIVERED: "Geliefert",
+  INVOICED: "Abgerechnet",
+  PAID: "Bezahlt",
+  CANCELLED: "Abgebrochen",
+};
+
+/**
+ * Grundlage der Flächenermittlung.
+ *
+ * Dieselben Werte trägt property_legal_data.living_area_basis — nur dort
+ * zusätzlich ESTIMATED und UNKNOWN, die ein Aufmaß gerade ablöst.
+ */
+export const FLAECHENSTANDARD: Beschriftungen = {
+  NONE: "Keine Flächenberechnung",
+  WOFLV: "Wohnflächenverordnung (WoFlV)",
+  DIN_277: "DIN 277",
+  BOTH: "WoFlV und DIN 277",
+};
+
+/** Woher ein Auftrag gekommen ist. */
+export const AUFTRAGSQUELLE: Beschriftungen = {
+  WEBSITE: "Website",
+  PHONE: "Telefon",
+  EMAIL: "E-Mail",
+  IN_PERSON: "Persönlich",
+  REFERRAL: "Empfehlung",
+  INTERNAL: "Intern angelegt",
+};
+
 /**
  * Beschriftung nachschlagen. Ohne Treffer bleibt der gespeicherte Wert stehen:
  * ein unbekannter Zustand soll sichtbar sein, nicht verschwinden.

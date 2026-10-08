@@ -26,6 +26,8 @@
 // Die Spaltenliste stammt aus den CHECK-Bedingungen der BETA-Datenbank
 // (Stand 07.09.2026, 85 Spalten). Neu hinzugekommene Spalten mit Wertebereich
 // gehoeren hier ergaenzt; die Abfrage dafuer steht unten.
+// Nachgetragen am 08.10.2026: area_standard und service_package aus dem
+// Aufmass-Modul.
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, sep } from "node:path";
@@ -33,7 +35,8 @@ import { join, sep } from "node:path";
 // select distinct (regexp_match(pg_get_constraintdef(oid), '\(?([a-z_]+) = ANY \(ARRAY\['))[1]
 // from pg_constraint where contype = 'c' and connamespace = 'public'::regnamespace;
 const SPALTEN = [
-  "acknowledgement_kind", "actor_type", "address_type", "applicability", "area_key", "area_type",
+  "acknowledgement_kind", "actor_type", "address_type", "applicability", "area_key",
+  "area_standard", "area_type",
   "audience", "calculation_basis_kind", "calculation_method", "category", "certificate_type",
   "channel", "channel_type", "classification", "client_side", "compliance_status",
   "conclusion_channel", "confidence", "consent_form", "consent_status", "contract_type",
@@ -46,9 +49,9 @@ const SPALTEN = [
   "preferred_channel", "presentation_form", "price_level", "priority", "property_type",
   "public_address_mode", "regulated_profession", "release_form", "release_scope", "release_status",
   "renewal_mode", "rent_adjustment_type", "response_channel", "retention_category", "risk_level",
-  "role", "sale_impact", "scenario_kind", "screening_result", "section", "side", "source", "stage",
-  "status", "succession_proof_type", "tenancy_status", "to_status", "transaction_type",
-  "value_type", "withdrawal_instruction_form",
+  "role", "sale_impact", "scenario_kind", "screening_result", "section", "service_package",
+  "side", "source", "stage", "status", "succession_proof_type", "tenancy_status", "to_status",
+  "transaction_type", "value_type", "withdrawal_instruction_form",
 ];
 
 // Spalten, deren gespeicherter Wert zugleich die richtige Beschriftung ist.

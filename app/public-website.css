@@ -637,6 +637,46 @@
 .sales-check-disabled-note { color: var(--zm-text-leise); }
 .sales-check-faq { padding-bottom: 90px; }
 
+/* --- Technisches Aufmaß: vier Pakete mit Preis ---------------------
+ *
+ * Die drei vorhandenen Kartenraster sind auf drei Spalten festgelegt
+ * (.sales-check-scenario-grid, .public-decision-grid, .zm-service-grid) und
+ * .sales-check-roles hebt zusaetzlich die mittlere Karte hervor. Vier Pakete
+ * passen in keines davon: bei drei Spalten steht das vierte allein in der
+ * zweiten Zeile, und hervorgehoben wird hier nichts -- welches Paket das
+ * richtige ist, haengt am Fall und nicht an unserer Empfehlung.
+ *
+ * Darum ein eigenes Raster. Es faellt von vier auf zwei auf eine Spalte, ohne
+ * Umbruchpunkt: der Preis und die Leistungsliste brauchen rund 250 Pixel.
+ *
+ * Der Preis steht in --zm-gold-tief (#8A6528), der einzigen Goldfassung, die
+ * auf hellem Grund Text tragen darf -- 4,98:1 auf dem Elfenbein.
+ */
+
+.aufmass-pakete, .aufmass-hinweis {
+  width: var(--zm-breite); margin-left: auto; margin-right: auto;
+}
+
+.aufmass-pakete { padding: clamp(56px, 7vw, 84px) 0; border-top: 1px solid var(--zm-linie); }
+.aufmass-hinweis { padding-bottom: clamp(40px, 5vw, 60px); }
+
+.aufmass-paket-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+/* Spalte statt Raster, damit der Hinweis unten am Kartenrand sitzt: die
+   Karten sind gleich hoch, die Pakete aber unterschiedlich umfangreich --
+   sonst steht unter dem kuerzesten Paket eine Handbreit Leere. */
+.aufmass-paket-grid article {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 28px 26px; background: var(--zm-karte);
+  border: 1px solid var(--zm-linie); border-top: 2px solid var(--zm-gold);
+}
+.aufmass-paket-name { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--zm-text-leise); }
+.aufmass-preis { font-family: var(--zm-serif); font-size: 26px; font-weight: 400; color: var(--zm-gold-tief); }
+.aufmass-paket-grid p { margin: 0; color: var(--zm-text-leise); font-size: 15px; line-height: 1.6; }
+.aufmass-paket-grid ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 7px; }
+.aufmass-paket-grid li { display: grid; grid-template-columns: auto 1fr; gap: 9px; font-size: 14px; line-height: 1.45; }
+.aufmass-paket-grid li span { color: var(--zm-gold-tief); }
+.aufmass-paket-grid small { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--zm-linie); color: var(--zm-text-leise); font-size: 13px; line-height: 1.5; }
+
 /* --- Schmalere Fenster --------------------------------------------- */
 
 @media (max-width: 1000px) {

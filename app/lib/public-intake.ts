@@ -1,3 +1,5 @@
+import { AUFMASSPAKET } from "~/lib/labels";
+
 // Werte, die Formular und Auswertung teilen.
 //
 // Getrennt von public-intake.server.ts, weil die Auswahlliste in der
@@ -21,6 +23,19 @@ export const IMMOBILIENARTEN: [string, string][] = [
 ];
 
 export const IMMOBILIENARTEN_SCHLUESSEL = new Set(IMMOBILIENARTEN.map(([key]) => key));
+
+/**
+ * Die Leistungspakete des technischen Aufmaßes, für das Auswahlfeld und die
+ * Prüfung der Eingabe.
+ *
+ * Abgeleitet aus AUFMASSPAKET in app/lib/labels.ts, damit ein Paket nicht an
+ * zwei Stellen anders heißt. Die Beschreibung, was in einem Paket steckt, und
+ * der Preis stehen in app/routes/public-measurement.tsx — das ist Inhalt der
+ * Seite und keine gemeinsame Liste.
+ */
+export const AUFMASSPAKETE: [string, string][] = Object.entries(AUFMASSPAKET);
+
+export const AUFMASSPAKET_SCHLUESSEL = new Set(Object.keys(AUFMASSPAKET));
 
 /** Kauf oder Miete — die beiden Werte, die search_profiles.transaction_type kennt. */
 export const ART_DER_SUCHE: [string, string][] = [["BUY", "Kaufen"], ["RENT", "Mieten"]];

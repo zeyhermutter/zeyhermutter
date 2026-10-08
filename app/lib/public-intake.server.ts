@@ -12,7 +12,7 @@
 export type AufnahmeErgebnis = { ok: true } | { ok: false; status: number; meldung: string };
 
 /** Die Aufnahmewege, die in der Zielsteuerung eine Zeile haben. */
-export type Aufnahmeweg = "SELLER_CHECK" | "VALUATION" | "SEARCH_PROFILE";
+export type Aufnahmeweg = "SELLER_CHECK" | "VALUATION" | "SEARCH_PROFILE" | "MEASUREMENT";
 
 type Env = { SUPABASE_URL: string; SUPABASE_PUBLISHABLE_KEY: string };
 

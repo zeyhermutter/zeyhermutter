@@ -6,10 +6,12 @@ const INQUIRY_CONSENT_VERSION = "website-inquiry-v1-2026-08-31";
 const SELLER_CHECK_CONSENT_VERSION = "seller-check-v1-2026-09-01";
 const VALUATION_CONSENT_VERSION = "valuation-v1-2026-09-08";
 const SEARCH_PROFILE_CONSENT_VERSION = "search-profile-v1-2026-09-08";
+const MEASUREMENT_CONSENT_VERSION = "measurement-v1-2026-10-08";
 const SELLER_CHECK_KINDS = new Set(["DETACHED_HOUSE", "SEMI_DETACHED_HOUSE", "TERRACED_HOUSE", "APARTMENT_BUILDING", "APARTMENT", "PENTHOUSE", "MAISONETTE", "LAND", "COMMERCIAL", "OFFICE", "RETAIL", "OTHER"]);
 const SELLER_CHECK_SUPPORT = new Set(["ASSESSMENT", "COORDINATION", "DOCUMENTS", "MARKETING"]);
 
 const SEARCH_TRANSACTIONS = new Set(["BUY", "RENT"]);
+const MEASUREMENT_PACKAGES = new Set(["FLOOR_PLAN_REFRESH", "AS_BUILT", "SALE_FINANCE", "HOUSE_PREMIUM", "INDIVIDUAL"]);
 
 // Welcher Weg legt was an, und welche Zeile der Zielsteuerung gilt dafuer.
 // Frueher stand das an vier Stellen verstreut im Ablauf; mit drei Wegen mehr
@@ -20,6 +22,7 @@ const WEGE = {
   SELLER_CHECK:   { tabelle: "leads",           konfig: "SELLER_CHECK",   einwilligung: SELLER_CHECK_CONSENT_VERSION },
   VALUATION:      { tabelle: "leads",           konfig: "VALUATION",      einwilligung: VALUATION_CONSENT_VERSION },
   SEARCH_PROFILE: { tabelle: "search_profiles", konfig: "SEARCH_PROFILE", einwilligung: SEARCH_PROFILE_CONSENT_VERSION },
+  MEASUREMENT:    { tabelle: "measurement_orders", konfig: "MEASUREMENT",    einwilligung: MEASUREMENT_CONSENT_VERSION },
 } as const;
 
 type IntakeKind = keyof typeof WEGE;
@@ -124,6 +127,20 @@ Deno.serve(async (request: Request) => {
     !SEARCH_TRANSACTIONS.has(transactionType)
     || searchTypes.length === 0
     || (!/^\d{5}$/.test(postalCode) && city.length < 2)
+  )) return response({ ok: false, error: "INVALID_INPUT" }, 400);
+
+  const servicePackage = clean(body.service_package, 40);
+  const approxArea = Number(body.approx_area_sqm);
+  const floorCount = Number(body.floor_count);
+
+  // Das Paket steuert, was der Auftrag ueberhaupt ist. Ohne Paket und ohne Ort
+  // laesst sich weder ein Preis nennen noch ein Termin planen; die Flaeche
+  // bleibt freiwillig, weil viele sie nicht kennen -- genau deshalb fragen sie.
+  if (kind === "MEASUREMENT" && (
+    !MEASUREMENT_PACKAGES.has(servicePackage)
+    || !/^\d{5}$/.test(postalCode)
+    || city.length < 2
+    || !SELLER_CHECK_KINDS.has(propertyType)
   )) return response({ ok: false, error: "INVALID_INPUT" }, 400);
 
   const db = createClient(supabaseUrl, serviceRole, { auth: { persistSession: false, autoRefreshToken: false } });
@@ -261,6 +278,44 @@ Deno.serve(async (request: Request) => {
       });
     }
     return response({ ok: true, deduplicated: Boolean(profile.out_deduplicated) });
+  }
+
+  if (kind === "MEASUREMENT") {
+    const { data: result, error: orderError } = await db.rpc("create_public_measurement_order", {
+      p_contact_id: contactId,
+      p_responsible_user: responsibleUser,
+      p_submission_key: submissionKey,
+      p_source_url: sourceUrl || "/technisches-aufmass",
+      p_service_package: servicePackage,
+      p_property_type: propertyType,
+      p_object_postal_code: postalCode,
+      p_object_city: city,
+      p_approx_area_sqm: Number.isFinite(approxArea) && approxArea > 0 ? approxArea : null,
+      p_floor_count: Number.isFinite(floorCount) && floorCount >= 1 && floorCount <= 20 ? Math.round(floorCount) : null,
+      p_message: message,
+      p_consent_text_version: MEASUREMENT_CONSENT_VERSION,
+    });
+    if (orderError || !result?.[0]) return processingFailed("measurement_order_creation", orderError);
+    const order = result[0];
+    if (!order.out_deduplicated) {
+      await db.from("activity_events").insert({
+        activity_type: "WEBSITE_MEASUREMENT",
+        title: "Aufmaß angefragt",
+        description: `Neue Aufmaß-Anfrage aus ${postalCode} ${city}`,
+        actor_user_id: null,
+        contact_id: contactId,
+        metadata: { source: "PUBLIC_WEBSITE", kind, consent_version: MEASUREMENT_CONSENT_VERSION, service_package: servicePackage, property_type: propertyType },
+      });
+      await db.from("notifications").insert({
+        user_id: responsibleUser,
+        type: "WEBSITE_MEASUREMENT",
+        title: "Neue Aufmaß-Anfrage",
+        message: `Aufmaß-Auftrag ${order.out_order_number} aus ${postalCode} ${city}`,
+        entity_type: "MEASUREMENT_ORDER",
+        entity_id: order.out_order_id,
+      });
+    }
+    return response({ ok: true, deduplicated: Boolean(order.out_deduplicated) });
   }
 
   if (kind === "SELLER_CHECK" || kind === "VALUATION") {

@@ -87,6 +87,7 @@ export const AKTE_ABSCHNITTE: Abschnitt[] = [
  */
 export const VORGAENGE: { beschriftung: string; liste: string }[] = [
   { beschriftung: "Maklerauftrag", liste: "/mandates" },
+  { beschriftung: "Aufmaß", liste: "/measurements" },
   { beschriftung: "Kaufangebote", liste: "/purchase-offers" },
   { beschriftung: "Reservierungen", liste: "/reservations" },
   { beschriftung: "Abschluss & Notar", liste: "/closings" },
