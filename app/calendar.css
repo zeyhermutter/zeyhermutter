@@ -227,18 +227,22 @@
  *
  * FARBE ALLEIN REICHT NICHT
  *
- * Fuenf Kategorien sind mehr, als sich ueber den Farbton zuverlaessig trennen
- * laesst: Violett, Blau und Gruen liegen in der Helligkeit nur den Faktor 1,1
- * auseinander. Jede Marke traegt darum zusaetzlich den Anfangsbuchstaben --
- * A, W, E, B, N. Wer die Farben nicht unterscheidet, liest die Buchstaben.
+ * Neun Kategorien sind weit mehr, als sich ueber den Farbton zuverlaessig
+ * trennen laesst: alle neun Flaechen liegen in der Helligkeit zwischen 82 und
+ * 86 Prozent. Jede Marke traegt darum zusaetzlich einen Buchstaben --
+ * A, W, P, E, V, B, M, N, Ü. Wer die Farben nicht unterscheidet, liest sie.
  *
  * Kontrast nachgerechnet, Schrift auf der jeweiligen Flaeche
  * (scripts/check-terminfarben.mjs rechnet das bei jedem Build nach):
  *   #3A4849 auf #ECEFEE   8.2:1   Aufgabe
  *   #45316F auf #ECE8F4   9.1:1   Wiedervorlage
+ *   #6B2440 auf #F6E8EC   9.1:1   Wiedervorlage Verkaufsprojekt
  *   #6A4A14 auf #F6EEDC   7.0:1   Eigentuemertermin
+ *   #44511F auf #ECEEE0   7.3:1   Begehung Verkaufsstrategie-Check
  *   #1F4E6B auf #E4EFF5   7.6:1   Besichtigung
+ *   #16514F auf #E0F0F0   7.7:1   Aufmasstermin
  *   #1F5134 auf #E2F0E6   7.8:1   Notartermin
+ *   #7A3B1D auf #F7E9E2   7.2:1   Uebergabe
  */
 
 .calendar-monat {
@@ -434,10 +438,22 @@ a.monatsraster-tag:focus-visible {
   box-shadow: inset 0 0 0 1px #cfc6e4;
 }
 
+.termin-projekt {
+  background: #f6e8ec;
+  color: #6b2440;
+  box-shadow: inset 0 0 0 1px #e4c6d1;
+}
+
 .termin-eigentuemer {
   background: #f6eedc;
   color: #6a4a14;
   box-shadow: inset 0 0 0 1px #e0cfa8;
+}
+
+.termin-begehung {
+  background: #eceee0;
+  color: #44511f;
+  box-shadow: inset 0 0 0 1px #cdd3b4;
 }
 
 .termin-besichtigung {
@@ -446,19 +462,35 @@ a.monatsraster-tag:focus-visible {
   box-shadow: inset 0 0 0 1px #bdd6e3;
 }
 
+.termin-aufmass {
+  background: #e0f0f0;
+  color: #16514f;
+  box-shadow: inset 0 0 0 1px #b4d5d4;
+}
+
 .termin-notar {
   background: #e2f0e6;
   color: #1f5134;
   box-shadow: inset 0 0 0 1px #b6d6c1;
 }
 
+.termin-uebergabe {
+  background: #f7e9e2;
+  color: #7a3b1d;
+  box-shadow: inset 0 0 0 1px #e6cab8;
+}
+
 /* Die Pille in der Agenda traegt die Kategoriefarbe; der eigene Rahmen aus
  * .calendar-kind wuerde sonst zweimal zeichnen. */
 .calendar-kind.termin-aufgabe,
 .calendar-kind.termin-wiedervorlage,
+.calendar-kind.termin-projekt,
 .calendar-kind.termin-eigentuemer,
+.calendar-kind.termin-begehung,
 .calendar-kind.termin-besichtigung,
-.calendar-kind.termin-notar {
+.calendar-kind.termin-aufmass,
+.calendar-kind.termin-notar,
+.calendar-kind.termin-uebergabe {
   border-color: transparent;
 }
 

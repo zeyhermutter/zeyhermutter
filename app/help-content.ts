@@ -91,7 +91,9 @@ export const HELP_CHAPTERS: HelpChapter[] = [
       { art: "liste", punkte: [
         "„Aufgaben\" zeigt offene und laufende Aufgaben, sortiert nach Fälligkeit. Überfällige sind gekennzeichnet.",
         "Jede Aufgabe hat genau einen Verantwortlichen. Beobachter können zusätzlich eingetragen werden — sie bekommen Benachrichtigungen, sind aber nicht zuständig.",
-        "Der Kalender zeigt Termine und Fälligkeiten. Einzelne Termine lassen sich als .ics-Datei in Outlook oder einen anderen Kalender übernehmen.",
+        "Der Kalender zeigt alle neun Terminarten des Systems: Aufgaben, Wiedervorlagen (Lead und Verkaufsprojekt), Eigentümertermine, Begehungen zum Verkaufsstrategie-Check, Besichtigungen, Aufmaßtermine, Notartermine und Übergaben. Er führt sie nur zusammen — gepflegt wird jeder Termin an seinem Vorgang.",
+        "Neben der Liste steht ein Monatsraster. Jeder Termin ist dort eine Marke in der Farbe seiner Art, mit einem Buchstaben darin; ein Klick auf einen Tag springt in der Liste dorthin.",
+        "Einzelne Termine lassen sich als .ics-Datei in Outlook oder einen anderen Kalender übernehmen.",
         "Unter „E-Mail\" wird eine Nachricht mit Bezug zu einem Kontakt, Lead oder einer Anfrage vorbereitet. Das System verschickt nichts von selbst.",
       ]},
       { art: "warnung", text:

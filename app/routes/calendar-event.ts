@@ -13,7 +13,7 @@ type ExportEvent = {
 };
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const KINDS = new Set(["task", "lead_followup", "lead_valuation", "viewing", "closing_notary"]);
+const KINDS = new Set(["task", "lead_followup", "project_followup", "lead_valuation", "viewing", "readiness_inspection", "measurement", "closing_notary", "handover"]);
 
 function one<T>(value: T | T[] | null | undefined): T | null {
   if (Array.isArray(value)) return value[0] ?? null;
@@ -137,6 +137,99 @@ async function loadExportEvent(supabase: any, kind: string, id: string): Promise
       startsAt: row.starts_at,
       endsAt: row.ends_at,
       sourcePath: `/viewings/${row.id}`,
+    };
+  }
+
+  if (kind === "project_followup") {
+    const { data: row, error } = await supabase
+      .from("sale_projects")
+      .select("id,project_number,follow_up_at,next_step,contacts(first_name,last_name),properties(property_number,internal_title)")
+      .eq("id", id)
+      .is("archived_at", null)
+      .maybeSingle();
+    if (error) throw new Response("Wiedervorlage konnte nicht exportiert werden.", { status: 500 });
+    if (!row?.follow_up_at) return null;
+    const contact = one(row.contacts) as { first_name: string; last_name: string } | null;
+    const property = one(row.properties) as { property_number: string; internal_title: string } | null;
+    return {
+      kind,
+      id,
+      summary: `Wiedervorlage ${row.project_number}`,
+      description: [contact ? `${contact.first_name} ${contact.last_name}` : null, property?.property_number, row.next_step].filter(Boolean).join(" · ") || null,
+      location: null,
+      startsAt: row.follow_up_at,
+      endsAt: null,
+      sourcePath: `/projects/${row.id}`,
+    };
+  }
+
+  if (kind === "measurement") {
+    const { data: row, error } = await supabase
+      .from("measurement_orders")
+      .select("id,order_number,appointment_at,object_street,object_house_number,object_postal_code,object_city,contacts(first_name,last_name),properties(property_number,internal_title)")
+      .eq("id", id)
+      .is("archived_at", null)
+      .maybeSingle();
+    if (error) throw new Response("Aufmaßtermin konnte nicht exportiert werden.", { status: 500 });
+    if (!row?.appointment_at) return null;
+    const contact = one(row.contacts) as { first_name: string; last_name: string } | null;
+    const property = one(row.properties) as { property_number: string; internal_title: string } | null;
+    const address = [row.object_street, row.object_house_number, row.object_postal_code, row.object_city].filter(Boolean).join(" ") || null;
+    return {
+      kind,
+      id,
+      summary: `Aufmaß ${row.order_number}`,
+      description: [contact ? `${contact.first_name} ${contact.last_name}` : null, property?.property_number, property?.internal_title].filter(Boolean).join(" · ") || null,
+      location: address,
+      startsAt: row.appointment_at,
+      endsAt: null,
+      sourcePath: `/measurements/${row.id}`,
+    };
+  }
+
+  if (kind === "readiness_inspection") {
+    const { data: row, error } = await supabase
+      .from("lead_sales_readiness_checks")
+      .select("id,lead_id,inspection_at,leads(lead_number,property_street,property_house_number,property_postal_code,property_city,contacts(first_name,last_name)),properties(property_number,internal_title)")
+      .eq("id", id)
+      .maybeSingle();
+    if (error) throw new Response("Begehung konnte nicht exportiert werden.", { status: 500 });
+    if (!row?.inspection_at) return null;
+    const lead = one(row.leads) as any;
+    const contact = one(lead?.contacts) as { first_name: string; last_name: string } | null;
+    const property = one(row.properties) as { property_number: string; internal_title: string } | null;
+    const address = [lead?.property_street, lead?.property_house_number, lead?.property_postal_code, lead?.property_city].filter(Boolean).join(" ") || null;
+    return {
+      kind,
+      id,
+      summary: `Begehung ${lead?.lead_number ?? "Verkaufsstrategie-Check"}`,
+      description: [contact ? `${contact.first_name} ${contact.last_name}` : null, property?.property_number].filter(Boolean).join(" · ") || null,
+      location: address,
+      startsAt: row.inspection_at,
+      endsAt: null,
+      sourcePath: `/leads/${row.lead_id}/sales-readiness`,
+    };
+  }
+
+  if (kind === "handover") {
+    const { data: row, error } = await supabase
+      .from("sale_handover_protocols")
+      .select("id,handover_at,sale_closings!inner(id,closing_number,archived_at,properties(property_number,internal_title))")
+      .eq("id", id)
+      .maybeSingle();
+    if (error) throw new Response("Übergabe konnte nicht exportiert werden.", { status: 500 });
+    const closing = one(row?.sale_closings) as any;
+    if (!row?.handover_at || !closing || closing.archived_at) return null;
+    const property = one(closing.properties) as { property_number: string; internal_title: string } | null;
+    return {
+      kind,
+      id,
+      summary: `Übergabe ${closing.closing_number}`,
+      description: [property?.property_number, property?.internal_title].filter(Boolean).join(" · ") || null,
+      location: null,
+      startsAt: row.handover_at,
+      endsAt: null,
+      sourcePath: `/closings/${closing.id}/milestones`,
     };
   }
 

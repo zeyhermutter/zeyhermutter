@@ -2,7 +2,11 @@ import { data, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/calendar";
 import { requireActiveUser } from "~/lib/auth.server";
 import { uhrzeit as formatTime } from "~/lib/format";
-import { ABSCHLUSSSTATUS, AUFGABENSTATUS, BESICHTIGUNGSSTATUS, beschrifte } from "~/lib/labels";
+import {
+  ABSCHLUSSSTATUS, AUFGABENSTATUS, AUFMASSPAKET, AUFMASSSTATUS, BESICHTIGUNGSSTATUS, CHECKSTATUS,
+  beschrifte,
+} from "~/lib/labels";
+import { PHASE as VERKAUFSPHASE } from "./projects";
 import { TERMINKATEGORIEN, kategorie, type Terminkategorie } from "~/lib/terminkategorien";
 import "~/calendar.css";
 
@@ -266,7 +270,45 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     .lt("notary_appointment_at", to)
     .order("notary_appointment_at", { ascending: true });
 
+  let measurementQuery = supabase
+    .from("measurement_orders")
+    .select("id,order_number,service_package,status,appointment_at,object_street,object_house_number,object_postal_code,object_city,primary_responsible_user,contacts(first_name,last_name),properties(property_number,internal_title)")
+    .is("archived_at", null)
+    .not("appointment_at", "is", null)
+    .gte("appointment_at", from)
+    .lt("appointment_at", to)
+    .order("appointment_at", { ascending: true });
+  let projectQuery = supabase
+    .from("sale_projects")
+    .select("id,project_number,phase,follow_up_at,primary_responsible_user,contacts(first_name,last_name),properties(property_number,internal_title)")
+    .is("archived_at", null)
+    .not("follow_up_at", "is", null)
+    .gte("follow_up_at", from)
+    .lt("follow_up_at", to)
+    .order("follow_up_at", { ascending: true });
+  // Das Uebergabeprotokoll hat selbst keinen Verantwortlichen und kein
+  // Archivkennzeichen -- beides haengt am Abschluss, zu dem es gehoert.
+  let inspectionQuery = supabase
+    .from("lead_sales_readiness_checks")
+    .select("id,lead_id,status,inspection_at,responsible_user,leads(lead_number,contacts(first_name,last_name)),properties(property_number,internal_title)")
+    .eq("is_current", true)
+    .not("inspection_at", "is", null)
+    .gte("inspection_at", from)
+    .lt("inspection_at", to)
+    .order("inspection_at", { ascending: true });
+  let handoverQuery = supabase
+    .from("sale_handover_protocols")
+    .select("id,handover_at,sale_closing_id,sale_closings!inner(id,closing_number,status,primary_responsible_user,archived_at,properties(property_number,internal_title))")
+    .not("handover_at", "is", null)
+    .gte("handover_at", from)
+    .lt("handover_at", to)
+    .order("handover_at", { ascending: true });
+
   if (scope === "mine") {
+    inspectionQuery = inspectionQuery.eq("responsible_user", userId);
+    measurementQuery = measurementQuery.eq("primary_responsible_user", userId);
+    projectQuery = projectQuery.eq("primary_responsible_user", userId);
+    handoverQuery = handoverQuery.eq("sale_closings.primary_responsible_user", userId);
     taskQuery = taskQuery.eq("responsible_user", userId);
     viewingQuery = viewingQuery.eq("primary_responsible_user", userId);
     followupQuery = followupQuery.eq("primary_responsible_user", userId);
@@ -274,14 +316,19 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     closingQuery = closingQuery.eq("primary_responsible_user", userId);
   }
 
-  const [taskResult, viewingResult, followupResult, valuationResult, closingResult] = await Promise.all([
+  const [taskResult, viewingResult, followupResult, valuationResult, closingResult, measurementResult, projectResult, inspectionResult, handoverResult] = await Promise.all([
     taskQuery,
     viewingQuery,
     followupQuery,
     valuationQuery,
     closingQuery,
+    measurementQuery,
+    projectQuery,
+    inspectionQuery,
+    handoverQuery,
   ]);
-  const firstError = [taskResult.error, viewingResult.error, followupResult.error, valuationResult.error, closingResult.error].find(Boolean);
+  const firstError = [taskResult.error, viewingResult.error, followupResult.error, valuationResult.error, closingResult.error,
+    measurementResult.error, projectResult.error, inspectionResult.error, handoverResult.error].find(Boolean);
   if (firstError) throw new Response("CRM-Kalender konnte nicht geladen werden.", { status: 500, headers: responseHeaders() });
 
   const tasks = taskResult.data ?? [];
@@ -373,6 +420,91 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       sourceLabel: kategorie("CLOSING_NOTARY").beschriftung,
       exportUrl: exportUrl("closing_notary", row.id),
       statusLabel: beschrifte(ABSCHLUSSSTATUS, row.status),
+    });
+  }
+
+  for (const row of (measurementResult.data ?? []) as any[]) {
+    if (!row.appointment_at) continue;
+    const contact = one(row.contacts) as { first_name: string; last_name: string } | null;
+    const property = one(row.properties) as { property_number: string; internal_title: string } | null;
+    const anschrift = [[row.object_street, row.object_house_number].filter(Boolean).join(" "),
+      [row.object_postal_code, row.object_city].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+    events.push({
+      key: `MEASUREMENT:${row.id}`,
+      kind: "MEASUREMENT",
+      title: `Aufmaß ${row.order_number}`,
+      subtitle: contextDescription([
+        beschrifte(AUFMASSPAKET, row.service_package),
+        property?.property_number ?? anschrift,
+        contact ? `${contact.first_name} ${contact.last_name}` : null,
+      ]),
+      startsAt: row.appointment_at,
+      endsAt: null,
+      sourcePath: `/measurements/${row.id}`,
+      sourceLabel: kategorie("MEASUREMENT").beschriftung,
+      exportUrl: exportUrl("measurement", row.id),
+      statusLabel: beschrifte(AUFMASSSTATUS, row.status),
+    });
+  }
+
+  for (const row of (projectResult.data ?? []) as any[]) {
+    if (!row.follow_up_at) continue;
+    const contact = one(row.contacts) as { first_name: string; last_name: string } | null;
+    const property = one(row.properties) as { property_number: string; internal_title: string } | null;
+    events.push({
+      key: `PROJECT_FOLLOWUP:${row.id}`,
+      kind: "PROJECT_FOLLOWUP",
+      title: `Wiedervorlage ${row.project_number}`,
+      subtitle: contextDescription([
+        contact ? `${contact.first_name} ${contact.last_name}` : null,
+        property?.property_number,
+      ]),
+      startsAt: row.follow_up_at,
+      endsAt: null,
+      sourcePath: `/projects/${row.id}`,
+      sourceLabel: kategorie("PROJECT_FOLLOWUP").beschriftung,
+      exportUrl: exportUrl("project_followup", row.id),
+      statusLabel: beschrifte(VERKAUFSPHASE, row.phase),
+    });
+  }
+
+  for (const row of (inspectionResult.data ?? []) as any[]) {
+    if (!row.inspection_at) continue;
+    const lead = one(row.leads) as any;
+    const contact = one(lead?.contacts) as { first_name: string; last_name: string } | null;
+    const property = one(row.properties) as { property_number: string; internal_title: string } | null;
+    events.push({
+      key: `READINESS_INSPECTION:${row.id}`,
+      kind: "READINESS_INSPECTION",
+      title: `Begehung ${lead?.lead_number ?? "Verkaufsstrategie-Check"}`,
+      subtitle: contextDescription([
+        contact ? `${contact.first_name} ${contact.last_name}` : null,
+        property?.property_number,
+      ]),
+      startsAt: row.inspection_at,
+      endsAt: null,
+      sourcePath: `/leads/${row.lead_id}/sales-readiness`,
+      sourceLabel: kategorie("READINESS_INSPECTION").beschriftung,
+      exportUrl: exportUrl("readiness_inspection", row.id),
+      statusLabel: beschrifte(CHECKSTATUS, row.status),
+    });
+  }
+
+  for (const row of (handoverResult.data ?? []) as any[]) {
+    const closing = one(row.sale_closings) as any;
+    if (!row.handover_at || !closing || closing.archived_at) continue;
+    const property = one(closing.properties) as { property_number: string; internal_title: string } | null;
+    events.push({
+      key: `HANDOVER:${row.id}`,
+      kind: "HANDOVER",
+      title: `Übergabe ${closing.closing_number}`,
+      subtitle: contextDescription([property?.property_number, property?.internal_title]),
+      startsAt: row.handover_at,
+      endsAt: null,
+      sourcePath: `/closings/${closing.id}/milestones`,
+      sourceLabel: kategorie("HANDOVER").beschriftung,
+      exportUrl: exportUrl("handover", row.id),
+      statusLabel: beschrifte(ABSCHLUSSSTATUS, closing.status),
     });
   }
 
