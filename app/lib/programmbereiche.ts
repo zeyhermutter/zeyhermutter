@@ -47,7 +47,7 @@ export const BEREICHE: Bereich[] = [
     beschriftung: "Mein Tag",
     start: "/crm",
     unterpunkte: [
-      { beschriftung: "Übersicht", pfad: "/crm", genau: true },
+      { beschriftung: "Heute", pfad: "/crm", genau: true },
       // "In Bewegung" stand in keinem Menue, nur als Knopf auf der Uebersicht.
       // Aufgefallen beim Abgleich aller Listen mit den Bereichen.
       { beschriftung: "In Bewegung", pfad: "/pipeline" },

@@ -1,0 +1,172 @@
+/*
+ * Mein Tag -- die Startseite im Programmrahmen.
+ *
+ * Gebaut wie die Listen im Arbeitsplatz: dichte Zeilen, kleine Schrift,
+ * keine grossen Ueberschriften. Jede Zeile ist ein Verweis auf den
+ * Datensatz, in dem die Sache gepflegt wird. Hell geschrieben.
+ */
+
+.mein-tag.editor-shell { min-height: 0; padding-top: 16px; }
+
+.mein-tag-kopf {
+  max-width: var(--crm-content-max);
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.mein-tag-kopf h1 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.25;
+  font-weight: 600;
+  color: #1b2733;
+}
+
+.mein-tag-kopf p { margin: 4px 0 0; color: #3d4a56; font-size: 13px; }
+
+/* Meins / Alle -- zwei Knoepfe nebeneinander, wie ein Umschalter. */
+.mein-tag-umfang {
+  display: inline-flex;
+  border: 1px solid #c3cad1;
+  border-radius: var(--crm-field-radius);
+  overflow: hidden;
+}
+
+.mein-tag-umfang a {
+  padding: 6px 14px;
+  color: #3d4a56;
+  font-size: 13px;
+  text-decoration: none;
+  background: #ffffff;
+}
+
+.mein-tag-umfang a + a { border-left: 1px solid #c3cad1; }
+.mein-tag-umfang a:hover { background: #f3f6fa; color: #1b2733; }
+.mein-tag-umfang a.aktiv { background: #062037; color: #ffffff; font-weight: 600; }
+
+.mein-tag-hinweis { max-width: var(--crm-content-max); margin: 0 auto 12px; }
+
+.mein-tag-raster {
+  max-width: var(--crm-content-max);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+.mein-tag-spalte { display: grid; gap: 14px; min-width: 0; }
+
+.mein-tag-feld {
+  border: 1px solid #cdd3d9;
+  border-radius: var(--crm-card-radius-sm);
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.mein-tag-feld-kopf {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-bottom: 1px solid #dde2e7;
+  background: #f4f6f8;
+}
+
+.mein-tag-feld-kopf h2 { margin: 0; font-size: 13px; font-weight: 600; color: #1b2733; }
+
+.mein-tag-zahl {
+  min-width: 20px;
+  padding: var(--crm-pill-padding-sm);
+  line-height: 1;
+  border-radius: var(--crm-pill-radius);
+  background: #dde2e7;
+  color: #1b2733;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.mein-tag-mehr { margin-left: auto; color: #0b5cad; font-size: 12px; text-decoration: none; }
+.mein-tag-mehr:hover { text-decoration: underline; }
+
+.mein-tag-leer { margin: 0; padding: 14px 12px; color: #4a5763; font-size: 13px; }
+
+/* Lange Listen scrollen im Feld, nicht die ganze Seite. */
+.mein-tag-liste { max-height: 420px; overflow-y: auto; }
+
+.mein-tag-zeile {
+  display: grid;
+  grid-template-columns: 64px auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-bottom: 1px solid #eef1f4;
+  color: #1b2733;
+  text-decoration: none;
+}
+
+.mein-tag-zeile:last-child { border-bottom: 0; }
+.mein-tag-zeile:hover { background: #f3f6fa; }
+
+/* Zeilen ohne Terminmarke: die Spalte der Marke faellt weg. */
+.mein-tag-zeile:not(:has(.termin-marke)) { grid-template-columns: 64px minmax(0, 1fr) auto; }
+
+.mein-tag-wann {
+  display: flex;
+  flex-direction: column;
+  color: #3d4a56;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.mein-tag-wann small { color: #6b7782; font-size: 11px; }
+
+.mein-tag-was { display: flex; flex-direction: column; min-width: 0; }
+
+/* Der Titel darf zwei Zeilen nehmen -- "Eigentuemer-/Bewertungstermin
+ * ZM-LEAD-000021" war in einer Zeile bei 1366 px abgeschnitten, und gerade
+ * die Nummer am Ende ist das, wonach man sucht. Die Unterzeile bleibt eine
+ * Zeile; ganz steht sie im title. */
+.mein-tag-was strong {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.mein-tag-was small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mein-tag-was small { color: #4a5763; font-size: 12px; }
+
+.mein-tag-art { color: #4a5763; font-size: 11px; white-space: nowrap; }
+
+/* Ueberfaellig: das Datum in Rot, sonst bleibt die Zeile ruhig. #a12a1f auf
+ * Weiss 6,9:1. */
+.mein-tag-zeile.warnung .mein-tag-wann { color: #a12a1f; font-weight: 600; }
+
+.mein-tag-karte { max-width: var(--crm-content-max); margin: 18px auto 0; }
+
+@media (max-width: 1280px) {
+  .mein-tag-raster { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+  .mein-tag-raster { grid-template-columns: minmax(0, 1fr); }
+  .mein-tag-art { display: none; }
+  .mein-tag-zeile,
+  .mein-tag-zeile:not(:has(.termin-marke)) { grid-template-columns: 56px auto minmax(0, 1fr); }
+  .mein-tag-zeile:not(:has(.termin-marke)) { grid-template-columns: 56px minmax(0, 1fr); }
+}

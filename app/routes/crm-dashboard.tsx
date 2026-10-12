@@ -1,48 +1,37 @@
-import { useEffect, useRef } from "react";
-import { data, Form, Link, useFetcher, useLoaderData } from "react-router";
+import { useEffect, useRef, type ReactNode } from "react";
+import { data, Link, useFetcher, useLoaderData } from "react-router";
 import type { Route } from "./+types/crm-dashboard";
 import { PropertyOverviewMap, type PropertyMapPoint } from "~/components/property-overview-map";
 import { requireActiveUser, requirePermission } from "~/lib/auth.server";
 import { geocodePropertyAddress } from "~/lib/geocoding.server";
-import { tagKurz as formatDate } from "~/lib/format";
-import { crmToday as berlinToday } from "~/lib/local-time";
-import { ANFRAGEKANAL, ANFRAGESTATUS, AUFGABENPRIORITAET, AUFGABENSTATUS, LEADSTATUS, beschrifte } from "~/lib/labels";
+import { plural, tagKurz, tagLang, uhrzeit, wochentagKurz } from "~/lib/format";
+import { crmToday } from "~/lib/local-time";
+import { FRIST_TAGE, VORSCHAU_TAGE, ladeMeinTag, type Eintrag } from "~/lib/mein-tag.server";
+import { kategorie } from "~/lib/terminkategorien";
+import type { CalendarEvent } from "~/lib/termine";
+import "~/calendar.css";
 import "~/property-map.css";
+import "~/mein-tag.css";
+
+// Mein Tag -- die Startseite des Programms.
+//
+// Bis 12.10.2026 stand hier eine Uebersicht aus Kennzahlen und "zuletzt
+// bearbeitet"-Listen, mit einer eigenen Seitenleiste aus der Anfangszeit.
+// Jetzt: was heute ansteht, was liegen geblieben ist, was neu ist, welche
+// Fristen laufen. Woher das kommt, steht in app/lib/mein-tag.server.ts.
+// Die Karte der Objektstandorte bleibt darunter.
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const { supabase, responseHeaders, profile } = await requireActiveUser(request, context.cloudflare.env);
-  const now = new Date().toISOString();
-  const today = berlinToday();
-  const monthStart = `${today.slice(0, 7)}-01`;
-  const [
-    { data: contacts, count: contactCount, error: contactError },
-    { data: tasks, error: taskError },
-    { count: organizationCount, error: organizationError },
-    { count: unreadCount, error: notificationError },
-    { count: propertyCount, error: propertyError },
-    propertyPermission,
-    { data: recentLeads, error: recentLeadError },
-    { data: recentInquiries, error: recentInquiryError },
-    { data: dashboardSummary, error: dashboardSummaryError },
-  ] = await Promise.all([
-    supabase.from("contacts").select("id,contact_number,first_name,last_name,email,mobile,status,updated_at", { count: "exact" }).is("archived_at", null).order("updated_at", { ascending: false }).limit(25),
-    supabase.from("tasks").select("id,task_number,title,status,priority,due_at,contact_id,lead_id,inquiry_id,search_profile_id,viewing_id").is("archived_at", null).in("status", ["OPEN", "IN_PROGRESS"]).order("due_at", { ascending: true }).limit(10),
-    supabase.from("organizations").select("id", { count: "exact", head: true }).is("archived_at", null),
-    supabase.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null),
-    supabase.from("properties").select("id", { count: "exact", head: true }).neq("status", "ARCHIVED"),
+  const { supabase, responseHeaders, userId } = await requireActiveUser(request, context.cloudflare.env);
+  const url = new URL(request.url);
+  const scope = url.searchParams.get("scope") === "all" ? "all" : "mine";
+  const heute = crmToday();
+
+  const [tag, propertyPermission, { count: propertyCount }] = await Promise.all([
+    ladeMeinTag(supabase, userId, scope, heute),
     supabase.rpc("current_user_has_permission", { p_permission: "property.read" }),
-    supabase.from("leads").select("id,lead_number,status,follow_up_at,property_city,updated_at,contacts!inner(first_name,last_name)").is("archived_at", null).order("updated_at", { ascending: false }).limit(6),
-    supabase.from("inquiries").select("id,inquiry_number,status,channel,received_at,contacts!inner(first_name,last_name),properties(property_number),search_profiles(search_profile_number)").is("archived_at", null).order("received_at", { ascending: false }).limit(5),
-    supabase.rpc("crm_dashboard_summary", { p_scope: "mine", p_from: monthStart, p_to: today }),
+    supabase.from("properties").select("id", { count: "exact", head: true }).neq("status", "ARCHIVED"),
   ]);
-
-  if (contactError || taskError || organizationError || notificationError || propertyError || recentLeadError || recentInquiryError || dashboardSummaryError || !dashboardSummary) {
-    throw new Response("CRM-Daten konnten nicht geladen werden.", { status: 500, headers: responseHeaders() });
-  }
-
-  const summary = dashboardSummary as any;
-  const snapshot = summary.snapshot ?? {};
-  const period = summary.period ?? {};
 
   let propertyMapPoints: PropertyMapPoint[] = [];
   let missingCoordinateCount = 0;
@@ -61,24 +50,14 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   }
 
   return data({
-    profile,
-    contacts: contacts ?? [],
-    tasks: tasks ?? [],
-    contactCount: contactCount ?? 0,
-    organizationCount: organizationCount ?? 0,
-    taskCount: Number(snapshot.open_tasks ?? 0),
-    unreadCount: unreadCount ?? 0,
+    ...tag,
+    scope,
+    vorschauTage: VORSCHAU_TAGE,
+    fristTage: FRIST_TAGE,
+    zeigeKarte: propertyPermission.data === true,
     propertyCount: propertyCount ?? 0,
     propertyMapPoints,
     missingCoordinateCount,
-    leadCount: Number(snapshot.active_leads ?? 0),
-    newLeadCount: Number(period.leads_created ?? 0),
-    overdueLeadCount: Number(snapshot.overdue_lead_followups ?? 0),
-    recentLeads: recentLeads ?? [],
-    searchProfileCount: Number(snapshot.active_search_profiles ?? 0),
-    openInquiryCount: Number(snapshot.open_inquiries ?? 0),
-    recentInquiries: recentInquiries ?? [],
-    upcomingViewingCount: Number(snapshot.upcoming_viewings ?? 0),
   }, { headers: responseHeaders() });
 }
 
@@ -101,56 +80,129 @@ export async function action({ request, context }: Route.ActionArgs) {
   return data({ geocoded }, { headers: responseHeaders() });
 }
 
-function one(value: any) { return Array.isArray(value) ? value[0] : value; }
+function Termin({ e, mitTag }: { e: CalendarEvent; mitTag?: boolean }) {
+  const art = kategorie(e.kind);
+  return (
+    <Link className="mein-tag-zeile" to={e.sourcePath}>
+      <span className="mein-tag-wann">
+        {mitTag ? <small>{wochentagKurz(e.startsAt)}</small> : null}
+        {e.ganztags ? "ganztags" : uhrzeit(e.startsAt)}
+      </span>
+      <span className={`termin-marke ${art.klasse}`} title={art.beschriftung} aria-hidden="true">{art.kuerzel}</span>
+      <span className="mein-tag-was"><strong>{e.title}</strong><small title={e.subtitle}>{e.subtitle}</small></span>
+      {e.statusLabel ? <span className="mein-tag-art">{e.statusLabel}</span> : null}
+    </Link>
+  );
+}
 
-export default function CrmDashboard() {
-  const { profile, contacts, tasks, contactCount, organizationCount, taskCount, unreadCount, propertyCount, propertyMapPoints, missingCoordinateCount, leadCount, newLeadCount, overdueLeadCount, recentLeads, searchProfileCount, openInquiryCount, recentInquiries, upcomingViewingCount } = useLoaderData<typeof loader>();
+function Zeile({ e, wann, warnung }: { e: Eintrag; wann: string; warnung?: boolean }) {
+  return (
+    <Link className={`mein-tag-zeile${warnung ? " warnung" : ""}`} to={e.pfad}>
+      <span className="mein-tag-wann">{wann}</span>
+      <span className="mein-tag-was"><strong>{e.titel}</strong><small title={e.kontext}>{e.kontext}</small></span>
+      <span className="mein-tag-art">{e.art}</span>
+    </Link>
+  );
+}
+
+function Feld({ titel, anzahl, mehr, leer, children }: {
+  titel: string;
+  anzahl: number;
+  mehr?: { pfad: string; beschriftung: string };
+  leer: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="mein-tag-feld" aria-label={titel}>
+      <header className="mein-tag-feld-kopf">
+        <h2>{titel}</h2>
+        <span className="mein-tag-zahl">{anzahl}</span>
+        {mehr ? <Link className="mein-tag-mehr" to={mehr.pfad}>{mehr.beschriftung}</Link> : null}
+      </header>
+      {anzahl === 0 ? <p className="mein-tag-leer">{leer}</p> : <div className="mein-tag-liste">{children}</div>}
+    </section>
+  );
+}
+
+export default function MeinTag() {
+  const d = useLoaderData<typeof loader>();
   const geocodeFetcher = useFetcher<typeof action>();
   const backfillStarted = useRef(false);
   useEffect(() => {
-    if (backfillStarted.current || missingCoordinateCount <= 0 || geocodeFetcher.state !== "idle") return;
+    if (backfillStarted.current || d.missingCoordinateCount <= 0 || geocodeFetcher.state !== "idle") return;
     backfillStarted.current = true;
     const formData = new FormData(); formData.set("_intent", "backfill_geocodes");
     geocodeFetcher.submit(formData, { method: "post" });
-  }, [missingCoordinateCount, geocodeFetcher]);
+  }, [d.missingCoordinateCount, geocodeFetcher]);
 
-  return <main className="app-shell">
-    <aside className="sidebar">
-      <div className="brand"><span className="brand-mark">ZM</span><span>ZeyherMutterOS</span></div>
-      <nav className="sidebar-nav" aria-label="Hauptnavigation">
-        <Link className="nav-item active" to="/crm">CRM</Link>
-        <Link className="nav-item" to="/reports">Dashboard & Auswertung</Link>
-        <Link className="nav-item" to="/crm/search">Suche</Link>
-        <Link className="nav-item" to="/crm/tasks">Aufgaben</Link>
-        <Link className="nav-item" to="/crm/notifications">Benachrichtigungen{unreadCount > 0 ? ` (${unreadCount})` : ""}</Link>
-        <Link className="nav-item" to="/crm/organizations">Organisationen</Link>
-        <Link className="nav-item" to="/properties">Immobilien</Link>
-        <Link className="nav-item" to="/leads">Verkäufer-Leads</Link>
-        <Link className="nav-item" to="/search-profiles">Interessenten / Suchprofile</Link>
-        <Link className="nav-item" to="/inquiries">Anfragen</Link>
-        <Link className="nav-item" to="/viewings">Besichtigungen</Link>
-        <Link className="nav-item" to="/crm/history">Systemhistorie</Link>
-        <Link className="nav-item" to="/crm/archive">Archiv</Link>
-        <Link className="nav-item" to="/commissions">Provisionen</Link>
-      </nav>
-      <div className="sidebar-footer"><small>{__APP_ENV_LABEL__}</small><strong>{profile.display_name}</strong><Form method="post" action="/logout"><button className="text-button" type="submit">Abmelden</button></Form></div>
-    </aside>
+  const ueberfaelligeFristen = d.fristen.filter((f) => f.ueberfaellig).length;
+  const zusammenfassung = [
+    plural(d.termineHeute.length, "Termin heute", "Termine heute"),
+    `${d.liegengeblieben.length} liegen geblieben`,
+    `${d.neu.length} neu`,
+    plural(d.fristen.length, "Frist", "Fristen") + (ueberfaelligeFristen ? `, ${ueberfaelligeFristen} überfällig` : ""),
+  ].join(" · ");
 
-    <section className="app-content">
-      <header className="app-header">
-        <div><p className="eyebrow">CRM · Immobilien · Verkäufer · Interessenten</p><div className="dashboard-greeting-row"><h1 className="app-title">Guten Tag, {profile.display_name}.</h1></div></div>
-        <div className="header-actions"><Link className="primary-button link-button" to="/pipeline">In Bewegung</Link><Link className="secondary-button link-button" to="/reports">Auswertung</Link><Link className="secondary-button link-button" to="/search-profiles">Interessenten · {searchProfileCount}</Link><Link className="secondary-button link-button" to="/inquiries">Anfragen · {openInquiryCount}</Link><Link className="secondary-button link-button" to="/viewings">Besichtigungen · {upcomingViewingCount}</Link><Link className="secondary-button link-button" to="/crm/search">Suchen</Link><Link className="primary-button link-button" to="/inquiries/new">+ Anfrage</Link><span className="badge">{__APP_ENV_LABEL__}</span></div>
-      </header>
+  return (
+    <main className="editor-shell mein-tag">
+      <div className="mein-tag-kopf">
+        <div>
+          <h1>{tagLang(d.heute)}</h1>
+          <p>{zusammenfassung}</p>
+        </div>
+        <nav className="mein-tag-umfang" aria-label="Umfang">
+          <Link className={d.scope === "mine" ? "aktiv" : ""} aria-current={d.scope === "mine" ? "page" : undefined} to="/crm">Meins</Link>
+          <Link className={d.scope === "all" ? "aktiv" : ""} aria-current={d.scope === "all" ? "page" : undefined} to="/crm?scope=all">Alle</Link>
+        </nav>
+      </div>
 
-      <div className="metric-grid"><Link className="metric-card" to="/crm/contacts"><span>Kontakte</span><strong>{contactCount}</strong><small>aktive Kontakte</small></Link><article className="metric-card"><span>Aktive Verkäufer-Leads</span><strong>{leadCount}</strong><small>{newLeadCount} im Monat neu · {overdueLeadCount} überfällig</small></article><article className="metric-card"><span>Organisationen</span><strong>{organizationCount}</strong><small>aktive Firmen/Partner</small></article><article className="metric-card"><span>Offene Aufgaben</span><strong>{taskCount}</strong><small>offen / in Bearbeitung</small></article></div>
+      {d.quellenfehler.length > 0 ? (
+        <p className="form-warning mein-tag-hinweis">Nicht geladen: {d.quellenfehler.join(", ")}. Der Rest der Seite ist vollständig.</p>
+      ) : null}
 
-      <section className="data-card"><div className="card-head"><div><p className="eyebrow">Modul 04</p><h2>Interessenten & Anfragen</h2></div><div className="inline-actions"><Link className="subtle-link" to="/search-profiles">{searchProfileCount} aktive Suchprofile</Link><Link className="subtle-link" to="/inquiries">{openInquiryCount} offene Anfragen</Link><Link className="subtle-link" to="/viewings">{upcomingViewingCount} anstehende Besichtigungen</Link></div></div><div className="data-list">{recentInquiries.map((inq: any) => { const contact = one(inq.contacts), property = one(inq.properties), sp = one(inq.search_profiles); return <Link className="data-row data-row-link" to={`/inquiries/${inq.id}`} key={inq.id}><div><strong>{contact ? `${contact.first_name} ${contact.last_name}` : inq.inquiry_number}</strong><small>{inq.inquiry_number} · {beschrifte(ANFRAGEKANAL, inq.channel)}{property?.property_number ? ` · ${property.property_number}` : sp?.search_profile_number ? ` · ${sp.search_profile_number}` : ""}</small></div><div className="row-meta"><span>{beschrifte(ANFRAGESTATUS, inq.status)}</span><small>{formatDate(inq.received_at)}</small></div></Link>; })}{recentInquiries.length === 0 ? <p className="empty-state">Noch keine Anfragen vorhanden.</p> : null}</div></section>
+      {/* Drei Spalten: was heute ansteht (Termine), was drueckt (Ueberfaelliges,
+          Fristen), was neu ist. Auf schmalen Bildschirmen untereinander, in
+          dieser Reihenfolge. */}
+      <div className="mein-tag-raster">
+        <div className="mein-tag-spalte">
+          <Feld titel="Termine heute" anzahl={d.termineHeute.length} mehr={{ pfad: `/crm/calendar${d.scope === "all" ? "?scope=all" : ""}`, beschriftung: "Kalender" }}
+            leer="Heute steht kein Termin an.">
+            {d.termineHeute.map((e) => <Termin key={e.key} e={e} />)}
+          </Feld>
+          <Feld titel={`Nächste ${d.vorschauTage - 1} Tage`} anzahl={d.termineDanach.length}
+            leer="In den nächsten Tagen steht kein Termin an.">
+            {d.termineDanach.map((e) => <Termin key={e.key} e={e} mitTag />)}
+          </Feld>
+        </div>
 
-      <section className="data-card"><div className="card-head"><div><p className="eyebrow">Modul 03</p><h2>Aktuelle Verkäufer-Leads</h2></div><Link className="subtle-link" to="/leads">Pipeline öffnen</Link></div><div className="data-list">{recentLeads.map((lead: any) => { const contact = one(lead.contacts), overdue = lead.follow_up_at && new Date(lead.follow_up_at).getTime() < Date.now(); return <Link className="data-row data-row-link" to={`/leads/${lead.id}`} key={lead.id}><div><strong>{contact ? `${contact.first_name} ${contact.last_name}` : lead.lead_number}</strong><small>{lead.lead_number} · {beschrifte(LEADSTATUS, lead.status)}{lead.property_city ? ` · ${lead.property_city}` : ""}</small></div><div className="row-meta"><span className={overdue ? "lead-overdue" : ""}>{lead.follow_up_at ? `Wiedervorlage ${formatDate(lead.follow_up_at)}` : "Keine Wiedervorlage"}</span><small>{formatDate(lead.updated_at)}</small></div></Link>; })}{recentLeads.length === 0 ? <p className="empty-state">Noch keine aktiven Verkäufer-Leads.</p> : null}</div></section>
+        <div className="mein-tag-spalte">
+          <Feld titel="Liegen geblieben" anzahl={d.liegengeblieben.length} mehr={{ pfad: "/crm/tasks", beschriftung: "Aufgaben" }}
+            leer="Nichts ist überfällig.">
+            {d.liegengeblieben.map((e) => <Zeile key={e.key} e={e} wann={tagKurz(e.wann)} warnung />)}
+          </Feld>
+          <Feld titel={`Fristen (${d.fristTage} Tage)`} anzahl={d.fristen.length}
+            leer={`Keine Frist in den nächsten ${d.fristTage} Tagen.`}>
+            {d.fristen.map((e) => <Zeile key={e.key} e={e} wann={tagKurz(e.wann)} warnung={e.ueberfaellig} />)}
+          </Feld>
+        </div>
 
-      <section className="data-card property-map-card"><div className="card-head"><div><p className="eyebrow">Immobilien</p><h2>Standorte</h2></div><div><Link className="subtle-link" to="/properties">Alle Immobilien</Link><div className="map-coverage-note">{propertyMapPoints.length} von {propertyCount} lokalisiert{geocodeFetcher.state !== "idle" ? " · Koordinaten werden ergänzt…" : ""}</div></div></div><PropertyOverviewMap points={propertyMapPoints}/></section>
+        <div className="mein-tag-spalte">
+          <Feld titel="Neu eingegangen" anzahl={d.neu.length} mehr={{ pfad: "/inquiries", beschriftung: "Anfragen" }}
+            leer="Keine neue Anfrage und kein neuer Lead.">
+            {d.neu.map((e) => <Zeile key={e.key} e={e} wann={tagKurz(e.wann)} />)}
+          </Feld>
+        </div>
+      </div>
 
-      <div className="dashboard-grid"><section className="data-card"><div className="card-head"><div><p className="eyebrow">Kontakte</p><h2>Zuletzt bearbeitet</h2></div><div className="inline-actions"><Link className="subtle-link" to="/crm/contacts">Alle Kontakte →</Link><Link className="subtle-link" to="/crm/contacts/new">Neu anlegen</Link></div></div>{contacts.length === 0 ? <p className="empty-state">Noch keine Kontakte vorhanden.</p> : <div className="data-list">{contacts.map((contact) => <div className="data-row" key={contact.id}><div><strong>{contact.first_name} {contact.last_name}</strong><small>{contact.contact_number} · {contact.email ?? contact.mobile ?? "—"}</small></div><div className="row-meta"><Link className="subtle-link" to={`/crm/contacts/${contact.id}/relations`}>Arbeitsbereich</Link><Link className="subtle-link" to={`/crm/contacts/${contact.id}`}>Stammdaten</Link></div></div>)}</div>}</section><section className="data-card"><div className="card-head"><div><p className="eyebrow">Wiedervorlagen</p><h2>Nächste Aufgaben</h2></div><Link className="subtle-link" to="/crm/tasks">Alle Aufgaben</Link></div>{tasks.length === 0 ? <p className="empty-state">Keine offenen Aufgaben.</p> : <div className="data-list">{tasks.map((task: any) => <div className="data-row" key={task.id}><div><strong>{task.title}</strong><small>{task.task_number} · {beschrifte(AUFGABENPRIORITAET, task.priority)}</small></div><div className="row-meta"><span>{beschrifte(AUFGABENSTATUS, task.status)}</span><small>{formatDate(task.due_at)}</small>{task.lead_id ? <Link className="subtle-link" to={`/leads/${task.lead_id}`}>Lead</Link> : null}{task.search_profile_id ? <Link className="subtle-link" to={`/search-profiles/${task.search_profile_id}`}>Suchprofil</Link> : null}{task.inquiry_id ? <Link className="subtle-link" to={`/inquiries/${task.inquiry_id}`}>Anfrage</Link> : null}{task.viewing_id ? <Link className="subtle-link" to={`/viewings/${task.viewing_id}`}>Besichtigung</Link> : null}</div></div>)}</div>}</section></div>
-    </section>
-  </main>;
+      {d.zeigeKarte ? (
+        <section className="data-card property-map-card mein-tag-karte">
+          <div className="card-head">
+            <div><h2>Objektstandorte</h2></div>
+            <div><Link className="subtle-link" to="/properties?ansicht=tabelle">Alle Objekte</Link><div className="map-coverage-note">{d.propertyMapPoints.length} von {d.propertyCount} lokalisiert{geocodeFetcher.state !== "idle" ? " · Koordinaten werden ergänzt…" : ""}</div></div>
+          </div>
+          <PropertyOverviewMap points={d.propertyMapPoints} />
+        </section>
+      ) : null}
+    </main>
+  );
 }

@@ -41,15 +41,20 @@ const AUSNAHMEN = {
     // vorkommen: "Mo, 07.09." ueber der Spalte und "September 2026" ueber dem
     // Monat. Eine eigene Funktion dafuer in format.ts haette genau einen
     // Aufrufer und wuerde die gemeinsame Fassung nur aufblaehen.
-    "berlinParts",
     "formatDay",
     "monthLabel",
+  ],
+  "app/lib/termine.ts": [
+    // Zerlegt einen Zeitpunkt in Berliner Jahr/Monat/Tag/Stunde, um zwischen
+    // Ortszeit und UTC umzurechnen und Termine einem Tag zuzuordnen. Dient
+    // der Rechnung, nicht der Anzeige. Stand bis 12.10.2026 in calendar.tsx.
+    "berlinParts",
   ],
 };
 
 const FORMATFUNKTIONEN = [
   "euroRund", "euroGenau", "zahl", "flaeche", "prozent",
-  "tag", "tagKurz", "zeitpunkt", "zeitpunktKurz", "uhrzeit",
+  "tag", "tagKurz", "zeitpunkt", "zeitpunktKurz", "uhrzeit", "tagLang", "wochentagKurz",
 ];
 
 function dateien(ordner, gesammelt = []) {

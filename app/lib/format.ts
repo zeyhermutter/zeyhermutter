@@ -135,6 +135,24 @@ export function uhrzeit(wert: Wert, wennLeer = "—"): string {
   }).format(d);
 }
 
+/** Wochentag und Tag ausgeschrieben, etwa "Montag, 12. Oktober". Fuer Ueberschriften. */
+export function tagLang(wert: Wert, wennLeer = "—"): string {
+  const d = alsDatum(wert);
+  if (!d) return wennLeer;
+  return new Intl.DateTimeFormat("de-DE", {
+    weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Berlin",
+  }).format(d);
+}
+
+/** Wochentag kurz mit Tag, etwa "Di., 13.10.". Fuer Listen ueber wenige Tage. */
+export function wochentagKurz(wert: Wert, wennLeer = "—"): string {
+  const d = alsDatum(wert);
+  if (!d) return wennLeer;
+  return new Intl.DateTimeFormat("de-DE", {
+    weekday: "short", day: "2-digit", month: "2-digit", timeZone: "Europe/Berlin",
+  }).format(d);
+}
+
 // --- Sprache ---------------------------------------------------------------
 
 /**

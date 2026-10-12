@@ -47,6 +47,11 @@
 //                 geraten -- sie laesst den Lauf aber durch, weil es eine
 //                 fachliche Entscheidung ist, ob Fristen in den Kalender
 //                 gehoeren oder in eine eigene Fristenuebersicht.
+//   meinTag       Eine Frist, die "Mein Tag" (app/lib/mein-tag.server.ts)
+//                 als Frist zeigt -- ueberfaellig oder in den naechsten
+//                 Tagen. Wird nachgeprueft wie eine Kalenderquelle: die
+//                 Abfrage dieser Tabelle muss das Feld eingrenzen und danach
+//                 sortieren. Seit 12.10.2026.
 //
 // Die Liste stammt aus der BETA-Datenbank, Stand 08.10.2026. Zum Erneuern:
 //
@@ -84,10 +89,10 @@ const ZEITPUNKTE = {
   "brokerage_mandates.term_end": { zeitraum: true },
   "brokerage_mandates.term_start": { zeitraum: true },
   "brokerage_mandates.terminated_on": { rueckschau: true },
-  "brokerage_mandates.withdrawal_deadline_on": { frist: true },
+  "brokerage_mandates.withdrawal_deadline_on": { meinTag: true },
   "brokerage_mandates.withdrawal_instruction_given_on": { rueckschau: true },
   "brokerage_mandates.withdrawn_on": { rueckschau: true },
-  "commissions.due_date": { frist: true },
+  "commissions.due_date": { meinTag: true },
   "commissions.paid_at": { rueckschau: true },
   "contact_organization_relationships.valid_from": { zeitraum: true },
   "contact_organization_relationships.valid_until": { zeitraum: true },
@@ -196,7 +201,7 @@ const ZEITPUNKTE = {
   "property_valuations.valued_on": { rueckschau: true },
   "public_form_rate_limits.window_start": { grund: "Beginn des Zeitfensters der Einsendebremse. Technik, kein Termin." },
   "purchase_offers.submitted_at": { rueckschau: true },
-  "purchase_offers.valid_until": { frist: true },
+  "purchase_offers.valid_until": { meinTag: true },
   "referrals.acknowledged_on": { rueckschau: true },
   "referrals.received_on": { rueckschau: true },
   "sale_case_studies.customer_feedback_on": { rueckschau: true },
@@ -204,7 +209,7 @@ const ZEITPUNKTE = {
   "sale_case_studies.release_requested_on": { rueckschau: true },
   "sale_case_studies.website_published_at": { rueckschau: true },
   "sale_closing_milestones.completed_on": { rueckschau: true },
-  "sale_closing_milestones.deadline_on": { frist: true },
+  "sale_closing_milestones.deadline_on": { meinTag: true },
   "sale_closing_milestones.initiated_on": { rueckschau: true },
   "sale_closings.completed_date": { rueckschau: true },
   "sale_closings.draft_received_date": { rueckschau: true },
@@ -212,7 +217,7 @@ const ZEITPUNKTE = {
   "sale_closings.notarized_date": { rueckschau: true },
   "sale_closings.notary_appointment_at": { kategorie: "CLOSING_NOTARY" },
   "sale_closings.notary_instruction_date": { rueckschau: true },
-  "sale_closings.purchase_price_due_date": { frist: true },
+  "sale_closings.purchase_price_due_date": { meinTag: true },
   "sale_closings.purchase_price_paid_date": { rueckschau: true },
   "sale_handover_meters.read_on": { rueckschau: true },
   "sale_handover_protocols.buyer_confirmed_at": { rueckschau: true },
@@ -238,7 +243,9 @@ const fehler = [];
 const pruefe = (bedingung, text) => { if (!bedingung) fehler.push(text); };
 
 const kategorien = await lies("app/lib/terminkategorien.ts");
-const seite = await lies("app/routes/calendar.tsx");
+// Der Ladeteil steht seit 12.10.2026 in app/lib/termine.ts -- Kalender
+// und "Mein Tag" laden dieselben Termine mit demselben Code.
+const seite = await lies("app/lib/termine.ts");
 
 const beschrieben = [...kategorien.matchAll(/schluessel:\s*"([A-Z_]+)"/g)].map((m) => m[1]);
 pruefe(beschrieben.length > 0,
@@ -246,7 +253,7 @@ pruefe(beschrieben.length > 0,
   + "  Entweder ist die Liste leer, oder ihre Form hat sich geaendert.");
 
 /**
- * Der Abfrageblock einer Tabelle in calendar.tsx: von `.from("tabelle")` bis
+ * Der Abfrageblock einer Tabelle in termine.ts: von `.from("tabelle")` bis
  * zum Semikolon, das die Abfrage abschliesst.
  *
  * Genau hier lag der Fehler der ersten Fassung. Wer nur fragt, ob das Feld
@@ -274,7 +281,7 @@ for (const [spalte, eintrag] of Object.entries(ZEITPUNKTE)) {
   const blocke = abfrageblocke(tabelle);
   pruefe(blocke.length > 0,
     `${spalte} soll als ${eintrag.kategorie} im Kalender stehen, aber\n`
-    + `  app/routes/calendar.tsx fragt die Tabelle ${tabelle} gar nicht ab.`);
+    + `  app/lib/termine.ts fragt die Tabelle ${tabelle} gar nicht ab.`);
   if (blocke.length === 0) continue;
   // Dieselbe Tabelle kann mehrfach abgefragt werden -- leads einmal fuer die
   // Wiedervorlage und einmal fuer den Eigentuemertermin. Es genuegt, wenn
@@ -323,14 +330,39 @@ for (const [spalte, eintrag] of Object.entries(ZEITPUNKTE)) {
     + "  app/lib/terminkategorien.ts nicht gibt.");
 }
 
+// --- 2b. Die Fristen in "Mein Tag" werden wirklich abgefragt ------------
+
+const meinTag = await lies("app/lib/mein-tag.server.ts");
+function blockeIn(text, tabelle) {
+  const blocke = [];
+  let suchen = 0;
+  for (;;) {
+    const anfang = text.indexOf(`.from("${tabelle}")`, suchen);
+    if (anfang < 0) break;
+    const ende = text.indexOf(";", anfang);
+    blocke.push(ende < 0 ? text.slice(anfang) : text.slice(anfang, ende));
+    suchen = ende < 0 ? text.length : ende;
+  }
+  return blocke;
+}
+for (const [spalte, eintrag] of Object.entries(ZEITPUNKTE)) {
+  if (!eintrag.meinTag) continue;
+  const [tabelle, feld] = spalte.split(".");
+  const blocke = blockeIn(meinTag, tabelle);
+  pruefe(blocke.some((b) => new RegExp(`\\.lte\\("${feld}"`).test(b) && new RegExp(`\\.order\\("${feld}"`).test(b)),
+    `${spalte} ist als Frist in "Mein Tag" eingestuft, aber app/lib/mein-tag.server.ts\n`
+    + `  hat keine Abfrage auf ${tabelle}, die ${feld} eingrenzt (.lte) und danach sortiert (.order).\n`
+    + "  Die Frist erschiene dann nie -- oder nicht in der Reihenfolge, in der sie drueckt.");
+}
+
 // --- 3. Jede Spalte traegt genau eine Einstufung ------------------------
 
 for (const [spalte, eintrag] of Object.entries(ZEITPUNKTE)) {
-  const anzahl = [eintrag.kategorie, eintrag.grund, eintrag.rueckschau, eintrag.zeitraum, eintrag.frist]
+  const anzahl = [eintrag.kategorie, eintrag.grund, eintrag.rueckschau, eintrag.zeitraum, eintrag.frist, eintrag.meinTag]
     .filter(Boolean).length;
   pruefe(anzahl === 1,
     `${spalte} traegt ${anzahl} Einstufungen -- genau eine ist richtig:\n`
-    + "  kategorie, grund, rueckschau, zeitraum oder frist.");
+    + "  kategorie, grund, rueckschau, zeitraum, frist oder meinTag.");
   if (eintrag.grund) {
     pruefe(eintrag.grund.length >= 40,
       `Die Begruendung bei ${spalte} ist zu knapp ("${eintrag.grund}").\n`
@@ -360,6 +392,6 @@ if (fehler.length > 0) {
 
 console.log(`Terminquellen: ${erfasst} Zeitpunktspalten erfasst -- ${zaehle("kategorie")} im Kalender, `
   + `${zaehle("grund")} begruendet ausgenommen, ${zaehle("rueckschau")} Rueckschau, `
-  + `${zaehle("zeitraum")} Gueltigkeitszeitraum, ${fristen.length} offene Fristen.`);
-console.log(`  Offene Fristen ohne eigene Uebersicht (fachlich zu entscheiden, ob sie in den Kalender gehoeren):`);
+  + `${zaehle("zeitraum")} Gueltigkeitszeitraum, ${zaehle("meinTag")} Fristen in "Mein Tag", ${fristen.length} offene Fristen.`);
+console.log(`  Offene Fristen ohne eigene Uebersicht (fachlich zu entscheiden, ob sie in den Kalender oder in "Mein Tag" gehoeren):`);
 for (const spalte of fristen) console.log(`    ${spalte}`);

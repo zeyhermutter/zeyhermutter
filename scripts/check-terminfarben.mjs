@@ -43,7 +43,9 @@ const pruefe = (bedingung, text) => { if (!bedingung) fehler.push(text); };
 
 const quelle = await lies("app/lib/terminkategorien.ts");
 const stil = await lies("app/calendar.css");
-const seite = await lies("app/routes/calendar.tsx");
+// Der Ladeteil steht seit 12.10.2026 in app/lib/termine.ts -- Kalender
+// und "Mein Tag" laden dieselben Termine mit demselben Code.
+const seite = await lies("app/lib/termine.ts");
 const ausgang = await lies("app/routes/calendar-event.ts");
 
 // --- Die Liste und der Typ ------------------------------------------------
@@ -144,13 +146,13 @@ for (const kategorie of beschrieben) {
 const gesetzt = new Set([...seite.matchAll(/\bkind:\s*"([A-Z_]+)"/g)].map((m) => m[1]));
 for (const schluessel of gesetzt) {
   pruefe(inListe.includes(schluessel),
-    `app/routes/calendar.tsx legt Termine mit kind: "${schluessel}" an, `
+    `app/lib/termine.ts legt Termine mit kind: "${schluessel}" an, `
     + "TERMINKATEGORIEN beschreibt den Wert nicht.\n"
     + "  Im Monatsraster faellt die Marke dieser Termine aus.");
 }
 for (const schluessel of inListe) {
   pruefe(gesetzt.has(schluessel),
-    `TERMINKATEGORIEN beschreibt ${schluessel}, aber app/routes/calendar.tsx legt keinen\n`
+    `TERMINKATEGORIEN beschreibt ${schluessel}, aber app/lib/termine.ts legt keinen\n`
     + "  Termin dieser Kategorie an. Entweder fehlt die Quelle, oder die Zeile in der\n"
     + "  Legende steht fuer etwas, das es nicht gibt.");
 }
