@@ -13,7 +13,8 @@
 
 .programm-liste-werkzeuge {
   max-width: var(--crm-content-max);
-  margin: 0 auto;
+  margin-left: auto;
+  margin-right: auto;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -61,7 +62,8 @@
 
 .programm-tabelle-rahmen {
   max-width: var(--crm-content-max);
-  margin: 0 auto;
+  margin-left: auto;
+  margin-right: auto;
   border: 1px solid #cdd3d9;
   border-radius: var(--crm-card-radius-sm);
   background: #ffffff;
@@ -114,7 +116,8 @@
 
 .programm-liste-seiten {
   max-width: var(--crm-content-max);
-  margin: 0 auto;
+  margin-left: auto;
+  margin-right: auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -197,3 +200,24 @@
 
 /* Ueberfaellig: das Datum in Rot (#a12a1f auf Weiss 6,9:1), sonst ruhig. */
 .programm-tabelle tr.ueberfaellig td:first-child { color: #a12a1f; font-weight: 600; }
+
+/* Kennzahlen einer Liste als eine ruhige Zeile unter der Werkzeugleiste --
+ * statt fuenf grosser Kacheln (Makleraufträge, Aufmaß, 12.10.2026). */
+.programm-kennzahlen {
+  max-width: var(--crm-content-max);
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  color: #4a5763;
+  font-size: 12px;
+}
+
+.programm-kennzahlen strong { color: #1b2733; font-size: 13px; font-variant-numeric: tabular-nums; }
+.programm-kennzahlen .warnung strong,
+.programm-tabelle .warnung-text { color: #a12a1f; }
+.programm-tabelle .warnung-text { margin-top: 3px; font-size: 11px; font-weight: 600; }
+.programm-tabelle td > .leise,
+.programm-tabelle td .leise { font-size: 12px; }
+.programm-liste-leer a { color: #0b5cad; }

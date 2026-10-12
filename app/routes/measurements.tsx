@@ -4,6 +4,7 @@ import type { Route } from "./+types/measurements";
 import { requirePermission } from "~/lib/auth.server";
 import { euroRund, flaeche, tag as formatDate, zeitpunkt } from "~/lib/format";
 import { AUFMASSPAKET as PAKET, AUFMASSSTATUS as STATUS, AUFTRAGSQUELLE as QUELLE } from "~/lib/labels";
+import "~/programm-liste.css";
 
 // Aufmass-Auftraege: die Liste der Dienstleistung neben der Vermittlung.
 //
@@ -64,39 +65,46 @@ export async function loader({request,context}:Route.LoaderArgs){
 }
 
 export default function Measurements(){
-  const {profile,rows,summary,canWrite,properties,filters}=useLoaderData<typeof loader>();
-  return <main className="editor-shell">
-    <header className="editor-header"><div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">Verkauf · Dienstleistung</p><h1 className="editor-title">Aufmaß-Aufträge</h1><p className="editor-meta">Grundrisse, Bestandsaufmaß und Wohnflächenberechnung — auch für Objekte ohne eigenen Maklerauftrag.</p></div><div className="header-actions">{canWrite?<Link className="primary-button link-button" to={filters.propertyId?`/measurements/new?property_id=${encodeURIComponent(filters.propertyId)}`:"/measurements/new"}>+ Auftrag</Link>:null}<span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div></header>
-
-    <section className="metric-grid">
-      <article className="metric-card"><span>Angefragt</span><strong>{summary.angefragt}</strong><small>Anfrage oder Angebot offen</small></article>
-      <article className="metric-card"><span>Beauftragt</span><strong>{summary.beauftragt}</strong><small>Termin steht aus oder ist vereinbart</small></article>
-      <article className="metric-card"><span>Termin &lt; 7 Tage</span><strong>{summary.termin}</strong><small>Aufmaß vor Ort</small></article>
-      <article className="metric-card"><span>Auszuliefern</span><strong>{summary.auszuliefern}</strong><small>aufgemessen, Unterlagen offen</small></article>
-      <article className="metric-card"><span>Offenes Honorar</span><strong>{euroRund(summary.offenesHonorar)}</strong><small>geliefert oder abgerechnet, nicht bezahlt</small></article>
-    </section>
-
-    <section className="data-card"><Form method="get" className="filter-grid">
+  const {rows,summary,canWrite,properties,filters}=useLoaderData<typeof loader>();
+  const neu=filters.propertyId?`/measurements/new?property_id=${encodeURIComponent(filters.propertyId)}`:"/measurements/new";
+  // Eine Programmliste wie die Kontaktliste (12.10.2026): Werkzeugleiste,
+  // eine Zeile Kennzahlen, Tabelle -- statt Seitenkopf, Kacheln und Karten.
+  return <main className="editor-shell programm-liste">
+    <Form method="get" className="programm-liste-werkzeuge" role="search">
       <input type="hidden" name="ansicht" value="tabelle"/>
-      <label><span>Suche</span><input name="q" defaultValue={filters.q} placeholder="Auftrag, Objekt oder Kunde"/></label>
-      <label><span>Ansicht</span><select name="status" defaultValue={filters.status}><option value="OPEN">Laufende Aufträge</option><option value="DUE">Honorar offen</option><option value="ALL">Alle</option>{Object.entries(STATUS).map(([value,label])=><option value={value} key={value}>{label}</option>)}<option value="ARCHIVED">Archiviert</option></select></label>
-      <label><span>Paket</span><select name="paket" defaultValue={filters.paket}><option value="">Alle Pakete</option>{Object.entries(PAKET).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label>
-      <label><span>Immobilie</span><select name="property_id" defaultValue={filters.propertyId}><option value="">Alle Immobilien</option>{properties.map((property:any)=><option key={property.id} value={property.id}>{property.property_number} · {property.internal_title}</option>)}</select></label>
+      <label className="programm-liste-suche"><span className="sr-only">Suche</span><input type="search" name="q" defaultValue={filters.q} placeholder="Auftrag, Objekt oder Kunde …" autoComplete="off"/></label>
+      <label><span className="sr-only">Ansicht</span><select name="status" defaultValue={filters.status}><option value="OPEN">Laufende Aufträge</option><option value="DUE">Honorar offen</option><option value="ALL">Alle</option>{Object.entries(STATUS).map(([value,label])=><option value={value} key={value}>{label}</option>)}<option value="ARCHIVED">Archiviert</option></select></label>
+      <label><span className="sr-only">Paket</span><select name="paket" defaultValue={filters.paket}><option value="">Alle Pakete</option>{Object.entries(PAKET).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label>
+      <label><span className="sr-only">Immobilie</span><select name="property_id" defaultValue={filters.propertyId}><option value="">Alle Immobilien</option>{properties.map((property:any)=><option key={property.id} value={property.id}>{property.property_number} · {property.internal_title}</option>)}</select></label>
       <button className="secondary-button" type="submit">Filtern</button>
-    </Form></section>
+      <span className="programm-liste-zaehler">{rows.length} {rows.length===1?"Auftrag":"Aufträge"}</span>
+      {canWrite?<Link className="programm-liste-neu" to={neu}>+ Neuer Auftrag</Link>:null}
+    </Form>
 
-    <section className="data-card"><div className="card-head"><div><p className="eyebrow">Auftragsverzeichnis</p><h2>{rows.length} Aufträge</h2></div></div><div className="data-list">
-      {rows.map((row:any)=>{
-        const contact=one(row.contacts);
-        return <Link className="data-row data-row-link" to={`/measurements/${row.id}`} key={row.id}>
-          <div><strong>{row.order_number} · {PAKET[row.service_package]??row.service_package}</strong><small>{objektZeile(row)}{contact?` · ${contact.first_name} ${contact.last_name}`:""}</small></div>
-          <div className="row-meta"><span className={`status-pill ${STATUS_CLASS[row.status]??"status-draft"}`}>{row.archived_at?"Archiviert":STATUS[row.status]??row.status}</span><small>{QUELLE[row.source]??row.source}</small></div>
-          <div className="row-meta"><span>{row.appointment_at?`Termin ${zeitpunkt(row.appointment_at)}`:row.measured_on?`Aufgemessen ${formatDate(row.measured_on)}`:`Angefragt ${formatDate(row.requested_on)}`}</span><small>{row.measured_living_area_sqm?`Wohnfläche ${flaeche(row.measured_living_area_sqm)}`:row.approx_area_sqm?`ca. ${flaeche(row.approx_area_sqm)} laut Kunde`:"Fläche offen"}</small></div>
-          <div className="row-meta"><span>{row.fee_amount?euroRund(row.fee_amount):"Honorar offen"}</span><small>{row.paid_on?`Bezahlt ${formatDate(row.paid_on)}`:row.invoiced_on?`Abgerechnet ${formatDate(row.invoiced_on)}`:row.delivered_on?`Geliefert ${formatDate(row.delivered_on)}`:"—"}</small></div>
-          <span className="subtle-link">Öffnen →</span>
-        </Link>;
-      })}
-      {rows.length===0?<p className="empty-state">Keine Aufmaß-Aufträge in dieser Ansicht.</p>:null}
-    </div></section>
+    <p className="programm-kennzahlen">
+      <span><strong>{summary.angefragt}</strong> angefragt</span>
+      <span><strong>{summary.beauftragt}</strong> beauftragt</span>
+      <span><strong>{summary.termin}</strong> Termine in 7 Tagen</span>
+      <span><strong>{summary.auszuliefern}</strong> auszuliefern</span>
+      <span className={summary.offenesHonorar?"warnung":undefined}><strong>{euroRund(summary.offenesHonorar)}</strong> Honorar offen</span>
+    </p>
+
+    <div className="programm-tabelle-rahmen">
+      {rows.length===0?<p className="programm-liste-leer">{filters.q||filters.paket||filters.propertyId||filters.status!=="OPEN"?"Keine Aufmaß-Aufträge in dieser Ansicht.":"Noch kein Aufmaß-Auftrag erfasst."}{canWrite?<> <Link to={neu}>Ersten Auftrag anlegen</Link></>:null}</p>:<table className="programm-tabelle">
+        <thead><tr><th>Nummer</th><th>Paket</th><th>Objekt · Kunde</th><th>Status</th><th>Termin / Stand</th><th>Fläche</th><th className="rechts">Honorar</th></tr></thead>
+        <tbody>{rows.map((row:any)=>{
+          const contact=one(row.contacts);
+          return <tr key={row.id}>
+            <td className="zahl"><Link to={`/measurements/${row.id}`}>{row.order_number}</Link></td>
+            <td><Link to={`/measurements/${row.id}`}>{PAKET[row.service_package]??row.service_package}</Link><div className="leise">{QUELLE[row.source]??row.source}</div></td>
+            <td>{objektZeile(row)}{contact?<div className="leise">{contact.first_name} {contact.last_name}</div>:null}</td>
+            <td><span className={`status-pill ${STATUS_CLASS[row.status]??"status-draft"}`}>{row.archived_at?"Archiviert":STATUS[row.status]??row.status}</span></td>
+            <td className="zahl">{row.appointment_at?`Termin ${zeitpunkt(row.appointment_at)}`:row.measured_on?`Aufgemessen ${formatDate(row.measured_on)}`:`Angefragt ${formatDate(row.requested_on)}`}</td>
+            <td className="zahl">{row.measured_living_area_sqm?flaeche(row.measured_living_area_sqm):row.approx_area_sqm?<span className="leise">ca. {flaeche(row.approx_area_sqm)}</span>:"—"}</td>
+            <td className="zahl rechts">{row.fee_amount?euroRund(row.fee_amount):"—"}<div className="leise">{row.paid_on?`bezahlt ${formatDate(row.paid_on)}`:row.invoiced_on?`abgerechnet ${formatDate(row.invoiced_on)}`:row.delivered_on?`geliefert ${formatDate(row.delivered_on)}`:""}</div></td>
+          </tr>;
+        })}</tbody>
+      </table>}
+    </div>
   </main>;
 }
