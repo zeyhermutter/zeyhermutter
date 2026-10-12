@@ -144,3 +144,56 @@
   padding-left: 32px !important;
   border-radius: var(--crm-field-radius);
 }
+
+/* Meins / Kollege / Alle -- Knoepfe nebeneinander, wie ein Umschalter.
+ * Auf "Mein Tag" und in den Aufgaben. */
+.programm-umfang {
+  display: inline-flex;
+  border: 1px solid #c3cad1;
+  border-radius: var(--crm-field-radius);
+  overflow: hidden;
+}
+
+.programm-umfang a {
+  padding: 6px 14px;
+  color: #3d4a56;
+  font-size: 13px;
+  text-decoration: none;
+  background: #ffffff;
+}
+
+.programm-umfang a + a { border-left: 1px solid #c3cad1; }
+.programm-umfang a:hover { background: #f3f6fa; color: #1b2733; }
+.programm-umfang a.aktiv { background: #062037; color: #ffffff; font-weight: 600; }
+
+/* Ein Knopf in der Werkzeugleiste (etwa "+ Aufgabe anlegen") in der Hoehe
+ * der Felder daneben. */
+.programm-liste-werkzeuge .primary-button,
+.programm-liste-werkzeuge .secondary-button {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+/* Auswahl und Knoepfe in einer Tabellenzeile: so hoch wie die Zeile. */
+.programm-tabelle select {
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 6px;
+  border: 1px solid #c3cad1;
+  border-radius: var(--crm-field-radius);
+  background: #ffffff;
+  color: #1b2733;
+  font: inherit;
+  font-size: 12px;
+}
+
+.programm-tabelle .secondary-button {
+  min-height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* Ueberfaellig: das Datum in Rot (#a12a1f auf Weiss 6,9:1), sonst ruhig. */
+.programm-tabelle tr.ueberfaellig td:first-child { color: #a12a1f; font-weight: 600; }

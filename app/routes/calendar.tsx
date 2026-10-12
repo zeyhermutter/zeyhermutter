@@ -5,6 +5,7 @@ import { uhrzeit as formatTime } from "~/lib/format";
 import { TERMINKATEGORIEN, kategorie, uebersichtsWege, type Terminkategorie } from "~/lib/terminkategorien";
 import { berlinLocalToIso, berlinParts, dateKey, ladeTermine, type CalendarEvent } from "~/lib/termine";
 import "~/calendar.css";
+import "~/programm-liste.css";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -156,21 +157,31 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const { supabase, responseHeaders, profile, userId } = await requireActiveUser(request, context.cloudflare.env);
   const url = new URL(request.url);
   const month = validMonth(url.searchParams.get("month"));
-  const scope = url.searchParams.get("scope") === "all" ? "all" : "mine";
   const { from, to, vonTag, bisTag } = monthBounds(month);
 
-  const { events: sichtbar, sichtbareArten, quellenfehler } = await ladeTermine(supabase, userId, { from, to, vonTag, bisTag }, scope);
+  // Wessen Termine: Meins, je Kollege ein Knopf, Alle -- wie auf "Mein Tag".
+  // ?scope=all bleibt als alte Schreibweise fuer "Alle" gueltig.
+  const { data: aktive } = await supabase.from("profiles").select("user_id,display_name").eq("status", "ACTIVE").order("display_name");
+  const kollegen = ((aktive ?? []) as { user_id: string; display_name: string | null }[])
+    .filter((p) => p.user_id !== userId)
+    .map((p) => ({ id: p.user_id, name: (p.display_name ?? "").trim().split(/\s+/)[0] || "Kollege" }));
+  const von = url.searchParams.get("von") ?? (url.searchParams.get("scope") === "all" ? "alle" : "meins");
+  const ansicht = von === "alle" ? "alle" : kollegen.some((k) => k.id === von) ? von : "meins";
+  const scope = ansicht === "alle" ? "all" : "mine";
+  const person = ansicht === "alle" || ansicht === "meins" ? userId : ansicht;
+
+  const { events: sichtbar, sichtbareArten, quellenfehler } = await ladeTermine(supabase, person, { from, to, vonTag, bisTag }, scope);
   const grouped = sichtbar.reduce<Record<string, CalendarEvent[]>>((acc, event) => {
     const key = dateKey(event.startsAt);
     (acc[key] ??= []).push(event);
     return acc;
   }, {});
 
-  return data({ month, scope, events: sichtbar, grouped, profile, sichtbareArten, quellenfehler }, { headers: responseHeaders() });
+  return data({ month, ansicht, kollegen, events: sichtbar, grouped, sichtbareArten, quellenfehler }, { headers: responseHeaders() });
 }
 
 export default function CalendarPage() {
-  const { month, scope, events, grouped, profile, sichtbareArten, quellenfehler } = useLoaderData<typeof loader>();
+  const { month, ansicht, kollegen, events, grouped, sichtbareArten, quellenfehler } = useLoaderData<typeof loader>();
   const wege = uebersichtsWege(sichtbareArten);
   // Die Kachel nennt die Anzahl, nicht die Namen: ausgeschrieben waren die
   // neun Kategorien rund 180 Zeichen und zogen die Nachbarkacheln auf die
@@ -182,44 +193,36 @@ export default function CalendarPage() {
   const nextMonth = shiftMonth(month, 1);
   const currentMonth = currentBerlinMonth();
 
-  return <main className="calendar-shell">
-    <header className="calendar-header">
-      <div>
-        <p className="eyebrow">Arbeitsplatz · Integration</p>
-        <h1>Kalender</h1>
-        <p>Eine gemeinsame Agenda aus den führenden CRM-Datensätzen. Termine werden hier nicht dupliziert, sondern an ihrer fachlichen Quelle gepflegt.</p>
+  // Wie eine Kalenderansicht im Programm (12.10.2026): oben eine Leiste mit
+  // Monat und Umfang, darunter Agenda und Monatsraster. Der Kopf mit
+  // Erklaerung und die Karte "Integrationsarchitektur" stehen unten,
+  // eingeklappt -- man braucht sie einmal, nicht jeden Tag.
+  const pfad = (m: string, a: string) => {
+    const p = new URLSearchParams({ month: m });
+    if (a !== "meins") p.set("von", a);
+    return `/crm/calendar?${p.toString()}`;
+  };
+  const umfang = [
+    { schluessel: "meins", name: "Meins" },
+    ...kollegen.map((k) => ({ schluessel: k.id, name: k.name })),
+    { schluessel: "alle", name: "Alle" },
+  ];
+
+  return <main className="calendar-shell kalender-programm">
+    <div className="programm-liste-werkzeuge kalender-werkzeuge">
+      <div className="kalender-monat">
+        <Link className="secondary-button link-button compact" to={pfad(previousMonth, ansicht)} aria-label="Vorheriger Monat">←</Link>
+        <span className="calendar-month-title">{monthLabel(month)}</span>
+        <Link className="secondary-button link-button compact" to={pfad(nextMonth, ansicht)} aria-label="Nächster Monat">→</Link>
+        {month !== currentMonth ? <Link className="subtle-link" to={pfad(currentMonth, ansicht)}>Heute</Link> : null}
       </div>
-      <div className="header-user"><span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div>
-    </header>
+      <nav className="programm-umfang" aria-label="Wessen Termine">
+        {umfang.map((u) => <Link key={u.schluessel} className={ansicht === u.schluessel ? "aktiv" : ""} aria-current={ansicht === u.schluessel ? "page" : undefined} to={pfad(month, u.schluessel)}>{u.name}</Link>)}
+      </nav>
+      <span className="programm-liste-zaehler">{events.length} {events.length === 1 ? "Termin" : "Termine"} im Monat</span>
+    </div>
 
     <section className="data-card">
-      <div className="card-head"><div><p className="eyebrow">Integrationsarchitektur</p><h2>CRM ist die führende Terminquelle</h2></div></div>
-      <div className="calendar-provider-status">
-        <div><span>Kalender-Provider</span><strong>Nicht verbunden</strong></div>
-        <div><span>Terminquellen</span><strong>{quellenText}</strong></div>
-        <div><span>Externer Kalender</span><strong>iCalendar (.ics) Export</strong></div>
-      </div>
-      <p className="calendar-note">Ein Export erzeugt eine Kalenderdatei aus dem bestehenden CRM-Termin. Änderungen werden weiterhin im zugehörigen CRM-Datensatz vorgenommen; es entsteht kein zweiter synchroner Terminbestand.</p>
-    </section>
-
-    <section className="data-card">
-      <div className="calendar-toolbar">
-        <div className="calendar-toolbar-group">
-          <Link className="secondary-button link-button compact" to={`/crm/calendar?month=${previousMonth}&scope=${scope}`}>←</Link>
-          <span className="calendar-month-title">{monthLabel(month)}</span>
-          <Link className="secondary-button link-button compact" to={`/crm/calendar?month=${nextMonth}&scope=${scope}`}>→</Link>
-          {month !== currentMonth ? <Link className="subtle-link" to={`/crm/calendar?month=${currentMonth}&scope=${scope}`}>Heute</Link> : null}
-        </div>
-        <div className="calendar-toolbar-group">
-          <Link className={scope === "mine" ? "primary-button link-button compact" : "secondary-button link-button compact"} to={`/crm/calendar?month=${month}&scope=mine`}>Meine Termine</Link>
-          <Link className={scope === "all" ? "primary-button link-button compact" : "secondary-button link-button compact"} to={`/crm/calendar?month=${month}&scope=all`}>Alle sichtbaren</Link>
-        </div>
-      </div>
-
-      <div className="calendar-source-links">
-        {wege.map((weg) => <Link className="subtle-link" key={weg.pfad} to={weg.pfad}>{weg.beschriftung} öffnen</Link>)}
-      </div>
-
       {quellenfehler.length > 0 ? <p className="form-error">
         Diese Terminquellen konnten nicht gelesen werden: {quellenfehler.join(", ")}. Die übrigen Termine stehen vollständig unten.
       </p> : null}
@@ -244,5 +247,17 @@ export default function CalendarPage() {
         <Monatsraster month={month} grouped={grouped} sichtbareArten={sichtbareArten} />
       </div>
     </section>
+    <details className="kalender-quellen">
+      <summary>Terminquellen und Export</summary>
+      <div className="calendar-provider-status">
+        <div><span>Kalender-Provider</span><strong>Nicht verbunden</strong></div>
+        <div><span>Terminquellen</span><strong>{quellenText}</strong></div>
+        <div><span>Externer Kalender</span><strong>iCalendar (.ics) Export</strong></div>
+      </div>
+      <p className="calendar-note">Eine gemeinsame Agenda aus den führenden CRM-Datensätzen. Ein Export erzeugt eine Kalenderdatei aus dem bestehenden CRM-Termin. Änderungen werden weiterhin im zugehörigen CRM-Datensatz vorgenommen; es entsteht kein zweiter synchroner Terminbestand.</p>
+      <div className="calendar-source-links">
+        {wege.map((weg) => <Link className="subtle-link" key={weg.pfad} to={weg.pfad}>{weg.beschriftung} öffnen</Link>)}
+      </div>
+    </details>
   </main>;
 }

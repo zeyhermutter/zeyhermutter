@@ -11,6 +11,7 @@ import { kategorie } from "~/lib/terminkategorien";
 import type { CalendarEvent } from "~/lib/termine";
 import "~/calendar.css";
 import "~/property-map.css";
+import "~/programm-liste.css";
 import "~/mein-tag.css";
 
 // Mein Tag -- die Startseite des Programms.
@@ -168,7 +169,7 @@ export default function MeinTag() {
           <h1>{tagLang(d.heute)}{fremd ? <span className="mein-tag-wessen"> · Tag von {fremd.name}</span> : null}</h1>
           <p>{zusammenfassung}</p>
         </div>
-        <nav className="mein-tag-umfang" aria-label="Umfang">
+        <nav className="programm-umfang" aria-label="Umfang">
           {[
             { schluessel: "meins", name: "Meins", pfad: "/crm" },
             ...d.kollegen.map((k) => ({ schluessel: k.id, name: k.name, pfad: `/crm?von=${encodeURIComponent(k.id)}` })),
@@ -188,7 +189,7 @@ export default function MeinTag() {
           dieser Reihenfolge. */}
       <div className="mein-tag-raster">
         <div className="mein-tag-spalte">
-          <Feld titel="Termine heute" anzahl={d.termineHeute.length} mehr={{ pfad: `/crm/calendar${d.ansicht === "meins" ? "" : "?scope=all"}`, beschriftung: "Kalender" }}
+          <Feld titel="Termine heute" anzahl={d.termineHeute.length} mehr={{ pfad: d.ansicht === "meins" ? "/crm/calendar" : `/crm/calendar?von=${encodeURIComponent(d.ansicht)}`, beschriftung: "Kalender" }}
             leer="Heute steht kein Termin an.">
             {d.termineHeute.map((e) => <Termin key={e.key} e={e} />)}
           </Feld>

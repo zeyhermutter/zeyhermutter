@@ -30,26 +30,6 @@
 
 .mein-tag-kopf p { margin: 4px 0 0; color: #3d4a56; font-size: 13px; }
 
-/* Meins / Alle -- zwei Knoepfe nebeneinander, wie ein Umschalter. */
-.mein-tag-umfang {
-  display: inline-flex;
-  border: 1px solid #c3cad1;
-  border-radius: var(--crm-field-radius);
-  overflow: hidden;
-}
-
-.mein-tag-umfang a {
-  padding: 6px 14px;
-  color: #3d4a56;
-  font-size: 13px;
-  text-decoration: none;
-  background: #ffffff;
-}
-
-.mein-tag-umfang a + a { border-left: 1px solid #c3cad1; }
-.mein-tag-umfang a:hover { background: #f3f6fa; color: #1b2733; }
-.mein-tag-umfang a.aktiv { background: #062037; color: #ffffff; font-weight: 600; }
-
 .mein-tag-hinweis { max-width: var(--crm-content-max); margin: 0 auto 12px; }
 
 .mein-tag-raster {

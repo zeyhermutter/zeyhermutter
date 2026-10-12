@@ -6,6 +6,7 @@ import { requireActiveUser } from "~/lib/auth.server";
 import { zeitpunkt as formatDate } from "~/lib/format";
 import { AUFGABENPRIORITAET as PRIORITY } from "~/lib/labels";
 import "~/inquiry.css";
+import "~/programm-liste.css";
 import { crmDateAtTimeToIso } from "~/lib/local-time";
 
 type ActionResult = { error?: string };
@@ -14,11 +15,20 @@ const STATUS: Record<string, string> = { OPEN: "Offen", IN_PROGRESS: "In Bearbei
 function text(fd: FormData, k: string) { return String(fd.get(k) ?? "").trim(); }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const { supabase, responseHeaders, profile } = await requireActiveUser(request, context.cloudflare.env);
+  const { supabase, responseHeaders, profile, userId } = await requireActiveUser(request, context.cloudflare.env);
   const url = new URL(request.url), status = url.searchParams.get("status") ?? "OPEN";
+  // Wessen Aufgaben: wie auf "Mein Tag" -- Meins, je Kollege ein Knopf, Alle.
+  // Eine unbekannte Kennung faellt auf Meins zurueck.
+  const von = url.searchParams.get("von") ?? "meins";
   let query = supabase.from("tasks").select("id,task_number,title,description,status,priority,due_at,contact_id,property_id,lead_id,inquiry_id,search_profile_id,viewing_id,responsible_user,created_by,version").is("archived_at", null).order("due_at", { ascending: true }).limit(200);
   if (status === "OPEN") query = query.in("status", ["OPEN", "IN_PROGRESS"]);
   else if (status !== "ALL") query = query.eq("status", status);
+  const { data: aktive } = await supabase.from("profiles").select("user_id,display_name").eq("status", "ACTIVE").order("display_name");
+  const kollegen = ((aktive ?? []) as { user_id: string; display_name: string | null }[])
+    .filter((p) => p.user_id !== userId)
+    .map((p) => ({ id: p.user_id, name: (p.display_name ?? "").trim().split(/\s+/)[0] || "Kollege" }));
+  const ansicht = von === "alle" ? "alle" : kollegen.some((k) => k.id === von) ? von : "meins";
+  if (ansicht !== "alle") query = query.eq("responsible_user", ansicht === "meins" ? userId : ansicht);
 
   const [{ data: tasks, error: taskError }, { data: contacts, error: contactError }, { data: profiles, error: profileError }, { data: properties, error: propertyError }, { data: leads, error: leadError }, { data: inquiries, error: inquiryError }, { data: searchProfiles, error: searchProfileError }, { data: viewings, error: viewingError }, { data: canWrite }] = await Promise.all([
     query,
@@ -41,14 +51,14 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   const map = (arr: any[], key: string) => Object.fromEntries(arr.map((x) => [x[key], x]));
   const group = (arr: any[], key: string) => arr.reduce((acc: Record<string, any[]>, item: any) => { (acc[item[key]] ??= []).push(item); return acc; }, {});
-  return data({ tasks: tasks ?? [], contacts: contacts ?? [], profiles: profiles ?? [], properties: properties ?? [], leads: leads ?? [], inquiries: inquiries ?? [], searchProfiles: searchProfiles ?? [], viewings: viewings ?? [], contactMap: map(contacts ?? [], "id"), profileMap: Object.fromEntries((profiles ?? []).map((x: any) => [x.user_id, x.display_name])), propertyMap: map(properties ?? [], "id"), leadMap: map(leads ?? [], "id"), inquiryMap: map(inquiries ?? [], "id"), searchProfileMap: map(searchProfiles ?? [], "id"), viewingMap: map(viewings ?? [], "id"), watchersByTask: group(watchers ?? [], "task_id"), commentsByTask: group(comments ?? [], "entity_id"), profile, status, canWrite: canWrite === true }, { headers: responseHeaders() });
+  return data({ tasks: tasks ?? [], contacts: contacts ?? [], profiles: profiles ?? [], properties: properties ?? [], leads: leads ?? [], inquiries: inquiries ?? [], searchProfiles: searchProfiles ?? [], viewings: viewings ?? [], contactMap: map(contacts ?? [], "id"), profileMap: Object.fromEntries((profiles ?? []).map((x: any) => [x.user_id, x.display_name])), propertyMap: map(properties ?? [], "id"), leadMap: map(leads ?? [], "id"), inquiryMap: map(inquiries ?? [], "id"), searchProfileMap: map(searchProfiles ?? [], "id"), viewingMap: map(viewings ?? [], "id"), watchersByTask: group(watchers ?? [], "task_id"), commentsByTask: group(comments ?? [], "entity_id"), profile, status, ansicht, kollegen, canWrite: canWrite === true }, { headers: responseHeaders() });
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
   const { supabase, responseHeaders, userId } = await requireActiveUser(request, context.cloudflare.env);
   const fd = await request.formData(), intent = text(fd, "_intent");
-  const currentStatus = new URL(request.url).searchParams.get("status") ?? "OPEN";
-  const back = `/crm/tasks?status=${encodeURIComponent(currentStatus)}`;
+  // Zurueck in dieselbe Ansicht: Status und Umfang (Meins/Kollege/Alle) bleiben.
+  const back = `/crm/tasks${new URL(request.url).search}`;
   async function validAssignee(candidate: string) {
     const target = candidate || userId;
     const { data: a } = await supabase.from("profiles").select("user_id").eq("user_id", target).eq("status", "ACTIVE").maybeSingle();
@@ -140,7 +150,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 }
 
 export default function Tasks() {
-  const { tasks, contacts, profiles, properties, leads, inquiries, searchProfiles, viewings, contactMap, profileMap, propertyMap, leadMap, inquiryMap, searchProfileMap, viewingMap, watchersByTask, commentsByTask, profile, status, canWrite } = useLoaderData<typeof loader>();
+  const { tasks, contacts, profiles, properties, leads, inquiries, searchProfiles, viewings, contactMap, profileMap, propertyMap, leadMap, inquiryMap, searchProfileMap, viewingMap, watchersByTask, commentsByTask, profile, status, ansicht, kollegen, canWrite } = useLoaderData<typeof loader>();
   const result = useActionData<typeof action>();
   const contactOptions = contacts.map((x: any) => ({ id: x.id, label: `${x.last_name}, ${x.first_name} · ${x.contact_number}` }));
   const leadOptions = leads.map((x: any) => ({ id: x.id, label: x.lead_number }));
@@ -149,22 +159,59 @@ export default function Tasks() {
   const inquiryOptions = inquiries.map((x: any) => ({ id: x.id, label: x.inquiry_number }));
   const viewingOptions = viewings.map((x: any) => ({ id: x.id, label: `${x.viewing_number} · ${formatDate(x.starts_at)}` }));
 
-  return <main className="editor-shell">
-    <header className="editor-header"><div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">CRM</p><h1 className="editor-title">Aufgaben & Wiedervorlagen</h1></div><div className="header-user"><span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div></header>
-    {result?.error ? <div className="form-error module04-content">{result.error}</div> : null}
-    <div className="tasks-page tasks-page-modal-layout module04-content">
+  const umfang = [
+    { schluessel: "meins", name: "Meins" },
+    ...kollegen.map((k: { id: string; name: string }) => ({ schluessel: k.id, name: k.name })),
+    { schluessel: "alle", name: "Alle" },
+  ];
+  const mitUmfang = (schluessel: string) => {
+    const p = new URLSearchParams();
+    if (status !== "OPEN") p.set("status", status);
+    if (schluessel !== "meins") p.set("von", schluessel);
+    const q = p.toString();
+    return q ? `/crm/tasks?${q}` : "/crm/tasks";
+  };
+
+  // Eine Programmliste wie die Kontaktliste (12.10.2026): oben die
+  // Werkzeugleiste, darunter eine Zeile je Aufgabe. Vorher eine Karte mit
+  // Unterzeilen, "ÜBERFÄLLIG" als Text und einem Zuordnen-Knopf je Aufgabe.
+  // Zuordnen geht jetzt direkt in der Spalte "Verantwortlich".
+  return <main className="editor-shell programm-liste">
+    {result?.error ? <div className="form-error">{result.error}</div> : null}
+    <div className="programm-liste-werkzeuge">
+      <nav className="programm-umfang" aria-label="Wessen Aufgaben">
+        {umfang.map((u) => <Link key={u.schluessel} className={ansicht === u.schluessel ? "aktiv" : ""} aria-current={ansicht === u.schluessel ? "page" : undefined} to={mitUmfang(u.schluessel)}>{u.name}</Link>)}
+      </nav>
+      <Form method="get">
+        {ansicht !== "meins" ? <input type="hidden" name="von" value={ansicht}/> : null}
+        <label><span className="sr-only">Status</span><select name="status" defaultValue={status} onChange={(e) => e.currentTarget.form?.requestSubmit()}><option value="OPEN">Offen</option><option value="ALL">Alle</option><option value="DONE">Erledigt</option><option value="CANCELLED">Abgebrochen</option></select></label>
+      </Form>
+      <span className="programm-liste-zaehler">{tasks.length} {tasks.length === 1 ? "Aufgabe" : "Aufgaben"}</span>
       {canWrite?<TaskCreateModal profiles={profiles} currentUserId={profile.user_id} contacts={contactOptions} leads={leadOptions} properties={propertyOptions} searchProfiles={searchProfileOptions} inquiries={inquiryOptions} viewings={viewingOptions}/>:null}
-      <section className="data-card"><div className="card-head"><div><p className="eyebrow">Wiedervorlagen</p><h2>Aufgaben</h2></div><Form method="get"><select name="status" defaultValue={status} onChange={(e) => e.currentTarget.form?.submit()}><option value="OPEN">Offen</option><option value="ALL">Alle</option><option value="DONE">Erledigt</option><option value="CANCELLED">Abgebrochen</option></select></Form></div><div className="data-list">
+    </div>
+    <div className="programm-tabelle-rahmen">
+      {tasks.length === 0 ? <p className="programm-liste-leer">Keine Aufgaben in dieser Ansicht.</p> : <table className="programm-tabelle aufgaben-tabelle">
+        <thead><tr><th>Fällig</th><th>Aufgabe</th><th>Bezug</th><th>Verantwortlich</th><th>Priorität</th><th>Status</th><th><span className="sr-only">Öffnen</span></th></tr></thead>
+        <tbody>
         {tasks.map((task: any) => {
           const contact = task.contact_id ? contactMap[task.contact_id] : null, property = task.property_id ? propertyMap[task.property_id] : null, lead = task.lead_id ? leadMap[task.lead_id] : null, inquiry = task.inquiry_id ? inquiryMap[task.inquiry_id] : null, sp = task.search_profile_id ? searchProfileMap[task.search_profile_id] : null, viewing = task.viewing_id ? viewingMap[task.viewing_id] : null;
           const overdue = ["OPEN", "IN_PROGRESS"].includes(task.status) && task.due_at && new Date(task.due_at).getTime() < Date.now();
           const contextLabel = viewing ? `Besichtigung · ${viewing.viewing_number}${inquiry ? ` · ${inquiry.inquiry_number}` : ""}${property ? ` · ${property.property_number} / ${property.internal_title}` : ""}` : inquiry ? `Anfrage · ${inquiry.inquiry_number}${property ? ` · ${property.property_number} / ${property.internal_title}` : ""}` : sp ? `Suchprofil · ${sp.search_profile_number} · ${sp.title}` : lead ? `Lead · ${lead.lead_number}` : property ? `Immobilie · ${property.property_number} / ${property.internal_title}` : contact ? `Kontakt · ${contact.contact_number} · ${contact.first_name} ${contact.last_name}` : "Allgemeine Aufgabe";
           const contextHref = viewing ? `/viewings/${viewing.id}` : inquiry ? `/inquiries/${inquiry.id}` : sp ? `/search-profiles/${sp.id}` : lead ? `/leads/${lead.id}` : property ? `/properties/${property.id}` : contact ? `/crm/contacts/${contact.id}` : undefined;
           const watchers = watchersByTask[task.id] ?? [], comments = commentsByTask[task.id] ?? [];
-          return <div className="data-row task-list-row" key={task.id}><div><div className="task-list-title"><strong>{task.title}</strong><span className={`task-status-badge status-${String(task.status).toLowerCase()}`}>{STATUS[task.status] ?? task.status}</span>{watchers.length?<span className="task-watcher-count">{watchers.length} Beobachter</span>:null}</div><small>{task.task_number} · {PRIORITY[task.priority] ?? task.priority} · {overdue ? "ÜBERFÄLLIG · " : ""}fällig {formatDate(task.due_at)} · verantwortlich: {task.responsible_user ? (profileMap[task.responsible_user] ?? "Benutzer") : "—"}</small><small className="task-context-label">{contextLabel}</small></div><div className="task-list-actions"><TaskModal task={task} responsibleName={task.responsible_user ? (profileMap[task.responsible_user] ?? "Benutzer") : "—"} contextLabel={contextLabel} contextHref={contextHref} canWrite={canWrite} profiles={profiles} watchers={watchers} comments={comments} profileMap={profileMap}/>{canWrite?<Form method="post" className="inline-actions"><input type="hidden" name="task_id" value={task.id}/><input type="hidden" name="version" value={task.version}/><select name="responsible_user" defaultValue={task.responsible_user ?? ""}>{profiles.map((x: any) => <option key={x.user_id} value={x.user_id}>{x.display_name}</option>)}</select><button className="text-button" name="_intent" value="assign" type="submit">Zuordnen</button></Form>:null}</div></div>;
+          const verantwortlich = task.responsible_user ? (profileMap[task.responsible_user] ?? "Benutzer") : "—";
+          return <tr key={task.id} className={overdue ? "ueberfaellig" : undefined}>
+            <td className="zahl">{task.due_at ? formatDate(task.due_at) : "—"}</td>
+            <td><strong>{task.title}</strong><div className="leise">{task.task_number}{watchers.length ? ` · ${watchers.length} Beobachter` : ""}{comments.length ? ` · ${comments.length} Kommentare` : ""}</div></td>
+            <td>{contextHref ? <Link to={contextHref}>{contextLabel}</Link> : <span className="leise">{contextLabel}</span>}</td>
+            <td>{canWrite ? <Form method="post"><input type="hidden" name="_intent" value="assign"/><input type="hidden" name="task_id" value={task.id}/><input type="hidden" name="version" value={task.version}/><label><span className="sr-only">Verantwortlich für {task.title}</span><select name="responsible_user" defaultValue={task.responsible_user ?? ""} onChange={(e) => e.currentTarget.form?.requestSubmit()}>{profiles.map((x: any) => <option key={x.user_id} value={x.user_id}>{x.display_name}</option>)}</select></label></Form> : verantwortlich}</td>
+            <td>{PRIORITY[task.priority] ?? task.priority}</td>
+            <td><span className={`task-status-badge status-${String(task.status).toLowerCase()}`}>{STATUS[task.status] ?? task.status}</span></td>
+            <td className="rechts"><TaskModal task={task} responsibleName={verantwortlich} contextLabel={contextLabel} contextHref={contextHref} canWrite={canWrite} profiles={profiles} watchers={watchers} comments={comments} profileMap={profileMap}/></td>
+          </tr>;
         })}
-        {tasks.length === 0 ? <p className="empty-state">Keine Aufgaben in dieser Ansicht.</p> : null}
-      </div></section>
+        </tbody>
+      </table>}
     </div>
   </main>;
 }
