@@ -6,10 +6,8 @@ import { createSupabaseServerClient } from "~/lib/supabase.server";
 import { CrmFormGuardrails } from "~/components/crm-form-guardrails";
 import { HelpEntry } from "~/components/help-entry";
 import { LiveListFilters } from "~/components/live-list-filters";
-import { PersistentNavigation } from "~/components/persistent-navigation";
+import { Programmrahmen } from "~/components/programmrahmen";
 import { RecordSectionNavigation } from "~/components/record-section-navigation";
-import { PropertyContextNavigation } from "~/components/property-context-navigation";
-import { objektakteAusPfad } from "~/lib/objektakte-navigation";
 import { ViewingDetailEnhancements } from "~/components/viewing-detail-enhancements";
 import { ViewingReplanModal } from "~/components/viewing-replan-modal";
 import "~/crm-form-guardrails.css";
@@ -30,38 +28,27 @@ const NAV_STACK_KEY = "zm_internal_navigation_stack";
 //
 // Der Loader wirft bewusst nicht: er haengt an jeder internen Seite, und eine
 // nicht ladbare Glocke darf keine Akte unerreichbar machen. Faellt die Abfrage
-// aus, liefert er null; der Seitenstreifen zeigt dann den einfachen Link ohne
+// aus, liefert er null; die Titelleiste zeigt dann den einfachen Link ohne
 // Zaehler. Die Anmeldung selbst pruefen weiterhin die einzelnen Seiten.
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { supabase } = createSupabaseServerClient(request, context.cloudflare.env);
   const { data: claims } = await supabase.auth.getClaims();
-  if (!claims?.claims?.sub) return { notifications: null, unreadCount: 0, immobilienStatus: null };
+  if (!claims?.claims?.sub) return { notifications: null, unreadCount: 0, benutzer: null };
 
-  const [{ count, error: countError }, { data: rows, error: rowError }] = await Promise.all([
+  const [{ count, error: countError }, { data: rows, error: rowError }, { data: profil }] = await Promise.all([
     supabase.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null),
     supabase.from("notifications").select("id,type,title,message,entity_type,entity_id,created_at,read_at").order("created_at", { ascending: false }).limit(8),
+    // Der Name fuer die Titelleiste. Faellt die Abfrage aus, steht dort
+    // kein Name -- die Seite selbst bleibt erreichbar.
+    supabase.from("profiles").select("display_name").eq("user_id", claims.claims.sub).maybeSingle(),
   ]);
-  if (countError || rowError) return { notifications: null, unreadCount: 0, immobilienStatus: null };
-
-  // Der Status der Immobilie, aber nur auf einer Objektakte. Die Leiste
-  // darueber faltet danach; ohne Status faltet sie nicht, und das ist die
-  // richtige Vorgabe -- lieber eine volle Leiste als eine, die den gesuchten
-  // Abschnitt grundlos wegraeumt.
-  //
-  // Eine Abfrage auf den Primaerschluessel, und nur auf Objektseiten. Faellt
-  // sie aus, bleibt der Status null; die Leiste zeigt dann alles.
-  const akte = objektakteAusPfad(new URL(request.url).pathname);
-  let immobilienStatus: string | null = null;
-  if (akte) {
-    const { data: immobilie } = await supabase
-      .from("properties").select("status").eq("id", akte.propertyId).maybeSingle();
-    immobilienStatus = (immobilie?.status as string | undefined) ?? null;
-  }
+  const benutzer = (profil?.display_name as string | undefined) ?? null;
+  if (countError || rowError) return { notifications: null, unreadCount: 0, benutzer };
 
   return {
     notifications: (rows ?? []) as HeaderNotification[],
     unreadCount: count ?? 0,
-    immobilienStatus,
+    benutzer,
   };
 }
 
@@ -137,20 +124,20 @@ function SalesReadinessLeadEntryEnhancer() {
 
 export default function InternalLayout({ loaderData }: Route.ComponentProps) {
   return (
-    <div className="persistent-app-frame">
+    <Programmrahmen
+      notifications={loaderData?.notifications ?? undefined}
+      unreadCount={loaderData?.unreadCount ?? 0}
+      benutzer={loaderData?.benutzer ?? null}
+    >
       <CrmFormGuardrails />
       <SmartBackNavigation />
       <ViewingDetailEnhancements />
       <ViewingReplanModal />
       <SalesReadinessLeadEntryEnhancer />
-      <PersistentNavigation notifications={loaderData?.notifications ?? undefined} unreadCount={loaderData?.unreadCount ?? 0} />
-      <div className="persistent-app-main">
-        <LiveListFilters />
-        <PropertyContextNavigation immobilienStatus={loaderData?.immobilienStatus ?? null} />
-        <RecordSectionNavigation />
-        <HelpEntry />
-        <Outlet />
-      </div>
-    </div>
+      <LiveListFilters />
+      <RecordSectionNavigation />
+      <HelpEntry />
+      <Outlet />
+    </Programmrahmen>
   );
 }

@@ -1,0 +1,346 @@
+/*
+ * Der Programmrahmen -- Titelleiste, Modulleiste, Bereichsleiste, Statusleiste.
+ *
+ * Er ersetzt app/persistent-navigation.css. Gescrollt wird weiterhin das
+ * Dokument, nicht ein Fenster im Fenster: so bleiben Sprungmarken
+ * (#fahrplan), die Scrollposition beim Zurueckgehen und alles, was eine Seite
+ * am Bildschirm festmacht, wie es war. Titel-, Modul- und Bereichsleiste
+ * kleben mit position: sticky am Rand und wandern deshalb nicht mit.
+ *
+ * Farben: Navy #062037 und Gold #C09A5B aus dem Auftritt der Website. Gold
+ * nur auf Navy -- auf hellem Grund ist es nicht lesbar (2,47:1).
+ */
+
+.persistent-app-frame.programmrahmen {
+  --rahmen-titel-hoehe: 44px;
+  --rahmen-modul-breite: 84px;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: var(--rahmen-modul-breite) minmax(0, 1fr);
+  grid-template-rows: var(--rahmen-titel-hoehe) minmax(0, 1fr);
+  background: #eef2f1;
+}
+
+/* --- Titelleiste ---------------------------------------------------------- */
+
+.titelleiste {
+  grid-column: 1 / -1;
+  position: sticky;
+  top: 0;
+  z-index: 130;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  height: var(--rahmen-titel-hoehe);
+  padding: 0 14px;
+  background: #062037;
+  color: #ffffff;
+}
+
+.titelleiste-marke {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: .01em;
+  white-space: nowrap;
+}
+
+.titelleiste-zeichen {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1.5px solid #c09a5b;
+  border-radius: 4px;
+  color: #c09a5b;
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.titelleiste-suche {
+  flex: 0 1 380px;
+  min-width: 0;
+  margin: 0 0 0 auto;
+}
+
+.titelleiste-suche label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid #2a4763;
+  border-radius: 4px;
+  background: #102d47;
+  color: #9fb2c6;
+}
+
+.titelleiste-suche input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: #ffffff;
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.titelleiste-suche input::placeholder { color: #9fb2c6; }
+.titelleiste-suche label:focus-within { border-color: #9fb2c6; }
+
+.titelleiste-rechts {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.titelleiste-rechts form { margin: 0; }
+
+.titelleiste-umgebung {
+  padding: var(--crm-pill-padding-sm);
+  border: 1px solid #c09a5b;
+  border-radius: var(--crm-pill-radius);
+  line-height: 1;
+  color: #c09a5b;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.titelleiste-benutzer {
+  color: #dce3ea;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.titelleiste-abmelden,
+.titelleiste-glocke {
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  background: transparent;
+  color: #dce3ea;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 2px;
+}
+
+.titelleiste-abmelden:hover,
+.titelleiste-glocke:hover { color: #ffffff; }
+
+/*
+ * Glocke und Suchfeld stehen auf Navy. crm-light-theme.css und
+ * crm-light-theme-fixes.css faerben beides fuer hellen Grund ein -- mit
+ * !important und unter .persistent-app-frame. Die Regeln hier sind je eine
+ * Stufe genauer und gewinnen deshalb; gemessen am 12.10.2026, vorher stand
+ * im Navy ein weisses Eingabefeld und ein weisser Kasten um die Glocke.
+ */
+.persistent-app-frame .titelleiste .notification-bell-trigger,
+.persistent-app-frame .titelleiste .notification-bell-trigger:hover,
+.persistent-app-frame .titelleiste .notification-bell[open] .notification-bell-trigger {
+  background: transparent !important;
+  border-color: transparent !important;
+  color: #dce3ea !important;
+}
+.persistent-app-frame .titelleiste .notification-bell-trigger:hover { color: #ffffff !important; }
+.persistent-app-frame .titelleiste .notification-bell-count { border-color: #062037 !important; }
+
+.persistent-app-frame .titelleiste-suche input:not([type="checkbox"]):not([type="radio"]),
+.persistent-app-frame .titelleiste-suche input:not([type="checkbox"]):not([type="radio"]):hover,
+.persistent-app-frame .titelleiste-suche input:not([type="checkbox"]):not([type="radio"]):focus {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #ffffff !important;
+  caret-color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+.persistent-app-frame .titelleiste-suche input::placeholder {
+  color: #9fb2c6 !important;
+  -webkit-text-fill-color: #9fb2c6 !important;
+}
+
+/* --- Modulleiste ---------------------------------------------------------- */
+
+.modulleiste {
+  grid-column: 1;
+  grid-row: 2;
+  position: sticky;
+  top: var(--rahmen-titel-hoehe);
+  height: calc(100vh - var(--rahmen-titel-hoehe));
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 6px;
+  border-right: 1px solid #cdd3d9;
+  background: #f4f6f8;
+  overflow-y: auto;
+}
+
+.modulleiste-eintrag {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 9px 2px 8px;
+  border-radius: 5px;
+  color: #2e3b47;
+  font-size: 11px;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+}
+
+.modulleiste-eintrag:hover { background: #dde2e7; color: #1b2733; }
+
+.modulleiste-eintrag.aktiv {
+  background: #062037;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.modulleiste-trenner { flex: 1 1 auto; min-height: 12px; }
+
+/* --- Arbeitsflaeche mit Bereichs- und Statusleiste ------------------------ */
+
+.programm-arbeitsflaeche {
+  grid-column: 2;
+  grid-row: 2;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.bereichsleiste {
+  position: sticky;
+  top: var(--rahmen-titel-hoehe);
+  z-index: 110;
+  box-sizing: border-box;
+  height: 41px; /* 40 + Rahmen. immobilien-arbeitsplatz.css rechnet damit. */
+  display: flex;
+  align-items: stretch;
+  gap: 18px;
+  padding: 0 18px;
+  border-bottom: 1px solid #cdd3d9;
+  background: #ffffff;
+}
+
+.bereichsleiste-titel {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1b2733;
+  white-space: nowrap;
+}
+
+.bereichsleiste-reiter {
+  display: flex;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.bereichsleiste-eintrag {
+  display: flex;
+  align-items: center;
+  padding: 2px 13px 0;
+  border-bottom: 2px solid transparent;
+  color: #3d4a56;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.bereichsleiste-eintrag:hover { background: #f3f6fa; color: #1b2733; }
+
+.bereichsleiste-eintrag.aktiv {
+  border-bottom-color: #062037;
+  color: #062037;
+  font-weight: 600;
+}
+
+.programm-arbeitsflaeche > .persistent-app-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.statusleiste {
+  position: sticky;
+  bottom: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-height: 26px;
+  padding: 0 14px;
+  border-top: 1px solid #cdd3d9;
+  background: #dde2e7;
+  color: #2e3b47;
+  font-size: 12px;
+}
+
+.statusleiste-rechts { margin-left: auto; }
+
+/* Die CRM-Uebersicht bringt aus ihrer Anfangszeit eine eigene Seitenleiste
+ * mit. Der Rahmen ersetzt sie, sie bleibt verborgen -- uebernommen aus dem
+ * alten app/persistent-navigation.css. */
+.persistent-app-frame .app-shell { display: block; min-height: 0; }
+.persistent-app-frame .app-shell > .sidebar { display: none; }
+
+/* Der einmalige Lead->Objekt-Hinweis haengt am body und richtete sich nach
+ * dem alten 236 px breiten Seitenstreifen. */
+body > [aria-label="Nächste Schritte nach Lead-Übernahme"] {
+  width: min(var(--crm-content-max), calc(100% - 84px - 72px));
+  margin-left: calc(84px + 36px);
+  margin-right: 36px;
+}
+
+/* --- Schmale Bildschirme -------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .persistent-app-frame.programmrahmen {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .titelleiste { gap: 10px; }
+  .titelleiste-marke > span:last-child,
+  .titelleiste-benutzer { display: none; }
+  .titelleiste-suche { flex: 1 1 auto; }
+
+  .modulleiste {
+    position: static;
+    height: auto;
+    flex-direction: row;
+    gap: 2px;
+    padding: 6px;
+    border-right: 0;
+    border-bottom: 1px solid #cdd3d9;
+    overflow-x: auto;
+  }
+
+  .modulleiste-eintrag { flex: 0 0 76px; }
+  .modulleiste-trenner { flex: 0 0 8px; min-height: 0; }
+
+  .bereichsleiste { position: static; padding: 0 10px; }
+  .bereichsleiste-titel { display: none; }
+
+  body > [aria-label="Nächste Schritte nach Lead-Übernahme"] {
+    width: calc(100% - 32px);
+    margin: 16px;
+  }
+}
+
+@media (max-width: 520px) {
+  .titelleiste-umgebung { display: none; }
+}
