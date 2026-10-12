@@ -1,0 +1,119 @@
+/*
+ * Der Fahrplan der Objektakte -- nur Anordnung und Abstand.
+ *
+ * Farben stehen hier bewusst keine. Die Zeilen sind .data-row, die Stände
+ * sind .status-pill, die Wege sind .subtle-link und .secondary-button: die
+ * Bausteine, die im ganzen CRM dieselben sind. Eine Karte, die sich ihre
+ * Farben selbst ausdenkt, ist der Anfang eines zweiten Erscheinungsbildes --
+ * und die Abstände haben wir am 08.10.2026 gerade erst vereinheitlicht.
+ *
+ * Alle Abstände kommen aus den Merkmalen in app/styles.css;
+ * scripts/check-abstaende.mjs hält das zu.
+ */
+
+.fahrplan-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/*
+ * Drei Spalten: Sache, Stand, Weg. Der Stand steht in der Mitte und nicht
+ * rechts, damit die Augen beim Überfliegen eine feste Spur haben -- rechts
+ * sind die Knöpfe unterschiedlich breit.
+ */
+.fahrplan-halt {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(120px, auto) minmax(150px, auto);
+  gap: 16px;
+  align-items: center;
+}
+
+.fahrplan-sache {
+  min-width: 0;
+}
+
+.fahrplan-titel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.fahrplan-sache small {
+  display: block;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
+.fahrplan-stand {
+  justify-content: flex-start;
+}
+
+.fahrplan-wege {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Die Station, die dran ist, trägt links eine Kante statt einer Farbfläche. */
+.fahrplan-halt.fahrplan-dran {
+  border-left: 3px solid currentColor;
+  padding-left: 11px;
+}
+
+.fahrplan-dran-marke {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--crm-pill-padding-sm);
+  border: 1px solid currentColor;
+  border-radius: var(--crm-pill-radius);
+  font-size: var(--crm-pill-font-sm);
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+/*
+ * Der nächste Schritt als eigene Zeile über der Liste: die eine Auskunft,
+ * für die man sonst die ganze Liste liest.
+ */
+.fahrplan-naechster {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 0 14px;
+  padding: var(--crm-card-padding-sm);
+  border: 1px solid currentColor;
+  border-radius: var(--crm-card-radius-sm);
+}
+
+.fahrplan-naechster span {
+  font-size: var(--crm-pill-font-sm);
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.fahrplan-naechster strong {
+  font-size: 17px;
+}
+
+.fahrplan-naechster small {
+  flex: 1 1 260px;
+  line-height: 1.45;
+}
+
+@media (max-width: 900px) {
+  .fahrplan-halt {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .fahrplan-wege {
+    justify-content: flex-start;
+  }
+}
