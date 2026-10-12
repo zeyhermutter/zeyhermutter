@@ -43,11 +43,16 @@ export default [
     route("crm/training", "routes/training.tsx"),
     route("crm/archive", "routes/crm-archive.tsx"),
     route("crm/hilfe", "routes/help.tsx"),
+    route("crm/contacts", "routes/contacts.tsx"),
     route("crm/contacts/new", "routes/contact-new.tsx"),
-    route("crm/contacts/:contactId", "routes/contact-detail.tsx"),
-    route("crm/contacts/:contactId/relations", "routes/contact-relations.tsx"),
-    route("crm/contacts/:contactId/associations", "routes/contact-associations.tsx"),
-    route("crm/contacts/:contactId/collaboration", "routes/contact-collaboration.tsx"),
+    // Der Arbeitsplatz: Kontaktliste links, Kontaktakte rechts. Ohne eigenen
+    // Pfad -- keine Adresse aendert sich.
+    layout("routes/kontakt-arbeitsplatz.tsx", [
+      route("crm/contacts/:contactId", "routes/contact-detail.tsx"),
+      route("crm/contacts/:contactId/relations", "routes/contact-relations.tsx"),
+      route("crm/contacts/:contactId/associations", "routes/contact-associations.tsx"),
+      route("crm/contacts/:contactId/collaboration", "routes/contact-collaboration.tsx"),
+    ]),
     route("crm/organizations", "routes/organizations.tsx"),
     route("crm/organizations/:organizationId", "routes/organization-detail.tsx"),
     route("crm/organizations/:organizationId/partner", "routes/organization-partner.tsx"),

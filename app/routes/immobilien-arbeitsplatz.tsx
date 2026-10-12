@@ -1,11 +1,11 @@
-import { useMemo, useState } from "react";
-import { data, Link, Outlet, useLoaderData, useParams } from "react-router";
+import { data, Outlet, useLoaderData, useParams } from "react-router";
 import type { Route } from "./+types/immobilien-arbeitsplatz";
 import { requirePermission } from "~/lib/auth.server";
 import { euroRund } from "~/lib/format";
 import { IMMOBILIENSTATUS, beschrifte } from "~/lib/labels";
 import { IMMOBILIENARTEN } from "~/lib/public-intake";
 import { PropertyContextNavigation } from "~/components/property-context-navigation";
+import { Arbeitsplatz, ArbeitsplatzKopf, type ArbeitsplatzZeile } from "~/components/arbeitsplatz";
 import "~/immobilien-arbeitsplatz.css";
 
 // Der Arbeitsplatz einer Objektakte: links die Objektliste, rechts die Akte.
@@ -102,88 +102,44 @@ function statusKlasse(status: string) {
 export default function ImmobilienArbeitsplatz() {
   const { zeilen, listeFehlt, abgeschnitten, akte } = useLoaderData<typeof loader>();
   const { propertyId } = useParams();
-  const [suche, setSuche] = useState("");
 
-  const sichtbar = useMemo(() => {
-    const nadel = suche.trim().toLocaleLowerCase("de-DE");
-    if (!nadel) return zeilen;
-    return zeilen.filter((z) => [z.nummer, z.titel, z.ort].filter(Boolean).join(" ").toLocaleLowerCase("de-DE").includes(nadel));
-  }, [zeilen, suche]);
-
-  // Die geoeffnete Akte steht in der Liste, auch wenn sie archiviert oder
-  // jenseits der 300 ist -- sonst waere nicht zu sehen, welche offen ist.
-  const geoeffnetFehlt = akte && !zeilen.some((z) => z.id === akte.id);
+  const alsZeile = (z: { id: string; nummer: string; titel: string; status: string; ort: string | null; preis?: string | null }): ArbeitsplatzZeile => ({
+    id: z.id,
+    pfad: `/properties/${z.id}`,
+    nummer: z.nummer,
+    titel: z.titel,
+    suchtext: [z.nummer, z.titel, z.ort].filter(Boolean).join(" "),
+    unterzeile: <>
+      <span className={statusKlasse(z.status)}>{beschrifte(IMMOBILIENSTATUS, z.status)}</span>
+      <span>{z.ort ?? "Ort offen"}</span>
+      {z.preis ? <span className="arbeitsplatz-zeile-preis">{z.preis}</span> : null}
+    </>,
+  });
 
   return (
-    <div className="arbeitsplatz">
-      <aside className="arbeitsplatz-liste" aria-label="Objektliste">
-        <div className="arbeitsplatz-liste-kopf">
-          <label className="arbeitsplatz-suche">
-            <span className="sr-only">Objekte filtern</span>
-            <input
-              type="search"
-              value={suche}
-              onChange={(e) => setSuche(e.currentTarget.value)}
-              placeholder="Nummer, Titel, Ort …"
-              autoComplete="off"
-            />
-          </label>
-          <Link className="arbeitsplatz-neu" to="/properties/new">+ Neu</Link>
-        </div>
-
-        <div className="arbeitsplatz-zeilen">
-          {listeFehlt ? <p className="arbeitsplatz-hinweis">Die Objektliste konnte nicht geladen werden. Die Akte rechts ist davon nicht betroffen.</p> : null}
-          {geoeffnetFehlt && akte ? (
-            <Link className="arbeitsplatz-zeile aktiv" to={`/properties/${akte.id}`} aria-current="page">
-              <span className="arbeitsplatz-zeile-nummer">{akte.nummer}</span>
-              <strong>{akte.titel}</strong>
-              <small>{akte.ort ?? "Ort offen"} · nicht in der Liste</small>
-            </Link>
-          ) : null}
-          {sichtbar.map((z) => {
-            const aktiv = z.id === propertyId;
-            return (
-              <Link
-                key={z.id}
-                className={`arbeitsplatz-zeile${aktiv ? " aktiv" : ""}`}
-                to={`/properties/${z.id}`}
-                aria-current={aktiv ? "page" : undefined}
-              >
-                <span className="arbeitsplatz-zeile-nummer">{z.nummer}</span>
-                <strong>{z.titel}</strong>
-                <small>
-                  <span className={statusKlasse(z.status)}>{beschrifte(IMMOBILIENSTATUS, z.status)}</span>
-                  <span>{z.ort ?? "Ort offen"}</span>
-                  {z.preis ? <span className="arbeitsplatz-zeile-preis">{z.preis}</span> : null}
-                </small>
-              </Link>
-            );
-          })}
-          {sichtbar.length === 0 && !listeFehlt ? <p className="arbeitsplatz-hinweis">Kein Objekt passt zu „{suche}“.</p> : null}
-        </div>
-
-        <div className="arbeitsplatz-liste-fuss">
-          {sichtbar.length === zeilen.length ? `${zeilen.length} Objekte` : `${sichtbar.length} von ${zeilen.length} Objekten`}
-          {abgeschnitten ? " · die zuletzt bearbeiteten 300" : ""}
-          {" · "}
-          <Link to="/properties">Volle Liste</Link>
-        </div>
-      </aside>
-
-      <section className="arbeitsplatz-akte" aria-label="Geöffnete Objektakte">
-        {akte ? (
-          <div className="arbeitsplatz-kopf">
-            <span className="arbeitsplatz-kopf-nummer">{akte.nummer}</span>
-            <span className={statusKlasse(akte.status)}>{beschrifte(IMMOBILIENSTATUS, akte.status)}</span>
-            <strong className="arbeitsplatz-kopf-titel">{akte.titel}</strong>
-            <span className="arbeitsplatz-kopf-ort">{[akte.art, akte.ort].filter(Boolean).join(" · ")}</span>
-          </div>
-        ) : null}
-        <PropertyContextNavigation immobilienStatus={akte?.status ?? null} />
-        <div className="arbeitsplatz-inhalt">
-          <Outlet />
-        </div>
-      </section>
-    </div>
+    <Arbeitsplatz
+      listenName="Objektliste"
+      einzahl="Objekt"
+      mehrzahl="Objekte"
+      zeilen={zeilen.map(alsZeile)}
+      aktiveId={propertyId}
+      geoeffnet={akte ? alsZeile({ ...akte, preis: null }) : null}
+      suchePlatzhalter="Nummer, Titel, Ort …"
+      neu={{ pfad: "/properties/new", beschriftung: "+ Neu" }}
+      volleListe="/properties"
+      listeFehlt={listeFehlt}
+      abgeschnitten={abgeschnitten ? "die zuletzt bearbeiteten 300" : null}
+      kopf={akte ? (
+        <ArbeitsplatzKopf
+          nummer={akte.nummer}
+          status={<span className={statusKlasse(akte.status)}>{beschrifte(IMMOBILIENSTATUS, akte.status)}</span>}
+          titel={akte.titel}
+          kontext={[akte.art, akte.ort].filter(Boolean).join(" · ")}
+        />
+      ) : null}
+      reiter={<PropertyContextNavigation immobilienStatus={akte?.status ?? null} />}
+    >
+      <Outlet />
+    </Arbeitsplatz>
   );
 }

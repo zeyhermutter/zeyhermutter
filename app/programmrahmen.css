@@ -344,3 +344,8 @@ body > [aria-label="Nächste Schritte nach Lead-Übernahme"] {
 @media (max-width: 520px) {
   .titelleiste-umgebung { display: none; }
 }
+
+/* Eine Kennzahl, die auf ihre Liste fuehrt (Uebersicht: "Kontakte" -> die
+ * Kontaktliste). Sie bleibt optisch eine Kachel, nur anklickbar. */
+a.metric-card { display: block; color: inherit; text-decoration: none; }
+a.metric-card:hover { border-color: #9fb2c6 !important; }

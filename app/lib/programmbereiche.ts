@@ -61,16 +61,16 @@ export const BEREICHE: Bereich[] = [
   {
     schluessel: "adressen",
     beschriftung: "Adressen",
-    start: "/leads",
+    start: "/crm/contacts",
     unterpunkte: [
+      // Seit dem 12.10.2026 mit eigener Liste. Vorher standen Kontakte nur
+      // auf der Uebersicht, die 25 zuletzt geaenderten.
+      { beschriftung: "Kontakte", pfad: "/crm/contacts" },
       { beschriftung: "Verkäufer-Leads", pfad: "/leads" },
       { beschriftung: "Verkaufsstrategie-Check", pfad: "/crm/sales-readiness" },
       { beschriftung: "Suchprofile", pfad: "/search-profiles" },
       { beschriftung: "Organisationen", pfad: "/crm/organizations" },
     ],
-    // Eine eigene Kontaktliste gibt es noch nicht; die Kontakte stehen auf der
-    // Uebersicht. Ihre Akten gehoeren trotzdem hierher.
-    weitere: ["/crm/contacts"],
   },
   {
     schluessel: "immobilien",
