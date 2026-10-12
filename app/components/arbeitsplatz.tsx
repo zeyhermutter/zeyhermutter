@@ -32,22 +32,71 @@ export type ArbeitsplatzReiterEintrag = {
   pfad: string;
   /** Nur genau dieser Pfad ist aktiv -- fuer den Stammreiter, der sonst alle Unterseiten fraesse. */
   genau?: boolean;
+  /**
+   * Die Seiten unter diesem Reiter. Ist einer davon offen, ist der Reiter
+   * aktiv, und sie stehen in einer zweiten, kleineren Zeile darunter.
+   * Fuer Akten mit vielen Seiten (die Objektakte): neun Reiter statt
+   * vierzehn Abschnitten nebeneinander.
+   */
+  unter?: ArbeitsplatzUnterEintrag[];
 };
+
+export type ArbeitsplatzUnterEintrag = {
+  beschriftung: string;
+  pfad: string;
+  genau?: boolean;
+  /** Fuehrt aus der Akte hinaus (eine andere Akte, gefiltert). Traegt einen Pfeil, ist nie aktiv. */
+  hinaus?: boolean;
+};
+
+function passt(pathname: string, pfad: string, genau?: boolean) {
+  const ohneAbfrage = pfad.split("?")[0];
+  return genau
+    ? pathname === ohneAbfrage || pathname === `${ohneAbfrage}/`
+    : pathname === ohneAbfrage || pathname.startsWith(`${ohneAbfrage}/`);
+}
 
 /** Reiter fuer einen Datensatz, dessen Unterseiten feste Adressen haben. */
 export function ArbeitsplatzReiter({ eintraege, beschriftung }: { eintraege: ArbeitsplatzReiterEintrag[]; beschriftung: string }) {
   const { pathname } = useLocation();
+  const istAktiv = (e: ArbeitsplatzReiterEintrag) => e.unter
+    ? e.unter.some((u) => !u.hinaus && passt(pathname, u.pfad, u.genau))
+    : passt(pathname, e.pfad, e.genau);
+  const aktiver = eintraege.find(istAktiv);
+  const unterzeile = aktiver?.unter && (aktiver.unter.length > 1 || aktiver.unter.some((u) => u.hinaus)) ? aktiver.unter : null;
+
   return (
-    <nav className="arbeitsplatz-reiter" aria-label={beschriftung}>
-      {eintraege.map((e) => {
-        const aktiv = e.genau ? pathname === e.pfad || pathname === `${e.pfad}/` : pathname === e.pfad || pathname.startsWith(`${e.pfad}/`);
-        return (
-          <Link key={e.pfad} to={e.pfad} className={`arbeitsplatz-reiter-eintrag${aktiv ? " aktiv" : ""}`} aria-current={aktiv ? "page" : undefined}>
-            {e.beschriftung}
-          </Link>
-        );
-      })}
-    </nav>
+    <>
+      <nav className="arbeitsplatz-reiter" aria-label={beschriftung}>
+        {eintraege.map((e) => {
+          const aktiv = e === aktiver;
+          return (
+            <Link key={e.pfad} to={e.pfad} className={`arbeitsplatz-reiter-eintrag${aktiv ? " aktiv" : ""}`} aria-current={aktiv ? "page" : undefined}>
+              {e.beschriftung}
+            </Link>
+          );
+        })}
+      </nav>
+      {unterzeile ? (
+        <nav className="arbeitsplatz-unterreiter" aria-label={`${aktiver!.beschriftung}: Seiten`}>
+          {unterzeile.map((u) => {
+            const aktiv = !u.hinaus && passt(pathname, u.pfad, u.genau);
+            return (
+              <Link key={u.pfad} to={u.pfad}
+                className={`arbeitsplatz-unterreiter-eintrag${aktiv ? " aktiv" : ""}${u.hinaus ? " hinaus" : ""}`}
+                aria-current={aktiv ? "page" : undefined}>
+                {u.beschriftung}
+                {u.hinaus ? (
+                  <svg viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                    <path d="M3 9 9 3M9 3H4.5M9 3v4.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                ) : null}
+              </Link>
+            );
+          })}
+        </nav>
+      ) : null}
+    </>
   );
 }
 

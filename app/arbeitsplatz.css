@@ -217,6 +217,46 @@
   font-weight: 600;
 }
 
+/* Die zweite Zeile: die Seiten unter dem gewaehlten Reiter. Kleiner und auf
+ * grauem Grund, damit sie als Unterteilung des Reiters darueber gelesen wird
+ * und nicht als zweite gleichrangige Leiste. */
+.arbeitsplatz-unterreiter {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 5px 14px;
+  border-bottom: 1px solid #dde2e7;
+  background: #f4f6f8;
+  overflow-x: auto;
+}
+
+.arbeitsplatz-unterreiter-eintrag {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: var(--crm-pill-padding-sm);
+  border-radius: var(--crm-pill-radius);
+  color: #3d4a56;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.arbeitsplatz-unterreiter-eintrag:hover { background: #e4e8ec; color: #1b2733; }
+
+.arbeitsplatz-unterreiter-eintrag.aktiv {
+  background: #062037;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* Ein Verweis hinaus in eine andere Akte: Linkfarbe und Pfeil, abgesetzt. */
+.arbeitsplatz-unterreiter-eintrag.hinaus { color: #0b5cad; }
+.arbeitsplatz-unterreiter-eintrag.hinaus svg { width: 10px; height: 10px; }
+.arbeitsplatz-unterreiter-eintrag:not(.hinaus) + .hinaus { margin-left: 14px; }
+
 /* --- Seiten im Arbeitsplatz ------------------------------------------------- */
 
 /* Die Seiten in der Akte bringen ihren eigenen Kopf mit, gebaut fuer eine

@@ -3,85 +3,12 @@
  * app/arbeitsplatz.css.
  */
 
-/*
- * Die Abschnitte der Akte als Reiter.
+/* Die Reiter der Akte (neun, darunter ihre Seiten) baut der gemeinsame
+ * Baustein; welche es sind, steht in app/lib/objektakte-navigation.ts.
  *
- * Die Leiste selbst (welche Abschnitte, welche Phase, was eingeklappt ist)
- * bleibt in app/components/property-context-navigation.tsx und
- * app/lib/objektakte-navigation.ts. Hier aendert sich nur die Form: aus zwei
- * gerahmten Pillenzeilen wird eine Reiterzeile unter dem Kopf, darunter die
- * Vorgaenge als leise Verweise.
- */
-.arbeitsplatz .objektakte-navigation {
-  width: auto;
-  margin: 0;
-  border: 0;
-  border-bottom: 1px solid #cdd3d9;
-  border-radius: 0;
-  background: #ffffff;
-}
-
-.arbeitsplatz .objektakte-zeile { padding: 0 14px; align-items: stretch; }
-.arbeitsplatz .objektakte-zeilentitel { display: none; }
-.arbeitsplatz .objektakte-eintraege { gap: 0; }
-
-.arbeitsplatz .objektakte-abschnitt {
-  min-height: 0;
-  padding: 10px 12px 8px;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  border-radius: 0;
-  background: transparent;
-  color: #3d4a56;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.arbeitsplatz .objektakte-abschnitt:hover { background: #f3f6fa; color: #1b2733; }
-
-.arbeitsplatz .objektakte-abschnitt.active {
-  border-bottom-color: #062037;
-  background: transparent;
-  color: #062037;
-  font-weight: 600;
-  box-shadow: none;
-}
-
-.arbeitsplatz .objektakte-mehr {
-  align-self: center;
-  margin-left: 6px;
-  font-size: 12px;
-}
-
-.arbeitsplatz .objektakte-vorgaenge {
-  padding: 5px 14px 6px;
-  border-top: 1px solid #eef1f4;
-  background: #f8f9fa;
-}
-
-.arbeitsplatz .objektakte-vorgaenge .objektakte-eintraege { gap: 2px 14px; }
-
-.arbeitsplatz .objektakte-vorgang {
-  min-height: 0;
-  padding: 2px 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: #0b5cad;
-  font-size: 12px;
-}
-
-/* Auf der Objektakte selbst wiederholt der Seitenkopf nur, was der
+ * Auf den vier Teilen der Objektakte selbst (Uebersicht, Objektdaten,
+ * Eigentuemer, Verlauf) wiederholt der Seitenkopf nur, was der
  * Arbeitsplatz-Kopf darueber schon sagt: Nummer, Titel, Status. Die
  * Unterseiten behalten ihren Kopf -- er traegt dort Knoepfe und Zustaende. */
 .arbeitsplatz-inhalt .property-header { display: none; }
 .arbeitsplatz-inhalt .editor-shell > .property-header + * { margin-top: 0; }
-
-@media (max-width: 900px) {
-  .arbeitsplatz .objektakte-eintraege { flex-wrap: nowrap; overflow-x: auto; }
-  /* Ohne das bricht ein Reiter in sich um ("Preis &" / "Wert"), statt die
-   * Zeile scrollen zu lassen -- gesehen bei 760 px. */
-  .arbeitsplatz .objektakte-abschnitt,
-  .arbeitsplatz .objektakte-mehr,
-  .arbeitsplatz .objektakte-vorgang { flex: 0 0 auto; white-space: nowrap; }
-}

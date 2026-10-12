@@ -13,7 +13,6 @@ import type { Route } from "./+types/root";
 import { PropertyLeadOnboarding } from "~/components/property-lead-onboarding";
 import "./styles.css";
 import "./crm.css";
-import "./property-context-nav.css";
 // Die Fehlerseite unten in dieser Datei liegt ausserhalb des internen Rahmens
 // und bekaeme sonst nur das dunkle Basis-Stylesheet.
 import "./auth-light-theme.css";
@@ -453,8 +452,8 @@ function AddressGeocodingEnhancer() {
 // die hier gezeigte war die ältere: sie kannte nur sechs der achtzehn
 // Abschnitte und nannte die Website-Akte noch "Vermarktung", was inzwischen
 // ein eigener Abschnitt ist. Maßgeblich ist die Leiste im internen Layout;
-// diese hier ist entfernt. Das Stylesheet property-context-nav.css bleibt
-// eingebunden, weil die verbliebene Leiste seine Klassen verwendet.
+// diese hier ist entfernt. Seit 12.10.2026 sind es die Reiter im
+// Immobilien-Arbeitsplatz (app/components/objektakte-reiter.tsx).
 
 export default function App() {
   return (

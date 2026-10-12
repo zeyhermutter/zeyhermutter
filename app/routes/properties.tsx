@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { data, Form, Link, useLoaderData } from "react-router";
+import { data, Form, Link, redirect, useLoaderData } from "react-router";
 import type { Route } from "./+types/properties";
 import { requirePermission } from "~/lib/auth.server";
 import { euroRund as money } from "~/lib/format";
@@ -73,6 +73,18 @@ function statusClass(status:string){return `status-${status.toLowerCase().replac
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { supabase, responseHeaders, profile } = await requirePermission(request, context.cloudflare.env, "property.read");
   const url = new URL(request.url);
+
+  // "Objekte" oeffnet den Arbeitsplatz mit der zuletzt bearbeiteten Akte --
+  // derselbe Datensatz, der in der Liste links oben steht. So wie bei den
+  // Kontakten (12.10.2026). Die Tabelle mit allen Filtern bleibt als
+  // "Volle Liste" (?ansicht=tabelle) und fuer jede gefilterte Ansicht.
+  const gefiltert = ["ansicht", "q", "status", "transaction", "type", "page"].some((k) => url.searchParams.has(k));
+  if (!gefiltert) {
+    const { data: erste } = await supabase.from("properties").select("id").neq("status", "ARCHIVED")
+      .order("updated_at", { ascending: false }).limit(1).maybeSingle();
+    if (erste) throw redirect(`/properties/${erste.id}`, { headers: responseHeaders() });
+  }
+
   const q = (url.searchParams.get("q") ?? "").trim();
   const status = (url.searchParams.get("status") ?? "ACTIVE").trim();
   const transaction = (url.searchParams.get("transaction") ?? "").trim();
@@ -119,7 +131,7 @@ export default function Properties() {
   const transitionsByStatus = Object.fromEntries(Object.keys(STATUS_LABELS).map((status) => [status, transitions.filter((transition) => transition.from_status === status)]));
   const allowedTransitions=transitionsByStatus[selectedStatus]??[];
   const preferred=PREFERRED_NEXT[selectedStatus];
-  const pageHref=(nextPage:number)=>{const p=new URLSearchParams();if(filters.q)p.set("q",filters.q);p.set("status",filters.status);if(filters.transaction)p.set("transaction",filters.transaction);if(filters.propertyType)p.set("type",filters.propertyType);p.set("page",String(nextPage));return `?${p.toString()}`;};
+  const pageHref=(nextPage:number)=>{const p=new URLSearchParams({ansicht:"tabelle"});if(filters.q)p.set("q",filters.q);p.set("status",filters.status);if(filters.transaction)p.set("transaction",filters.transaction);if(filters.propertyType)p.set("type",filters.propertyType);p.set("page",String(nextPage));return `?${p.toString()}`;};
 
   return (
     <main className="editor-shell">
@@ -130,6 +142,8 @@ export default function Properties() {
 
       <section className="data-card property-section">
         <Form method="get" className="filter-grid property-filter-grid">
+          {/* Haelt die Tabelle fest, auch wenn alle Filter leer sind -- sonst oeffnete "/properties" die erste Akte. */}
+          <input type="hidden" name="ansicht" value="tabelle"/>
           <label><span>Suche</span><input name="q" defaultValue={filters.q} placeholder="Objektnummer oder Titel"/></label>
           <label><span>Status</span><select name="status" defaultValue={filters.status}><option value="ACTIVE">Aktive</option><option value="ALL">Alle</option><option value="ARCHIVED">Archiv</option></select></label>
           <label><span>Transaktion</span><select name="transaction" defaultValue={filters.transaction}><option value="">Alle</option><option value="SALE">Verkauf</option><option value="RENT">Vermietung</option></select></label>

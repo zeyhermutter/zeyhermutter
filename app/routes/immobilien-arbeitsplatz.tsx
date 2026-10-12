@@ -4,7 +4,7 @@ import { requirePermission } from "~/lib/auth.server";
 import { euroRund } from "~/lib/format";
 import { IMMOBILIENSTATUS, beschrifte } from "~/lib/labels";
 import { IMMOBILIENARTEN } from "~/lib/public-intake";
-import { PropertyContextNavigation } from "~/components/property-context-navigation";
+import { ObjektakteReiter } from "~/components/objektakte-reiter";
 import { Arbeitsplatz, ArbeitsplatzKopf, type ArbeitsplatzZeile } from "~/components/arbeitsplatz";
 import "~/immobilien-arbeitsplatz.css";
 
@@ -126,7 +126,7 @@ export default function ImmobilienArbeitsplatz() {
       geoeffnet={akte ? alsZeile({ ...akte, preis: null }) : null}
       suchePlatzhalter="Nummer, Titel, Ort …"
       neu={{ pfad: "/properties/new", beschriftung: "+ Neu" }}
-      volleListe="/properties"
+      volleListe="/properties?ansicht=tabelle"
       listeFehlt={listeFehlt}
       abgeschnitten={abgeschnitten ? "die zuletzt bearbeiteten 300" : null}
       kopf={akte ? (
@@ -137,7 +137,7 @@ export default function ImmobilienArbeitsplatz() {
           kontext={[akte.art, akte.ort].filter(Boolean).join(" · ")}
         />
       ) : null}
-      reiter={<PropertyContextNavigation immobilienStatus={akte?.status ?? null} />}
+      reiter={<ObjektakteReiter />}
     >
       <Outlet />
     </Arbeitsplatz>

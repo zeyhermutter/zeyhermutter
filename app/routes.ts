@@ -102,6 +102,11 @@ export default [
     // keine Adresse aendert sich. Die Vorschauen liegen bewusst ausserhalb.
     layout("routes/immobilien-arbeitsplatz.tsx", [
       route("properties/:propertyId", "routes/property-detail.tsx"),
+      // Dieselbe Seite, weitere Teile der Objektakte (seit 12.10.2026 Reiter
+      // statt einer langen Seite). Siehe TEILE in app/lib/objektakte-navigation.ts.
+      route("properties/:propertyId/objektdaten", "routes/property-detail.tsx", { id: "property-objektdaten" }),
+      route("properties/:propertyId/eigentuemer", "routes/property-detail.tsx", { id: "property-eigentuemer" }),
+      route("properties/:propertyId/verlauf", "routes/property-detail.tsx", { id: "property-verlauf" }),
       route("properties/:propertyId/interests", "routes/property-interests.tsx"),
       route("properties/:propertyId/compliance", "routes/property-compliance.tsx"),
       route("properties/:propertyId/legal", "routes/property-legal.tsx"),
