@@ -147,4 +147,3 @@ export function abschnittsPfad(propertyId: string, schluessel: string): string {
 export function vorgangsPfad(propertyId: string, liste: string): string {
   return `${liste}?property_id=${encodeURIComponent(propertyId)}`;
 }
-
