@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
+import { istEinstieg } from "~/lib/einstieg";
 import type { Route } from "./+types/organizations";
 import { requireActiveUser } from "~/lib/auth.server";
 
@@ -19,6 +20,13 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     request,
     context.cloudflare.env,
   );
+
+  // Einstieg: gleich die erste Organisation (nach Namen) im Arbeitsplatz oeffnen (app/lib/einstieg.ts).
+  if (istEinstieg(request)) {
+    const { data: erste } = await supabase.from("organizations").select("id").is("archived_at", null)
+      .order("name", { ascending: true }).limit(1).maybeSingle();
+    if (erste) throw redirect(`/crm/organizations/${erste.id}`, { headers: responseHeaders() });
+  }
 
   const url = new URL(request.url);
   const q = (url.searchParams.get("q") ?? "").trim().toLowerCase();
@@ -163,6 +171,7 @@ export default function Organizations() {
       <div className="organization-page">
         <section className="data-card">
           <Form method="get" className="organization-filter-grid">
+            <input type="hidden" name="ansicht" value="tabelle" />
             <label>
               <span>Suche</span>
               <input name="q" defaultValue={filters.q} placeholder="Name, Nummer, E-Mail, Telefon oder Ort" />
