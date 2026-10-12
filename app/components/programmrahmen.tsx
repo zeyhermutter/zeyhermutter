@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { NotificationBell, type HeaderNotification } from "~/components/notification-bell";
 import { BEREICHE, bereichAusPfad, emailZiel, type Bereichsschluessel } from "~/lib/programmbereiche";
 import "~/programmrahmen.css";
+import "~/programmansicht.css";
 
 // Der Rahmen um jede interne Seite -- wie ein Arbeitsprogramm, nicht wie eine
 // Webseite.

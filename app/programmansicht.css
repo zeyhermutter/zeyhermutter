@@ -1,0 +1,151 @@
+/*
+ * Programmansicht -- alle Seiten im Programmrahmen kompakt.
+ *
+ * WARUM
+ *
+ * Kontakte, Objekte und Mein Tag sind seit 12.10.2026 als Programm gebaut.
+ * Die uebrigen rund dreissig Seiten hinter den Reitern der Bereichsleiste
+ * (Makleraufträge, Verkäufer-Leads, Aufgaben ...) waren noch Webseiten:
+ * "← CRM", eine Zeile in Versalien, eine 58 px grosse Ueberschrift, ein
+ * erklaerender Satz, die Umgebung und der Benutzername noch einmal -- 163 px
+ * Kopf, bevor die erste Kachel kommt. Gemessen bei 1366 px auf den
+ * Makleraufträgen: die erste Zeile der Liste stand bei 706 px, also fast
+ * unten am Bildschirm. Sebastian: "auch diese punkte ... müssen noch
+ * angepasst werden".
+ *
+ * WIE
+ *
+ * Nicht Seite fuer Seite, sondern einmal fuer alle: Die Seiten bauen aus
+ * denselben Bausteinen (editor-header, metric-grid, filter-grid, data-card,
+ * data-row), und deren Abstaende haengen an Merkmalen (--crm-...). Die
+ * Seitenabstaende sind dafuer an ihrer einen Quelle enger gestellt
+ * (app/responsive-data-card.css); hier werden die Seitenkoepfe auf das
+ * reduziert, was die Bereichsleiste nicht schon sagt, und Kennzahlen,
+ * Listen und Filter dichter gesetzt.
+ * Die Merkmale, die scripts/check-abstaende.mjs als "genau einmal definiert"
+ * fuehrt (Kasten-, Pillen-, Feldabstaende), bleiben unangetastet -- enger
+ * gestellt werden nur die Seitenabstaende.
+ *
+ * Was entfaellt, steht anderswo: der Weg zurueck in der Bereichsleiste, die
+ * Umgebung und der Benutzer in der Titelleiste. Die Zeile in Versalien
+ * ueber dem Titel ("VERKAUF", "MODUL 03") war Gliederung einer Webseite.
+ *
+ * Gilt nur in .programm-arbeitsflaeche -- die oeffentliche Website und die
+ * Anmeldung bleiben unberuehrt. Hell geschrieben. !important nur an einer
+ * Stelle, begruendet dort.
+ */
+
+
+.programm-arbeitsflaeche .editor-shell { min-height: 0; padding-top: 16px; padding-bottom: 28px; }
+
+/* --- Seitenkopf ------------------------------------------------------------ */
+
+.programm-arbeitsflaeche .editor-header { align-items: center; gap: 12px; }
+
+/* "← CRM" auf einer Liste fuehrt nur zur Startseite -- die steht links in
+ * der Modulleiste. Ein Zurueck auf eine bestimmte Akte bleibt. */
+.programm-arbeitsflaeche .editor-header a.back-link[href="/crm"] { display: none; }
+.programm-arbeitsflaeche .editor-header .back-link { margin-bottom: 4px; font-size: 12px; }
+
+.programm-arbeitsflaeche .editor-header > div > .eyebrow { display: none; }
+
+.programm-arbeitsflaeche .editor-title {
+  font-size: 20px;
+  line-height: 1.25;
+  letter-spacing: -.01em;
+}
+
+.programm-arbeitsflaeche .editor-meta { margin-top: 3px; font-size: 13px; }
+
+/* Umgebung und Benutzer stehen in der Titelleiste. */
+.programm-arbeitsflaeche .editor-header .header-actions > .badge,
+.programm-arbeitsflaeche .editor-header .header-actions > .badge + small,
+.programm-arbeitsflaeche .editor-header .header-user > .badge,
+.programm-arbeitsflaeche .editor-header .header-user > .badge + small { display: none; }
+
+.programm-arbeitsflaeche .editor-header .primary-button,
+.programm-arbeitsflaeche .editor-header .secondary-button {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+/* --- Kennzahlen ------------------------------------------------------------ */
+
+.programm-arbeitsflaeche .metric-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+
+.programm-arbeitsflaeche .metric-card {
+  padding: var(--crm-card-padding-sm);
+  border-radius: var(--crm-card-radius-sm);
+}
+
+.programm-arbeitsflaeche .metric-card span { font-size: 12px; }
+.programm-arbeitsflaeche .metric-card strong { margin: 2px 0 1px; font-size: 20px; line-height: 1.2; }
+.programm-arbeitsflaeche .metric-card small { font-size: 11px; line-height: 1.3; }
+
+/* --- Karten und Listen ----------------------------------------------------- */
+
+.programm-arbeitsflaeche .data-card,
+.programm-arbeitsflaeche .editor-card { border-radius: var(--crm-card-radius-sm); }
+
+.programm-arbeitsflaeche .card-head { margin-bottom: 6px; }
+.programm-arbeitsflaeche .card-head .eyebrow { margin-bottom: 2px; font-size: 10.5px; }
+.programm-arbeitsflaeche .card-head h2 { font-size: 15px; line-height: 1.3; }
+
+.programm-arbeitsflaeche .data-row { gap: 14px; padding: 9px 0; }
+.programm-arbeitsflaeche .data-row strong { font-size: 13.5px; }
+.programm-arbeitsflaeche .data-row small,
+.programm-arbeitsflaeche .row-meta { font-size: 12px; }
+
+/* Die Statuspille ist mit 36 px Mindesthoehe fuer Kopfzeilen gebaut; in einer
+ * Listenzeile stand sie doppelt so hoch wie der Text daneben. */
+.programm-arbeitsflaeche .status-pill {
+  min-height: 0;
+  padding: var(--crm-pill-padding-sm);
+  font-size: var(--crm-pill-font-sm);
+  line-height: 1.3;
+}
+
+/* --- Filterleisten --------------------------------------------------------- */
+
+/* Die Filter ueber einer Liste sind Werkzeug, nicht Formular: kleine
+ * Beschriftung, Felder in der Hoehe der Kontaktliste (32 px). Gilt fuer die
+ * gemeinsamen Filterraster und alle, die LiveListFilters bedient. */
+.programm-arbeitsflaeche .filter-grid,
+.programm-arbeitsflaeche [class$="-filter-grid"],
+.programm-arbeitsflaeche [class*="-filter-grid "],
+.programm-arbeitsflaeche .live-filter-form { gap: 8px 10px; }
+
+.programm-arbeitsflaeche :is(.filter-grid, [class$="-filter-grid"], [class*="-filter-grid "], .live-filter-form) label > span:first-child {
+  margin-bottom: 3px;
+  font-size: 11px;
+}
+
+.programm-arbeitsflaeche :is(.filter-grid, [class$="-filter-grid"], [class*="-filter-grid "], .live-filter-form) :is(input, select) {
+  min-height: 32px;
+  height: 32px;
+  padding-block: 0;
+  font-size: 13px;
+}
+
+.programm-arbeitsflaeche :is(.filter-grid, [class$="-filter-grid"], [class*="-filter-grid "], .live-filter-form) :is(.primary-button, .secondary-button) {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+/* Das Live-Suchfeld (LiveListFilters) ist fuer die alten grossen
+ * Filterflaechen gebaut: 46 px hoch, Lupe 40 px eingerueckt -- und der
+ * Einzug steht dort mit !important. Hier dieselbe Form wie in der
+ * Kontaktliste (app/programm-liste.css). */
+.programm-arbeitsflaeche .live-search-field::before { bottom: 8px; left: 10px; width: 15px; height: 15px; }
+.programm-arbeitsflaeche .live-search-field .live-search-input {
+  min-height: 32px;
+  height: 32px;
+  padding-left: 32px !important;
+  border-radius: var(--crm-field-radius);
+}
+
+@media (max-width: 760px) {
+  .programm-arbeitsflaeche .editor-header { align-items: flex-start; }
+}

@@ -1,14 +1,19 @@
 /* Beta – gemeinsame Fluchtlinien und responsive data-card-Abstände */
 :root {
-  --crm-page-gutter: clamp(18px, 2.1vw, 36px);
-  --crm-section-gap: clamp(14px, 1.25vw, 20px);
-  --crm-block-gap: clamp(16px, 1.35vw, 22px);
-  /* Nach dem Seitenkopf eine Stufe mehr: der Kopf traegt seine eigenen
-     14px zwischen Titel und Beschreibung -- waere der Abstand danach
-     derselbe wie zwischen zwei Karten, liesse sich nicht mehr sehen, wo der
-     Kopf aufhoert. */
-  --crm-header-gap: clamp(26px, 2.4vw, 36px);
-  --crm-card-padding-x: clamp(18px, 1.45vw, 22px);
+  /* Seit 12.10.2026 enger: alle internen Seiten stehen im Programmrahmen
+     (Titel-, Modul-, Bereichsleiste), und dort wirkten die Abstaende einer
+     Webseite -- 18 bis 36 px Rand, 26 bis 36 px nach dem Kopf -- wie Luft
+     zwischen Fenstern. Vorher: gutter clamp(18,2.1vw,36), section
+     clamp(14,1.25vw,20), block clamp(16,1.35vw,22), header clamp(26,2.4vw,36),
+     card-x clamp(18,1.45vw,22). Siehe app/programmansicht.css. */
+  --crm-page-gutter: 22px;
+  --crm-section-gap: 12px;
+  --crm-block-gap: 12px;
+  /* Nach dem Seitenkopf eine Stufe mehr: waere der Abstand danach derselbe
+     wie zwischen zwei Karten, liesse sich nicht mehr sehen, wo der Kopf
+     aufhoert. */
+  --crm-header-gap: 16px;
+  --crm-card-padding-x: 16px;
 }
 
 /*
@@ -217,9 +222,7 @@
 
 @media (max-width: 760px) {
   :root {
-    --crm-page-gutter: 16px;
-    --crm-card-padding-x: 16px;
-    --crm-section-gap: 14px;
-    --crm-block-gap: 14px;
+    --crm-page-gutter: 14px;
+    --crm-card-padding-x: 14px;
   }
 }
