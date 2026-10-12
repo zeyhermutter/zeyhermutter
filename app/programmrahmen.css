@@ -263,6 +263,11 @@
 
 .bereichsleiste-eintrag:hover { background: #f3f6fa; color: #1b2733; }
 
+/* Tastaturfokus: ein schmaler blauer Rand innen, statt des schwarzen
+ * Browser-Rahmens, der um den ganzen Reiter lief. */
+.bereichsleiste-eintrag:focus { outline: none; }
+.bereichsleiste-eintrag:focus-visible { outline: 2px solid #0b5cad; outline-offset: -3px; border-radius: 3px; }
+
 .bereichsleiste-eintrag.aktiv {
   border-bottom-color: #062037;
   color: #062037;

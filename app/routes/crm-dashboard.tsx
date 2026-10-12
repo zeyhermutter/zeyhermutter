@@ -24,11 +24,27 @@ import "~/mein-tag.css";
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { supabase, responseHeaders, userId } = await requireActiveUser(request, context.cloudflare.env);
   const url = new URL(request.url);
-  const scope = url.searchParams.get("scope") === "all" ? "all" : "mine";
   const heute = crmToday();
 
+  // Wessen Tag: meiner, der eines Kollegen oder der aller. Die Kollegen sind
+  // die anderen aktiven Benutzer -- Sebastian sieht "Jochen", Jochen sieht
+  // "Sebastian". Nichts ist hier nach Namen fest verdrahtet; kommt jemand
+  // dazu, bekommt er einen eigenen Knopf. Eine unbekannte Kennung in der
+  // Adresse faellt auf "Meins" zurueck, statt eine leere Seite zu zeigen.
+  const { data: benutzer } = await supabase.from("profiles").select("user_id,display_name").eq("status", "ACTIVE").order("display_name");
+  const kollegen = ((benutzer ?? []) as { user_id: string; display_name: string | null }[])
+    .filter((p) => p.user_id !== userId)
+    .map((p) => ({ id: p.user_id, name: (p.display_name ?? "").trim().split(/\s+/)[0] || "Kollege" }));
+  const gewuenscht = url.searchParams.get("von");
+  const ansicht: "meins" | "alle" | string =
+    url.searchParams.get("scope") === "all" ? "alle"
+    : gewuenscht && kollegen.some((k) => k.id === gewuenscht) ? gewuenscht
+    : "meins";
+  const scope = ansicht === "alle" ? "all" : "mine";
+  const person = ansicht === "alle" || ansicht === "meins" ? userId : ansicht;
+
   const [tag, propertyPermission, { count: propertyCount }] = await Promise.all([
-    ladeMeinTag(supabase, userId, scope, heute),
+    ladeMeinTag(supabase, person, scope, heute),
     supabase.rpc("current_user_has_permission", { p_permission: "property.read" }),
     supabase.from("properties").select("id", { count: "exact", head: true }).neq("status", "ARCHIVED"),
   ]);
@@ -51,7 +67,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   return data({
     ...tag,
-    scope,
+    ansicht,
+    kollegen,
     vorschauTage: VORSCHAU_TAGE,
     fristTage: FRIST_TAGE,
     zeigeKarte: propertyPermission.data === true,
@@ -136,6 +153,7 @@ export default function MeinTag() {
   }, [d.missingCoordinateCount, geocodeFetcher]);
 
   const ueberfaelligeFristen = d.fristen.filter((f) => f.ueberfaellig).length;
+  const fremd = d.kollegen.find((k) => k.id === d.ansicht) ?? null;
   const zusammenfassung = [
     plural(d.termineHeute.length, "Termin heute", "Termine heute"),
     `${d.liegengeblieben.length} liegen geblieben`,
@@ -147,12 +165,17 @@ export default function MeinTag() {
     <main className="editor-shell mein-tag">
       <div className="mein-tag-kopf">
         <div>
-          <h1>{tagLang(d.heute)}</h1>
+          <h1>{tagLang(d.heute)}{fremd ? <span className="mein-tag-wessen"> · Tag von {fremd.name}</span> : null}</h1>
           <p>{zusammenfassung}</p>
         </div>
         <nav className="mein-tag-umfang" aria-label="Umfang">
-          <Link className={d.scope === "mine" ? "aktiv" : ""} aria-current={d.scope === "mine" ? "page" : undefined} to="/crm">Meins</Link>
-          <Link className={d.scope === "all" ? "aktiv" : ""} aria-current={d.scope === "all" ? "page" : undefined} to="/crm?scope=all">Alle</Link>
+          {[
+            { schluessel: "meins", name: "Meins", pfad: "/crm" },
+            ...d.kollegen.map((k) => ({ schluessel: k.id, name: k.name, pfad: `/crm?von=${encodeURIComponent(k.id)}` })),
+            { schluessel: "alle", name: "Alle", pfad: "/crm?scope=all" },
+          ].map((u) => (
+            <Link key={u.schluessel} className={d.ansicht === u.schluessel ? "aktiv" : ""} aria-current={d.ansicht === u.schluessel ? "page" : undefined} to={u.pfad}>{u.name}</Link>
+          ))}
         </nav>
       </div>
 
@@ -165,7 +188,7 @@ export default function MeinTag() {
           dieser Reihenfolge. */}
       <div className="mein-tag-raster">
         <div className="mein-tag-spalte">
-          <Feld titel="Termine heute" anzahl={d.termineHeute.length} mehr={{ pfad: `/crm/calendar${d.scope === "all" ? "?scope=all" : ""}`, beschriftung: "Kalender" }}
+          <Feld titel="Termine heute" anzahl={d.termineHeute.length} mehr={{ pfad: `/crm/calendar${d.ansicht === "meins" ? "" : "?scope=all"}`, beschriftung: "Kalender" }}
             leer="Heute steht kein Termin an.">
             {d.termineHeute.map((e) => <Termin key={e.key} e={e} />)}
           </Feld>

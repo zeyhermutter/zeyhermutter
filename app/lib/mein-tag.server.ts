@@ -76,6 +76,10 @@ function mitTeilen(...teile: Array<string | null | undefined>) {
   return teile.filter(Boolean).join(" · ");
 }
 
+/**
+ * userId ist die Person, deren Tag gezeigt wird -- der angemeldete Benutzer
+ * oder ein Kollege ("Meins" / "Jochen"). Mit scope "all" spielt sie keine Rolle.
+ */
 export async function ladeMeinTag(
   supabase: SupabaseClient,
   userId: string,
