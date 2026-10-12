@@ -107,7 +107,7 @@ export default function KontaktArbeitsplatz() {
       geoeffnet={akte ? alsZeile(akte) : null}
       suchePlatzhalter="Name, Nummer, Rolle, Telefon …"
       neu={{ pfad: "/crm/contacts/new", beschriftung: "+ Neu" }}
-      volleListe="/crm/contacts"
+      volleListe="/crm/contacts?ansicht=tabelle"
       listeFehlt={listeFehlt}
       abgeschnitten={abgeschnitten ? `die ersten ${LISTE_HOECHSTENS} nach Namen` : null}
       seitenkopf="ausblenden"

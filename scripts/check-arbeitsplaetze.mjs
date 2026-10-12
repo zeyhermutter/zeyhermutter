@@ -83,6 +83,37 @@ for (const { datei, kinder } of layouts) {
   }
 }
 
+// --- "Volle Liste" fuehrt wirklich auf die Liste -----------------------------
+//
+// Seit 12.10.2026 oeffnet "/crm/contacts" ohne Parameter gleich den ersten
+// Kontakt im Arbeitsplatz; die Tabelle gibt es nur mit ?ansicht=tabelle.
+// Zeigt "Volle Liste" auf die nackte Adresse, landet man wieder in der Akte,
+// aus der man kam -- der Verweis tut scheinbar nichts. Deshalb: leitet die
+// Listenseite ohne "ansicht" um, muss "Volle Liste" die Ansicht mitgeben.
+
+const routenDateien = new Map([...routen.matchAll(/route\("([^"]+)",\s*"(routes\/[^"]+)"/g)].map((m) => [`/${m[1]}`, `app/${m[2]}`]));
+
+for (const { datei } of layouts) {
+  const quelle = await lies(datei);
+  const volle = /volleListe="([^"]+)"/.exec(quelle)?.[1];
+  pruefe(Boolean(volle), `${datei}: volleListe="..." fehlt oder ist kein fester Pfad.`);
+  if (!volle) continue;
+  const [pfad, abfrage = ""] = volle.split("?");
+  const listenDatei = routenDateien.get(pfad);
+  pruefe(Boolean(listenDatei), `${datei}: "Volle Liste" zeigt auf ${pfad}, das in app/routes.ts nicht haengt.`);
+  if (!listenDatei) continue;
+  const liste = await lies(listenDatei);
+  const leitetUm = /throw redirect\(/.test(liste) && /"ansicht"/.test(liste);
+  if (leitetUm) {
+    pruefe(/(^|&)ansicht=tabelle(&|$)/.test(abfrage),
+      `${datei}: "Volle Liste" zeigt auf ${volle}, aber ${listenDatei} leitet ohne ?ansicht=tabelle\n`
+      + "  in die erste Akte um. Der Verweis fuehrte zurueck in den Arbeitsplatz statt auf die Liste.");
+    pruefe(/name="ansicht" value="tabelle"/.test(liste),
+      `${listenDatei}: das Filterformular gibt ansicht=tabelle nicht mit. Wer alle Filter leert,\n`
+      + "  landet sonst in der ersten Akte statt in der ungefilterten Tabelle.");
+  }
+}
+
 // --- Niemand baut die Liste nach ------------------------------------------
 
 const verdaechtig = [];

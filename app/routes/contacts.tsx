@@ -1,4 +1,4 @@
-import { data, Form, Link, useLoaderData, useNavigation } from "react-router";
+import { data, Form, Link, redirect, useLoaderData, useNavigation } from "react-router";
 import type { Route } from "./+types/contacts";
 import { requireActiveUser } from "~/lib/auth.server";
 import { tag } from "~/lib/format";
@@ -24,6 +24,22 @@ const SEITE = 50;
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { supabase, responseHeaders } = await requireActiveUser(request, context.cloudflare.env);
   const url = new URL(request.url);
+
+  // "Kontakte" in der Bereichsleiste oeffnet den Arbeitsplatz -- Liste links,
+  // Kontakt rechts --, und zwar mit dem ersten Kontakt der Liste, so wie ein
+  // Adressbuch-Programm beim Start den obersten Eintrag zeigt. Sebastian am
+  // 12.10.2026: "Es soll so aussehen" (Bild der Kontaktakte), nicht wie eine
+  // Tabelle. Die Tabelle bleibt als "Volle Liste" (?ansicht=tabelle) und
+  // fuer jede gefilterte Ansicht. Ohne Kontakte bleibt es bei der leeren
+  // Tabelle mit "+ Neuer Kontakt".
+  const gefiltert = ["ansicht", "q", "rolle", "status", "seite"].some((k) => url.searchParams.has(k));
+  if (!gefiltert) {
+    const { data: erster } = await supabase.from("contacts").select("id").is("archived_at", null)
+      .order("last_name", { ascending: true }).order("first_name", { ascending: true })
+      .limit(1).maybeSingle();
+    if (erster) throw redirect(`/crm/contacts/${erster.id}`, { headers: responseHeaders() });
+  }
+
   const q = (url.searchParams.get("q") ?? "").trim();
   const status = url.searchParams.get("status") ?? "AKTIV";
   const rolle = (url.searchParams.get("rolle") ?? "").trim();
@@ -87,13 +103,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 function seitenLink(filter: { q: string; status: string; rolle: string }, seite: number) {
-  const p = new URLSearchParams();
+  const p = new URLSearchParams({ ansicht: "tabelle" });
   if (filter.q) p.set("q", filter.q);
   if (filter.status !== "AKTIV") p.set("status", filter.status);
   if (filter.rolle) p.set("rolle", filter.rolle);
   if (seite > 1) p.set("seite", String(seite));
-  const s = p.toString();
-  return s ? `/crm/contacts?${s}` : "/crm/contacts";
+  return `/crm/contacts?${p.toString()}`;
 }
 
 export default function Kontaktliste() {
@@ -104,6 +119,8 @@ export default function Kontaktliste() {
   return (
     <main className="editor-shell programm-liste">
       <Form method="get" className="programm-liste-werkzeuge" role="search">
+        {/* Haelt die Tabelle fest, auch wenn alle Filter leer sind -- sonst oeffnete "/crm/contacts" den ersten Kontakt. */}
+        <input type="hidden" name="ansicht" value="tabelle" />
         <label className="programm-liste-suche">
           <span className="sr-only">Kontakte suchen</span>
           <input type="search" name="q" defaultValue={filter.q} placeholder="Name, Nummer, E-Mail, Telefon …" autoComplete="off" />
