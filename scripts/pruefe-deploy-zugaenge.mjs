@@ -81,12 +81,37 @@ if (fehlend.length > 0) {
     console.error(`  Gebraucht fuer: ${z.braucht}`);
     console.error(`  ${z.hinweis}\n`);
   }
-  console.error("In GitHub pruefen -- und dabei auf die UMGEBUNG achten:");
-  console.error("  Settings -> Secrets and variables -> Actions");
-  console.error(`  Ein Geheimnis unter "Environment secrets" der Umgebung "${GITHUB_UMGEBUNG}" gilt`);
-  console.error("  NUR fuer Jobs in dieser Umgebung. Ein Geheimnis unter \"Repository secrets\"");
-  console.error("  gilt fuer alle. Ein Deploy-Geheimnis, das beide Umgebungen brauchen,");
-  console.error("  gehoert entweder in beide Umgebungen oder ins Repository.\n");
+  // Der Rat muss zum Ort passen, an dem der Deploy laeuft.
+  //
+  // Die erste Fassung dieser Meldung schickte immer in die GitHub-Einstellungen,
+  // weil sie fuer den Vorfall vom 07.10.2026 geschrieben wurde -- und der
+  // passierte in einem Actions-Job. Am 12.10.2026 hat Sebastian `pnpm run
+  // deploy:beta` auf seinem eigenen Rechner aufgerufen und einen Rat bekommen,
+  // der dort nichts bewirkt: ein GitHub-Geheimnis setzt keine Umgebungsvariable
+  // in einer Eingabeaufforderung unter Windows.
+  if (process.env.GITHUB_ACTIONS === "true") {
+    console.error("In GitHub pruefen -- und dabei auf die UMGEBUNG achten:");
+    console.error("  Settings -> Secrets and variables -> Actions");
+    console.error(`  Ein Geheimnis unter "Environment secrets" der Umgebung "${GITHUB_UMGEBUNG}" gilt`);
+    console.error("  NUR fuer Jobs in dieser Umgebung. Ein Geheimnis unter \"Repository secrets\"");
+    console.error("  gilt fuer alle. Ein Deploy-Geheimnis, das beide Umgebungen brauchen,");
+    console.error("  gehoert entweder in beide Umgebungen oder ins Repository.\n");
+  } else {
+    console.error("Dieser Aufruf laeuft NICHT in GitHub Actions, sondern hier auf diesem");
+    console.error("Rechner. Die Geheimnisse aus den GitHub-Einstellungen gelten hier nicht --");
+    console.error("gebraucht werden Umgebungsvariablen in dieser Sitzung.\n");
+    console.error("Der vorgesehene Weg ist ein anderer: der Deploy laeuft in GitHub Actions,");
+    console.error("wo beide Zugaenge bereits hinterlegt sind.");
+    console.error(`  BETA        laeuft bei jedem Push auf den Arbeitszweig von selbst.`);
+    console.error("  PRODUKTION  wird unter Actions -> \"Deploy PROD\" von Hand gestartet.");
+    console.error("  Ein Blick in den Reiter Actions zeigt, ob der Lauf schon durch ist.\n");
+    console.error("Nur wenn es wirklich von hier aus sein soll, fuer diese eine Sitzung setzen");
+    console.error("(die Werte gehoeren nicht in eine Datei im Projekt):");
+    console.error("  Eingabeaufforderung:  set CLOUDFLARE_API_TOKEN=...");
+    console.error("                        set SUPABASE_ACCESS_TOKEN=...");
+    console.error("  PowerShell:           $env:CLOUDFLARE_API_TOKEN=\"...\"");
+    console.error("                        $env:SUPABASE_ACCESS_TOKEN=\"...\"\n");
+  }
   process.exit(1);
 }
 
