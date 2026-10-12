@@ -1,4 +1,5 @@
-import { data, Form, Link, useLoaderData } from "react-router";
+import { data, Form, Link, redirect, useLoaderData } from "react-router";
+import { istEinstieg } from "~/lib/einstieg";
 import type { Route } from "./+types/mandates";
 import { requirePermission } from "~/lib/auth.server";
 import { euroRund, prozent, tag as formatDate } from "~/lib/format";
@@ -22,6 +23,8 @@ export function openWithdrawalRisk(row:any){
 
 export async function loader({request,context}:Route.LoaderArgs){
   const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"mandate.read");
+  // Einstieg: gleich den zuletzt bearbeiteten Datensatz im Arbeitsplatz oeffnen (app/lib/einstieg.ts).
+  if(istEinstieg(request)){const {data:erster}=await supabase.from("brokerage_mandates").select("id").is("archived_at",null).order("updated_at",{ascending:false}).limit(1).maybeSingle(); if(erster)throw redirect(`/mandates/${erster.id}`,{headers:responseHeaders()});}
   const url=new URL(request.url);
   const filters={q:(url.searchParams.get("q")??"").trim(),status:url.searchParams.get("status")??"OPEN",type:url.searchParams.get("type")??"",propertyId:url.searchParams.get("property_id")??""};
   const [{data:rows,error},{data:canWrite},{data:properties}]=await Promise.all([
@@ -69,6 +72,7 @@ export default function Mandates(){
     </section>
 
     <section className="data-card"><Form method="get" className="filter-grid">
+      <input type="hidden" name="ansicht" value="tabelle"/>
       <label><span>Suche</span><input name="q" defaultValue={filters.q} placeholder="Auftrag, Objekt oder Auftraggeber"/></label>
       <label><span>Ansicht</span><select name="status" defaultValue={filters.status}><option value="OPEN">Laufende Aufträge</option><option value="RISK">Widerruf offen</option><option value="ALL">Alle</option>{Object.entries(STATUS).map(([value,label])=><option value={value} key={value}>{label}</option>)}<option value="ARCHIVED">Archiviert</option></select></label>
       <label><span>Auftragsart</span><select name="type" defaultValue={filters.type}><option value="">Alle</option>{Object.entries(TYPE).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label>

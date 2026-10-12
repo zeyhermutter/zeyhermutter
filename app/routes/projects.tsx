@@ -1,4 +1,5 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
+import { istEinstieg } from "~/lib/einstieg";
 import type { Route } from "./+types/projects";
 import { requirePermission } from "~/lib/auth.server";
 import { tag } from "~/lib/format";
@@ -45,6 +46,8 @@ export function projectErrorMessage(error:any){
 
 export async function loader({request,context}:Route.LoaderArgs){
   const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"project.read");
+  // Einstieg: gleich den zuletzt bearbeiteten Datensatz im Arbeitsplatz oeffnen (app/lib/einstieg.ts).
+  if(istEinstieg(request)){const {data:erstes}=await supabase.from("sale_projects").select("id").is("archived_at",null).order("updated_at",{ascending:false}).limit(1).maybeSingle(); if(erstes)throw redirect(`/projects/${erstes.id}`,{headers:responseHeaders()});}
   const url=new URL(request.url);
   const showAll=url.searchParams.get("alle")==="1";
 
@@ -125,7 +128,7 @@ export default function Projects(){
         <p className="subtle">Die Klammer um Eigentümer, Immobilie, Check, Maßnahmen, Auftrag, Vermarktung und Abschluss.</p>
       </div>
       <div className="inline-actions">
-        <Link className="subtle-link" to={d.showAll?"/projects":"/projects?alle=1"}>{d.showAll?"Nur laufende":"Auch abgeschlossene"}</Link>
+        <Link className="subtle-link" to={d.showAll?"/projects?ansicht=tabelle":"/projects?ansicht=tabelle&alle=1"}>{d.showAll?"Nur laufende":"Auch abgeschlossene"}</Link>
       </div>
     </div>
 
@@ -162,7 +165,7 @@ export default function Projects(){
         })}</div>}
     </section>
 
-    <section className="data-card">
+    <section className="data-card" id="projekt-anlegen">
       <div className="card-head"><div><p className="eyebrow">Neu</p><h2>Projekt anlegen</h2></div></div>
       <Form method="post" className="form-grid">
         <input type="hidden" name="_intent" value="project_add"/>

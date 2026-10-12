@@ -1,4 +1,5 @@
-import { data, Form, Link, useLoaderData } from "react-router";
+import { data, Form, Link, redirect, useLoaderData } from "react-router";
+import { istEinstieg } from "~/lib/einstieg";
 import type { Route } from "./+types/measurements";
 import { requirePermission } from "~/lib/auth.server";
 import { euroRund, flaeche, tag as formatDate, zeitpunkt } from "~/lib/format";
@@ -27,6 +28,8 @@ export function objektZeile(row:any){
 
 export async function loader({request,context}:Route.LoaderArgs){
   const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"measurement.read");
+  // Einstieg: gleich den zuletzt bearbeiteten Datensatz im Arbeitsplatz oeffnen (app/lib/einstieg.ts).
+  if(istEinstieg(request)){const {data:erster}=await supabase.from("measurement_orders").select("id").is("archived_at",null).order("updated_at",{ascending:false}).limit(1).maybeSingle(); if(erster)throw redirect(`/measurements/${erster.id}`,{headers:responseHeaders()});}
   const url=new URL(request.url);
   const filters={q:(url.searchParams.get("q")??"").trim(),status:url.searchParams.get("status")??"OPEN",paket:url.searchParams.get("paket")??"",propertyId:url.searchParams.get("property_id")??""};
   const [{data:rows,error},{data:canWrite},{data:properties}]=await Promise.all([
@@ -74,6 +77,7 @@ export default function Measurements(){
     </section>
 
     <section className="data-card"><Form method="get" className="filter-grid">
+      <input type="hidden" name="ansicht" value="tabelle"/>
       <label><span>Suche</span><input name="q" defaultValue={filters.q} placeholder="Auftrag, Objekt oder Kunde"/></label>
       <label><span>Ansicht</span><select name="status" defaultValue={filters.status}><option value="OPEN">Laufende Aufträge</option><option value="DUE">Honorar offen</option><option value="ALL">Alle</option>{Object.entries(STATUS).map(([value,label])=><option value={value} key={value}>{label}</option>)}<option value="ARCHIVED">Archiviert</option></select></label>
       <label><span>Paket</span><select name="paket" defaultValue={filters.paket}><option value="">Alle Pakete</option>{Object.entries(PAKET).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label>

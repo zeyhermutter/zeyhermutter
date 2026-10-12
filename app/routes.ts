@@ -66,7 +66,9 @@ export default [
     ]),
     route("compliance", "routes/compliance.tsx"),
     route("projects", "routes/projects.tsx"),
-    route("projects/:projectId", "routes/project-detail.tsx"),
+    layout("routes/verkaufsprojekt-arbeitsplatz.tsx", [
+      route("projects/:projectId", "routes/project-detail.tsx"),
+    ]),
     route("acquisition", "routes/acquisition.tsx"),
     route("acquisition/:campaignId", "routes/acquisition-campaign.tsx"),
     route("case-studies", "routes/case-studies.tsx"),
@@ -76,10 +78,14 @@ export default [
     route("after-sales", "routes/after-sales.tsx"),
     route("mandates", "routes/mandates.tsx"),
     route("mandates/new", "routes/mandate-new.tsx"),
-    route("mandates/:mandateId", "routes/mandate-detail.tsx"),
+    layout("routes/maklerauftrag-arbeitsplatz.tsx", [
+      route("mandates/:mandateId", "routes/mandate-detail.tsx"),
+    ]),
     route("measurements", "routes/measurements.tsx"),
     route("measurements/new", "routes/measurement-new.tsx"),
-    route("measurements/:orderId", "routes/measurement-detail.tsx"),
+    layout("routes/aufmass-arbeitsplatz.tsx", [
+      route("measurements/:orderId", "routes/measurement-detail.tsx"),
+    ]),
     route("commissions", "routes/commissions.tsx"),
     route("commissions/new", "routes/commission-new.tsx"),
     route("commissions/:commissionId", "routes/commission-detail.tsx"),

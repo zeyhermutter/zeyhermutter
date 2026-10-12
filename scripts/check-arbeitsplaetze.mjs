@@ -108,7 +108,7 @@ for (const { datei } of layouts) {
     pruefe(/(^|&)ansicht=tabelle(&|$)/.test(abfrage),
       `${datei}: "Volle Liste" zeigt auf ${volle}, aber ${listenDatei} leitet ohne ?ansicht=tabelle\n`
       + "  in die erste Akte um. Der Verweis fuehrte zurueck in den Arbeitsplatz statt auf die Liste.");
-    pruefe(/name="ansicht" value="tabelle"/.test(liste),
+    pruefe(!/method="get"/.test(liste) || /name="ansicht" value="tabelle"/.test(liste),
       `${listenDatei}: das Filterformular gibt ansicht=tabelle nicht mit. Wer alle Filter leert,\n`
       + "  landet sonst in der ersten Akte statt in der ungefilterten Tabelle.");
   }
