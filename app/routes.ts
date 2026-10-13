@@ -34,7 +34,9 @@ export default [
     route("crm/calendar", "routes/calendar.tsx"),
     route("crm/calendar/event.ics", "routes/calendar-event.ts"),
     route("crm/website", "routes/website-cms.tsx"),
-    route("crm/website/:pageKey", "routes/website-cms-detail.tsx"),
+    layout("routes/website-arbeitsplatz.tsx", [
+      route("crm/website/:pageKey", "routes/website-cms-detail.tsx"),
+    ]),
     route("crm/website/:pageKey/preview", "routes/website-cms-preview.tsx"),
     route("crm/sales-readiness", "routes/sales-readiness-overview.tsx"),
     route("crm/notifications", "routes/notifications.tsx"),
@@ -104,6 +106,9 @@ export default [
       route("purchase-offers/:offerId", "routes/purchase-offer-detail.tsx"),
     ]),
     route("reservations", "routes/reservations.tsx"),
+    layout("routes/reservierung-arbeitsplatz.tsx", [
+      route("reservations/:reservationId", "routes/reservation-detail.tsx"),
+    ]),
     route("closings", "routes/closings.tsx"),
     layout("routes/abschluss-arbeitsplatz.tsx", [
       route("closings/:closingId", "routes/closing-detail.tsx"),

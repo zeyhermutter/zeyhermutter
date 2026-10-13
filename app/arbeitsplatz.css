@@ -316,3 +316,35 @@
     border-bottom: 1px solid #cdd3d9;
   }
 }
+
+/* --- Felder einer Akte (Reservierung, 13.10.2026) ---------------------------
+ * Beschriftung klein darueber, Wert darunter, zwei Spalten; lange Texte
+ * (Bedingungen, Notizen) ueber die volle Breite. */
+.akte-felder {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 24px;
+  margin: 0;
+}
+.akte-felder > div { min-width: 0; }
+.akte-felder > div.breit { grid-column: 1 / -1; }
+.akte-felder dt { color: #4a5763; font-size: 12px; }
+.akte-felder dd { margin: 2px 0 0; color: #1b2733; font-size: 13px; overflow-wrap: anywhere; white-space: pre-line; }
+.akte-felder dd a { color: #0b5cad; text-decoration: none; }
+.akte-felder dd a:hover { text-decoration: underline; }
+.akte-felder .leise { color: #6b7782; font-size: 12px; }
+
+/* Knoepfe einer Akte (Wiedervorlage, Archivieren) -- rechtsbuendig in einer
+ * Reihe ueber den Feldern. */
+.akte-werkzeuge { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.akte-werkzeuge:empty { display: none; }
+.akte-werkzeuge form { margin: 0; }
+.akte-werkzeuge :is(.primary-button, .secondary-button) { min-height: 30px; padding: 0 12px; font-size: 13px; }
+
+@media (max-width: 760px) {
+  .akte-felder { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Die rechte Seite, solange es noch keinen Datensatz gibt
+ * (app/components/leerer-arbeitsplatz.tsx). */
+.leere-akte .programm-erklaerung { margin: 0 0 12px; color: #3d4a56; font-size: 13px; line-height: 1.5; }

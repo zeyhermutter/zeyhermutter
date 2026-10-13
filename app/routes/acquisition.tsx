@@ -1,7 +1,9 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/acquisition";
 import { Aufklapper } from "~/components/aufklapper";
+import { LeererArbeitsplatz } from "~/components/leerer-arbeitsplatz";
 import { requirePermission } from "~/lib/auth.server";
+import { istEinstieg } from "~/lib/einstieg";
 import { euroRund as money, tag as formatDate } from "~/lib/format";
 import { KAMPAGNENSTATUS as CAMPAIGN_STATUS } from "~/lib/labels";
 import "~/programm-liste.css";
@@ -37,6 +39,14 @@ function errorMessage(error:any){
 
 export async function loader({request,context}:Route.LoaderArgs){
   const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"acquisition.read");
+  // Ohne Parameter: gleich die zuletzt angelegte Kampagne als Akte -- Liste
+  // links, Akte rechts (13.10.2026). Kampagnen und Gebiete als Tabellen gibt
+  // es mit ?ansicht=tabelle. Ohne Kampagne steht der leere Arbeitsplatz da.
+  const einstieg=istEinstieg(request);
+  if(einstieg){
+    const {data:erste}=await supabase.from("acquisition_campaigns").select("id").is("archived_at",null).order("created_at",{ascending:false}).limit(1).maybeSingle();
+    if(erste?.id) throw redirect(`/acquisition/${erste.id}`,{headers:responseHeaders()});
+  }
   const url=new URL(request.url);
   const from=url.searchParams.get("from")||new Date(Date.now()-365*86400000).toISOString().slice(0,10);
   const to=url.searchParams.get("to")||new Date().toISOString().slice(0,10);
@@ -68,7 +78,7 @@ export async function loader({request,context}:Route.LoaderArgs){
   };
 
   return data({
-    profile,from,to,
+    leer:einstieg,profile,from,to,
     areas:ordered.map((a)=>({...a,path:pathOf(a.id)})),
     campaigns:campaignsRes.data??[],
     sources:sourcesRes.data??[],
@@ -99,7 +109,7 @@ export async function action({request,context}:Route.ActionArgs){
       created_by:userId,updated_by:userId,
     });
     if(error)return fail(error);
-    return redirect("/acquisition#gebiete",{headers:responseHeaders()});
+    return redirect("/acquisition?ansicht=tabelle#gebiete",{headers:responseHeaders()});
   }
 
   if(intent==="campaign_add"){
@@ -137,10 +147,45 @@ export async function action({request,context}:Route.ActionArgs){
   return invalid("Unbekannte Aktion.");
 }
 
+/** Die Formulare zum Anlegen -- auf der Tabelle zum Aufklappen, im leeren
+ * Arbeitsplatz offen. */
+function KampagneAnlegen({d}:{d:any}){
+  const disabled=!d.canWrite;
+  return <Form method="post" className="form-grid" >
+        <input type="hidden" name="_intent" value="campaign_add"/>
+        <label className="form-field"><span>Name *</span><input name="name" disabled={disabled} placeholder="Trudering Herbst 2026"/></label>
+        <label className="form-field"><span>Gebiet *</span><select name="area_id" defaultValue="" disabled={disabled}><option value="">—</option>{d.areas.map((a:any)=><option key={a.id} value={a.id}>{a.path}</option>)}</select></label>
+        <label className="form-field"><span>Kanal *</span><select name="source_id" defaultValue="" disabled={disabled}><option value="">—</option>{d.sources.map((s:any)=><option key={s.id} value={s.id}>{s.label}</option>)}</select><small className="subtle">Die bestehenden Leadquellen bleiben die Kanalebene.</small></label>
+        <label className="form-field"><span>Status</span><select name="status" defaultValue="PLANNED" disabled={disabled}>{Object.entries(CAMPAIGN_STATUS).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label>
+        <label className="form-field"><span>Zielgruppe</span><input name="target_group" disabled={disabled} placeholder="Eigentümer 55+"/></label>
+        <label className="form-field"><span>Thema</span><input name="topic" disabled={disabled} placeholder="Renovieren oder verkaufen"/></label>
+        <label className="form-field"><span>Handlungsaufforderung</span><input name="call_to_action" disabled={disabled} placeholder="Verkaufsstrategie-Check"/></label>
+        <label className="form-field"><span>Angeschriebene Haushalte</span><input name="household_count" disabled={disabled}/></label>
+        <label className="form-field"><span>Beginn</span><input type="date" name="starts_on" disabled={disabled}/></label>
+        <label className="form-field"><span>Ende</span><input type="date" name="ends_on" disabled={disabled}/></label>
+        <label className="form-field"><span>Geplante Kosten €</span><input name="planned_cost" disabled={disabled}/></label>
+        <label className="form-field full-width"><span>Notiz</span><input name="notes" disabled={disabled}/></label>
+        <div className="form-field full-width inline-actions"><button className="primary-button" type="submit" disabled={disabled}>Kampagne anlegen</button></div>
+      </Form>;
+}
+
+function GebietAnlegen({d}:{d:any}){
+  const disabled=!d.canWrite;
+  return <Form method="post" className="form-grid" >
+        <input type="hidden" name="_intent" value="area_add"/>
+        <label className="form-field"><span>Name *</span><input name="name" disabled={disabled} placeholder="Waldtrudering"/></label>
+        <label className="form-field"><span>Übergeordnet</span><select name="parent_area_id" defaultValue="" disabled={disabled}><option value="">— oberste Ebene</option>{d.areas.map((a:any)=><option key={a.id} value={a.id}>{a.path}</option>)}</select></label>
+        <label className="form-field"><span>Art</span><select name="area_type" defaultValue="DISTRICT" disabled={disabled}>{Object.entries(AREA_TYPE).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label>
+        <label className="form-field"><span>PLZ</span><input name="postal_code" disabled={disabled}/></label>
+        <label className="form-field"><span>Haushalte (Schätzung)</span><input name="household_estimate" disabled={disabled}/></label>
+        <label className="form-field full-width"><span>Notiz</span><input name="notes" disabled={disabled}/></label>
+        <div className="form-field full-width inline-actions"><button className="secondary-button" type="submit" disabled={disabled}>Gebiet anlegen</button></div>
+      </Form>;
+}
+
 export default function Acquisition(){
   const d=useLoaderData<typeof loader>();
   const actionData=useActionData<ActionResult>();
-  const disabled=!d.canWrite;
   const campaigns=(d.campaigns??[]) as any[];
   const performance=new Map((d.performance??[]).map((row:any)=>[row.campaign_id,row]));
   const totals=(d.performance??[]).reduce((acc:any,row:any)=>({
@@ -150,6 +195,17 @@ export default function Acquisition(){
     cost:acc.cost+Number(row.actual_cost||row.planned_cost||0),
     commission:acc.commission+Number(row.commission_expected||0),
   }),{responses:0,mandates:0,sales:0,cost:0,commission:0});
+
+  if(d.leer) return <LeererArbeitsplatz listenName="Kampagnenliste" einzahl="Kampagne" mehrzahl="Kampagnen" suchePlatzhalter="Name, Nummer …"
+    neu={d.canWrite?{pfad:"#kampagne-anlegen",beschriftung:"+ Neu"}:undefined} volleListe="/acquisition?ansicht=tabelle" titel="Noch keine Kampagne">
+    {actionData?.error?<p className="form-error">{actionData.error}</p>:null}
+    {d.areas.length===0
+      ?<section className="data-card" id="gebiet-anlegen"><div className="card-head"><div><h2>Zuerst ein Gebiet anlegen</h2></div></div><p className="programm-erklaerung">Eine Kampagne läuft immer in einem Gebiet. Es ist noch keines erfasst.</p><GebietAnlegen d={d}/></section>
+      :<>
+        <section className="data-card" id="kampagne-anlegen"><div className="card-head"><div><h2>Erste Kampagne anlegen</h2></div></div><KampagneAnlegen d={d}/></section>
+        <Aufklapper id="gebiet-anlegen" knopf={`Gebiete (${d.areas.length}) · weiteres Gebiet anlegen`}><section className="data-card"><GebietAnlegen d={d}/></section></Aufklapper>
+      </>}
+  </LeererArbeitsplatz>;
 
   // Programmliste (13.10.2026): Kennzahlen als eine Zeile, Kampagnen und
   // Gebiete als Tabellen mit Spaltenkoepfen; Anlegen klappt darunter auf.
@@ -197,22 +253,7 @@ export default function Acquisition(){
         </table>}
       </div>
 
-      <Aufklapper id="kampagne-anlegen" knopf="+ Kampagne anlegen"><Form method="post" className="form-grid" >
-        <input type="hidden" name="_intent" value="campaign_add"/>
-        <label className="form-field"><span>Name *</span><input name="name" disabled={disabled} placeholder="Trudering Herbst 2026"/></label>
-        <label className="form-field"><span>Gebiet *</span><select name="area_id" defaultValue="" disabled={disabled}><option value="">—</option>{d.areas.map((a:any)=><option key={a.id} value={a.id}>{a.path}</option>)}</select></label>
-        <label className="form-field"><span>Kanal *</span><select name="source_id" defaultValue="" disabled={disabled}><option value="">—</option>{d.sources.map((s:any)=><option key={s.id} value={s.id}>{s.label}</option>)}</select><small className="subtle">Die bestehenden Leadquellen bleiben die Kanalebene.</small></label>
-        <label className="form-field"><span>Status</span><select name="status" defaultValue="PLANNED" disabled={disabled}>{Object.entries(CAMPAIGN_STATUS).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label>
-        <label className="form-field"><span>Zielgruppe</span><input name="target_group" disabled={disabled} placeholder="Eigentümer 55+"/></label>
-        <label className="form-field"><span>Thema</span><input name="topic" disabled={disabled} placeholder="Renovieren oder verkaufen"/></label>
-        <label className="form-field"><span>Handlungsaufforderung</span><input name="call_to_action" disabled={disabled} placeholder="Verkaufsstrategie-Check"/></label>
-        <label className="form-field"><span>Angeschriebene Haushalte</span><input name="household_count" disabled={disabled}/></label>
-        <label className="form-field"><span>Beginn</span><input type="date" name="starts_on" disabled={disabled}/></label>
-        <label className="form-field"><span>Ende</span><input type="date" name="ends_on" disabled={disabled}/></label>
-        <label className="form-field"><span>Geplante Kosten €</span><input name="planned_cost" disabled={disabled}/></label>
-        <label className="form-field full-width"><span>Notiz</span><input name="notes" disabled={disabled}/></label>
-        <div className="form-field full-width inline-actions"><button className="primary-button" type="submit" disabled={disabled}>Kampagne anlegen</button></div>
-      </Form></Aufklapper>
+      <Aufklapper id="kampagne-anlegen" knopf="+ Kampagne anlegen"><KampagneAnlegen d={d}/></Aufklapper>
     </section>
 
     <section className="programm-abschnitt" id="gebiete">
@@ -233,16 +274,7 @@ export default function Acquisition(){
         </table>}
       </div>
 
-      <Aufklapper id="gebiet-anlegen" knopf="+ Gebiet anlegen"><Form method="post" className="form-grid" >
-        <input type="hidden" name="_intent" value="area_add"/>
-        <label className="form-field"><span>Name *</span><input name="name" disabled={disabled} placeholder="Waldtrudering"/></label>
-        <label className="form-field"><span>Übergeordnet</span><select name="parent_area_id" defaultValue="" disabled={disabled}><option value="">— oberste Ebene</option>{d.areas.map((a:any)=><option key={a.id} value={a.id}>{a.path}</option>)}</select></label>
-        <label className="form-field"><span>Art</span><select name="area_type" defaultValue="DISTRICT" disabled={disabled}>{Object.entries(AREA_TYPE).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label>
-        <label className="form-field"><span>PLZ</span><input name="postal_code" disabled={disabled}/></label>
-        <label className="form-field"><span>Haushalte (Schätzung)</span><input name="household_estimate" disabled={disabled}/></label>
-        <label className="form-field full-width"><span>Notiz</span><input name="notes" disabled={disabled}/></label>
-        <div className="form-field full-width inline-actions"><button className="secondary-button" type="submit" disabled={disabled}>Gebiet anlegen</button></div>
-      </Form></Aufklapper>
+      <Aufklapper id="gebiet-anlegen" knopf="+ Gebiet anlegen"><GebietAnlegen d={d}/></Aufklapper>
     </section>
   </div>;
 }

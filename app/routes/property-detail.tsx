@@ -5,7 +5,7 @@ import { grossYield } from "./property-hoa-tenancy";
 import { PHASE as PROJECT_PHASE_LABELS } from "./projects";
 import { euroRund as euro, tag, tag as formatDay, zeitpunkt as formatDate } from "~/lib/format";
 import { ABSCHLUSSSTATUS, AUFMASSSTATUS, CHECKLISTENKATEGORIE, KAUFANGEBOTSTATUS, MAKLERAUFTRAGART as MANDATE_TYPE, MAKLERAUFTRAGSTATUS as MANDATE_STATUS, PROVISIONSSTATUS, VERFUEGUNGSROLLE as DISPOSITION_ROLE, beschrifte } from "~/lib/labels";
-import { RESERVATION_STATUS } from "./reservations";
+import { RESERVATION_STATUS } from "~/lib/reservierung";
 import { fahrplan } from "~/lib/objektakte-fahrplan";
 import { ObjektakteFahrplan } from "~/components/objektakte-fahrplan";
 import { ankerPfad, teilAusPfad } from "~/lib/objektakte-navigation";

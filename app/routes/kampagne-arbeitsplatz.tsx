@@ -7,9 +7,9 @@ import { ladeArbeitsplatz } from "~/lib/arbeitsplatz.server";
 import { Arbeitsplatz, ArbeitsplatzKopf, type ArbeitsplatzZeile } from "~/components/arbeitsplatz";
 
 // Der Arbeitsplatz der Kampagnen: links die Liste, rechts der Datensatz.
-// Derselbe Aufbau wie Kontakte und Objekte (13.10.2026). "Kampagnen &
-// Gebiete" selbst bleibt die Uebersicht mit Kanaelen und Gebieten -- sie
-// leitet nicht in die erste Kampagne um.
+// Derselbe Aufbau wie Kontakte und Objekte (13.10.2026). "/acquisition"
+// leitet seitdem in die zuletzt angelegte Kampagne um; Kampagnen und Gebiete
+// als Tabellen gibt es mit ?ansicht=tabelle ("Volle Liste").
 // Der Seitenkopf wiederholte Name und Status -- das steht im Kopf darueber.
 
 const HOECHSTENS = 300;
@@ -57,8 +57,8 @@ export default function KampagneArbeitsplatz() {
       aktiveId={campaignId}
       geoeffnet={akte ? alsZeile(akte) : null}
       suchePlatzhalter="Name, Nummer …"
-      neu={{ pfad: "/acquisition#kampagne-anlegen", beschriftung: "+ Neu" }}
-      volleListe="/acquisition#kampagnen"
+      neu={{ pfad: "/acquisition?ansicht=tabelle#kampagne-anlegen", beschriftung: "+ Neu" }}
+      volleListe="/acquisition?ansicht=tabelle#kampagnen"
       listeFehlt={listeFehlt}
       abgeschnitten={abgeschnitten ? `die zuletzt bearbeiteten ${HOECHSTENS}` : null}
       seitenkopf="ausblenden"

@@ -1,17 +1,22 @@
-import { data, Link, useLoaderData } from "react-router";
+import { data, Link, redirect, useLoaderData } from "react-router";
 import type { Route } from "./+types/website-cms";
 import { Aufklapper } from "~/components/aufklapper";
 import { requirePermission } from "~/lib/auth.server";
+import { istEinstieg } from "~/lib/einstieg";
+import { stateLabel } from "~/lib/website-stand";
 import { zeitpunkt as formatDate } from "~/lib/format";
 import "~/website-cms.css";
 import "~/programm-liste.css";
 
-function stateLabel(page: any) { if (page.status === "PUBLISHED" && !page.has_unpublished_changes) return "Veröffentlicht"; if (page.status === "READY") return "Version zur Freigabe bereit"; if (page.published_version) return "Veröffentlicht · Änderungen offen"; return "Entwurf"; }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { supabase, responseHeaders } = await requirePermission(request, context.cloudflare.env, "website.read");
   const { data: pages, error } = await supabase.from("website_pages").select("id,page_key,path,label,status,candidate_version,published_version,has_unpublished_changes,updated_at,version").order("path");
   if (error) throw new Response("Website-CMS konnte nicht geladen werden.", { status: 500, headers: responseHeaders() });
+  // Ohne Parameter: gleich die erste Seite als Akte -- Liste links, Akte
+  // rechts. Die Tabelle aller Seiten gibt es mit ?ansicht=tabelle.
+  const erste = (pages ?? [])[0] as any;
+  if (istEinstieg(request) && erste) throw redirect(`/crm/website/${String(erste.page_key).toLowerCase()}`, { headers: responseHeaders() });
   return data({ pages: pages ?? [] }, { headers: responseHeaders() });
 }
 
