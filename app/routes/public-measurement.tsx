@@ -27,7 +27,12 @@ import "~/public-website.css";
 //
 // Der Umsatzsteuerzusatz steht an JEDER Zahl und nicht nur einmal unter dem
 // Raster. Eine Preisangabe wird gelesen, wo sie steht -- wer die Karte
-// "399 EUR bis 100 m2" ueberfliegt, scrollt nicht erst zur Fussnote.
+// "479 EUR bis 100 m2" ueberfliegt, scrollt nicht erst zur Fussnote.
+//
+// Seit 13.10.2026 Bruttopreise (Sebastians Entscheidung): die Kunden sind
+// fast immer Privatleute, und die rechnen mit dem Endpreis. Vorher netto
+// 149 / 399 / 549 / ab 899 EUR; jetzt gerundet 179 / 479 / 649 / ab 1.090
+// EUR einschliesslich 19 % Umsatzsteuer.
 //
 // WAS DIESE SEITE NICHT TUT
 //
@@ -42,21 +47,21 @@ type ActionResult = { ok?: string; error?: string };
 const PAKETE: { schluessel: string; preis: string; einleitung: string; leistungen: string[]; hinweis?: string }[] = [
   {
     schluessel: "FLOOR_PLAN_REFRESH",
-    preis: "ab 149 €",
+    preis: "ab 179 €",
     einleitung: "Sie haben bereits einen Grundriss, brauchen ihn aber in einer modernen, übersichtlichen Darstellung.",
     leistungen: ["Neuzeichnung vorhandener Unterlagen", "Raumbezeichnungen", "Übersichtliche 2D-Darstellung", "PDF- und Exposé-Version"],
     hinweis: "Grundlage sind die zur Verfügung gestellten Bestandsunterlagen. Ohne Vor-Ort-Aufmaß.",
   },
   {
     schluessel: "AS_BUILT",
-    preis: "399 € bis 100 m²",
+    preis: "479 € bis 100 m²",
     einleitung: "Wir messen Ihre Immobilie vor Ort auf und erstellen einen aktuellen Bestandsgrundriss.",
     leistungen: ["Örtliches Aufmaß", "Maßstäblicher Bestandsgrundriss", "Bemaßung", "Raumbezeichnungen", "Flächenangaben", "Technische PDF-Ausfertigung"],
     hinweis: "Für fehlende, veraltete oder nicht mehr zum tatsächlichen Bestand passende Grundrisse.",
   },
   {
     schluessel: "SALE_FINANCE",
-    preis: "549 € bis 100 m²",
+    preis: "649 € bis 100 m²",
     einleitung: "Das Komplettpaket für Eigentümer, Käufer und Verkäufer.",
     leistungen: [
       "Örtliches Aufmaß", "Bemaßter Bestandsgrundriss", "Wohnflächenberechnung nach WoFlV",
@@ -66,7 +71,7 @@ const PAKETE: { schluessel: string; preis: string; einleitung: string; leistunge
   },
   {
     schluessel: "HOUSE_PREMIUM",
-    preis: "ab 899 €",
+    preis: "ab 1.090 €",
     einleitung: "Für Einfamilienhäuser und Immobilien mit mehreren Geschossen.",
     leistungen: [
       "Vollständiges Vor-Ort-Aufmaß", "Bestandsgrundrisse sämtlicher Geschosse",
@@ -91,14 +96,14 @@ const FRAGEN: [string, string][] = [
   ["Was ist der Unterschied zwischen WoFlV und DIN 277?", "Die Wohnflächenverordnung ist die übliche Grundlage für Wohnimmobilien und rechnet etwa Dachschrägen und Balkone nur anteilig an. Die DIN 277 erfasst Grundflächen des Bauwerks und kommt auf andere Zahlen. Welche Grundlage gilt, steht in der Berechnung ausdrücklich dabei."],
   ["Muss ich bei Ihnen verkaufen, um das zu beauftragen?", "Nein. Das Aufmaß ist eine eigenständige Leistung. Sie können es beauftragen, ohne dass ein Verkauf ansteht oder ein Maklerauftrag besteht."],
   ["Gilt der Preis auch für größere Objekte?", "Die genannten Preise gelten für die beschriebenen Leistungen in den angegebenen Grenzen. Größere Objekte, mehrere Einheiten, weite Anfahrt oder besondere Anforderungen rechnen wir nach Aufwand ab — den Preis nennen wir vor der Beauftragung."],
-  ["Sind die Preise mit oder ohne Umsatzsteuer?", "Alle genannten Beträge sind Nettopreise zuzüglich der gesetzlichen Umsatzsteuer. Im Angebot, das Sie vor der Beauftragung erhalten, stehen Netto- und Bruttobetrag nebeneinander."],
+  ["Sind die Preise mit oder ohne Umsatzsteuer?", "Alle genannten Beträge sind Endpreise einschließlich der gesetzlichen Umsatzsteuer. Im Angebot, das Sie vor der Beauftragung erhalten, stehen Netto- und Bruttobetrag nebeneinander."],
 ];
 
 function seitenMeta({ data: routeData }: Route.MetaArgs) {
   const canonicalUrl = (routeData as { canonicalUrl?: string } | undefined)?.canonicalUrl;
   return [
     { title: "Technisches Immobilienaufmaß · Grundrisse und Wohnflächenberechnung · ZeyherMutter" },
-    { name: "description", content: "Bestandsgrundrisse und Wohnflächenberechnung nach WoFlV vom Vermessungsingenieur. Grundriss-Refresh ab 149 €, Bestandsaufmaß ab 399 € — jeweils netto zzgl. USt." },
+    { name: "description", content: "Bestandsgrundrisse und Wohnflächenberechnung nach WoFlV vom Vermessungsingenieur. Grundriss-Refresh ab 179 €, Bestandsaufmaß ab 479 € — jeweils inkl. USt." },
     { name: "robots", content: "index,follow" },
     ...(canonicalUrl ? [{ tagName: "link" as const, rel: "canonical", href: canonicalUrl }] : []),
   ];
@@ -197,7 +202,7 @@ export default function PublicMeasurement() {
         {PAKETE.map((paket) => <article key={paket.schluessel}>
           <span className="aufmass-paket-name">{AUFMASSPAKET[paket.schluessel]}</span>
           <strong className="aufmass-preis">{paket.preis}</strong>
-          <small className="aufmass-preis-zusatz">zzgl. gesetzlicher Umsatzsteuer</small>
+          <small className="aufmass-preis-zusatz">inkl. gesetzlicher Umsatzsteuer</small>
           <p>{paket.einleitung}</p>
           <ul>
             {paket.leistungen.map((leistung) => <li key={leistung}><span aria-hidden="true">✓</span>{leistung}</li>)}
@@ -206,8 +211,8 @@ export default function PublicMeasurement() {
         </article>)}
       </div>
       <p className="sales-check-estimate-note">
-        <strong>Was die Preise bedeuten:</strong> Alle genannten Beträge sind Nettopreise und verstehen sich zuzüglich der
-        gesetzlichen Umsatzsteuer. Sie gelten für die beschriebenen Leistungen in den angegebenen Grenzen. Größere Objekte,
+        <strong>Was die Preise bedeuten:</strong> Alle genannten Beträge sind Endpreise einschließlich der gesetzlichen
+        Umsatzsteuer. Sie gelten für die beschriebenen Leistungen in den angegebenen Grenzen. Größere Objekte,
         mehrere Einheiten, weite Anfahrt oder besondere Anforderungen rechnen wir nach Aufwand ab — den Preis für Ihren Fall
         nennen wir vor der Beauftragung.
       </p>

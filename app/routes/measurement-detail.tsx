@@ -421,7 +421,7 @@ export default function MeasurementDetail(){
         <input type="hidden" name="version" value={row.version}/>
         <fieldset disabled={!editable}>
           <div className="form-grid">
-            <label className="form-field"><span>Honorar</span><input name="fee_amount" inputMode="decimal" defaultValue={row.fee_amount??""}/><small className="subtle">{row.fee_amount?`Hinterlegt: ${money(row.fee_amount)}`:"Noch nicht vereinbart"}</small></label>
+            <label className="form-field"><span>Honorar (brutto)</span><input name="fee_amount" inputMode="decimal" defaultValue={row.fee_amount??""}/><small className="subtle">{row.fee_amount?`Hinterlegt: ${money(row.fee_amount)}`:"Noch nicht vereinbart"}</small></label>
             <label className="form-field"><span>Grundlage des Honorars</span><input name="fee_basis" defaultValue={row.fee_basis??""} placeholder="z. B. Paketpreis, Aufwand, Zuschlag Anfahrt"/></label>
             <label className="form-field"><span>Rechnungsreferenz</span><input name="invoice_reference" defaultValue={row.invoice_reference??""}/></label>
             <label className="form-field"><span>Abgerechnet am</span><input name="invoiced_on" type="date" defaultValue={row.invoiced_on??""}/></label>

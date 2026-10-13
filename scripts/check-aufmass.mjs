@@ -27,7 +27,8 @@
 // 1. Die Pakete sind in Migration, Beschriftung und Edge-Funktion dieselben.
 // 2. Jedes Paket, das das oeffentliche Formular anbietet, hat auf der Seite
 //    eine Karte mit Preis -- oder steht hier mit Begruendung als Ausnahme.
-//    An jeder Zahl steht, dass sie netto ist.
+//    An jeder Zahl steht, ob die Umsatzsteuer enthalten ist (seit 13.10.2026
+//    Bruttopreise).
 // 3. Die Zustaende sind in Migration und Beschriftung dieselben.
 // 4. Jeder Zustand ausser dem Startzustand ist ueber mindestens einen
 //    Uebergang erreichbar, und aus jedem Zustand ausser den Endzustaenden
@@ -156,8 +157,8 @@ for (const [paket, grund] of Object.entries(OHNE_KARTE)) {
 
 // --- 2b. Jede Zahl traegt die Umsatzsteuerangabe --------------------------
 //
-// Die Preise sind Nettopreise. Steht das nicht an der Zahl, liest ein privater
-// Eigentuemer sie als Endpreis -- und das ist der Betrag, mit dem er rechnet.
+// Ob die Umsatzsteuer enthalten ist, gehoert an die Zahl: ein privater
+// Eigentuemer rechnet mit dem Endpreis. Seit 13.10.2026 sind es Bruttopreise.
 // Die Angabe gehoert in die Karte und nicht nur in eine Fussnote, weil eine
 // Preisangabe dort gelesen wird, wo sie steht.
 
