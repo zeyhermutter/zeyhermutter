@@ -157,17 +157,31 @@
 }
 .public-nav a:hover { border-bottom-color: var(--zm-gold); }
 
+/* Der Fuss ordnet nach Anliegen wie die Navigation: Eigentuemer, Kaeufer,
+   das Buero -- darunter die Rechtstexte. Vorher eine Zeile mit elf Links. */
 .public-footer {
-  margin-top: 0;
-  padding: 40px max(24px, calc((100% - 1180px) / 2));
+  padding: 56px max(24px, calc((100% - 1180px) / 2)) 28px;
   background: var(--zm-navy);
   color: var(--zm-auf-navy-leise);
-  font-size: 13px;
-  display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+  font-size: 14px;
+  display: grid;
+  grid-template-columns: minmax(240px, 1.4fr) repeat(3, minmax(160px, 1fr));
+  gap: 32px 40px;
 }
-.public-footer > div { display: flex; gap: 22px; flex-wrap: wrap; }
+.public-footer > nav { display: grid; align-content: start; gap: 9px; }
+.public-footer strong { color: var(--zm-auf-navy); font-size: 13px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 4px; }
+.public-footer-marke strong { display: block; font-family: var(--zm-serif); font-size: 21px; letter-spacing: 0; text-transform: none; margin-bottom: 8px; }
+.public-footer-marke p { margin: 0 0 14px; line-height: 1.6; max-width: 36ch; }
 .public-footer a { color: var(--zm-auf-navy); text-decoration: none; }
 .public-footer a:hover { color: var(--zm-gold); }
+.public-footer .public-footer-kontakt { color: var(--zm-gold); font-weight: 600; }
+.public-footer-recht {
+  grid-column: 1 / -1;
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px 24px;
+  padding-top: 22px; border-top: 1px solid var(--zm-linie-navy);
+  font-size: 13px;
+}
+.public-footer-recht > span:last-child { display: flex; gap: 20px; flex-wrap: wrap; }
 .public-internal-link { opacity: .5; }
 
 /* --- Bausteine ----------------------------------------------------- */
@@ -223,35 +237,6 @@
 .zm-lead { font-size: 19px; line-height: 1.7; color: var(--zm-auf-navy-leise); max-width: 62ch; margin-top: 18px; }
 .zm-actions { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-top: 34px; }
 
-/* Zwei Wege: verkaufen oder erst vorbereiten. */
-.zm-choice { width: var(--zm-breite); margin: 0 auto; padding: clamp(64px, 8vw, 104px) 0; }
-.zm-choice-head { max-width: 62ch; margin-bottom: 40px; }
-.zm-choice-head p:last-child { color: var(--zm-text-leise); font-size: 17px; }
-.zm-choice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
-.zm-choice-grid article {
-  display: grid; align-content: start; gap: 10px;
-  padding: 34px; background: var(--zm-karte);
-  border: 1px solid var(--zm-linie); border-top: 2px solid var(--zm-gold);
-}
-/* Die beiden Karten sind zwei verschiedene Dinge: die Vermarktung selbst und
-   die Option davor. Im alten Blatt war die zweite komplett navy ausgefuellt --
-   das schrie den Zusatzdienst heraus. Ein Sandton genuegt, um sie zu
-   unterscheiden, ohne sie wichtiger zu machen als das Hauptgeschaeft. */
-.zm-choice-grid article.secondary { background: var(--zm-sand); }
-.zm-choice-grid article > span { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--zm-text-leise); }
-.zm-choice-grid p { color: var(--zm-text-leise); margin: 0; }
-.zm-choice-grid a { justify-self: start; margin-top: 8px; color: var(--zm-text); text-decoration: none; font-weight: 600; border-bottom: 1px solid var(--zm-gold); padding-bottom: 2px; }
-
-/* Leistungen: drei Spalten, nur durch Linien getrennt. */
-.zm-services { width: var(--zm-breite); margin: 0 auto; padding-bottom: clamp(64px, 8vw, 100px); }
-.zm-services-head { margin-bottom: 34px; }
-.zm-service-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--zm-linie); }
-.zm-service-grid article { padding: 34px 30px 34px 0; border-right: 1px solid var(--zm-linie); }
-.zm-service-grid article:not(:first-child) { padding-left: 30px; }
-.zm-service-grid article:last-child { border-right: 0; padding-right: 0; }
-.zm-service-grid article > span { font-family: var(--zm-serif); font-size: 15px; color: var(--zm-gold-tief); }
-.zm-service-grid p { color: var(--zm-text-leise); margin: 0; }
-
 /* Der Verkaufsstrategie-Check als dunkle Zäsur in der Mitte der Seite. */
 .zm-check-band {
   background: var(--zm-navy); color: var(--zm-auf-navy);
@@ -278,20 +263,6 @@
 .zm-check-points strong { font-weight: 500; }
 .zm-check-band .zm-check-points > a { margin-top: 22px; justify-self: start; color: var(--zm-gold); text-decoration: none; font-weight: 600; border-bottom: 1px solid var(--zm-linie-navy); padding-bottom: 3px; }
 .zm-check-points > a:hover { border-bottom-color: var(--zm-gold); }
-
-/* Das Zitat: ruhig, viel Luft, keine Anführungsgrafik. */
-.zm-trust {
-  width: var(--zm-breite); margin: 0 auto;
-  padding: clamp(64px, 8vw, 100px) 0;
-  display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(260px, .6fr); gap: 64px; align-items: start;
-}
-.zm-trust blockquote {
-  margin: 0; font-size: clamp(23px, 2.7vw, 33px); line-height: 1.4; color: var(--zm-text);
-  padding-left: 26px; border-left: 2px solid var(--zm-gold);
-}
-.zm-trust > div { padding-top: 8px; }
-.zm-trust strong { display: block; font-size: 14px; letter-spacing: .04em; margin-bottom: 8px; }
-.zm-trust p { color: var(--zm-text-leise); margin: 0; }
 
 .zm-cta {
   background: var(--zm-sand);
@@ -687,16 +658,14 @@
 
 @media (max-width: 1000px) {
   .public-property-grid.compact { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .zm-check-band, .zm-trust, .public-detail-grid { gap: 40px; }
+  .zm-check-band, .public-detail-grid { gap: 40px; }
   .public-gallery { grid-template-columns: 2fr 1fr; grid-auto-rows: 190px; }
 }
 
 @media (max-width: 860px) {
-  .zm-choice-grid, .zm-service-grid, .public-decision-grid, .zm-personen-gitter,
+  .public-decision-grid, .zm-personen-gitter,
   .sales-check-scenario-grid, .sales-check-roles { grid-template-columns: 1fr; }
-  .zm-service-grid article, .zm-service-grid article:not(:first-child) { border-right: 0; border-bottom: 1px solid var(--zm-linie); padding: 26px 0; }
-  .zm-service-grid article:last-child { border-bottom: 0; }
-  .zm-check-band, .zm-trust, .public-story-section, .public-faq-section,
+  .zm-check-band, .public-story-section, .public-faq-section,
   .public-situations-section, .sales-check-hero, .sales-check-process, .zm-warum, .zm-abwaegung,
   .zm-grenze, .zm-ratgeber-gitter,
   .sales-check-measures, .sales-check-form-section, .public-contact-page,
@@ -717,15 +686,11 @@
 
 @media (max-width: 560px) {
   .public-site { --zm-breite: min(100% - 28px, 1180px); }
-  /* Auf dem Telefon passen Logo und drei Links nicht mehr nebeneinander:
-     bei 390 Pixeln Fensterbreite lief die Leiste 72 Pixel hinaus. Der
-     Kopfbereich bricht deshalb in zwei Zeilen um -- Logo oben, Links darunter.
-     Ein Klappmenue waere ein zusaetzlicher Klick fuer drei Eintraege. */
-  .public-header { padding: 0 14px; flex-wrap: wrap; justify-content: flex-start; gap: 0; }
-  .public-brand { padding: 12px 0 4px; }
-  .public-brand img { width: 200px; }
-  .public-nav { width: 100%; flex-wrap: wrap; gap: 6px 18px; padding-bottom: 10px; }
-  .public-nav a { font-size: 13px; }
+  /* Auf dem Telefon: Logo links, "Kontakt" und "Menü" rechts in einer
+     Zeile. Sieben Links liefen vorher in drei Zeilen um. */
+  .public-header { padding: 0 14px; gap: 0 10px; }
+  .public-brand { padding: 10px 0; }
+  .public-brand img { width: 170px; }
   .zm-hero, .zm-check-band, .public-situations-section, .sales-check-measures,
   .zm-cta, .public-footer { padding-left: 14px; padding-right: 14px; }
   .public-fact-grid { grid-template-columns: 1fr 1fr; }
@@ -735,6 +700,221 @@
   .public-gallery-main { grid-column: auto; height: 250px; }
   .public-process-grid, .sales-check-measures ul, .sales-check-support { grid-template-columns: 1fr; }
   .public-process-grid li, .public-process-grid li:not(:first-child) { border-right: 0; padding-left: 0; border-bottom: 1px solid var(--zm-linie); }
-  .public-footer { display: grid; }
   .public-partner-note { align-items: flex-start; }
 }
+
+/* === Kopfbereich mit Kontaktknopf und Menue (13.10.2026) ==============
+   Logo links, Navigation, rechts "Kontakt" als goldener Knopf -- er ist auf
+   jeder Seite der eine Weg, mit uns zu sprechen. Unter 1100 Pixeln traegt
+   die Zeile die sieben Links nicht mehr; dann klappen sie hinter "Menü". */
+
+.public-header { flex-wrap: nowrap; gap: 0 28px; }
+.public-header > .public-nav { margin-left: auto; flex-wrap: nowrap; gap: 0 24px; }
+.public-nav a.active { border-bottom-color: var(--zm-gold); }
+.public-header-rechts { display: flex; align-items: center; gap: 12px; }
+.public-header .public-header-kontakt {
+  display: inline-flex; align-items: center; min-height: 40px; padding: 0 18px;
+  background: var(--zm-gold); color: var(--zm-navy);
+  font-size: 14px; font-weight: 700; text-decoration: none; border-radius: 2px;
+  white-space: nowrap;
+}
+.public-header .public-header-kontakt:hover { background: #D2AE72; }
+
+.public-menu { position: relative; display: none; }
+.public-header .public-menu > summary {
+  display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px;
+  border: 1px solid rgba(236, 235, 240, .4); border-radius: 2px;
+  color: var(--zm-auf-navy); font-size: 14px; cursor: pointer; list-style: none;
+}
+.public-menu > summary::-webkit-details-marker { display: none; }
+.public-header .public-menu[open] > summary { border-color: var(--zm-gold); }
+.public-header .public-menu > nav {
+  position: absolute; right: 0; top: calc(100% + 10px); z-index: 50;
+  display: grid; min-width: 240px; padding: 8px 0;
+  background: var(--zm-navy); border: 1px solid var(--zm-linie-navy);
+  box-shadow: 0 18px 40px rgba(6, 32, 55, .35);
+}
+.public-header .public-menu > nav a { padding: 11px 20px; color: var(--zm-auf-navy); text-decoration: none; font-size: 15px; }
+.public-header .public-menu > nav a:hover { background: var(--zm-navy-2); color: var(--zm-gold); }
+
+@media (max-width: 1100px) {
+  .public-header > .public-nav { display: none; }
+  .public-header-rechts { margin-left: auto; }
+  .public-menu { display: block; }
+}
+
+/* === Startseite (13.10.2026) ==========================================
+   Vom Besucher aus gebaut: Kopf mit Aussage und vier Anliegen, darunter
+   Vorteile, Leistungen, echte Immobilien, Ablauf, Check, Team, Anlaesse,
+   Kontakt. Farben bleiben die der Marke: Navy, Gold als Linie und auf
+   Navy, Elfenbein als Grund. */
+
+/* Kopf zweispaltig: links die Aussage, rechts die Anliegen als Karte. Die
+   Schrift links bleibt in den ersten 760 Pixeln (siehe check-hero-bild);
+   die Karte rechts ist deckend und braucht das Foto nicht. */
+.zm-hero > .zm-held-raster { max-width: none; }
+.zm-held-raster {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
+  gap: 56px; align-items: center;
+}
+.zm-held-text { max-width: 700px; }
+.zm-held { padding-top: clamp(56px, 7vw, 96px); padding-bottom: clamp(56px, 7vw, 96px); }
+.zm-held h1 { font-size: clamp(40px, 5.2vw, 64px); max-width: 16ch; }
+
+.zm-anliegen {
+  display: grid; gap: 2px; padding: 22px 18px 18px;
+  background: var(--zm-grund); color: var(--zm-text);
+  border-top: 3px solid var(--zm-gold);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .28);
+}
+.zm-anliegen-titel { margin: 0 6px 10px; font-family: var(--zm-serif); font-size: 22px; line-height: 1.3; color: var(--zm-text); }
+.zm-anliegen-eintrag {
+  display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; gap: 14px;
+  padding: 13px 10px; border-radius: 2px;
+  color: var(--zm-text); text-decoration: none;
+  border-bottom: 1px solid var(--zm-linie);
+}
+.zm-anliegen-eintrag:last-child { border-bottom: 0; }
+.zm-anliegen-eintrag:hover { background: var(--zm-karte); }
+.zm-anliegen-eintrag:hover .zm-pfeil { transform: translateX(3px); color: var(--zm-navy); }
+.zm-anliegen-eintrag .zm-symbol {
+  width: 40px; height: 40px; padding: 9px; border-radius: 50%;
+  background: var(--zm-navy); color: var(--zm-gold);
+}
+.zm-anliegen-eintrag strong { display: block; font-size: 16px; font-weight: 650; }
+.zm-anliegen-eintrag small { display: block; margin-top: 2px; color: var(--zm-text-leise); font-size: 13.5px; line-height: 1.45; }
+.zm-pfeil { color: var(--zm-gold-tief); font-size: 18px; transition: transform .18s ease; }
+
+/* Vorteile: eine ruhige Zeile direkt unter dem Kopf. */
+.zm-vorteile {
+  list-style: none; margin: 0; padding: 18px max(24px, calc((100% - 1180px) / 2));
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 28px;
+  background: var(--zm-karte); border-bottom: 1px solid var(--zm-linie);
+  font-size: 14.5px; font-weight: 600; color: var(--zm-text);
+}
+.zm-vorteile li { display: flex; align-items: center; gap: 10px; line-height: 1.4; }
+.zm-vorteile li > span {
+  flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--zm-navy); color: var(--zm-gold); font-size: 12px;
+}
+
+/* Abschnittskoepfe */
+.zm-abschnitt-kopf { max-width: 66ch; margin-bottom: 36px; }
+.zm-abschnitt-kopf > p:last-child:not(.public-eyebrow) { color: var(--zm-text-leise); font-size: 17px; margin: 0; }
+.zm-kopf-zeile { max-width: none; display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap; }
+
+/* Leistungen: sechs Karten, die erste (der Verkauf) breit und dunkel --
+   sie ist das Kerngeschaeft, alles andere arbeitet ihr zu. */
+.zm-leistungen { width: var(--zm-breite); margin: 0 auto; padding: clamp(64px, 8vw, 104px) 0; }
+.zm-leistungen-raster { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.zm-leistung {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 30px 28px; background: var(--zm-karte);
+  border: 1px solid var(--zm-linie); border-top: 2px solid var(--zm-gold);
+  color: var(--zm-text); text-decoration: none;
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.zm-leistung:hover { transform: translateY(-3px); box-shadow: 0 16px 34px rgba(6, 32, 55, .1); border-color: var(--zm-gold); }
+.zm-leistung h3 { margin: 4px 0 0; }
+.zm-leistung p { margin: 0; color: var(--zm-text-leise); font-size: 15.5px; line-height: 1.65; }
+.zm-leistung .zm-symbol { width: 44px; height: 44px; padding: 10px; border-radius: 50%; background: var(--zm-sand); color: var(--zm-navy); }
+.zm-leistung-link { margin-top: auto; padding-top: 10px; font-weight: 650; font-size: 15px; color: var(--zm-text); }
+.zm-leistung:hover .zm-leistung-link { color: var(--zm-gold-tief); }
+.zm-leistung.haupt { grid-column: span 2; background: var(--zm-navy); color: var(--zm-auf-navy); border-color: var(--zm-navy); border-top-color: var(--zm-gold); }
+.zm-leistung.haupt h3 { color: var(--zm-auf-navy); font-size: 28px; }
+.zm-leistung.haupt p { color: var(--zm-auf-navy-leise); font-size: 17px; max-width: 52ch; }
+.zm-leistung.haupt .zm-symbol { background: var(--zm-navy-2); color: var(--zm-gold); }
+.zm-leistung.haupt .zm-leistung-link { color: var(--zm-gold); }
+.zm-leistung-punkte {
+  list-style: none; margin: 6px 0 0; padding: 0;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 24px;
+  color: var(--zm-auf-navy); font-size: 15px;
+}
+.zm-leistung-punkte li { display: flex; gap: 10px; align-items: baseline; }
+.zm-leistung-punkte li::before { content: ""; flex: 0 0 auto; width: 6px; height: 6px; border-radius: 50%; background: var(--zm-gold); transform: translateY(-2px); }
+
+/* Aktuelle Immobilien */
+.zm-objekte { width: var(--zm-breite); margin: 0 auto; padding: 0 0 clamp(64px, 8vw, 104px); }
+.zm-objekte .public-property-grid.compact { width: 100%; padding-bottom: 0; }
+.zm-objekte-leer {
+  display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap;
+  padding: 30px 32px; background: var(--zm-sand); border-left: 3px solid var(--zm-gold);
+}
+.zm-objekte-leer p { margin: 0; max-width: 62ch; font-size: 17px; color: var(--zm-text); }
+
+/* Ablauf: fuenf nummerierte Schritte auf einer Linie. */
+.zm-ablauf { background: var(--zm-karte); border-top: 1px solid var(--zm-linie); border-bottom: 1px solid var(--zm-linie); padding: clamp(64px, 8vw, 104px) max(24px, calc((100% - 1180px) / 2)); scroll-margin-top: 20px; }
+.zm-ablauf-schritte { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 24px; position: relative; }
+.zm-ablauf-schritte::before { content: ""; position: absolute; left: 22px; right: 22px; top: 22px; height: 1px; background: var(--zm-gold); }
+.zm-ablauf-schritte li { position: relative; }
+.zm-schritt-nr {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--zm-navy); color: var(--zm-gold);
+  font-family: var(--zm-serif); font-size: 19px;
+  box-shadow: 0 0 0 6px var(--zm-karte);
+}
+.zm-ablauf-schritte h3 { margin: 18px 0 6px; font-size: 19px; }
+.zm-ablauf-schritte p { margin: 0; color: var(--zm-text-leise); font-size: 15px; line-height: 1.6; }
+
+/* Wer wir sind */
+.zm-team {
+  width: var(--zm-breite); margin: 0 auto; padding: clamp(64px, 8vw, 104px) 0;
+  display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 64px; align-items: start;
+}
+.zm-team-text { padding-left: 28px; border-left: 2px solid var(--zm-gold); }
+.zm-team-personen { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 22px; }
+.zm-team-personen > span { display: inline-flex; align-items: center; gap: 12px; font-size: 17px; font-weight: 600; }
+.zm-monogramm {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--zm-navy); color: var(--zm-auf-navy);
+  font-family: var(--zm-serif); font-size: 24px;
+  box-shadow: inset 0 0 0 2px var(--zm-gold);
+}
+.zm-team-text p { margin: 0 0 16px; font-size: 18px; color: var(--zm-text); }
+
+/* Anlaesse: eine Zeile mit Verweisen in den Ratgeber. */
+.zm-anlaesse {
+  width: var(--zm-breite); margin: 0 auto; padding: 0 0 clamp(56px, 7vw, 88px);
+  display: flex; align-items: center; gap: 18px 32px; flex-wrap: wrap;
+}
+.zm-anlaesse h2 { margin: 0; font-size: 26px; }
+.zm-anlaesse > div { display: flex; gap: 10px; flex-wrap: wrap; }
+.zm-anlaesse a {
+  padding: 10px 16px; border: 1px solid var(--zm-linie); background: var(--zm-karte);
+  color: var(--zm-text); text-decoration: none; font-weight: 600; font-size: 15px;
+}
+.zm-anlaesse a:hover { border-color: var(--zm-gold); color: var(--zm-gold-tief); }
+
+.zm-cta > div:first-child > p:last-child { margin: 8px 0 0; color: var(--zm-text-leise); max-width: 52ch; }
+
+.zm-symbol { display: block; flex: 0 0 auto; }
+
+@media (max-width: 1000px) {
+  .zm-held-raster { grid-template-columns: 1fr; gap: 40px; }
+  .zm-anliegen { max-width: 560px; }
+  .zm-vorteile { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .zm-leistungen-raster { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .zm-ablauf-schritte { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 24px; }
+  .zm-ablauf-schritte::before { display: none; }
+  .zm-team { grid-template-columns: 1fr; gap: 28px; }
+  .public-footer { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+  .zm-vorteile { grid-template-columns: 1fr; padding-left: 14px; padding-right: 14px; }
+  .zm-leistungen-raster, .zm-ablauf-schritte { grid-template-columns: 1fr; }
+  .zm-leistung.haupt { grid-column: auto; }
+  .zm-leistung-punkte { grid-template-columns: 1fr; }
+  .zm-ablauf { padding-left: 14px; padding-right: 14px; }
+  .zm-team-text { padding-left: 18px; }
+  .zm-anliegen { padding: 16px 10px 10px; }
+  .public-header .public-header-kontakt { padding: 0 12px; }
+  .public-footer { grid-template-columns: 1fr; padding-left: 14px; padding-right: 14px; }
+}
+
+/* Der Build-Stempel stand oben links auf dem Logo. Auf der oeffentlichen
+   Seite gehoert er nicht ins Blickfeld eines Kunden -- klein unten links. */
+body:has(.public-site) .build-version { top: auto !important; bottom: 8px !important; left: 8px !important; opacity: .55; }
