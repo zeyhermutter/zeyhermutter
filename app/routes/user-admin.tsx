@@ -121,7 +121,7 @@ export default function UserAdmin() {
   const activeUsers = users.filter((user: any) => user.status === "ACTIVE").length;
 
   return (
-    <main className="editor-shell">
+    <main className="editor-shell programm-seite">
       <header className="editor-header">
         <div>
           <Link className="back-link" to="/crm">← CRM</Link>

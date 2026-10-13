@@ -299,3 +299,20 @@
   .programm-arbeitsflaeche .programm-seite > .editor-header { grid-column: 1; grid-row: auto; justify-content: flex-start; }
   .programm-arbeitsflaeche .programm-seite > .data-card:has(> form[method="get"]) { grid-row: auto; }
 }
+
+/* --- Seiten mit eigenem Kopf: E-Mail, Auswertung ---------------------------
+ * Sie bauen ihren Kopf nicht aus editor-header, sondern aus
+ * communication-header bzw. reporting-header -- dieselbe Behandlung wie
+ * oben: Versalienzeile und Umgebung weg, Titel 20 px. */
+.programm-arbeitsflaeche :is(.communication-shell, .reporting-shell) { padding-top: 16px; }
+.programm-arbeitsflaeche :is(.communication-header, .reporting-header) { align-items: center; gap: 12px; }
+.programm-arbeitsflaeche :is(.communication-header, .reporting-header) > div > .eyebrow { display: none; }
+.programm-arbeitsflaeche :is(.communication-header, .reporting-header) h1 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.25;
+  letter-spacing: -.01em;
+}
+.programm-arbeitsflaeche :is(.communication-header, .reporting-header) h1 + p { margin: 3px 0 0; font-size: 13px; }
+.programm-arbeitsflaeche :is(.communication-header, .reporting-header) > .badge,
+.programm-arbeitsflaeche :is(.communication-header, .reporting-header) > .header-user { display: none; }
