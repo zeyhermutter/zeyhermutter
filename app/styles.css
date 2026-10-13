@@ -216,8 +216,13 @@ h1 { max-width: 850px; margin: 0; font-size: clamp(42px, 7vw, 82px); line-height
   --crm-pill-font-sm: 11px;
 
   /* Eingabefelder: eine eigene Familie, sie muessen anfassbar sein statt
-   * ruhig. Vorher 11 verschiedene Wertepaare. */
-  --crm-field-padding: 12px 13px;
+   * ruhig. Vorher 11 verschiedene Wertepaare.
+   *
+   * 13.10.2026: 12px 13px -> 8px 10px. Mit 12 px oben und unten war ein Feld
+   * rund 46 px hoch -- das Mass einer Webseite fuer den Daumen. Im
+   * Programmrahmen stehen Formulare dicht wie in einer Maklersoftware;
+   * 8 px ergeben rund 36 px, auf dem Telefon noch gut zu treffen. */
+  --crm-field-padding: 8px 10px;
   --crm-field-radius: 10px;
 
   /* Fenster ueber der Seite: grosszuegiger als eine Karte, weil nichts

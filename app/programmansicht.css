@@ -316,3 +316,42 @@
 .programm-arbeitsflaeche :is(.communication-header, .reporting-header) h1 + p { margin: 3px 0 0; font-size: 13px; }
 .programm-arbeitsflaeche :is(.communication-header, .reporting-header) > .badge,
 .programm-arbeitsflaeche :is(.communication-header, .reporting-header) > .header-user { display: none; }
+
+/* ==========================================================================
+ * Formulare in den Akten -- dicht wie in einem Programm.
+ *
+ * Gemessen in der Kontaktakte (1366 px): Feldbeschriftungen in #aeb9ba auf
+ * Weiss (2,1:1 -- zu blass, um sie zu lesen; crm.css ist fuer dunklen Grund
+ * geschrieben, das helle Thema hat sie nie umgefaerbt), 18 px zwischen den
+ * Feldern, "Änderungen speichern" 46 px hoch. Jetzt: Beschriftung #3d4a56
+ * (9,3:1), 12 px; Felder ~36 px (Merkmal --crm-field-padding); Knoepfe 34 px.
+ * ========================================================================== */
+
+.programm-arbeitsflaeche :is(.form-field, .auth-form label, .search-bar > label, .filter-grid > label, .inline-upload label) {
+  gap: 4px;
+  color: #3d4a56;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.programm-arbeitsflaeche :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) { font-size: 14px; }
+
+.programm-arbeitsflaeche .form-grid { gap: 12px 16px; }
+.programm-arbeitsflaeche .auth-form { gap: 12px; }
+.programm-arbeitsflaeche .full-width { margin-top: 12px; }
+.programm-arbeitsflaeche .form-actions { margin-top: 16px; padding-top: 14px; }
+.programm-arbeitsflaeche .checkbox-row { min-height: 32px; }
+
+.programm-arbeitsflaeche .primary-button,
+.programm-arbeitsflaeche .secondary-button {
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: var(--crm-field-radius);
+  font-size: 13px;
+}
+
+.programm-arbeitsflaeche .secondary-button.compact { min-height: 30px; padding: 0 11px; font-size: 12px; }
+
+/* Leere Zustaende ("Noch keine ... erfasst.") standen in 16 px -- groesser
+ * als der Inhalt, den sie vertreten. */
+.programm-arbeitsflaeche .empty-state { font-size: 13px; line-height: 1.5; }
