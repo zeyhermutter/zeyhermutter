@@ -259,7 +259,7 @@ export default function Pipeline() {
                       <td><span className={`pipeline-art pipeline-art-${z.art.toLowerCase()}`}>{z.artText}</span></td>
                       <td>{z.statusText}</td>
                       <td className="zahl rechts">{z.betrag === null ? "—" : geld(z.betrag)}</td>
-                      <td className="zahl">{z.frist ? (z.frist.length > 10 ? zeitpunkt(z.frist) : tag(z.frist)) : "—"}<div className="leise">{z.fristText}</div></td>
+                      <td className="zahl">{z.frist ? <>{z.frist.length > 10 ? zeitpunkt(z.frist) : tag(z.frist)}<div className="leise">{z.fristText}</div></> : <span className="leise">{z.fristText}</span>}</td>
                     </tr>
                   )),
                 ];

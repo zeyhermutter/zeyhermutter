@@ -4,6 +4,7 @@ import { Aufklapper } from "~/components/aufklapper";
 import type { Route } from "./+types/projects";
 import { requirePermission } from "~/lib/auth.server";
 import { tag } from "~/lib/format";
+import "~/programm-liste.css";
 
 type ActionResult={error?:string};
 
@@ -121,18 +122,16 @@ export default function Projects(){
   const withoutProperty=projects.filter((p)=>!p.property_id).length;
   const overdue=projects.filter((p)=>p.next_step_due_on&&p.next_step_due_on<new Date().toISOString().slice(0,10)).length;
 
-  return <div className="editor-shell programm-seite">
-    <div className="editor-header">
-      <div>
-        <p className="eyebrow">Arbeitsplatz · Verkauf</p>
-        <h1>Verkaufsprojekte</h1>
-        <p className="subtle">Die Klammer um Eigentümer, Immobilie, Check, Maßnahmen, Auftrag, Vermarktung und Abschluss.</p>
-      </div>
-      <div className="inline-actions">
-        <Link className="subtle-link" to={d.showAll?"/projects?ansicht=tabelle":"/projects?ansicht=tabelle&alle=1"}>{d.showAll?"Nur laufende":"Auch abgeschlossene"}</Link>
-      </div>
-    </div>
-    <Aufklapper id="projekt-anlegen" knopf="+ Projekt anlegen"><section className="data-card">
+  // Programmliste (13.10.2026) wie die Makleraufträge daneben: Werkzeugleiste,
+  // eine Zeile Kennzahlen, Tabelle. Vorher Zeilen ohne Spaltenkoepfe.
+  return <div className="editor-shell programm-liste">
+    <div className="programm-liste-werkzeuge">
+      <nav className="programm-umfang" aria-label="Ansicht">
+        <Link className={d.showAll?undefined:"aktiv"} to="/projects?ansicht=tabelle">Laufende</Link>
+        <Link className={d.showAll?"aktiv":undefined} to="/projects?ansicht=tabelle&alle=1">Alle</Link>
+      </nav>
+      <span className="programm-liste-zaehler">{projects.length} {projects.length===1?"Projekt":"Projekte"}</span>
+      <Aufklapper id="projekt-anlegen" knopf="+ Projekt anlegen"><section className="data-card">
       <div className="card-head"><div><p className="eyebrow">Neu</p><h2>Projekt anlegen</h2></div></div>
       <Form method="post" className="form-grid">
         <input type="hidden" name="_intent" value="project_add"/>
@@ -147,39 +146,41 @@ export default function Projects(){
         <div className="form-field full-width inline-actions"><button className="primary-button" type="submit" disabled={disabled}>Projekt anlegen</button></div>
       </Form>
     </section></Aufklapper>
+    </div>
 
     {actionData?.error?<p className="form-error">{actionData.error}</p>:null}
 
-    <div className="metric-grid">
-      <article className="metric"><span>Angezeigt</span><strong>{projects.length}</strong><small>von {d.total} nicht archivierten</small></article>
-      <article className="metric"><span>Ohne Immobilie</span><strong>{withoutProperty}</strong><small>{withoutProperty===1?"Projekt zeigt auf kein Objekt":"Projekte zeigen auf kein Objekt"}</small></article>
-      <article className="metric"><span>Fällige Schritte</span><strong>{overdue}</strong><small>{overdue===1?"nächster Schritt ist überfällig":"nächste Schritte sind überfällig"}</small></article>
-    </div>
+    <p className="programm-kennzahlen">
+      <span><strong>{projects.length}</strong> angezeigt von {d.total}</span>
+      <span className={withoutProperty?"warnung":undefined}><strong>{withoutProperty}</strong> ohne Immobilie</span>
+      <span className={overdue?"warnung":undefined}><strong>{overdue}</strong> Schritte überfällig</span>
+    </p>
 
-    <section className="data-card">
-      <div className="card-head"><div><p className="eyebrow">Ein Projekt, eine nächste Aktion</p><h2>Projekte</h2></div></div>
+    <div className="programm-tabelle-rahmen">
       {projects.length===0
-        ?<p className="empty-state">Kein Verkaufsprojekt vorhanden.</p>
-        :<div className="data-list">{projects.map((p:any)=>{
-          const rows=blockerMap[p.id];
-          const action=nextAction(p,rows??[]);
-          const overdueStep=action.kind==="STEP"&&action.due&&action.due<new Date().toISOString().slice(0,10);
-          return <Link className="data-row data-row-link" to={`/projects/${p.id}`} key={p.id}>
-            <div>
-              <strong>{p.project_number} · {p.contacts?`${p.contacts.last_name}, ${p.contacts.first_name}`:"Eigentümer offen"}</strong>
-              <small>{PHASE[p.phase]??p.phase}{p.properties?` · ${p.properties.property_number}`:" · ohne Immobilie"}{p.profiles?.display_name?` · ${p.profiles.display_name}`:""}</small>
-            </div>
-            <div className="row-meta">
-              <span>{action.kind==="BLOCKER"?`Hängt an: ${action.title}`:action.title}</span>
-              <small>{rows===null?"Offene Punkte konnten nicht geladen werden."
-                :action.kind==="STEP"?`fällig ${formatDay(action.due)}${overdueStep?" · überfällig":""}`
-                :action.kind==="BLOCKER"?`${BLOCKER_AREA[(action as any).area]??"Offener Punkt"} · ${rows.length} ${rows.length===1?"offener Punkt":"offene Punkte"}`
-                :"nichts offen"}</small>
-            </div>
-            <span className={`status-pill ${STATUS_CLASS[p.status]??""}`}>{PROJECT_STATUS[p.status]??p.status}</span>
-          </Link>;
-        })}</div>}
-    </section>
-
+        ?<p className="programm-liste-leer">Kein Verkaufsprojekt vorhanden.{d.canWrite?<> <Link to="/projects?ansicht=tabelle#projekt-anlegen">Erstes Projekt anlegen</Link></>:null}</p>
+        :<table className="programm-tabelle">
+          <thead><tr><th>Nummer</th><th>Eigentümer</th><th>Phase</th><th>Immobilie</th><th>Nächste Aktion</th><th>Fällig / offen</th><th>Zuständig</th><th>Status</th></tr></thead>
+          <tbody>{projects.map((p:any)=>{
+            const rows=blockerMap[p.id];
+            const action=nextAction(p,rows??[]);
+            const overdueStep=action.kind==="STEP"&&action.due&&action.due<new Date().toISOString().slice(0,10);
+            const pfad=`/projects/${p.id}`;
+            return <tr key={p.id}>
+              <td className="zahl"><Link to={pfad}>{p.project_number}</Link></td>
+              <td><Link to={pfad}>{p.contacts?`${p.contacts.last_name}, ${p.contacts.first_name}`:"Eigentümer offen"}</Link></td>
+              <td>{PHASE[p.phase]??p.phase}</td>
+              <td>{p.properties?p.properties.property_number:<span className="leise">ohne Immobilie</span>}</td>
+              <td>{action.kind==="BLOCKER"?`Hängt an: ${action.title}`:action.title}</td>
+              <td className="zahl">{rows===null?<span className="warnung-text">nicht geladen</span>
+                :action.kind==="STEP"?<>{formatDay(action.due)}{overdueStep?<div className="warnung-text">überfällig</div>:null}</>
+                :action.kind==="BLOCKER"?<span className="leise">{BLOCKER_AREA[(action as any).area]??"Offener Punkt"} · {rows.length}</span>
+                :<span className="leise">nichts offen</span>}</td>
+              <td>{p.profiles?.display_name??<span className="leise">—</span>}</td>
+              <td><span className={`status-pill ${STATUS_CLASS[p.status]??""}`}>{PROJECT_STATUS[p.status]??p.status}</span></td>
+            </tr>;
+          })}</tbody>
+        </table>}
+    </div>
   </div>;
 }

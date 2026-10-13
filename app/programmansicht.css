@@ -247,6 +247,10 @@
   white-space: nowrap;
 }
 .programm-arbeitsflaeche .programm-seite .data-card > form[method="get"] > label:has(input[name="q"]) input { width: 100%; }
+/* Auswahlfelder nicht breiter als ihr laengster sinnvoller Eintrag -- sonst
+ * bricht die Leiste um, sobald rechts ein Anlegen-Knopf steht (Reservierungen
+ * mit "Alle Immobilien", BETA 13.10.2026). */
+.programm-arbeitsflaeche .programm-seite .data-card > form[method="get"] > label select { max-width: 220px; }
 
 /* Kennzahlen: eine ruhige Zeile statt Kacheln -- "3 aktiv · 1 Entwurf".
  * Die Kacheln heissen je nach Seite metric-card oder metric (Nachbetreuung,
@@ -412,7 +416,7 @@
 .programm-arbeitsflaeche .reporting-section-head .eyebrow { display: none; }
 .programm-arbeitsflaeche .reporting-section-head h2 { margin: 0; font-size: 15px; }
 .programm-arbeitsflaeche .reporting-metric-grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
-.programm-arbeitsflaeche .reporting-metric { min-height: 0; gap: 2px; }
+.programm-arbeitsflaeche .reporting-metric { min-height: 0; gap: 2px; justify-content: flex-start; }
 .programm-arbeitsflaeche .reporting-metric strong { font-size: 20px; line-height: 1.2; }
 .programm-arbeitsflaeche .reporting-metric strong.reporting-metric-unavailable { font-size: 14px; }
 .programm-arbeitsflaeche .reporting-metric small { font-size: 11px; }
@@ -431,3 +435,4 @@
 /* Ein Hinweis direkt auf der Programmseite (Reservierungen: "Erfassung,
  * keine rechtliche Bewertung") in der Groesse der Kennzahlenzeile. */
 .programm-arbeitsflaeche .programm-seite > .form-warning { padding: 7px 12px; font-size: 12px; line-height: 1.45; }
+.programm-arbeitsflaeche .reporting-pipeline-head h3 { margin: 0; font-size: 14px; font-weight: 600; }

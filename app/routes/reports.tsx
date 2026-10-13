@@ -296,7 +296,6 @@ export default function Reports() {
         <label><span className="sr-only">Bis</span><input type="date" name="to" defaultValue={to}/></label>
         <button className={periodPreset === "custom" ? "primary-button" : "secondary-button"} type="submit">Zeitraum</button>
       </Form>
-      <span className="programm-liste-zaehler">{scope === "company" ? "Unternehmen" : profile.display_name} · {formatDate(from)} – {formatDate(to)}</span>
     </div>
     {rangeError ? <p className="form-error">{rangeError}</p> : null}
 

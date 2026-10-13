@@ -2,7 +2,7 @@ import { data, Form, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/crm-search";
 import { requireActiveUser } from "~/lib/auth.server";
 import { euroGenau, tagKurz } from "~/lib/format";
-import { ABSCHLUSSSTATUS, ANFRAGESTATUS, AUFGABENSTATUS, IMMOBILIENSTATUS, KAUFANGEBOTSTATUS, KONTAKTSTATUS, LEADSTATUS, beschrifte, type Beschriftungen } from "~/lib/labels";
+import { ABSCHLUSSSTATUS, ANFRAGEKANAL, ANFRAGESTATUS, AUFGABENSTATUS, IMMOBILIENSTATUS, KAUFANGEBOTSTATUS, KONTAKTSTATUS, LEADSTATUS, beschrifte, type Beschriftungen } from "~/lib/labels";
 import "~/module04-fixes.css";
 import "~/programm-liste.css";
 
@@ -46,6 +46,14 @@ const STATUS_LABELS:Record<string,string>={OPEN:"Offen",IN_PROGRESS:"In Bearbeit
 // "Vermarktung", NEW bei einem Lead "Neu". Vorher stand fuer Immobilien der
 // gespeicherte Wert MARKETING in der Trefferliste (live auf BETA, 13.10.2026).
 const STATUS_JE_ART:Record<string,Beschriftungen>={PROPERTY:IMMOBILIENSTATUS,LEAD:LEADSTATUS,INQUIRY:ANFRAGESTATUS,OFFER:KAUFANGEBOTSTATUS,CLOSING:ABSCHLUSSSTATUS,CONTACT:KONTAKTSTATUS,TASK:AUFGABENSTATUS};
+// Die Unterzeile einer Anfrage faellt in der Datenbank auf den Kanal
+// zurueck (i.channel), wenn weder Objekt noch Suchprofil noch Quelle
+// gesetzt ist -- dann stand dort "OTHER".
+function detailText(result:SearchResult){
+  if(!result.subtitle) return "—";
+  if(result.entity_type==="INQUIRY"&&result.subtitle in ANFRAGEKANAL) return ANFRAGEKANAL[result.subtitle];
+  return result.subtitle;
+}
 function standText(result:SearchResult){
   if(result.archived) return "Archiviert";
   const tabelle=STATUS_JE_ART[result.entity_type];
@@ -71,7 +79,7 @@ export default function CrmSearch() {
           <td className="zahl"><Link to={target(result)}>{result.reference}</Link></td>
           <td><Link to={target(result)}>{result.title}</Link></td>
           <td>{LABELS[result.entity_type]??result.entity_type}</td>
-          <td className="leise">{result.subtitle||"—"}</td>
+          <td className="leise">{detailText(result)}</td>
           <td>{standText(result)}</td>
           <td className="zahl rechts leise">{tagKurz(result.updated_at)}</td>
         </tr>)}</tbody>

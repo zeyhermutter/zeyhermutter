@@ -3,7 +3,7 @@ import { useLocation } from "react-router";
 import "~/live-list-filters.css";
 import "~/live-list-filters-extended.css";
 
-const FILTER_FORM_SELECTOR = ".search-profile-filter-grid, .inquiry-filter-grid, .organization-filter-grid, .property-filter-grid, .lead-filter-grid, .programm-liste-werkzeuge";
+const FILTER_FORM_SELECTOR = ".search-profile-filter-grid, .inquiry-filter-grid, .organization-filter-grid, .property-filter-grid, .lead-filter-grid, form.programm-liste-werkzeuge";
 const SEARCH_DEBOUNCE_MS = 350;
 
 export function LiveListFilters() {
@@ -14,6 +14,11 @@ export function LiveListFilters() {
     const cleanups: Array<() => void> = [];
 
     for (const form of forms) {
+      // Nur Formulare: Die Werkzeugleiste ist auf manchen Seiten ein <div>
+      // mit eigenen Formularen darin (Benachrichtigungen, Auswertung). Dort
+      // haette diese Schleife den ersten Knopf versteckt und bei jeder
+      // Auswahl ein requestSubmit() auf einem <div> versucht (13.10.2026).
+      if (!(form instanceof HTMLFormElement)) continue;
       const searchInput = form.querySelector<HTMLInputElement>('input[name="q"]');
       const searchLabel = searchInput?.closest("label");
       const submitButton = form.querySelector<HTMLButtonElement>('button[type="submit"]');
