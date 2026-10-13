@@ -29,20 +29,29 @@ export type HelpChapter = {
   bloecke: HelpBlock[];
 };
 
+// Stand der Anleitung: 13.10.2026, nach dem Umbau zum Programmrahmen
+// (Modulleiste mit sieben Bereichen, Arbeitsplatz "Liste links, Akte rechts",
+// Programmlisten). Die alten Bildschirmfotos zeigten noch den Seitenstreifen
+// und sind entfernt; programmfenster.jpg ist eine Skizze des neuen Rahmens.
+// Wo ein Kapitel einen Weg beschreibt, steht er in der Form
+// "Bereich › Unterpunkt" -- so wie ihn die Statusleiste unten anzeigt.
+
 export const HELP_TITLE = "Anleitung ZeyherMutterOS";
 export const HELP_INTRO =
   "Diese Anleitung führt einmal durch den kompletten Verkaufsfall — vom ersten "
   + "Anruf eines Eigentümers bis zur Nachbetreuung nach der Übergabe. Sie ist in "
   + "der Reihenfolge geschrieben, in der die Arbeit tatsächlich anfällt. Wer "
   + "etwas Bestimmtes sucht, springt über das Inhaltsverzeichnis; wer neu "
-  + "anfängt, liest von vorne.";
+  + "anfängt, liest Kapitel 1 und dann von vorne. Wege im Programm stehen als "
+  + "„Bereich › Unterpunkt“ da, genau so, wie sie unten in der Statusleiste "
+  + "angezeigt werden.";
 
 export const HELP_CHAPTERS: HelpChapter[] = [
   {
     id: "grundlagen",
     nummer: "1",
     titel: "Aufbau und Bedienung",
-    kurz: "Anmelden, Navigation, Glocke, Suche — was auf jeder Seite gleich ist.",
+    kurz: "Das Programmfenster: Bereiche, Arbeitsplatz, Listen, Suche, Glocke und Mein Tag.",
     pfade: ["/crm", "/crm/search", "/crm/notifications"],
     bloecke: [
       { art: "absatz", text:
@@ -50,37 +59,78 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         + "und dem persönlichen Passwort. Es gibt keine Sammelzugänge: jede Änderung "
         + "wird dem angemeldeten Benutzer zugeschrieben und ist später in der "
         + "Systemhistorie nachvollziehbar." },
-      { art: "bild", datei: "uebersicht.jpg", breite: 1200, hoehe: 535, unterschrift:
-        "Die Übersicht nach der Anmeldung. Links die Navigation, oben links die "
-        + "Glocke mit der Anzahl ungelesener Benachrichtigungen." },
       { art: "absatz", text:
-        "Die Navigation am linken Rand ist auf jeder Seite dieselbe und in fünf "
-        + "Gruppen geteilt, die dem Ablauf eines Vorgangs folgen: Arbeitsplatz, "
-        + "Akquise, Verkauf, Interessenten, Nach dem Verkauf und Verwaltung. Der "
-        + "aktuelle Bereich ist hervorgehoben. Eine Ausnahme von der Reihenfolge "
-        + "ist Absicht: **Immobilien** steht oben in der Gruppe Verkauf, obwohl "
-        + "die Objektakte erst nach dem Maklerauftrag entsteht — es ist der "
-        + "Eintrag, der am häufigsten gebraucht wird." },
+        "ZeyherMutterOS ist wie ein Arbeitsprogramm am PC aufgebaut, nicht wie eine "
+        + "Webseite. Das Fenster hat auf jeder Seite dieselben sechs Teile:" },
+      { art: "bild", datei: "programmfenster.jpg", breite: 1200, hoehe: 640, unterschrift:
+        "Skizze des Programmfensters, hier im Bereich Immobilien. Die Ziffern "
+        + "gehören zur Liste darunter." },
+      { art: "schritte", punkte: [
+        "**Titelleiste** (dunkelblau, ganz oben): links die Marke — ein Klick führt zu „Mein Tag“. Daneben das Suchfeld für Objekte, Adressen und Nummern. Rechts der Knopf **Hilfe**, die Glocke mit den Benachrichtigungen, die Umgebung (BETA ist das Testsystem), der angemeldete Benutzer und **Abmelden**.",
+        "**Modulleiste** (links): die sieben Bereiche **Mein Tag, Adressen, Immobilien, Vermarktung, Abschluss, Auswertung** und abgesetzt darunter **Verwaltung**. Jeder Bereich hat eine eigene Farbe; der geöffnete ist ausgefüllt.",
+        "**Bereichsleiste** (oben über der Arbeitsfläche): links der Name des Bereichs in seiner Farbe, daneben seine Unterpunkte als Reiter. Der geöffnete Unterpunkt ist unterstrichen.",
+        "**Liste** (links in der Arbeitsfläche): alle Datensätze des Unterpunkts, mit Suchfeld zum Eingrenzen, „+ Neu“ zum Anlegen und unten „Volle Liste“ für die Tabellenansicht.",
+        "**Akte** (rechts): der in der Liste gewählte Datensatz. Oben Nummer und Titel, darunter die Reiter der Akte und, wo es sie gibt, deren Unterseiten.",
+        "**Statusleiste** (ganz unten): wo man gerade ist („Immobilien › Objekte“), als wer man angemeldet ist und der Stand der Programmversion.",
+      ]},
+      { art: "absatz", text:
+        "Die sieben Bereiche und was darin steht:" },
       { art: "liste", punkte: [
-        "Die Glocke oben links zeigt ungelesene Benachrichtigungen. Ein Klick öffnet die Liste, ein Klick auf einen Eintrag springt zum betroffenen Vorgang und markiert ihn als gelesen.",
-        "„Suche\" findet Kontakte, Immobilien, Leads und Vorgänge über Namen und Nummern.",
-        "Jede Nummer im System ist eindeutig und sprechend: ZM-K für Kontakte, ZM-2026- für Immobilien, ZM-L für Verkäufer-Leads, ZM-A für Anfragen, ZM-T für Aufgaben, ZM-VP für Verkaufsprojekte, ZM-KA für Kaufangebote, ZM-VK für Abschlüsse.",
-        "Unten links steht die Umgebung. Steht dort BETA, ist es das Testsystem — dort darf gefahrlos geübt werden.",
+        "**Mein Tag** (blau): Heute, In Bewegung, Aufgaben, Kalender, E-Mail, Benachrichtigungen, Suche.",
+        "**Adressen** (petrol): Kontakte, Verkäufer-Leads, Verkaufsstrategie-Check, Suchprofile, Organisationen.",
+        "**Immobilien** (grün): Objekte, Makleraufträge, Verkaufsprojekte, Aufmaß-Aufträge.",
+        "**Vermarktung** (orange): Anfragen, Besichtigungen, Kampagnen & Gebiete, Website.",
+        "**Abschluss** (ocker): Kaufangebote, Reservierungen, Abschlüsse & Notar, Provisionen.",
+        "**Auswertung** (violett): Dashboard, Nachbetreuung, Empfehlungen, Case Studies.",
+        "**Verwaltung** (grau): Anleitung, Geldwäsche & Aufbewahrung, Benutzer & Rollen, Weiterbildung, Archiv, Systemhistorie.",
+      ]},
+      { art: "absatz", text:
+        "**Der Arbeitsplatz: Liste links, Akte rechts.** Fast jeder Unterpunkt öffnet "
+        + "sich so. Ein Klick auf eine Zeile links öffnet ihre Akte rechts, ohne dass "
+        + "die Liste verschwindet; die geöffnete Zeile ist in der Farbe des Bereichs "
+        + "hinterlegt. Das Suchfeld über der Liste grenzt beim Tippen ein. Gibt es "
+        + "noch keinen Datensatz, steht rechts statt einer Akte das Formular für den "
+        + "ersten." },
+      { art: "absatz", text:
+        "**Volle Liste.** Wer mehr Spalten braucht, sortieren oder nach Status "
+        + "filtern will, öffnet unten links „Volle Liste“. Das ist die Programmliste: "
+        + "oben eine Werkzeugleiste mit Suche und Filtern, darunter eine Zeile mit "
+        + "Kennzahlen, dann die Tabelle. Ein Klick auf eine Zeile führt zurück in den "
+        + "Arbeitsplatz mit der Akte rechts." },
+      { art: "liste", punkte: [
+        "Formulare zum Anlegen innerhalb einer Akte sind eingeklappt und beginnen mit „+“, etwa „+ Gebiet anlegen“ oder „+ Maßnahme erfassen“. Ein Klick klappt sie auf.",
+        "Der Stand eines Datensatzes steht als farbiges Schildchen da: blau für alles, was gerade läuft (etwa Vermarktung, Reserviert, Notar), gelb für Vorbereitung und Wartendes, grün für Verkauft und Erledigtes, rot für Verloren, Abgelehntes und Überfälliges, grau für Entwürfe und Archiviertes. Die Farbe ist nie das einzige Merkmal — das Wort steht immer dabei.",
+        "Navy ist die Farbe der Handlung: „+ Neu“, „Speichern“ und andere Hauptknöpfe sind immer dunkelblau, egal in welchem Bereich.",
+        "Jede Nummer im System ist eindeutig und sprechend: ZM-K für Kontakte, ZM-2026- für Immobilien, ZM-L für Verkäufer-Leads, ZM-A für Anfragen, ZM-T für Aufgaben, ZM-VP für Verkaufsprojekte, ZM-KA für Kaufangebote, ZM-VK für Abschlüsse, ZM-AM für Aufmaß-Aufträge.",
+      ]},
+      { art: "absatz", text:
+        "**Mein Tag** ist die Startseite nach der Anmeldung (Mein Tag › Heute). Sie "
+        + "beantwortet die Frage, was heute zu tun ist, in vier Feldern: **Termine "
+        + "heute** und in den nächsten Tagen, **Liegen geblieben** (überfällige "
+        + "Aufgaben), **Fristen** der nächsten 14 Tage und **Neu eingegangen** "
+        + "(neue Anfragen und Verkäufer-Leads). Oben wird "
+        + "umgeschaltet, wessen Tag gezeigt wird: **Meins**, der eines Kollegen oder "
+        + "**Alle**. Darunter steht die Karte mit den Objektstandorten." },
+      { art: "liste", punkte: [
+        "Die **Suche** in der Titelleiste findet Kontakte, Immobilien, Leads und Vorgänge über Namen, Adressen und Nummern. Enter öffnet die Trefferliste (Mein Tag › Suche).",
+        "Die **Glocke** zeigt die Zahl ungelesener Benachrichtigungen. Ein Klick öffnet die Liste, ein Klick auf einen Eintrag springt zum betroffenen Vorgang und markiert ihn als gelesen. Alle Benachrichtigungen stehen unter Mein Tag › Benachrichtigungen.",
+        "Steht in der Titelleiste **BETA**, ist es das Testsystem — dort darf gefahrlos geübt werden.",
       ]},
       { art: "hinweis", text:
-        "Auf jeder Seite steht unten rechts ein Hilfe-Knopf. Er öffnet genau das "
-        + "Kapitel dieser Anleitung, das die geöffnete Seite beschreibt — als "
-        + "Fenster über der Seite, damit angefangene Eingaben nicht verloren gehen. "
-        + "Aus dem Fenster heraus lässt sich die vollständige Anleitung zusätzlich "
-        + "in einem eigenen Tab öffnen, etwa für einen zweiten Bildschirm." },
+        "Der Knopf **Hilfe** steht oben rechts in der Titelleiste, neben der Glocke. "
+        + "Er öffnet genau das Kapitel dieser Anleitung, das die geöffnete Seite "
+        + "beschreibt — als Fenster über der Seite, damit angefangene Eingaben nicht "
+        + "verloren gehen. Aus dem Fenster heraus lässt sich die vollständige "
+        + "Anleitung in einem eigenen Tab öffnen; sie steht außerdem unter "
+        + "Verwaltung › Anleitung." },
     ],
   },
   {
     id: "alltag",
     nummer: "2",
-    titel: "Aufgaben, Kalender und E-Mail",
-    kurz: "Wiedervorlagen, Termine und Nachrichten aus dem System heraus.",
-    pfade: ["/crm/tasks", "/crm/calendar", "/crm/calendar/event.ics", "/crm/email"],
+    titel: "Aufgaben, Kalender, E-Mail und „In Bewegung“",
+    kurz: "Wiedervorlagen, Termine, Nachrichten und was kurz vor dem Abschluss steht.",
+    pfade: ["/crm/tasks", "/crm/calendar", "/crm/calendar/event.ics", "/crm/email", "/pipeline"],
     bloecke: [
       { art: "absatz", text:
         "Aufgaben sind der Motor des Systems. Fast alles, was eine Frist hat, legt "
@@ -89,13 +139,34 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         + "nach der Übergabe. Diese Aufgaben tauchen nicht aus dem Nichts auf — sie "
         + "hängen immer an einem Vorgang und verlinken dorthin." },
       { art: "liste", punkte: [
-        "„Aufgaben\" zeigt offene und laufende Aufgaben, sortiert nach Fälligkeit. Überfällige sind gekennzeichnet.",
+        "**Mein Tag › Aufgaben** zeigt offene und laufende Aufgaben als Programmliste, sortiert nach Fälligkeit. Überfällige sind hervorgehoben, die Priorität steht als Schildchen in der Zeile.",
+        "Oben wird wie auf „Heute“ umgeschaltet: **Meins**, ein Kollege oder **Alle**. Status und Umschalter bleiben stehen, wenn eine Aufgabe erledigt wird.",
         "Jede Aufgabe hat genau einen Verantwortlichen. Beobachter können zusätzlich eingetragen werden — sie bekommen Benachrichtigungen, sind aber nicht zuständig.",
-        "Der Kalender zeigt alle neun Terminarten des Systems: Aufgaben, Wiedervorlagen (Lead und Verkaufsprojekt), Eigentümertermine, Begehungen zum Verkaufsstrategie-Check, Besichtigungen, Aufmaßtermine, Notartermine und Übergaben. Er führt sie nur zusammen — gepflegt wird jeder Termin an seinem Vorgang.",
-        "Neben der Liste steht ein Monatsraster. Jeder Termin ist dort eine Marke in der Farbe seiner Art, mit einem Buchstaben darin; ein Klick auf einen Tag springt in der Liste dorthin.",
-        "Einzelne Termine lassen sich als .ics-Datei in Outlook oder einen anderen Kalender übernehmen.",
-        "Unter „E-Mail\" wird eine Nachricht mit Bezug zu einem Kontakt, Lead oder einer Anfrage vorbereitet. Das System verschickt nichts von selbst.",
       ]},
+      { art: "absatz", text:
+        "**Mein Tag › Kalender** zeigt alle neun Terminarten des Systems: Aufgaben, "
+        + "Wiedervorlagen (Lead und Verkaufsprojekt), Eigentümertermine, Begehungen "
+        + "zum Verkaufsstrategie-Check, Besichtigungen, Aufmaßtermine, Notartermine "
+        + "und Übergaben. Er führt sie nur zusammen — gepflegt wird jeder Termin an "
+        + "seinem Vorgang." },
+      { art: "liste", punkte: [
+        "Neben der Terminliste steht das Monatsraster, mit Pfeilen zum vorigen und nächsten Monat. Jeder Termin ist dort eine Marke in der Farbe seiner Art; ein Klick auf einen Tag springt in der Liste dorthin.",
+        "Über „Wessen Termine“ wird zwischen den eigenen, denen eines Kollegen und allen umgeschaltet.",
+        "Einzelne Termine lassen sich als .ics-Datei in Outlook oder einen anderen Kalender übernehmen.",
+      ]},
+      { art: "absatz", text:
+        "**Mein Tag › E-Mail** bereitet eine Nachricht mit Bezug zu einem Kontakt, "
+        + "Lead oder einer Anfrage vor und hält fest, was geschrieben wurde. Wer den "
+        + "Unterpunkt aus einer geöffneten Kontaktakte, einem Lead oder einer Anfrage "
+        + "heraus anklickt, findet den Bezug schon vorbelegt. Versendet wird im "
+        + "eigenen E-Mail-Programm; unter „E-Mail erfassen“ wird die Nachricht danach "
+        + "als Aktivität am Vorgang dokumentiert." },
+      { art: "absatz", text:
+        "**Mein Tag › In Bewegung** zieht zusammen, was kurz vor dem Abschluss steht: "
+        + "ablaufende Kaufangebote, endende Reservierungen, anstehende Notartermine "
+        + "und fällige Kaufpreise. Die Liste ist nach Datum gegliedert — Überfällig, "
+        + "Diese Woche, Später und Ohne Frist. Sie legt nichts an und ändert nichts; "
+        + "jede Zeile führt in die Akte, in die der Vorgang gehört." },
       { art: "warnung", text:
         "Das System versendet keine E-Mails automatisch. Auch die Nachbetreuung nach "
         + "der Übergabe erzeugt nur Wiedervorlagen — geschrieben wird von Hand." },
@@ -106,7 +177,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
     nummer: "3",
     titel: "Kontakte und Organisationen",
     kurz: "Personen und Firmen anlegen, Rollen vergeben, Beziehungen abbilden.",
-    pfade: ["/crm/contacts*", "/crm/organizations*"],
+    pfade: ["/crm/contacts*", "/crm/organizations", "/crm/organizations/:organizationId"],
     bloecke: [
       { art: "absatz", text:
         "Jede Person im System ist ein Kontakt — Eigentümer, Interessent, Käufer, "
@@ -115,21 +186,23 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         + "kann gleichzeitig Verkäufer bei einem Objekt und Interessent bei einem "
         + "anderen sein." },
       { art: "schritte", punkte: [
-        "„Organisationen\" → oder aus der Übersicht heraus „+ Anfrage\" für den schnellen Weg.",
-        "Beim Anlegen genügen Vor- und Nachname. Alles weitere kann später ergänzt werden.",
+        "**Adressen › Kontakte** öffnen. Links steht die Kontaktliste, rechts die Akte des gewählten Kontakts.",
+        "Über der Liste „+ Neu“. Beim Anlegen genügen Vor- und Nachname; alles weitere kann später ergänzt werden.",
         "Das System prüft beim Speichern auf mögliche Dubletten und weist darauf hin, statt stillschweigend eine zweite Karteileiche anzulegen.",
-        "Über „Beziehungen\" werden Verbindungen zwischen Kontakten abgebildet — Ehepartner, Miterben, Bevollmächtigte.",
-        "Über „Verknüpfungen\" ist zu sehen, an welchen Immobilien, Leads und Vorgängen der Kontakt hängt.",
+        "Die Kontaktakte hat vier Reiter: **Stammdaten** (Name, Erreichbarkeit, Empfehlungen, Historie), **Rollen & Aufgaben** (Rollen an Vorgängen, verbundene Personen wie Ehepartner, Miterben oder Bevollmächtigte, offene Aufgaben), **Adressen & Firmen** (nachgewiesene Objekte, Organisationen, Anschriften) und **Verlauf** (Aktivitäten, Kommentare und @Erwähnungen).",
       ]},
       { art: "absatz", text:
         "Organisationen sind Firmen und Partner: Notariate, Handwerksbetriebe, "
-        + "Fotografen, Hausverwaltungen. Bei Partnern, die Empfehlungen aussprechen, "
-        + "wird zusätzlich ein Partnerprofil geführt — mehr dazu im Kapitel über "
-        + "Kampagnen und Partner." },
+        + "Fotografen, Hausverwaltungen. Sie stehen unter **Adressen › "
+        + "Organisationen**, ebenfalls als Liste links und Akte rechts. Die "
+        + "Organisationsakte hat die Reiter **Stammdaten** und **Partner & "
+        + "Compliance**; im zweiten wird bei Partnern, die Empfehlungen aussprechen, "
+        + "das Partnerprofil geführt — mehr dazu im Kapitel über Kampagnen und "
+        + "Partner." },
       { art: "hinweis", text:
         "Kontakte werden nicht gelöscht, sondern archiviert. Sie verschwinden dann "
         + "aus allen Auswahllisten, bleiben aber in abgeschlossenen Vorgängen "
-        + "sichtbar. Das Archiv ist über die Verwaltung erreichbar." },
+        + "sichtbar. Archivierte Datensätze stehen unter Verwaltung › Archiv." },
     ],
   },
   {
@@ -141,18 +214,23 @@ export const HELP_CHAPTERS: HelpChapter[] = [
     bloecke: [
       { art: "absatz", text:
         "Ein Verkäufer-Lead ist ein Eigentümer, der über einen Verkauf nachdenkt. "
-        + "Er entsteht entweder von Hand oder automatisch aus dem "
-        + "Verkaufsstrategie-Check auf der Website. Der Lead ist die Vorstufe: hier "
-        + "wird geklärt, ob überhaupt ein Verkauf ansteht." },
+        + "Er entsteht entweder von Hand oder automatisch aus einer Anfrage über die "
+        + "Website — Bewertung oder Verkaufsstrategie-Check. Der Lead ist die "
+        + "Vorstufe: hier wird geklärt, ob überhaupt ein Verkauf ansteht." },
+      { art: "absatz", text:
+        "Die Leads stehen unter **Adressen › Verkäufer-Leads**. Die Leadakte rechts "
+        + "hat zwei Reiter: **Lead** mit Angaben zum möglichen Auftrag, Herkunft, "
+        + "Verantwortlichem, Aufgaben und Aktivitäten, und **Verkaufsstrategie-Check** "
+        + "für den Check zu diesem Eigentümer." },
       { art: "liste", punkte: [
-        "Die Pipeline führt von „Neu\" über „Kontaktiert\" und „Qualifiziert\" bis zu „Gewonnen\" oder „Kein weiteres Interesse\".",
-        "„Kein weiteres Interesse\" verlangt einen Grund. Ohne Grund wird nicht gespeichert — das ist Absicht, weil die Gründe später ausgewertet werden.",
+        "Der Stand führt von „Neu“ über „Kontaktiert“ und „Qualifiziert“ bis zu „Gewonnen“ oder „Kein weiteres Interesse“.",
+        "„Kein weiteres Interesse“ verlangt einen Grund. Ohne Grund wird nicht gespeichert — das ist Absicht, weil die Gründe später ausgewertet werden.",
         "Jeder Lead hat eine Wiedervorlage. Ohne Wiedervorlage geht ein Lead in der Praxis verloren.",
-        "Aus einem Lead entsteht per Knopfdruck eine Immobilie und ein Verkaufsprojekt. Die erfassten Geschäftsdaten werden dabei eingefroren, damit später nachvollziehbar bleibt, mit welchen Angaben gestartet wurde.",
+        "Mit „Auftrag übernehmen“ entsteht aus dem Lead eine Immobilie und ein Verkaufsprojekt. Die erfassten Geschäftsdaten werden dabei eingefroren, damit später nachvollziehbar bleibt, mit welchen Angaben gestartet wurde.",
       ]},
       { art: "hinweis", text:
-        "Der Lead bleibt nach der Umwandlung bestehen und verweist auf die entstandene "
-        + "Immobilie. Es entsteht keine Dublette." },
+        "Der Lead bleibt nach der Umwandlung bestehen und verweist auf die "
+        + "entstandene Immobilie. Es entsteht keine Dublette." },
     ],
   },
   {
@@ -166,18 +244,24 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         "Die Akquise wird in einer Kette geführt: Kanal → Kampagne → Gebiet → Welle → "
         + "Werbemittel → Reaktion → Termin → Vorgang. Damit lässt sich am Ende sagen, "
         + "welche Maßnahme in welchem Gebiet welche Aufträge gebracht hat." },
+      { art: "absatz", text:
+        "Die Kampagnen stehen unter **Vermarktung › Kampagnen & Gebiete**: links die "
+        + "Kampagnenliste, rechts die Kampagnenakte mit den Abschnitten Kampagne, "
+        + "Wellen und Zugeordnete Leads. Die Gebiete und das Formular für eine neue "
+        + "Kampagne stehen in der „Volle Liste“." },
       { art: "schritte", punkte: [
-        "Zuerst ein Gebiet anlegen — Gebiete lassen sich schachteln, etwa München → Trudering → Waldtrudering.",
-        "Dann eine Kampagne im Gebiet: Zielgruppe, Anzahl angeschriebener Haushalte, Zeitraum, Kosten, Werbemittel, Thema.",
-        "Innerhalb der Kampagne einzelne Wellen erfassen. Eine Welle darf nicht vor dem Kampagnenstart liegen.",
+        "Zuerst ein Gebiet anlegen: in der „Volle Liste“ über „+ Gebiet anlegen“. Gebiete lassen sich schachteln, etwa München → Trudering → Waldtrudering.",
+        "Dann über „+ Neu“ eine Kampagne im Gebiet: Zielgruppe, Anzahl angeschriebener Haushalte, Zeitraum, Kosten, Werbemittel, Thema.",
+        "In der Kampagnenakte einzelne Wellen erfassen („Welle anlegen“). Eine Welle darf nicht vor dem Kampagnenstart liegen.",
         "Beim Lead die Herkunft eintragen: Kampagne, Welle, empfehlender Partner, Reaktionsweg und -datum.",
       ]},
       { art: "absatz", text:
-        "Bei Partnern wird ein Compliance-Kennzeichen geführt: Provision grundsätzlich "
-        + "möglich, keine Provision, rechtliche Prüfung erforderlich, oder nur "
-        + "Kooperation ohne Vergütung. Für regulierte Berufsgruppen — Rechtsanwälte, "
-        + "Notare — verweigert das System die Erfassung einer Vergütung und nennt den "
-        + "Grund im Klartext." },
+        "Partner werden in der Organisationsakte unter dem Reiter **Partner & "
+        + "Compliance** geführt (Adressen › Organisationen). Dort steht ein "
+        + "Compliance-Kennzeichen: Provision grundsätzlich möglich, keine Provision, "
+        + "rechtliche Prüfung erforderlich, oder nur Kooperation ohne Vergütung. Für "
+        + "regulierte Berufsgruppen — Rechtsanwälte, Notare — verweigert das System "
+        + "die Erfassung einer Vergütung und nennt den Grund im Klartext." },
       { art: "warnung", text:
         "Ob eine Empfehlungsvergütung im Einzelfall zulässig ist, entscheidet das "
         + "System nicht. Es setzt nur um, was als Kennzeichen hinterlegt wurde." },
@@ -192,16 +276,20 @@ export const HELP_CHAPTERS: HelpChapter[] = [
     bloecke: [
       { art: "absatz", text:
         "Das Verkaufsprojekt hält einen Verkaufsfall zusammen. Wer wissen will, wie "
-        + "es um einen Fall steht, öffnet das Projekt und nicht sechs Einzellisten." },
-      { art: "bild", datei: "verkaufsprojekt.jpg", breite: 1200, hoehe: 535, unterschrift:
-        "Ein Verkaufsprojekt: oben die eine nächste Aktion, darunter die offenen "
-        + "Punkte bis zum Vermarktungsstart." },
+        + "es um einen Fall steht, öffnet das Projekt und nicht sechs Einzellisten. "
+        + "Die Projekte stehen unter **Immobilien › Verkaufsprojekte**." },
       { art: "absatz", text:
-        "Zwei Karten tragen das Projekt. **Nächste Aktion** nennt genau eine Sache "
-        + "mit Fälligkeit und Verantwortlichem — nicht drei, sondern eine. **Offene "
-        + "Punkte** führt zusammen, was dem Vermarktungsstart noch im Weg steht: "
-        + "Maßnahmen, Vermarktungsreife, Pflichtangaben, Verfügungsberechtigung und "
-        + "Maklerauftrag. Jeder Punkt verlinkt an die Stelle, wo er zu erledigen ist." },
+        "Zwei Karten stehen in der Projektakte oben. **Nächste Aktion** nennt genau "
+        + "eine Sache mit Fälligkeit und Verantwortlichem — nicht drei, sondern eine. "
+        + "**Offene Punkte** führt zusammen, was dem Vermarktungsstart noch im Weg "
+        + "steht: Maßnahmen, Vermarktungsreife, Pflichtangaben, "
+        + "Verfügungsberechtigung und Maklerauftrag. Jeder Punkt verlinkt an die "
+        + "Stelle, wo er zu erledigen ist." },
+      { art: "absatz", text:
+        "Darunter folgen Projekt (Stammdaten), Stand, der zugehörige "
+        + "Verkaufsstrategie-Check und „Auftrag, Vermarktung, Abschluss“ mit den "
+        + "Verweisen in die Vorgänge. Ein neues Projekt entsteht meist aus einem Lead "
+        + "(„Auftrag übernehmen“); von Hand über „+ Neu“ in der Liste." },
       { art: "warnung", text:
         "Ein Projekt lässt sich auch dann in die Vermarktung setzen, wenn offene "
         + "Punkte bestehen. Das System warnt, es entscheidet nicht. Die Verantwortung "
@@ -219,20 +307,24 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         "Der Check beantwortet die Frage, die im Erstgespräch wirklich zählt: Was "
         + "sollte vor dem Verkauf noch gemacht werden, was lohnt sich nicht mehr, und "
         + "was kostet das an Zeit und Geld?" },
-      { art: "bild", datei: "verkaufsstrategie-check.jpg", breite: 1200, hoehe: 535, unterschrift:
-        "Ein Check im Entwurf. Oben steht, was zur Prüfbereitschaft noch fehlt." },
+      { art: "absatz", text:
+        "Alle Checks stehen unter **Adressen › Verkaufsstrategie-Check**. Bearbeitet "
+        + "wird ein Check in der Leadakte des Eigentümers, Reiter "
+        + "**Verkaufsstrategie-Check**. Oben steht, was zur Prüfbereitschaft noch "
+        + "fehlt." },
       { art: "schritte", punkte: [
         "Ausgangssituation, Verkaufsziel und Besichtigungsdatum erfassen.",
-        "Szenarien anlegen — typischerweise „ohne Aufbereitung\", „kleine Maßnahmen\", „umfassende Aufbereitung\". Je Szenario Preisspanne, Investition und Dauer.",
-        "Genau ein Szenario empfehlen. Auch „nicht empfohlen\" ist eine zulässige Empfehlungsstufe und oft die ehrlichste.",
-        "Maßnahmen erfassen und dem Szenario zuordnen.",
+        "Szenarien anlegen — typischerweise „ohne Aufbereitung“, „kleine Maßnahmen“, „umfassende Aufbereitung“. Je Szenario Preisspanne, Investition und Dauer.",
+        "Genau ein Szenario empfehlen. Auch „nicht empfohlen“ ist eine zulässige Empfehlungsstufe und oft die ehrlichste.",
+        "Maßnahmen erfassen und dem Szenario zuordnen. Was bei der Begehung an Heizung, Elektrik oder Photovoltaik auffällt, gehört als eigene Maßnahme hierher — die Website kündigt diese technische Einschätzung ausdrücklich an.",
         "Den Check zur Prüfung markieren und anschließend finalisieren. Danach ist er unveränderlich; eine fachliche Änderung erzeugt eine neue Revision.",
         "Die Entscheidung des Eigentümers dokumentieren.",
       ]},
       { art: "warnung", text:
         "Alle Zahlen im Check sind ausdrücklich Einschätzungen und keine Zusicherung. "
         + "Das steht auch so in der Oberfläche und gehört im Gespräch mit dem "
-        + "Eigentümer genauso gesagt." },
+        + "Eigentümer genauso gesagt. Die technische Einschätzung ist kein Gutachten "
+        + "und keine Fachplanung." },
       { art: "hinweis", text:
         "Für die Textbausteine erzeugt das System einen Prompt zum Kopieren. Es ist "
         + "keine KI angebunden — der Text wird außerhalb erzeugt und bewusst wieder "
@@ -243,25 +335,40 @@ export const HELP_CHAPTERS: HelpChapter[] = [
     id: "immobilie",
     nummer: "8",
     titel: "Die Objektakte",
-    kurz: "Die Immobilie anlegen und durch ihre Statusstufen führen.",
-    pfade: ["/properties", "/properties/new", "/properties/:propertyId"],
+    kurz: "Die Immobilie anlegen, ihre neun Reiter und die Statusstufen.",
+    pfade: [
+      "/properties", "/properties/new", "/properties/:propertyId",
+      "/properties/:propertyId/objektdaten", "/properties/:propertyId/eigentuemer",
+      "/properties/:propertyId/verlauf",
+    ],
     bloecke: [
       { art: "absatz", text:
-        "Die Objektakte ist die zentrale Seite einer Immobilie. Über ihr steht eine "
-        + "Leiste mit allen Abschnitten der Akte — Recht & Lasten, "
-        + "Verfügungsberechtigung, Preis & Wert, WEG & Miete, Pflichtangaben, "
-        + "Interessenten, Website, Exposés, Vermarktung, Dokumente, Medien, "
-        + "Geldwäsche." },
-      { art: "bild", datei: "objektakte.jpg", breite: 1200, hoehe: 535, unterschrift:
-        "Die Objektakte. Oben die Abschnittsleiste, darunter Statuswechsel und die "
-        + "Karten mit dem jeweiligen Stand." },
+        "Die Objektakte ist die zentrale Akte einer Immobilie. Sie steht unter "
+        + "**Immobilien › Objekte**: links die Objektliste mit dem Stand jedes "
+        + "Objekts, rechts die Akte. Eine neue Immobilie entsteht über „+ Neu“ oder "
+        + "aus einem Lead." },
+      { art: "absatz", text:
+        "Die Akte hat neun Reiter, die immer gleich dastehen. Unter manchen Reitern "
+        + "stehen mehrere Seiten als kleine Unterreiter:" },
+      { art: "liste", punkte: [
+        "**Übersicht** — Status und Statuswechsel, Checkliste zur Vermarktungsreife und der Stand der einzelnen Abschnitte auf einen Blick.",
+        "**Objektdaten** — Basisdaten & Ausstattung, WEG & Miete, Pflichtangaben.",
+        "**Eigentümer & Recht** — Eigentümer, Recht & Lasten, Verfügungsberechtigung.",
+        "**Preis & Wert** — Preisverlauf und Wertermittlung.",
+        "**Unterlagen** — Unterlagenliste und Dokumente.",
+        "**Vermarktung** — Medien, Exposés, Portale, Website.",
+        "**Interessenten** — Interessenten & Besichtigungen zu diesem Objekt.",
+        "**Abwicklung** — Geldwäsche, dazu die Verweise in die Vorgänge dieses Objekts: Maklerauftrag, Aufmaß, Kaufangebote, Reservierungen, Abschluss & Notar, Provisionen. Diese öffnen ihre eigene Akte.",
+        "**Verlauf** — die Objekthistorie.",
+      ]},
       { art: "absatz", text:
         "Der Objektstatus läuft: Entwurf → Akquise → Bewertung → Auftrag ausstehend → "
         + "Vorbereitung → Vermarktung → Reserviert → Notar → Verkauft. Daneben gibt es "
-        + "Verloren, Zurückgezogen und Archiviert." },
+        + "Verloren, Zurückgezogen und Archiviert. Der Stand steht als farbiges "
+        + "Schildchen in der Liste und im Kopf der Akte." },
       { art: "warnung", text:
         "Der Schritt von Vorbereitung nach Vermarktung ist gesperrt, solange die "
-        + "Vermarktungsreife nicht erreicht ist. Die Checkliste auf der Objektakte "
+        + "Vermarktungsreife nicht erreicht ist. Die Checkliste in der Übersicht "
         + "zeigt, was fehlt. Diese Sperre sitzt in der Datenbank und lässt sich nicht "
         + "über das Formular umgehen." },
     ],
@@ -273,6 +380,9 @@ export const HELP_CHAPTERS: HelpChapter[] = [
     kurz: "Grundbuch, Belastungen — und die Frage, wer überhaupt verkaufen darf.",
     pfade: ["/properties/:propertyId/legal", "/properties/:propertyId/disposition"],
     bloecke: [
+      { art: "absatz", text:
+        "Beides steht in der Objektakte unter dem Reiter **Eigentümer & Recht**, "
+        + "neben der Seite Eigentümer." },
       { art: "absatz", text:
         "Unter **Recht & Lasten** wird die Immobilie als Rechtsobjekt erfasst: "
         + "Grundbuchdaten mit Amtsgericht, Blatt, Gemarkung, Flur und Flurstück; "
@@ -287,7 +397,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         + "mit Aufgabenkreis und gerichtlicher Genehmigung, minderjährige Beteiligte "
         + "und die Ehegattenzustimmung." },
       { art: "absatz", text:
-        "Das System nennt jederzeit den Stand: „Verfügungsberechtigung geklärt\" oder "
+        "Das System nennt jederzeit den Stand: „Verfügungsberechtigung geklärt“ oder "
         + "eine Liste dessen, was offen ist. Fehlende Genehmigungen und ausstehende "
         + "Zustimmungen erzeugen Wiedervorlagen." },
       { art: "warnung", text:
@@ -306,10 +416,11 @@ export const HELP_CHAPTERS: HelpChapter[] = [
     pfade: ["/properties/:propertyId/pricing"],
     bloecke: [
       { art: "absatz", text:
-        "Jede Preisänderung wird als eigene Stufe erfasst — mit Datum, altem und "
-        + "neuem Wert, Begründung und Verantwortlichem. Das System zählt je Stufe "
-        + "automatisch mit: Tage im Markt, Anfragen, Besichtigungen, Kaufangebote. "
-        + "Damit lässt sich im Rückblick belegen, warum ein Preis wann geändert wurde." },
+        "Objektakte, Reiter **Preis & Wert**. Jede Preisänderung wird als eigene "
+        + "Stufe erfasst — mit Datum, altem und neuem Wert, Begründung und "
+        + "Verantwortlichem. Das System zählt je Stufe automatisch mit: Tage im "
+        + "Markt, Anfragen, Besichtigungen, Kaufangebote. Damit lässt sich im "
+        + "Rückblick belegen, warum ein Preis wann geändert wurde." },
       { art: "absatz", text:
         "Die Wertermittlung hält das Verfahren fest — Vergleichswert, Ertragswert, "
         + "Sachwert oder Marktpreiseinschätzung —, dazu Bewertungsdatum, Bewerter, "
@@ -317,7 +428,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         + "die Ergebnisspanne." },
       { art: "absatz", text:
         "Das Besichtigungsfeedback wird je Objekt verdichtet: „von zwölf "
-        + "Besichtigungen halten neun den Preis für zu hoch\" ist ein Satz, mit dem "
+        + "Besichtigungen halten neun den Preis für zu hoch“ ist ein Satz, mit dem "
         + "sich ein Preisgespräch führen lässt." },
       { art: "warnung", text:
         "Das System gibt keine Preisempfehlung ab und rechnet Zu- und Abschläge nicht "
@@ -333,11 +444,12 @@ export const HELP_CHAPTERS: HelpChapter[] = [
     pfade: ["/properties/:propertyId/hoa-tenancy"],
     bloecke: [
       { art: "absatz", text:
-        "Für Eigentumswohnungen: Miteigentumsanteil, Hausgeld getrennt nach Umlage und "
-        + "Rücklagenanteil, Höhe der Erhaltungsrücklage, beschlossene und absehbare "
-        + "Sonderumlagen mit Betrag und Zweck, Sondernutzungsrechte, Verwalter mit "
-        + "Vertragslaufzeit, Beschlusssammlung, Wirtschaftsplan, Jahresabrechnung und "
-        + "anstehende Sanierungen." },
+        "Objektakte, Reiter **Objektdaten › WEG & Miete**. Für Eigentumswohnungen: "
+        + "Miteigentumsanteil, Hausgeld getrennt nach Umlage und Rücklagenanteil, "
+        + "Höhe der Erhaltungsrücklage, beschlossene und absehbare Sonderumlagen mit "
+        + "Betrag und Zweck, Sondernutzungsrechte, Verwalter mit Vertragslaufzeit, "
+        + "Beschlusssammlung, Wirtschaftsplan, Jahresabrechnung und anstehende "
+        + "Sanierungen." },
       { art: "absatz", text:
         "Für vermietete Objekte: Mietvertragsdatum und -art, Ist-Kaltmiete, "
         + "Nebenkostenvorauszahlung, Kaution, Staffel- oder Indexmiete, "
@@ -345,7 +457,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         + "der Mieter als Kontakt, Mietervorkaufsrecht und Sperrfrist nach Umwandlung." },
       { art: "hinweis", text:
         "Die Bruttomietrendite erscheint nur, wenn die Grunddaten vollständig sind. "
-        + "Sonst steht dort „nicht berechenbar\" — eine Rendite auf halber Datenlage "
+        + "Sonst steht dort „nicht berechenbar“ — eine Rendite auf halber Datenlage "
         + "wäre eine erfundene Zahl." },
     ],
   },
@@ -357,11 +469,10 @@ export const HELP_CHAPTERS: HelpChapter[] = [
     pfade: ["/properties/:propertyId/mandatory-data"],
     bloecke: [
       { art: "absatz", text:
-        "Vor dem Wechsel in die Vermarktung und vor jeder Veröffentlichung prüft das "
-        + "System die Angaben, die eine Immobilienanzeige tragen muss." },
-      { art: "bild", datei: "pflichtangaben.jpg", breite: 1200, hoehe: 535, unterschrift:
-        "Die Pflichtangaben. Der grüne Balken bestätigt Vollständigkeit — nicht "
-        + "rechtliche Richtigkeit." },
+        "Objektakte, Reiter **Objektdaten › Pflichtangaben**. Vor dem Wechsel in die "
+        + "Vermarktung und vor jeder Veröffentlichung prüft das System die Angaben, "
+        + "die eine Immobilienanzeige tragen muss. Ein grüner Balken bestätigt "
+        + "Vollständigkeit — nicht rechtliche Richtigkeit." },
       { art: "liste", punkte: [
         "Art des Ausweises: Bedarf oder Verbrauch.",
         "Endenergiewert in kWh/(m²·a).",
@@ -390,10 +501,12 @@ export const HELP_CHAPTERS: HelpChapter[] = [
     pfade: ["/mandates", "/mandates/new", "/mandates/:mandateId"],
     bloecke: [
       { art: "absatz", text:
-        "Der Maklerauftrag ist ein eigener Vorgang, kein bloßes Dokument. Erfasst "
-        + "werden Auftraggeber, Objekt, Auftragsart — einfacher Auftrag, Alleinauftrag "
-        + "oder qualifizierter Alleinauftrag —, Vertragsschluss mit Datum und Form, "
-        + "Laufzeit, Verlängerungsregel, Kündigung und tatsächliches Ende." },
+        "Der Maklerauftrag ist ein eigener Vorgang, kein bloßes Dokument. Er steht "
+        + "unter **Immobilien › Makleraufträge** und ist aus der Objektakte über den "
+        + "Reiter **Abwicklung** erreichbar. Erfasst werden Auftraggeber, Objekt, "
+        + "Auftragsart — einfacher Auftrag, Alleinauftrag oder qualifizierter "
+        + "Alleinauftrag —, Vertragsschluss mit Datum und Form, Laufzeit, "
+        + "Verlängerungsregel, Kündigung und tatsächliches Ende." },
       { art: "absatz", text:
         "Die Provisionsvereinbarung wird getrennt je Seite geführt: Prozentsatz oder "
         + "Festbetrag, Bezugsgröße und Fälligkeitsereignis." },
@@ -407,6 +520,11 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         + "Fristende, das ausdrückliche Verlangen nach vorzeitigem Leistungsbeginn, "
         + "die Kenntnisnahme des Wertersatzes und ein etwaiger erklärter Widerruf. Die "
         + "Widerrufsfrist erzeugt eine Wiedervorlage." },
+      { art: "hinweis", text:
+        "Die Startseite der Website beantwortet die Kostenfragen der Eigentümer — "
+        + "Provision, wer sie zahlt, Fälligkeit, Laufzeit und Kündigung — in "
+        + "allgemeiner Form. Was im Gespräch und im Auftrag konkret vereinbart wird, "
+        + "muss dazu passen. Die Formulierungen dort sind mit dem Anwalt abzustimmen." },
       { art: "warnung", text:
         "Fehlt bei einem Verbraucherauftrag die dokumentierte Belehrung, warnt das "
         + "System am Auftrag und am Objekt. Ein Vermarktungsstart innerhalb der "
@@ -422,16 +540,19 @@ export const HELP_CHAPTERS: HelpChapter[] = [
     pfade: ["/compliance", "/properties/:propertyId/compliance"],
     bloecke: [
       { art: "absatz", text:
-        "Je Verkaufsimmobilie wird eine Geldwäscheakte geführt. Erfasst werden die "
-        + "Identifizierung von Verkäufer- und Käuferseite mit Ausweisart, Nummer, "
-        + "ausstellender Behörde, Gültigkeit, Datum, identifizierender Person und "
-        + "Verfahren; der wirtschaftlich Berechtigte bei juristischen Personen; die "
+        "Je Verkaufsimmobilie wird eine Geldwäscheakte geführt — in der Objektakte "
+        + "unter **Abwicklung › Geldwäsche**. Erfasst werden die Identifizierung von "
+        + "Verkäufer- und Käuferseite mit Ausweisart, Nummer, ausstellender Behörde, "
+        + "Gültigkeit, Datum, identifizierender Person und Verfahren; der "
+        + "wirtschaftlich Berechtigte bei juristischen Personen; die "
         + "Risikoeinstufung mit Begründung und Prüfdatum; der dokumentierte Abgleich "
         + "mit PEP- und Sanktionslisten; die Herkunft der Mittel; der Nachweis der "
         + "unbaren Zahlung." },
-      { art: "bild", datei: "geldwaesche-aufbewahrung.jpg", breite: 1200, hoehe: 535, unterschrift:
-        "Die Übersicht über alle Geldwäscheakten und die ablaufenden "
-        + "Aufbewahrungsfristen." },
+      { art: "absatz", text:
+        "Die Übersicht über alle Geldwäscheakten steht unter **Verwaltung › "
+        + "Geldwäsche & Aufbewahrung**, zusammen mit den ablaufenden "
+        + "Aufbewahrungsfristen, den Aufbewahrungsregeln und der Liste dessen, was "
+        + "vor dem Produktivbetrieb anwaltlich abzunehmen ist." },
       { art: "warnung", text:
         "Diese Daten sind besonders geschützt. Sie sind nur für Rollen mit "
         + "ausdrücklicher Berechtigung sichtbar, und jeder Zugriff wird protokolliert. "
@@ -441,10 +562,10 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         + "Seiten nicht dokumentiert ist. Der Hinweis blockiert den Vorgang nicht und "
         + "stellt nicht fest, ob eine Pflicht besteht." },
       { art: "absatz", text:
-        "Unter „Löschreife und Lücken\" auf derselben Seite steht, welche Unterlagen "
-        + "löschreif sind, welche kein Löschdatum haben und für welche Dokumentarten "
-        + "überhaupt keine Aufbewahrungsregel hinterlegt ist. Einen Löschknopf gibt es "
-        + "bewusst nicht: wie lange aufzubewahren ist, ist eine rechtliche Frage." },
+        "Unter „Löschreife und Lücken“ steht, welche Unterlagen löschreif sind, "
+        + "welche kein Löschdatum haben und für welche Dokumentarten überhaupt keine "
+        + "Aufbewahrungsregel hinterlegt ist. Einen Löschknopf gibt es bewusst nicht: "
+        + "wie lange aufzubewahren ist, ist eine rechtliche Frage." },
     ],
   },
   {
@@ -458,6 +579,9 @@ export const HELP_CHAPTERS: HelpChapter[] = [
       "/properties/:propertyId/media",
     ],
     bloecke: [
+      { art: "absatz", text:
+        "Objektakte, Reiter **Unterlagen** mit den Seiten **Unterlagenliste** und "
+        + "**Dokumente**; die Bilder stehen unter **Vermarktung › Medien**." },
       { art: "absatz", text:
         "Dokumente hängen an einer Immobilie oder einem Kontakt und tragen eine "
         + "Kategorie — Grundbuchauszug, Flurkarte, Grundriss, Energieausweis, "
@@ -477,8 +601,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
 
       { art: "absatz", text:
         "**Die Unterlagenliste** beantwortet die andere Frage: nicht was da ist, "
-        + "sondern was noch fehlt. Sie steht in der Objektakte unter "
-        + "**Unterlagenliste** und führt je Objekt eine Zeile pro Unterlage mit "
+        + "sondern was noch fehlt. Sie führt je Objekt eine Zeile pro Unterlage mit "
         + "ihrem Stand — Fehlt, Angefordert, Vorhanden, Zu prüfen, Geprüft, "
         + "Veraltet oder Nicht erforderlich." },
       { art: "schritte", punkte: [
@@ -505,7 +628,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
     id: "vermarktung",
     nummer: "16",
     titel: "Website, Exposés und Portale",
-    kurz: "Vom internen Objekt zur öffentlichen Anzeige — über freigegebene Versionen.",
+    kurz: "Vom internen Objekt zur öffentlichen Anzeige — und die Seiten der Website pflegen.",
     pfade: [
       "/properties/:propertyId/publication",
       "/properties/:propertyId/publication/preview",
@@ -515,23 +638,39 @@ export const HELP_CHAPTERS: HelpChapter[] = [
     ],
     bloecke: [
       { art: "absatz", text:
-        "Die Website liest niemals direkt aus der Objektakte. Sie liest eine "
-        + "freigegebene, unveränderliche Version. Eine interne Korrektur ändert die "
-        + "laufende Anzeige also nicht von selbst — das ist anzeigenrechtlich wichtig "
-        + "und in der Praxis beruhigend." },
-      { art: "bild", datei: "veroeffentlichung.jpg", breite: 1200, hoehe: 280, unterschrift:
-        "Das Publikationsprinzip: intern bearbeiten, Snapshot veröffentlichen." },
+        "Objektakte, Reiter **Vermarktung** mit den Seiten Medien, Exposés, Portale "
+        + "und Website. Die Website liest niemals direkt aus der Objektakte. Sie "
+        + "liest eine freigegebene, unveränderliche Version. Eine interne Korrektur "
+        + "ändert die laufende Anzeige also nicht von selbst — das ist "
+        + "anzeigenrechtlich wichtig und in der Praxis beruhigend." },
       { art: "schritte", punkte: [
-        "Öffentlichen Titel, URL-Kürzel, Untertitel, Kurztext und Objektbeschreibung erfassen.",
+        "Unter **Vermarktung › Website** öffentlichen Titel, URL-Kürzel, Untertitel, Kurztext und Objektbeschreibung erfassen.",
         "Die Vorschau prüfen — sie ist intern und veröffentlicht nichts.",
         "Freigeben. Erst damit entsteht die öffentliche Version.",
         "Wird intern etwas geändert, weist das System auf unveröffentlichte Änderungen hin und verlangt eine neue Freigabe.",
       ]},
       { art: "absatz", text:
         "Exposés werden aus einer konkreten Publikationsversion erzeugt und ebenfalls "
-        + "versioniert. Unter „Vermarktung & Portale\" wird je Kanal festgehalten, wo "
-        + "das Objekt läuft. Es gibt keine vorgetäuschte Portalanbindung — geschaltet "
-        + "wird beim Portal, dokumentiert wird hier." },
+        + "versioniert. Unter **Portale** wird je Kanal festgehalten, wo das Objekt "
+        + "läuft. Es gibt keine vorgetäuschte Portalanbindung — geschaltet wird beim "
+        + "Portal, dokumentiert wird hier." },
+      { art: "absatz", text:
+        "**Die Seiten der Website** — Startseite, Über uns, Kontakt, Ratgeber, "
+        + "Impressum und die übrigen — werden unter **Vermarktung › Website** "
+        + "gepflegt. Links stehen alle Seiten mit ihrem Stand, rechts die gewählte "
+        + "Seite mit den Abschnitten **Inhalte bearbeiten**, **Vorschau & Live** und "
+        + "**Versionen**." },
+      { art: "schritte", punkte: [
+        "Texte unter „Inhalte bearbeiten“ ändern und mit „Entwurf speichern“ sichern. Der Entwurf ist noch nicht öffentlich.",
+        "„Vorschauversion erstellen“ und die Vorschau prüfen.",
+        "„Version … veröffentlichen“. Erst jetzt ändert sich die öffentliche Seite.",
+      ]},
+      { art: "hinweis", text:
+        "Solange eine Seite noch nie veröffentlicht wurde, zeigt die Website die "
+        + "Grundtexte aus dem Programm. Eine veröffentlichte Version bleibt dagegen "
+        + "stehen, bis eine neue veröffentlicht wird — auch wenn sich die Grundtexte "
+        + "inzwischen geändert haben. Neue Felder einer Seite (etwa der Fragen-Block "
+        + "zu den Maklerkosten auf der Startseite) zeigen bis dahin ihren Grundtext." },
     ],
   },
   {
@@ -548,24 +687,29 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         "Ein Suchprofil hält fest, was ein Interessent sucht: Preisspanne, Fläche, "
         + "Zimmer, Baujahr, Lage mit Suchradius, Kauf oder Miete, Finanzierungsstand "
         + "und gewünschte Merkmale. Daraus schlägt das System passende Objekte vor — "
-        + "mit nachvollziehbaren Gründen, nicht als Punktzahl aus einer Blackbox." },
-      { art: "bild", datei: "anfragen-reaktionszeit.jpg", breite: 1200, hoehe: 535, unterschrift:
-        "Die Reaktionszeit je Eingangskanal. Überfällige Anfragen lassen sich per "
-        + "Knopfdruck eskalieren." },
+        + "mit nachvollziehbaren Gründen, nicht als Punktzahl aus einer Blackbox. "
+        + "Suchprofile stehen unter **Adressen › Suchprofile**; Suchaufträge von "
+        + "der Website kommen dort ebenfalls an." },
       { art: "absatz", text:
-        "Anfragen kommen über Website, Portal, Telefon oder persönlich herein. Je "
-        + "Kanal ist eine Zielzeit hinterlegt — für einen Rückruf kürzer als für eine "
-        + "Portalanfrage. Überschreitungen sind sichtbar, und „Überfällige eskalieren\" "
-        + "legt je überfälliger Anfrage genau eine Wiedervorlage an, einmalig und nur "
-        + "auf Knopfdruck." },
+        "Anfragen stehen unter **Vermarktung › Anfragen**. Sie kommen über Website, "
+        + "Portal, Telefon oder persönlich herein. Je Kanal ist eine Zielzeit "
+        + "hinterlegt — für einen Rückruf kürzer als für eine Portalanfrage. In der "
+        + "„Volle Liste“ zeigt der Abschnitt Reaktionszeit, wo die Zielzeit "
+        + "überschritten ist, und „Überfällige eskalieren“ legt je überfälliger "
+        + "Anfrage genau eine Wiedervorlage an, einmalig und nur auf Knopfdruck." },
       { art: "absatz", text:
-        "Besichtigungen werden mit Termin, Treffpunkt und Teilnehmern geplant. Danach "
-        + "wird das Feedback erfasst: Interessenniveau, Positives, Bedenken, "
-        + "Preisrückmeldung und nächster Schritt. Dieses Feedback fließt in die "
-        + "Preisauswertung ein." },
+        "Das Kontaktformular der Website legt eine Anfrage an. Oben in der Nachricht "
+        + "steht das gewählte Anliegen. Bittet jemand um Rückruf, steht dort auch das "
+        + "gewünschte Zeitfenster — vormittags, nachmittags oder abends — mit der "
+        + "Telefonnummer. Angerufen wird dann im gewünschten Zeitfenster." },
+      { art: "absatz", text:
+        "Besichtigungen stehen unter **Vermarktung › Besichtigungen** und werden mit "
+        + "Termin, Treffpunkt und Teilnehmern geplant. Danach wird das Feedback "
+        + "erfasst: Interessenniveau, Positives, Bedenken, Preisrückmeldung und "
+        + "nächster Schritt. Dieses Feedback fließt in die Preisauswertung ein." },
       { art: "hinweis", text:
-        "Unter „Interessenten & Besichtigungen\" in der Objektakte steht dasselbe aus "
-        + "Sicht der Immobilie: wem sie nachgewiesen wurde und wer sie gesehen hat." },
+        "Im Reiter **Interessenten** der Objektakte steht dasselbe aus Sicht der "
+        + "Immobilie: wem sie nachgewiesen wurde und wer sie gesehen hat." },
     ],
   },
   {
@@ -573,20 +717,28 @@ export const HELP_CHAPTERS: HelpChapter[] = [
     nummer: "18",
     titel: "Kaufangebote und Reservierung",
     kurz: "Vom Angebot bis zur reservierten Immobilie.",
-    pfade: ["/purchase-offers*", "/reservations"],
+    pfade: ["/purchase-offers*", "/reservations*"],
     bloecke: [
       { art: "absatz", text:
-        "Ein Kaufangebot trägt Betrag, Gültigkeit, Abgabedatum und Notizen. Je "
-        + "Interessent und Objekt ist immer nur ein Angebot aktiv; ein Folgeangebot "
-        + "ersetzt das vorige ausdrücklich, statt es zu überschreiben. Damit bleibt "
-        + "die Verhandlung nachvollziehbar." },
+        "Kaufangebote stehen unter **Abschluss › Kaufangebote**. Ein Angebot trägt "
+        + "Betrag, Gültigkeit, Abgabedatum und Notizen. Je Interessent und Objekt ist "
+        + "immer nur ein Angebot aktiv; ein Folgeangebot ersetzt das vorige "
+        + "ausdrücklich, statt es zu überschreiben. Damit bleibt die Verhandlung "
+        + "nachvollziehbar." },
       { art: "absatz", text:
         "Beim Anlegen zeigt das System den zugehörigen Objektnachweis an — oder "
         + "markiert deutlich, dass keiner vorliegt." },
       { art: "absatz", text:
-        "Eine Reservierung hält Interessent, Objekt, Zeitraum, reservierten Preis, "
-        + "Bedingungen und Ablaufdatum fest und erzeugt eine Wiedervorlage zum Ablauf. "
-        + "Eine Aufhebung verlangt einen Grund." },
+        "Reservierungen stehen unter **Abschluss › Reservierungen**, links die "
+        + "Liste, rechts die Reservierungsakte. Eine Reservierung hält Interessent, "
+        + "Objekt, Zeitraum, reservierten Preis, Bedingungen und ein etwa "
+        + "verknüpftes Kaufangebot fest. Angelegt wird über „+ Neu“." },
+      { art: "liste", punkte: [
+        "In der Akte oben: „Wiedervorlage zum Ablauf“ legt eine Aufgabe zum Enddatum an; „Archivieren“ nimmt die Reservierung aus der Liste.",
+        "Im Abschnitt **Bearbeiten** werden Enddatum, Preis, Vereinbarung, Entgelt, Kaufangebot und Bedingungen geändert.",
+        "Im Abschnitt **Reservierung beenden** wird das Ergebnis gewählt: Abgelaufen, In Verkauf übergegangen oder Aufgehoben. Eine Aufhebung verlangt einen Grund.",
+        "Was demnächst endet, steht auch unter Mein Tag › In Bewegung.",
+      ]},
       { art: "warnung", text:
         "Reservierungsentgelte sind rechtlich heikel. Das System erfasst sie nur, "
         + "schlägt sie nicht vor und berechnet nichts. Ein Entgelt lässt sich nur "
@@ -603,10 +755,15 @@ export const HELP_CHAPTERS: HelpChapter[] = [
     bloecke: [
       { art: "absatz", text:
         "Die Abschlussakte hält den Weg zwischen Beurkundung und "
-        + "Eigentumsumschreibung zusammen, damit dafür keine Nebenliste nötig ist." },
-      { art: "bild", datei: "abschluss.jpg", breite: 1200, hoehe: 535, unterschrift:
-        "Eine Abschlussakte mit den beiden Warnungen zu Verfügungsberechtigung und "
-        + "Geldwäsche, die vor der Beurkundung offen sind." },
+        + "Eigentumsumschreibung zusammen, damit dafür keine Nebenliste nötig ist. "
+        + "Sie steht unter **Abschluss › Abschlüsse & Notar** und hat zwei Reiter: "
+        + "**Abschluss** (Verkaufskontext, Dokumente & Provisionen, Notar und "
+        + "Termine, Nachbetreuung, nächste Schritte, Historie) und **Meilensteine & "
+        + "Übergabe**." },
+      { art: "absatz", text:
+        "Vor der Beurkundung stehen oben in der Akte zwei Warnungen, solange sie "
+        + "offen sind: zur Verfügungsberechtigung und zur Geldwäsche-Identifizierung "
+        + "beider Seiten." },
       { art: "absatz", text:
         "Die Meilensteine werden je mit Datum, Zuständigem und Wiedervorlage geführt: "
         + "Auflassungsvormerkung, Lastenfreistellung und Löschungsbewilligungen, "
@@ -620,7 +777,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         + "— als auswertbarer Datensatz, nicht nur als abgelegtes Blatt Papier." },
       { art: "hinweis", text:
         "Erst mit der Eigentumsumschreibung gilt der Fall als vollständig "
-        + "abgeschlossen. Der Objektstatus „Verkauft\" bleibt davon unberührt." },
+        + "abgeschlossen. Der Objektstatus „Verkauft“ bleibt davon unberührt." },
     ],
   },
   {
@@ -631,9 +788,10 @@ export const HELP_CHAPTERS: HelpChapter[] = [
     pfade: ["/commissions", "/commissions/new", "/commissions/:commissionId"],
     bloecke: [
       { art: "absatz", text:
-        "Eine Provision erbt die Konditionen aus dem Maklerauftrag, bleibt aber "
-        + "einzeln übersteuerbar. Sie wird getrennt nach Innen- und Außenseite "
-        + "geführt, wahlweise als Prozentsatz oder Festbetrag." },
+        "Provisionen stehen unter **Abschluss › Provisionen**. Eine Provision erbt "
+        + "die Konditionen aus dem Maklerauftrag, bleibt aber einzeln übersteuerbar. "
+        + "Sie wird getrennt nach Innen- und Außenseite geführt, wahlweise als "
+        + "Prozentsatz oder Festbetrag." },
       { art: "absatz", text:
         "Rechnungsstatus und Zahlungsstatus sind zwei verschiedene Dinge und werden "
         + "getrennt geführt. Jeder Statuswechsel wird protokolliert." },
@@ -650,15 +808,17 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         "Nach der dokumentierten Übergabe entstehen automatisch Wiedervorlagen aus "
         + "festen Bausteinen: Nachfassen nach der Übergabe, Empfehlungsanfrage, "
         + "Jahrestag. Die Bausteine — Titel, Adressat, Abstand in Tagen, Priorität — "
-        + "lassen sich unter „Nachbetreuung\" anpassen." },
+        + "lassen sich unter **Auswertung › Nachbetreuung** anpassen." },
       { art: "absatz", text:
-        "Unter „Empfehlungen\" wird festgehalten, wer wen empfohlen hat und was daraus "
-        + "geworden ist. Das koppelt auf das Partnerprofil zurück." },
+        "Unter **Auswertung › Empfehlungen** wird festgehalten, wer wen empfohlen hat "
+        + "und was daraus geworden ist. Das koppelt auf das Partnerprofil zurück." },
       { art: "absatz", text:
-        "Eine Case Study wird aus den vorhandenen Daten aufgebaut: Ausgangszustand, "
-        + "ursprüngliche Preiseinschätzung, durchgeführte Maßnahmen, Investitionssumme, "
-        + "Dauer der Aufbereitung, Vermarktungsdauer, Verkaufspreis, "
-        + "Vorher-/Nachher-Medien und Lessons Learned." },
+        "Eine Case Study (**Auswertung › Case Studies**) wird aus den vorhandenen "
+        + "Daten aufgebaut: Ausgangszustand, ursprüngliche Preiseinschätzung, "
+        + "durchgeführte Maßnahmen, Investitionssumme, Dauer der Aufbereitung, "
+        + "Vermarktungsdauer, Verkaufspreis, Vorher-/Nachher-Medien und Lessons "
+        + "Learned. Empfehlungen und Case Studies werden über „+ Neu“ in der Liste "
+        + "angelegt; das Formular steht in der „Volle Liste“." },
       { art: "warnung", text:
         "Die Marketingfreigabe des Eigentümers wird getrennt dokumentiert. Ohne sie "
         + "wird nichts verwendet. Die anonymisierte Fassung prüft das System auf "
@@ -673,13 +833,16 @@ export const HELP_CHAPTERS: HelpChapter[] = [
     kurz: "Kennzahlen über den eigenen Arbeitsplatz oder das ganze Unternehmen.",
     pfade: ["/reports"],
     bloecke: [
-      { art: "bild", datei: "auswertung.jpg", breite: 1200, hoehe: 535, unterschrift:
-        "Die Auswertung, umschaltbar zwischen eigenem Arbeitsplatz und Unternehmen." },
       { art: "absatz", text:
-        "Die Auswertung lässt sich zwischen „Mein Arbeitsplatz\" und „Unternehmen\" "
-        + "umschalten und über Schnellzeiträume oder einen freien Zeitraum "
-        + "eingrenzen. Dazu kommen die Auswertungen zu Kampagnen nach Gebiet und zu "
-        + "Partnerempfehlungen." },
+        "**Auswertung › Dashboard**. In der Werkzeugleiste oben wird zuerst die "
+        + "Ebene gewählt — **Mein Arbeitsplatz** oder, mit der entsprechenden "
+        + "Berechtigung, **Unternehmen** —, daneben ein Schnellzeitraum oder ein "
+        + "freier Zeitraum von–bis." },
+      { art: "absatz", text:
+        "Darunter folgen die Abschnitte Operative Steuerung; Akquise, Funnel & "
+        + "Abschluss; Verkäufer-Leads nach Quelle; Kampagnen nach Gebiet; "
+        + "Partnerempfehlungen; Empfehlungen und die Verteilung nach "
+        + "Geschäftsstatus." },
       { art: "hinweis", text:
         "Es werden ausschließlich tatsächlich vorhandene Geschäftsdaten gezeigt. Es "
         + "gibt keine Hochrechnung und keine Beispielzahlen. Wo eine Kennzahl nicht "
@@ -691,30 +854,37 @@ export const HELP_CHAPTERS: HelpChapter[] = [
     nummer: "23",
     titel: "Verwaltung: Benutzer, Weiterbildung, Historie, Archiv",
     kurz: "Rechte vergeben, Nachweise führen, Änderungen nachvollziehen.",
-    pfade: ["/crm/users", "/crm/training", "/crm/history", "/crm/archive"],
+    pfade: ["/crm/users", "/crm/training", "/crm/history", "/crm/archive", "/crm/hilfe"],
     bloecke: [
       { art: "absatz", text:
-        "Unter **Benutzer & Rollen** werden Zugänge freigeschaltet und Rollen "
-        + "vergeben. Niemand kann sich selbst höhere Rechte geben; die Administratorrolle "
-        + "vergibt nur ein Administrator. Jede Änderung landet in der Systemhistorie." },
-      { art: "bild", datei: "weiterbildung.jpg", breite: 1200, hoehe: 535, unterschrift:
-        "Die Weiterbildung mit dem Stand je Benutzer im laufenden Zeitraum." },
+        "Der Bereich **Verwaltung** steht in der Modulleiste unten abgesetzt, weil "
+        + "er selten gebraucht wird. Er enthält Anleitung, Geldwäsche & "
+        + "Aufbewahrung (Kapitel 14), Benutzer & Rollen, Weiterbildung, Archiv und "
+        + "Systemhistorie." },
+      { art: "absatz", text:
+        "Unter **Benutzer & Rollen** werden Zugänge freigeschaltet, deaktiviert und "
+        + "Rollen zugewiesen. Die Tabelle **Berechtigungen je Rolle** zeigt als "
+        + "Matrix, welche Rolle was darf. Niemand kann sich selbst höhere Rechte "
+        + "geben; die Administratorrolle vergibt nur ein Administrator. Jede Änderung "
+        + "landet in der Systemhistorie." },
       { art: "absatz", text:
         "Unter **Weiterbildung** wird je Benutzer erfasst, welche Maßnahme wann mit "
-        + "wie vielen Stunden belegt wurde. Das System summiert die Stunden im "
-        + "laufenden Zeitraum und zeigt, wie viel noch offen ist. Stunden dürfen mit "
-        + "Komma eingegeben werden." },
-      { art: "bild", datei: "systemhistorie.jpg", breite: 1200, hoehe: 535, unterschrift:
-        "Die Systemhistorie mit Filter nach Bereich, Aktion, Benutzer und Referenz." },
+        + "wie vielen Stunden belegt wurde („Nachweis erfassen“). Der Abschnitt "
+        + "„Stand im laufenden Zeitraum“ zeigt je Benutzer einen Fortschrittsbalken: "
+        + "erreichte Stunden gegen die Vorgabe, und wie viel noch offen ist. Stunden "
+        + "dürfen mit Komma eingegeben werden." },
       { art: "absatz", text:
         "Die **Systemhistorie** protokolliert jede Änderung mit Zeitpunkt, Benutzer, "
-        + "Bereich, Vorgangsnummer und den geänderten Feldern — alter Wert, neuer "
-        + "Wert. Sie ist append-only: Einträge lassen sich nicht ändern und nicht "
-        + "löschen. Gefiltert wird nach Bereich, Aktion, Benutzer und Referenz." },
+        + "Bereich, Vorgangsnummer und den geänderten Feldern. Sie ist eine Tabelle; "
+        + "ein Klick auf die Feldangabe einer Zeile klappt alter Wert → neuer Wert "
+        + "auf. Gefiltert wird über die Werkzeugleiste nach Bereich, Aktion, Benutzer "
+        + "und Referenz. Die Historie ist append-only: Einträge lassen sich nicht "
+        + "ändern und nicht löschen." },
       { art: "absatz", text:
-        "Im **Archiv** stehen archivierte Datensätze aller Bereiche. Archivieren ist "
-        + "kein Löschen: der Vorgang verschwindet aus den Arbeitslisten und bleibt "
-        + "nachvollziehbar." },
+        "Im **Archiv** wird oben der Datentyp gewählt und zwischen **Aktiv** und "
+        + "**Archiviert** umgeschaltet. Archivieren ist kein Löschen: der Vorgang "
+        + "verschwindet aus den Arbeitslisten und bleibt nachvollziehbar; von hier "
+        + "aus lässt er sich wiederherstellen." },
       { art: "warnung", text:
         "Die hinterlegten Soll-Stunden, Zeiträume und Aufbewahrungsfristen sind "
         + "betriebliche Voreinstellungen und keine rechtliche Aussage." },
@@ -729,15 +899,16 @@ export const HELP_CHAPTERS: HelpChapter[] = [
     bloecke: [
       { art: "absatz", text:
         "Das Aufmaß ist eine Dienstleistung neben der Vermittlung und deshalb ein "
-        + "eigener Vorgang mit eigener Nummer (ZM-AM-…). Es kann zu einer Immobilie "
-        + "aus dem Bestand gehören — muss es aber nicht: ein Auftrag für einen "
-        + "Eigentümer, der gar nicht verkauft, trägt statt der Objektakte seine "
-        + "Anschrift selbst. Eines von beidem, Immobilie oder Kunde, muss gesetzt sein." },
+        + "eigener Vorgang mit eigener Nummer (ZM-AM-…), unter **Immobilien › "
+        + "Aufmaß-Aufträge**. Es kann zu einer Immobilie aus dem Bestand gehören — "
+        + "muss es aber nicht: ein Auftrag für einen Eigentümer, der gar nicht "
+        + "verkauft, trägt statt der Objektakte seine Anschrift selbst. Eines von "
+        + "beidem, Immobilie oder Kunde, muss gesetzt sein." },
       { art: "absatz", text:
         "Anfragen über die öffentliche Seite /technisches-aufmass landen hier "
-        + "unmittelbar als Auftrag im Stand „Angefragt\" — mit Paket, Objektart, "
+        + "unmittelbar als Auftrag im Stand „Angefragt“ — mit Paket, Objektart, "
         + "Ort und der ungefähren Fläche, die der Kunde angegeben hat. Das Formular "
-        + "nimmt erst Anfragen entgegen, wenn unter „Verkaufsstrategie-Check\" ein "
+        + "nimmt erst Anfragen entgegen, wenn unter „Verkaufsstrategie-Check“ ein "
         + "Empfänger für den Aufnahmeweg eingetragen ist." },
       { art: "schritte", punkte: [
         "**Angefragt** oder **Entwurf** — der Vorgang existiert, der Umfang steht noch nicht fest.",
@@ -745,18 +916,21 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         "**Beauftragt** — der Kunde hat zugesagt.",
         "**Termin vereinbart** — das Aufmaß vor Ort steht im Kalender.",
         "**Aufgemessen** — das Datum des Aufmaßes ist Pflicht für diesen Stand.",
-        "**Geliefert** — Lieferdatum ist Pflicht. Beim Grundriss-Refresh geht es ohne den Umweg über „Aufgemessen\".",
+        "**Geliefert** — Lieferdatum ist Pflicht. Beim Grundriss-Refresh geht es ohne den Umweg über „Aufgemessen“.",
         "**Abgerechnet** — Honorar und Rechnungsdatum sind Pflicht.",
         "**Bezahlt** — Zahlungsdatum ist Pflicht.",
       ]},
+      { art: "absatz", text:
+        "Das Honorar wird **brutto** eingetragen, also mit Umsatzsteuer — so, wie es "
+        + "auch die Preise auf der öffentlichen Aufmaß-Seite nennen." },
       { art: "absatz", text:
         "Das Ergebnis besteht aus der Flächengrundlage (WoFlV, DIN 277 oder beides) "
         + "und den gemessenen Flächen. Eine Grundlage ohne Flächenangabe wird "
         + "abgewiesen — sie wäre eine Aussage über nichts." },
       { art: "hinweis", text:
         "Gehört der Auftrag zu einer Immobilie aus dem Bestand, trägt der Knopf "
-        + "„Wohnfläche in die Objektakte übernehmen\" das Ergebnis dorthin: die "
-        + "Wohnfläche an die Immobilie, die Grundlage nach „Recht & Lasten\". Das "
+        + "„Wohnfläche in die Objektakte übernehmen“ das Ergebnis dorthin: die "
+        + "Wohnfläche an die Immobilie, die Grundlage nach „Recht & Lasten“. Das "
         + "passiert ausdrücklich und nicht automatisch, damit die Wohnfläche einer "
         + "Immobilie sich nicht nebenbei ändert, während jemand einen Auftrag abhakt. "
         + "Dafür wird zusätzlich die Berechtigung zum Bearbeiten von Immobilien benötigt." },
@@ -784,7 +958,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
       { art: "liste", punkte: [
         "**Keine Rechtsberatung.** Das System erfasst Sachverhalte, Fristen und Nachweise. Es bewertet sie nicht und erzeugt keine Vertragstexte, Belehrungen oder Klauseln.",
         "**Es warnt und blockiert, es entscheidet nicht.** Wo eine Voraussetzung nachweislich fehlt, wird gesperrt. Wo es eine fachliche Abwägung ist, wird gewarnt und der Weg bleibt offen.",
-        "**Keine erfundenen Zahlen.** Wo nichts erfasst ist, steht ein Strich oder „nicht berechenbar\" — keine Null, die wie ein Wert aussieht.",
+        "**Keine erfundenen Zahlen.** Wo nichts erfasst ist, steht ein Strich oder „nicht berechenbar“ — keine Null, die wie ein Wert aussieht.",
         "**Keine Knöpfe ohne Funktion.** Was angezeigt wird, ist angebunden.",
         "**Keine automatischen Nachrichten.** Das System verschickt nichts ohne ausdrückliche Auslösung.",
         "**Nichts wird still verworfen.** Wird eine Eingabe nicht angenommen, sagt das System warum, statt sie kommentarlos zu verwerfen.",
