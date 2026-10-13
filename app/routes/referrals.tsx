@@ -1,6 +1,7 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import { istEinstieg } from "~/lib/einstieg";
 import type { Route } from "./+types/referrals";
+import { Aufklapper } from "~/components/aufklapper";
 import { requirePermission } from "~/lib/auth.server";
 import { tag } from "~/lib/format";
 
@@ -178,7 +179,7 @@ export default function Referrals(){
         })}</div>}
     </section>
 
-    {d.canWrite?<section className="data-card" id="anlegen">
+    {d.canWrite?<Aufklapper id="anlegen" knopf="+ Empfehlung erfassen"><section className="data-card">
       <div className="card-head"><div><p className="eyebrow">Neu</p><h2>Empfehlung erfassen</h2></div></div>
       <Form method="post" className="form-grid">
         <label className="form-field"><span>Empfehlung kommt von</span>
@@ -224,6 +225,6 @@ export default function Referrals(){
         <div className="form-field full-width inline-actions"><button className="primary-button" type="submit">Empfehlung erfassen</button></div>
         <p className="form-field full-width subtle">Wähle entweder eine Person oder eine Organisation — je nachdem, was oben eingestellt ist. Die jeweils andere Auswahl bleibt unberücksichtigt.</p>
       </Form>
-    </section>:null}
+    </section></Aufklapper>:null}
   </main>;
 }

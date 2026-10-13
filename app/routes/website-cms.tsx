@@ -1,5 +1,6 @@
 import { data, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/website-cms";
+import { Aufklapper } from "~/components/aufklapper";
 import { requirePermission } from "~/lib/auth.server";
 import { zeitpunkt as formatDate } from "~/lib/format";
 import "~/website-cms.css";
@@ -17,7 +18,7 @@ export default function WebsiteCms() {
   const { pages, profile } = useLoaderData<typeof loader>();
   return <main className="editor-shell website-cms-shell programm-seite">
     <header className="editor-header"><div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">Thema 12 · Website-CMS</p><h1 className="editor-title">Website-Inhalte</h1><p className="editor-meta">Entwurf, Vorschau und Veröffentlichung bleiben getrennt.</p></div><div className="header-user"><span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div></header>
-    <section className="data-card website-cms-principle"><div className="card-head"><div><p className="eyebrow">Publikationsprinzip</p><h2>Nur freigegebene Snapshots gehen live</h2></div></div><p>Bearbeitungen ändern zunächst nur den internen Entwurf. Erst eine vorbereitete Version kann mit der Berechtigung <code>website.publish</code> veröffentlicht werden. Bereits veröffentlichte Versionen bleiben unverändert erhalten.</p></section>
+    <Aufklapper knopf="Wie die Veröffentlichung funktioniert"><section className="data-card website-cms-principle"><div className="card-head"><div><p className="eyebrow">Publikationsprinzip</p><h2>Nur freigegebene Snapshots gehen live</h2></div></div><p>Bearbeitungen ändern zunächst nur den internen Entwurf. Erst eine vorbereitete Version kann mit der Berechtigung <code>website.publish</code> veröffentlicht werden. Bereits veröffentlichte Versionen bleiben unverändert erhalten.</p></section></Aufklapper>
     <div className="website-cms-grid">{pages.map((page: any) => <article className="data-card website-page-card" key={page.id}><div className="card-head"><div><p className="eyebrow">{page.path}</p><h2>{page.label}</h2></div><span className={`website-state ${page.status.toLowerCase()}`}>{stateLabel(page)}</span></div><dl><div><dt>Live-Version</dt><dd>{page.published_version ?? "—"}</dd></div><div><dt>Kandidat</dt><dd>{page.candidate_version ?? "—"}</dd></div><div><dt>Zuletzt geändert</dt><dd>{formatDate(page.updated_at)}</dd></div></dl><div className="inline-actions"><Link className="primary-button link-button compact" to={`/crm/website/${page.page_key.toLowerCase()}`}>Bearbeiten</Link><Link className="secondary-button link-button compact" to={page.path} target="_blank">Live ↗</Link></div></article>)}</div>
   </main>;
 }

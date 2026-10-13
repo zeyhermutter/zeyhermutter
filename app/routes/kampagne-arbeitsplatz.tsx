@@ -57,6 +57,7 @@ export default function KampagneArbeitsplatz() {
       aktiveId={campaignId}
       geoeffnet={akte ? alsZeile(akte) : null}
       suchePlatzhalter="Name, Nummer …"
+      neu={{ pfad: "/acquisition#kampagne-anlegen", beschriftung: "+ Neu" }}
       volleListe="/acquisition#kampagnen"
       listeFehlt={listeFehlt}
       abgeschnitten={abgeschnitten ? `die zuletzt bearbeiteten ${HOECHSTENS}` : null}

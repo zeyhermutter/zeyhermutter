@@ -1,5 +1,6 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import { istEinstieg } from "~/lib/einstieg";
+import { Aufklapper } from "~/components/aufklapper";
 import type { Route } from "./+types/projects";
 import { requirePermission } from "~/lib/auth.server";
 import { tag } from "~/lib/format";
@@ -165,7 +166,7 @@ export default function Projects(){
         })}</div>}
     </section>
 
-    <section className="data-card" id="projekt-anlegen">
+    <Aufklapper id="projekt-anlegen" knopf="+ Projekt anlegen"><section className="data-card">
       <div className="card-head"><div><p className="eyebrow">Neu</p><h2>Projekt anlegen</h2></div></div>
       <Form method="post" className="form-grid">
         <input type="hidden" name="_intent" value="project_add"/>
@@ -179,6 +180,6 @@ export default function Projects(){
         <label className="form-field full-width"><span>Notiz</span><input name="notes" disabled={disabled}/></label>
         <div className="form-field full-width inline-actions"><button className="primary-button" type="submit" disabled={disabled}>Projekt anlegen</button></div>
       </Form>
-    </section>
+    </section></Aufklapper>
   </div>;
 }

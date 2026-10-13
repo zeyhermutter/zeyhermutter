@@ -248,18 +248,23 @@
 }
 .programm-arbeitsflaeche .programm-seite .data-card > form[method="get"] > label:has(input[name="q"]) input { width: 100%; }
 
-/* Kennzahlen: eine ruhige Zeile statt Kacheln. */
+/* Kennzahlen: eine ruhige Zeile statt Kacheln -- "3 aktiv · 1 Entwurf".
+ * Die Kacheln heissen je nach Seite metric-card oder metric (Nachbetreuung,
+ * Empfehlungen, Kampagnen); deshalb jedes Kind der Kennzahlenleiste. Die Zahl
+ * steht vorn (order), die Erlaeuterung (small) entfaellt -- gesehen auf BETA
+ * am 13.10.2026: "Offen0Wiedervorlagen aus der Nachbetreuung". */
 .programm-arbeitsflaeche .programm-seite .metric-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 18px;
 }
 
-.programm-arbeitsflaeche .programm-seite .metric-grid > .metric-card {
+.programm-arbeitsflaeche .programm-seite .metric-grid > * {
   display: inline-flex;
-  flex-direction: row-reverse;
+  flex-direction: row;
   align-items: baseline;
   gap: 5px;
+  min-height: 0;
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -267,9 +272,23 @@
   box-shadow: none;
 }
 
-.programm-arbeitsflaeche .programm-seite .metric-grid > .metric-card > strong { margin: 0; font-size: 13px; }
-.programm-arbeitsflaeche .programm-seite .metric-grid > .metric-card > span { font-size: 12px; }
-.programm-arbeitsflaeche .programm-seite .metric-grid > .metric-card > small { display: none; }
+.programm-arbeitsflaeche .programm-seite .metric-grid > * > strong { order: -1; margin: 0; font-size: 13px; line-height: 1.3; }
+.programm-arbeitsflaeche .programm-seite .metric-grid > * > span { font-size: 12px; color: #4a5763; }
+.programm-arbeitsflaeche .programm-seite .metric-grid > * > small { display: none; }
+
+/* Kartenkoepfe ohne Versalienzeile ("WER EMPFIEHLT WEN"), Titel 15 px. */
+.programm-arbeitsflaeche .programm-seite .card-head .eyebrow { display: none; }
+.programm-arbeitsflaeche .programm-seite .card-head h2 { font-size: 15px; }
+
+/* Knoepfe in Listenzeilen (Benachrichtigungen: "Öffnen", "Als gelesen
+ * markieren") in Zeilenhoehe. */
+.programm-arbeitsflaeche .programm-seite .data-row :is(.primary-button, .secondary-button) { min-height: 28px; padding: 0 10px; font-size: 12px; }
+
+/* Globale Suche: das Suchfeld war in der Werkzeugleiste auf rund 90 px
+ * zusammengeschoben, die Lupe stand ueber dem Platzhalter. */
+.programm-arbeitsflaeche .programm-seite .global-search-form { gap: 10px; }
+.programm-arbeitsflaeche .programm-seite .global-search-field { flex: 1 1 360px; max-width: 560px; }
+.programm-arbeitsflaeche .programm-seite .global-search-field input { min-height: 34px; padding-left: 38px; }
 
 /* Die Liste im Rahmen, mit einer Kopfzeile wie eine Tabelle. */
 .programm-arbeitsflaeche .programm-seite .data-card:has(> .data-list) {
@@ -355,3 +374,47 @@
 /* Leere Zustaende ("Noch keine ... erfasst.") standen in 16 px -- groesser
  * als der Inhalt, den sie vertreten. */
 .programm-arbeitsflaeche .empty-state { font-size: 13px; line-height: 1.5; }
+
+/* --- Aufklapper (app/components/aufklapper.tsx) ----------------------------
+ * Anlege- und Bearbeitungsformulare auf Listenseiten: zu, bis man sie
+ * braucht. Der Knopf sieht aus wie ein Zweitknopf und steht links. */
+.programm-aufklapper { width: 100%; }
+
+.programm-aufklapper-knopf {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid #c3cad1;
+  border-radius: var(--crm-field-radius);
+  background: #ffffff;
+  color: #1b2733;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+
+.programm-aufklapper-knopf::-webkit-details-marker { display: none; }
+.programm-aufklapper-knopf:hover { background: #f3f6fa; }
+.programm-aufklapper[open] > .programm-aufklapper-knopf { background: #062037; border-color: #062037; color: #ffffff; }
+.programm-aufklapper-inhalt { margin-top: 10px; }
+
+/* In einer Listenkarte ohne Innenabstand (Programmseite) braucht der Knopf
+ * Abstand zum Rand -- so wie die Zeilen darueber. */
+.programm-arbeitsflaeche .programm-seite .data-card > .programm-aufklapper { padding: 10px 12px; }
+
+/* --- Auswertung (reports) ---------------------------------------------------
+ * Die Kennzahlen dort sind ein Dashboard und bleiben Kacheln -- aber in der
+ * Groesse eines Programms: Zahl 20 statt bis 36 px, keine Mindesthoehe von
+ * 132 px, Abschnittskoepfe ohne Versalienzeile. Live auf BETA geprueft. */
+.programm-arbeitsflaeche .reporting-section-head { margin-bottom: 10px; }
+.programm-arbeitsflaeche .reporting-section-head .eyebrow { display: none; }
+.programm-arbeitsflaeche .reporting-section-head h2 { margin: 0; font-size: 15px; }
+.programm-arbeitsflaeche .reporting-metric-grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+.programm-arbeitsflaeche .reporting-metric { min-height: 0; gap: 2px; }
+.programm-arbeitsflaeche .reporting-metric strong { font-size: 20px; line-height: 1.2; }
+.programm-arbeitsflaeche .reporting-metric strong.reporting-metric-unavailable { font-size: 14px; }
+.programm-arbeitsflaeche .reporting-metric small { font-size: 11px; }
+.programm-arbeitsflaeche .reporting-toolbar { gap: 10px; }
+.programm-arbeitsflaeche .reporting-toolbar .eyebrow { margin-bottom: 4px; font-size: 10.5px; }

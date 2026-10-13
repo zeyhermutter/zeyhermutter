@@ -1,6 +1,7 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import { istEinstieg } from "~/lib/einstieg";
 import type { Route } from "./+types/case-studies";
+import { Aufklapper } from "~/components/aufklapper";
 import { requirePermission } from "~/lib/auth.server";
 import { euroRund, tag } from "~/lib/format";
 
@@ -144,7 +145,7 @@ export default function CaseStudies(){
         })}</div>}
     </section>
 
-    {d.canWrite?<section className="data-card" id="anlegen">
+    {d.canWrite?<Aufklapper id="anlegen" knopf="+ Case Study anlegen"><section className="data-card">
       <div className="card-head"><div><p className="eyebrow">Neu</p><h2>Case Study anlegen</h2></div></div>
       {d.openClosings.length===0
         ?<p className="empty-state">{d.notarizedCount===0
@@ -161,6 +162,6 @@ export default function CaseStudies(){
           <div className="form-field full-width inline-actions"><button className="primary-button" type="submit">Case Study anlegen</button></div>
           <p className="form-field full-width subtle">Die Kennzahlen kommen aus dem Vorgang selbst. Texte schreibt ausschließlich der Benutzer; die Software formuliert nichts.</p>
         </Form>}
-    </section>:null}
+    </section></Aufklapper>:null}
   </main>;
 }

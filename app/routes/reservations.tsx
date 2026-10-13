@@ -1,5 +1,6 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/reservations";
+import { Aufklapper } from "~/components/aufklapper";
 import { requirePermission } from "~/lib/auth.server";
 import { crmDateAtTimeToIso } from "~/lib/local-time";
 import { euroRund as money, tag as formatDate } from "~/lib/format";
@@ -233,7 +234,7 @@ export default function Reservations(){
       {rows.length===0?<p className="empty-state">Keine Reservierungen in dieser Ansicht.</p>:null}
     </div></section>
 
-    {rows.filter((row:any)=>!row.archived_at).map((row:any)=><section className="editor-card" key={`edit-${row.id}`}>
+    {rows.filter((row:any)=>!row.archived_at).map((row:any)=><Aufklapper key={`edit-${row.id}`} id={`bearbeiten-${row.id}`} knopf={`${row.reservation_number} bearbeiten`}><section className="editor-card">
       <div className="card-head"><div><p className="eyebrow">{row.reservation_number}</p><h2>{one(row.properties)?.property_number} · {contactLabel(one(row.contacts))}</h2></div><span className={`status-pill ${STATUS_CLASS[row.status]}`}>{RESERVATION_STATUS[row.status]}</span></div>
       {d.canWrite&&row.status==="ACTIVE"?<Form method="post">
         <input type="hidden" name="_intent" value="update"/>
@@ -263,9 +264,9 @@ export default function Reservations(){
         <label className="form-field full-width"><span>Beendigungsgrund</span><textarea name="end_reason" rows={2} placeholder="Bei Aufhebung erforderlich"/></label>
         <div className="form-actions"><button className="secondary-button" type="submit">Reservierung beenden</button></div>
       </Form>:null}
-    </section>)}
+    </section></Aufklapper>)}
 
-    {d.canWrite?<section className="editor-card"><div className="card-head"><div><p className="eyebrow">Neu</p><h2>Reservierung anlegen</h2></div></div>
+    {d.canWrite?<Aufklapper id="anlegen" knopf="+ Reservierung anlegen"><section className="editor-card"><div className="card-head"><div><p className="eyebrow">Neu</p><h2>Reservierung anlegen</h2></div></div>
       <Form method="post">
         <input type="hidden" name="_intent" value="create"/>
         <div className="form-grid">
@@ -283,15 +284,15 @@ export default function Reservations(){
         <label className="form-field full-width"><span>Interne Notizen</span><textarea name="internal_notes" rows={2}/></label>
         <div className="form-actions"><button className="primary-button" type="submit">Reservierung anlegen</button></div>
       </Form>
-    </section>:null}
+    </section></Aufklapper>:null}
 
-    <section className="data-card"><div className="card-head"><div><p className="eyebrow">Vor produktiver Nutzung</p><h2>Anwaltlich abzunehmen</h2></div></div>
+    <Aufklapper knopf="Vor produktiver Nutzung: anwaltlich abzunehmen"><section className="data-card"><div className="card-head"><div><p className="eyebrow">Vor produktiver Nutzung</p><h2>Anwaltlich abzunehmen</h2></div></div>
       <ul className="subtle">
         <li>Ob und unter welchen Voraussetzungen ein Reservierungsentgelt überhaupt vereinbart werden darf.</li>
         <li>Welche Form eine Reservierungsvereinbarung braucht und was sie regeln darf.</li>
         <li>Welche Wirkung eine Reservierung gegenüber anderen Interessenten hat.</li>
         <li>Wie ein vereinnahmtes Entgelt bei Nichtzustandekommen des Kaufs zu behandeln ist.</li>
       </ul>
-    </section>
+    </section></Aufklapper>
   </main>;
 }

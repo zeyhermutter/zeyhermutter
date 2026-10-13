@@ -1,5 +1,6 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/acquisition";
+import { Aufklapper } from "~/components/aufklapper";
 import { requirePermission } from "~/lib/auth.server";
 import { euroRund as money, tag as formatDate } from "~/lib/format";
 import { KAMPAGNENSTATUS as CAMPAIGN_STATUS } from "~/lib/labels";
@@ -185,7 +186,7 @@ export default function Acquisition(){
           </Link>;
         })}</div>}
 
-      <Form method="post" className="form-grid" style={{marginTop:"1rem"}}>
+      <Aufklapper id="kampagne-anlegen" knopf="+ Kampagne anlegen"><Form method="post" className="form-grid" >
         <input type="hidden" name="_intent" value="campaign_add"/>
         <label className="form-field"><span>Name *</span><input name="name" disabled={disabled} placeholder="Trudering Herbst 2026"/></label>
         <label className="form-field"><span>Gebiet *</span><select name="area_id" defaultValue="" disabled={disabled}><option value="">—</option>{d.areas.map((a:any)=><option key={a.id} value={a.id}>{a.path}</option>)}</select></label>
@@ -200,7 +201,7 @@ export default function Acquisition(){
         <label className="form-field"><span>Geplante Kosten €</span><input name="planned_cost" disabled={disabled}/></label>
         <label className="form-field full-width"><span>Notiz</span><input name="notes" disabled={disabled}/></label>
         <div className="form-field full-width inline-actions"><button className="primary-button" type="submit" disabled={disabled}>Kampagne anlegen</button></div>
-      </Form>
+      </Form></Aufklapper>
     </section>
 
     <section className="data-card" id="gebiete">
@@ -214,7 +215,7 @@ export default function Acquisition(){
             <span>{plural(campaigns.filter((c:any)=>c.area_id===a.id).length,"Kampagne","Kampagnen")}</span>
           </div>)}</div>}
 
-      <Form method="post" className="form-grid" style={{marginTop:"1rem"}}>
+      <Aufklapper id="gebiet-anlegen" knopf="+ Gebiet anlegen"><Form method="post" className="form-grid" >
         <input type="hidden" name="_intent" value="area_add"/>
         <label className="form-field"><span>Name *</span><input name="name" disabled={disabled} placeholder="Waldtrudering"/></label>
         <label className="form-field"><span>Übergeordnet</span><select name="parent_area_id" defaultValue="" disabled={disabled}><option value="">— oberste Ebene</option>{d.areas.map((a:any)=><option key={a.id} value={a.id}>{a.path}</option>)}</select></label>
@@ -223,7 +224,7 @@ export default function Acquisition(){
         <label className="form-field"><span>Haushalte (Schätzung)</span><input name="household_estimate" disabled={disabled}/></label>
         <label className="form-field full-width"><span>Notiz</span><input name="notes" disabled={disabled}/></label>
         <div className="form-field full-width inline-actions"><button className="secondary-button" type="submit" disabled={disabled}>Gebiet anlegen</button></div>
-      </Form>
+      </Form></Aufklapper>
     </section>
   </div>;
 }

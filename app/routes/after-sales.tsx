@@ -1,5 +1,6 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/after-sales";
+import { Aufklapper } from "~/components/aufklapper";
 import { requirePermission } from "~/lib/auth.server";
 import { tag } from "~/lib/format";
 import { AUFGABENPRIORITAET } from "~/lib/labels";
@@ -135,7 +136,7 @@ export default function AfterSales(){
         })}</div>}
     </section>
 
-    <section className="data-card" id="folge">
+    <Aufklapper id="folge" knopf="Folge der Nachbetreuung bearbeiten"><section className="data-card">
       <div className="card-head"><div><p className="eyebrow">Vorlage</p><h2>Die Folge</h2></div></div>
       <p className="subtle">Aus jedem aktiven Baustein entsteht mit der Übergabe genau eine Wiedervorlage — einmalig, auch wenn das Protokoll später noch geändert wird. Änderungen hier gelten für künftige Übergaben.</p>
       <div className="data-list">{(d.templates as any[]).map((template:any)=>
@@ -180,6 +181,6 @@ export default function AfterSales(){
         <label className="form-field full-width"><span>Beschreibung</span><textarea name="description" rows={2}/></label>
         <div className="form-field full-width inline-actions"><button className="primary-button" type="submit">Baustein hinzufügen</button></div>
       </Form>:null}
-    </section>
+    </section></Aufklapper>
   </main>;
 }

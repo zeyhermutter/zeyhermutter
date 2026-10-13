@@ -93,7 +93,7 @@ const AUSNAHMEN = {
   ".asset-modal-close": "Schliessknopf, folgt den Knoepfen und nicht den Flaechen.",
   ".media-disclosure.owner-card": "Aufklapper ohne eigene Flaeche -- bewusst ohne Rundung.",
   '.programm-arbeitsflaeche .programm-seite .data-card:has(>form[method="get"])': "Der Filterkasten einer Liste wird auf Programmseiten zur Werkzeugleiste (13.10.2026) -- bewusst ohne Flaeche, Rand und Innenabstand.",
-  ".programm-arbeitsflaeche .programm-seite .metric-grid>.metric-card": "Kennzahlen als eine Textzeile statt Kacheln (13.10.2026) -- bewusst ohne Flaeche, Rand und Innenabstand.",
+  ".programm-arbeitsflaeche .programm-seite .metric-grid>*": "Kennzahlen als eine Textzeile statt Kacheln (13.10.2026) -- bewusst ohne Flaeche, Rand und Innenabstand.",
   ".kalender-programm .calendar-day-label": "Kopfzeile eines Tages in der Agendaliste (seit 12.10.2026) -- buendig wie ein Tabellenkopf, keine Karte.",
   ".kalender-programm .calendar-ansichten .calendar-event": "Ein Termin als Zeile der Agendaliste (seit 12.10.2026), nicht mehr als Karte -- buendig, ohne Rundung.",
 };

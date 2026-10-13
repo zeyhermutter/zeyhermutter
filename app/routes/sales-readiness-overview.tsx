@@ -1,5 +1,6 @@
 import { data, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/sales-readiness-overview";
+import { Aufklapper } from "~/components/aufklapper";
 import { requirePermission } from "~/lib/auth.server";
 import { requireSalesReadinessBackend } from "~/lib/sales-readiness.server";
 import { tag as formatDate } from "~/lib/format";
@@ -108,7 +109,7 @@ export default function SalesReadinessOverview() {
       </header>
 
       <div className="sales-readiness-overview-width">
-        <section className="data-card">
+        <Aufklapper knopf="Worum geht es beim Verkaufsstrategie-Check?"><section className="data-card">
           <div className="card-head">
             <div>
               <p className="eyebrow">Verkaufsstrategie</p>
@@ -120,7 +121,7 @@ export default function SalesReadinessOverview() {
             Maßnahmen und Eigentümerentscheidung werden strukturiert vorbereitet und anschließend direkt
             mit dem Lead weitergeführt.
           </p>
-        </section>
+        </section></Aufklapper>
 
         <section className="metric-grid">
           <article className="metric-card">

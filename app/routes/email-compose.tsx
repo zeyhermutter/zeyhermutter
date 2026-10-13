@@ -1,5 +1,6 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/email-compose";
+import { Aufklapper } from "~/components/aufklapper";
 import { requireActiveUser } from "~/lib/auth.server";
 import { zeitpunkt as formatDate } from "~/lib/format";
 import { crmLocalDateTimeToIso as berlinLocalToIso, crmNowLocalDateTime as berlinInputNow } from "~/lib/local-time";
@@ -230,14 +231,14 @@ export default function EmailCompose() {
 
     <div className="communication-grid">
       <div className="communication-stack">
-        <section className="data-card">
+        <Aufklapper knopf="Integrationsstatus: Mail-Provider nicht verbunden"><section className="data-card">
           <div className="card-head"><div><p className="eyebrow">Integrationsstatus</p><h2>Providerunabhängiger Arbeitsablauf</h2></div></div>
           <div className="communication-status">
             <div><span>Mail-Provider</span><strong>Nicht verbunden</strong></div>
             <div><span>Verfügbar</span><strong>Mailprogramm öffnen + CRM-Activity</strong></div>
           </div>
           <p className="communication-note">Das Öffnen des Mailprogramms wird nicht automatisch als Versand gewertet. Nur tatsächlich gesendete oder empfangene E-Mails werden anschließend bewusst als Activity dokumentiert.</p>
-        </section>
+        </section></Aufklapper>
 
         {context ? <>
           <section className="data-card">
@@ -264,7 +265,7 @@ export default function EmailCompose() {
           </section>
         </> : <section className="data-card">
           <div className="card-head"><div><p className="eyebrow">Kontext erforderlich</p><h2>E-Mail aus dem CRM öffnen</h2></div></div>
-          <p className="communication-note">Öffne einen Kontakt, Verkäufer-Lead oder eine Anfrage. Der Eintrag „E-Mail“ in der Sidebar übernimmt den aktuellen CRM-Bezug automatisch.</p>
+          <p className="communication-note">Öffne einen Kontakt, Verkäufer-Lead oder eine Anfrage. Der Reiter „E-Mail“ übernimmt den aktuellen CRM-Bezug automatisch.</p>
           <div className="communication-empty-links"><Link className="secondary-button link-button" to="/crm">CRM öffnen</Link><Link className="secondary-button link-button" to="/leads">Verkäufer-Leads</Link><Link className="secondary-button link-button" to="/inquiries">Anfragen</Link></div>
         </section>}
       </div>
