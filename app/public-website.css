@@ -920,3 +920,30 @@
 /* Der Build-Stempel stand oben links auf dem Logo. Auf der oeffentlichen
    Seite gehoert er nicht ins Blickfeld eines Kunden -- klein unten links. */
 body:has(.public-site) .build-version { top: auto !important; bottom: 8px !important; left: 8px !important; opacity: .55; }
+
+/* Kosten-Fragen auf der Startseite: dasselbe Raster wie die FAQ der
+   Leistungsseiten, ohne die obere Linie (davor steht der weisse Ablauf). */
+.zm-kosten { border-top: 0; scroll-margin-top: 20px; }
+.zm-kosten > div:first-child > p:last-child { color: var(--zm-text-leise); }
+.zm-kosten-hinweis { margin: 16px 0 0; color: var(--zm-text-leise); font-size: 13.5px; }
+
+/* Verkaufsstrategie-Check: Technik im Blick (Heizung, Elektrik, PV). */
+.check-technik { width: var(--zm-breite); margin: 0 auto; padding: clamp(56px, 7vw, 84px) 0; border-top: 1px solid var(--zm-linie); }
+.check-technik-kopf { max-width: 70ch; margin-bottom: 30px; }
+.check-technik-kopf > p:last-child { color: var(--zm-text-leise); font-size: 17px; }
+.check-technik-raster { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.check-technik-raster article { padding: 26px 24px; background: var(--zm-karte); border: 1px solid var(--zm-linie); border-top: 2px solid var(--zm-gold); }
+.check-technik-raster h3 { margin-top: 0; }
+.check-technik-raster p { margin: 0; color: var(--zm-text-leise); font-size: 15.5px; line-height: 1.65; }
+.check-technik-grenze { margin: 18px 0 0; color: var(--zm-text-leise); font-size: 13.5px; }
+@media (max-width: 860px) { .check-technik-raster { grid-template-columns: 1fr; } }
+
+/* Kontaktformular: Antwortweg und Rueckruf-Zeitfenster (13.10.2026).
+   Das Zeitfenster erscheint erst, wenn "anrufen" gewaehlt ist -- ohne
+   Skript, ueber :has(). Ohne :has() bleibt es sichtbar und stoert nicht. */
+.public-antwortweg { display: grid; gap: 10px; margin: 0; padding: 16px 18px; border: 1px solid var(--zm-linie); background: var(--zm-karte); }
+.public-antwortweg legend { padding: 0 6px; font-size: 13px; font-weight: 600; }
+.public-inquiry-form .public-antwortweg > label:not(.public-rueckruf-zeit) { display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 15px; cursor: pointer; }
+.public-inquiry-form .public-antwortweg input[type="radio"] { width: 18px; height: 18px; margin: 0; padding: 0; accent-color: var(--zm-navy); }
+.public-rueckruf-zeit small, .public-feld-hinweis { color: var(--zm-text-leise); font-size: 12.5px; font-weight: 400; }
+.public-antwortweg:has(input[value="email"]:checked) .public-rueckruf-zeit { display: none; }

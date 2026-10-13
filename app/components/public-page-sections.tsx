@@ -41,6 +41,8 @@ const LEISTUNGEN = [
 ];
 
 const ANLAESSE: [string, string][] = [
+  ["Was kostet der Verkauf?", "/ratgeber/kosten-beim-verkauf"],
+  ["Ablauf beim Notar", "/ratgeber/ablauf-beim-notar"],
   ["Geerbte Immobilie", "/ratgeber/geerbte-immobilie"],
   ["Immobilie bei Trennung", "/ratgeber/immobilie-bei-trennung"],
   ["Verkauf im Alter", "/ratgeber/immobilie-im-alter"],
@@ -117,6 +119,28 @@ export function HomePageSections({ content: c, objekte = [] }: { content: Websit
           <li key={n}><span className="zm-schritt-nr">{n}</span><h3>{c[`schritt_${n}_titel`]}</h3><p>{c[`schritt_${n}_text`]}</p></li>
         ))}
       </ol>
+    </section>
+
+    {/* Was der Makler kostet -- die erste Frage jedes Eigentuemers, offen
+        beantwortet. Antworten sind allgemein gehalten; verbindlich ist der
+        Maklerauftrag. Vor dem Live-Gang anwaltlich abzunehmen. */}
+    <section className="public-faq-section zm-kosten" id="kosten">
+      <div>
+        <p className="public-eyebrow">{c.kosten_eyebrow}</p>
+        <h2>{c.kosten_titel}</h2>
+        <p>{c.kosten_text}</p>
+      </div>
+      <div>
+        <div className="public-faq-list">
+          {[1, 2, 3, 4, 5, 6].filter((n) => c[`kosten_frage_${n}`]?.trim()).map((n) => (
+            <details key={n} open={n === 1 || undefined}>
+              <summary>{c[`kosten_frage_${n}`]}</summary>
+              <p>{c[`kosten_antwort_${n}`]}</p>
+            </details>
+          ))}
+        </div>
+        {c.kosten_hinweis ? <p className="zm-kosten-hinweis">{c.kosten_hinweis}</p> : null}
+      </div>
     </section>
 
     <section className="zm-check-band zm-auf-navy">

@@ -1,9 +1,11 @@
 export type WebsitePageKey =
   | "HOME" | "CONTACT" | "IMPRINT" | "PRIVACY" | "ABOUT" | "WITHDRAWAL" | "PRIVATE_SALE"
-  | "GUIDE" | "GUIDE_INHERITANCE" | "GUIDE_DIVORCE" | "GUIDE_AGE" | "GUIDE_ENERGY";
+  | "GUIDE" | "GUIDE_INHERITANCE" | "GUIDE_DIVORCE" | "GUIDE_AGE" | "GUIDE_ENERGY" | "GUIDE_COSTS" | "GUIDE_NOTARY";
 
-/** Die vier Anlassseiten des Ratgebers, in der Reihenfolge der Übersicht. */
-export const RATGEBER_SEITEN = ["GUIDE_INHERITANCE", "GUIDE_DIVORCE", "GUIDE_AGE", "GUIDE_ENERGY"] as const;
+/** Die Seiten des Ratgebers, in der Reihenfolge der Übersicht: zuerst die
+ * zwei Fragen, die fast jeder Eigentümer stellt (13.10.2026), dann die vier
+ * Anlässe. */
+export const RATGEBER_SEITEN = ["GUIDE_COSTS", "GUIDE_NOTARY", "GUIDE_INHERITANCE", "GUIDE_DIVORCE", "GUIDE_AGE", "GUIDE_ENERGY"] as const;
 export type RatgeberSeite = (typeof RATGEBER_SEITEN)[number];
 export type WebsiteContent = Record<string, string>;
 export type WebsiteFieldDefinition = { key: string; label: string; multiline?: boolean; rows?: number };
@@ -92,6 +94,22 @@ export const WEBSITE_PAGE_DEFINITIONS: Record<WebsitePageKey, { label: string; p
       { key: "schritt_4_text", label: "Ablauf · Schritt 4 · Text", multiline: true, rows: 3 },
       { key: "schritt_5_titel", label: "Ablauf · Schritt 5 · Titel" },
       { key: "schritt_5_text", label: "Ablauf · Schritt 5 · Text", multiline: true, rows: 3 },
+      { key: "kosten_eyebrow", label: "Kosten · Zeile über der Überschrift" },
+      { key: "kosten_titel", label: "Kosten · Überschrift", multiline: true, rows: 2 },
+      { key: "kosten_text", label: "Kosten · Einleitung", multiline: true, rows: 3 },
+      { key: "kosten_frage_1", label: "Kosten · Frage 1" },
+      { key: "kosten_antwort_1", label: "Kosten · Antwort 1", multiline: true, rows: 4 },
+      { key: "kosten_frage_2", label: "Kosten · Frage 2" },
+      { key: "kosten_antwort_2", label: "Kosten · Antwort 2", multiline: true, rows: 4 },
+      { key: "kosten_frage_3", label: "Kosten · Frage 3" },
+      { key: "kosten_antwort_3", label: "Kosten · Antwort 3", multiline: true, rows: 4 },
+      { key: "kosten_frage_4", label: "Kosten · Frage 4" },
+      { key: "kosten_antwort_4", label: "Kosten · Antwort 4", multiline: true, rows: 4 },
+      { key: "kosten_frage_5", label: "Kosten · Frage 5" },
+      { key: "kosten_antwort_5", label: "Kosten · Antwort 5", multiline: true, rows: 4 },
+      { key: "kosten_frage_6", label: "Kosten · Frage 6" },
+      { key: "kosten_antwort_6", label: "Kosten · Antwort 6", multiline: true, rows: 4 },
+      { key: "kosten_hinweis", label: "Kosten · Hinweis darunter", multiline: true, rows: 2 },
       { key: "check_eyebrow", label: "Check · Eyebrow" },
       { key: "check_title", label: "Check · Überschrift", multiline: true, rows: 2 },
       { key: "check_body", label: "Check · Text", multiline: true, rows: 4 },
@@ -203,6 +221,8 @@ export const WEBSITE_PAGE_DEFINITIONS: Record<WebsitePageKey, { label: string; p
   GUIDE_DIVORCE: { label: "Ratgeber · Trennung", path: "/ratgeber/immobilie-bei-trennung", fields: RATGEBER_FELDER },
   GUIDE_AGE: { label: "Ratgeber · Im Alter", path: "/ratgeber/immobilie-im-alter", fields: RATGEBER_FELDER },
   GUIDE_ENERGY: { label: "Ratgeber · Energieausweis", path: "/ratgeber/energieausweis", fields: RATGEBER_FELDER },
+  GUIDE_COSTS: { label: "Ratgeber · Kosten beim Verkauf", path: "/ratgeber/kosten-beim-verkauf", fields: RATGEBER_FELDER },
+  GUIDE_NOTARY: { label: "Ratgeber · Ablauf beim Notar", path: "/ratgeber/ablauf-beim-notar", fields: RATGEBER_FELDER },
   PRIVATE_SALE: {
     label: "Ohne Makler verkaufen",
     path: "/ohne-makler-verkaufen",
@@ -258,7 +278,7 @@ export const DEFAULT_WEBSITE_CONTENT: Record<WebsitePageKey, WebsiteContent> = {
     leistung_bewertung_text: "Wir sehen uns die Immobilie an und sagen Ihnen, was wir für erzielbar halten – mit den Vergleichsobjekten, auf die wir uns stützen.",
     leistung_bewertung_link: "Bewertung anfragen",
     leistung_check_titel: "Verkaufsstrategie-Check",
-    leistung_check_text: "Wenn offen ist, ob vor dem Verkauf etwas gemacht werden sollte: Ist-Zustand, gezielte Aufbereitung und größere Maßnahmen im Vergleich.",
+    leistung_check_text: "Wenn offen ist, ob vor dem Verkauf etwas gemacht werden sollte: Ist-Zustand, gezielte Aufbereitung und größere Maßnahmen im Vergleich – auch bei Heizung, Elektrik und Photovoltaik.",
     leistung_check_link: "Check ansehen",
     leistung_aufmass_titel: "Aufmaß & Grundrisse",
     leistung_aufmass_text: "Maßstäblicher Bestandsgrundriss, Wohnflächenberechnung nach WoFlV und Grundriss fürs Exposé – vor Ort erfasst, zu festen Paketpreisen.",
@@ -281,6 +301,22 @@ export const DEFAULT_WEBSITE_CONTENT: Record<WebsitePageKey, WebsiteContent> = {
     schritt_4_text: "Exposé, Portale und unsere Suchkunden. Wir prüfen Interessenten und führen die Besichtigungen.",
     schritt_5_titel: "Verhandlung, Notar & Übergabe",
     schritt_5_text: "Wir verhandeln für Sie, bereiten den Notartermin vor und sind bei der Übergabe dabei.",
+    kosten_eyebrow: "Offen gesagt",
+    kosten_titel: "Was kostet Sie ein Makler?",
+    kosten_text: "Die Fragen, die uns Eigentümer am häufigsten stellen – beantwortet, bevor Sie fragen müssen.",
+    kosten_frage_1: "Was kostet mich der Makler?",
+    kosten_antwort_1: "Sie zahlen eine Provision – und zwar erst, wenn Ihre Immobilie tatsächlich verkauft ist. Die Höhe vereinbaren wir vor Beginn schriftlich im Maklerauftrag. Leistungen, die Sie zusätzlich beauftragen, etwa ein Aufmaß, nennen wir Ihnen vorher mit Preis.",
+    kosten_frage_2: "Wer zahlt die Provision – Verkäufer oder Käufer?",
+    kosten_antwort_2: "Bei Wohnungen und Einfamilienhäusern, die ein Verbraucher kauft, gilt seit Dezember 2020 grundsätzlich: Verkäufer und Käufer teilen sich die Provision zu gleichen Teilen (§ 656c BGB). Wie es bei Ihrer Immobilie aussieht, steht vorab im Maklerauftrag.",
+    kosten_frage_3: "Wann wird die Provision fällig?",
+    kosten_antwort_3: "Die Provision ist ein Erfolgshonorar: Sie entsteht erst mit dem wirksamen notariellen Kaufvertrag. Kommt kein Verkauf zustande, fällt keine Provision an.",
+    kosten_frage_4: "Wie lange läuft der Maklerauftrag?",
+    kosten_antwort_4: "Die Laufzeit vereinbaren wir gemeinsam mit Ihnen. Üblich sind einige Monate, damit genug Zeit für eine sorgfältige Vermarktung bleibt. Sie steht im Auftrag, bevor Sie unterschreiben.",
+    kosten_frage_5: "Kann ich den Auftrag kündigen?",
+    kosten_antwort_5: "Ja. Wie und mit welcher Frist, steht im Maklerauftrag – wir gehen es vor der Unterschrift mit Ihnen durch. Wird der Vertrag außerhalb unserer Geschäftsräume oder per E-Mail geschlossen, haben Sie als Verbraucher zusätzlich ein gesetzliches Widerrufsrecht.",
+    kosten_frage_6: "Kostet das erste Gespräch etwas?",
+    kosten_antwort_6: "Nein. Das erste Gespräch ist unverbindlich. Was danach etwas kostet, sagen wir Ihnen vorher – Überraschungen gibt es bei uns nicht.",
+    kosten_hinweis: "Allgemeine Information, keine Rechtsberatung. Verbindlich ist allein der Maklerauftrag, den wir vor Beginn schriftlich mit Ihnen vereinbaren.",
     check_eyebrow: "Wenn vor dem Verkauf noch Fragen offen sind",
     check_title: "Erst klären, was die Immobilie braucht. Dann verkaufen.",
     check_body: "Der Verkaufsstrategie-Check ist eine zusätzliche Option vor der Vermarktung. Er hilft bei der Entscheidung, ob die Immobilie direkt in den Markt gehen sollte oder ob ausgewählte Maßnahmen sinnvoll erscheinen.",
@@ -296,7 +332,7 @@ export const DEFAULT_WEBSITE_CONTENT: Record<WebsitePageKey, WebsiteContent> = {
     team_person_2: "Sebastian",
     team_person_2_rolle: "Vermessungsingenieur",
     team_link: "Mehr über uns",
-    anlass_titel: "Ein besonderer Anlass?",
+    anlass_titel: "Häufige Fragen:",
     abschluss_eyebrow: "Kontakt",
     abschluss_titel: "Sprechen wir über Ihre Immobilie.",
     abschluss_text: "Schreiben Sie uns, worum es geht – wir melden uns persönlich. Das erste Gespräch ist unverbindlich.",
@@ -370,8 +406,8 @@ export const DEFAULT_WEBSITE_CONTENT: Record<WebsitePageKey, WebsiteContent> = {
 
   GUIDE: {
     eyebrow: "Ratgeber",
-    title: "Vier Situationen, in denen ein Verkauf anders läuft.",
-    lead: "Die meisten Immobilien werden nicht verkauft, weil jemand verkaufen möchte, sondern weil etwas passiert ist. Der Anlass bestimmt, wer entscheidet, welche Unterlagen fehlen und wie schnell es gehen muss.",
+    title: "Was Eigentümer vor dem Verkauf wissen wollen.",
+    lead: "Zwei Fragen stellt uns fast jeder: Was kostet mich der Verkauf, und wie läuft es beim Notar? Dazu vier Situationen, in denen ein Verkauf anders läuft – weil der Anlass bestimmt, wer entscheidet, welche Unterlagen fehlen und wie schnell es gehen muss.",
     note: "Diese Seiten erklären, was der jeweilige Anlass für den Verkauf bedeutet. Die rechtlichen und steuerlichen Fragen, die dabei fast immer mitlaufen, beantworten Notar, Anwältin und Steuerberater — nicht wir. Wo die Grenze verläuft, steht auf jeder Seite ausdrücklich.",
   },
 
@@ -458,6 +494,48 @@ export const DEFAULT_WEBSITE_CONTENT: Record<WebsitePageKey, WebsiteContent> = {
     limits_title: "Wofür Sie jemand anderen brauchen",
     limits_body: "Ausgestellt wird der Ausweis von den dafür berechtigten Stellen, nicht von uns. Welche Ausweisart in Ihrem Fall zulässig ist, welche Pflichten das Gebäudeenergiegesetz im Einzelnen auslöst und welche Folgen ein Verstoß hat, ist eine Rechtsfrage — dazu geben wir keine Auskunft. Für Sanierungsentscheidungen und Förderungen ist die Energieberatung zuständig.",
     cta_title: "Wir prüfen, was fehlt, bevor die Anzeige steht.",
+  },
+
+  // Kosten beim Verkauf (13.10.2026). Die erste Frage jedes Eigentuemers.
+  // Geschrieben aus Sicht des Verkaufs: welche Posten es gibt und wer sie
+  // ueblicherweise traegt -- keine Betraege, die nur Notariat, Bank oder
+  // Steuerberatung verbindlich nennen koennen.
+  GUIDE_COSTS: {
+    eyebrow: "Kosten beim Verkauf",
+    title: "Was kostet mich der Verkauf meiner Immobilie?",
+    lead: "Den Kaufpreis bekommen Sie nicht eins zu eins aufs Konto. Welche Kosten auf der Verkäuferseite typischerweise anfallen – und welche nicht.",
+    situation_title: "Womit Verkäufer typischerweise rechnen",
+    situation_body: "Die großen Nebenkosten eines Immobilienkaufs – Grunderwerbsteuer sowie Notar und Grundbuch für die Eigentumsumschreibung – trägt üblicherweise der Käufer. Auf der Verkäuferseite bleiben meist kleinere, aber nicht zu vernachlässigende Posten.\n\nWelche davon bei Ihnen anfallen, hängt vor allem von zwei Fragen ab: Steht im Grundbuch noch eine Grundschuld, und läuft noch ein Kredit, der vorzeitig zurückgezahlt wird?",
+    effects_title: "Die Posten im Einzelnen",
+    effect_1: "Maklerprovision. Bei Wohnungen und Einfamilienhäusern, die ein Verbraucher kauft, teilen sich Verkäufer und Käufer die Provision grundsätzlich zu gleichen Teilen. Die Höhe steht vorab im Maklerauftrag; fällig wird sie erst mit dem notariellen Kaufvertrag.",
+    effect_2: "Unterlagen. Energieausweis, aktueller Grundbuchauszug, bei Wohnungen Unterlagen der Hausverwaltung, bei Bedarf ein Aufmaß mit Wohnflächenberechnung. Was davon fehlt und was es kostet, klären wir zu Beginn.",
+    effect_3: "Löschung der Grundschuld. Ist im Grundbuch noch eine Grundschuld eingetragen, die der Käufer nicht übernimmt, trägt üblicherweise der Verkäufer die Kosten von Notar und Grundbuchamt für ihre Löschung.",
+    effect_4: "Vorzeitige Kreditablösung. Wird ein laufendes Darlehen vor dem Ende der Zinsbindung abgelöst, kann die Bank eine Vorfälligkeitsentschädigung verlangen. Wie hoch sie ist, sagt Ihnen nur Ihre Bank – fragen Sie früh danach.",
+    we_title: "Was wir übernehmen",
+    we_body: "Wir gehen die Posten zu Beginn mit Ihnen durch, damit Sie wissen, womit Sie rechnen müssen. Unterlagen, die fehlen, beschaffen wir oder sagen Ihnen, wo sie zu bekommen sind – und was sie kosten, bevor etwas beauftragt wird.",
+    limits_title: "Wofür Sie jemand anderen brauchen",
+    limits_body: "Ob beim Verkauf Steuern anfallen – ein Thema etwa bei Verkäufen innerhalb von zehn Jahren nach dem Erwerb –, klärt Ihre Steuerberatung. Die Höhe einer Vorfälligkeitsentschädigung nennt Ihre Bank, die Notarkosten das Notariat. Dazu geben wir keine verbindliche Auskunft.",
+    cta_title: "Wir gehen gemeinsam durch, was vom Kaufpreis bleibt.",
+  },
+
+  // Ablauf beim Notar (13.10.2026). Beschreibt die Schritte, nicht den
+  // Vertragsinhalt -- den entwirft und erklaert der Notar.
+  GUIDE_NOTARY: {
+    eyebrow: "Ablauf beim Notar",
+    title: "Vom Vertragsentwurf bis zur Schlüsselübergabe.",
+    lead: "Ein Immobilienverkauf wird in Deutschland notariell beurkundet. Was zwischen der Einigung mit dem Käufer und der Übergabe passiert – Schritt für Schritt.",
+    situation_title: "Die Schritte im Überblick",
+    situation_body: "Haben Sie sich mit einem Käufer geeinigt, wird ein Notar mit dem Kaufvertragsentwurf beauftragt – meist vom Käufer, weil er die Kosten trägt. Beide Seiten bekommen den Entwurf vorab. Ist ein Verbraucher beteiligt, soll er ihn in der Regel zwei Wochen vor dem Termin erhalten, damit Zeit zum Prüfen bleibt.\n\nBei der Beurkundung liest der Notar den Vertrag vor und erklärt ihn. Mit den Unterschriften ist der Vertrag geschlossen – der Kaufpreis wird aber erst fällig, wenn bestimmte Voraussetzungen erfüllt sind.\n\nDanach arbeitet der Notar die Schritte ab, die den Käufer absichern und den Verkäufer zu seinem Geld bringen: Vormerkung im Grundbuch, Löschung alter Grundschulden, Fälligkeitsmitteilung, Zahlung, Übergabe und Umschreibung.",
+    effects_title: "Was in welcher Reihenfolge passiert",
+    effect_1: "Entwurf und Prüfung. Der Entwurf regelt unter anderem Kaufpreis, Übergabetermin und mitverkauftes Inventar. Lesen Sie ihn in Ruhe und stellen Sie Ihre Fragen vor dem Termin – im Termin selbst ist es spät dafür.",
+    effect_2: "Beurkundung. Beide Seiten oder ihre Bevollmächtigten unterschreiben beim Notar. Mitzubringen sind in der Regel ein gültiger Ausweis und die Steuer-Identifikationsnummer.",
+    effect_3: "Absicherung und Fälligkeit. Der Notar lässt für den Käufer eine Vormerkung im Grundbuch eintragen, holt die Unterlagen zur Löschung alter Grundschulden ein und teilt dann mit, dass der Kaufpreis fällig ist. Erst danach zahlt der Käufer.",
+    effect_4: "Zahlung, Übergabe, Umschreibung. Mit dem Zahlungseingang folgt die Übergabe – Schlüssel, Zählerstände, Protokoll. Die Umschreibung im Grundbuch kommt einige Wochen später, sobald die Grunderwerbsteuer bezahlt ist.",
+    we_title: "Was wir übernehmen",
+    we_body: "Wir stimmen die Eckpunkte mit dem Käufer ab, liefern dem Notariat die Unterlagen, gehen den Entwurf mit Ihnen durch und behalten die Fristen im Blick. Zur Übergabe kommen wir mit und halten sie im Protokoll fest.",
+    limits_title: "Wofür Sie jemand anderen brauchen",
+    limits_body: "Den Kaufvertrag entwirft und erklärt der Notar; er ist zur Neutralität verpflichtet und belehrt beide Seiten. Wir erstellen keine Vertragstexte und geben keine Rechtsberatung. Bei Fragen zum Vertragsinhalt, die über die Erklärung des Notars hinausgehen, hilft eine Anwältin oder ein Anwalt.",
+    cta_title: "Wir begleiten Sie bis zur Schlüsselübergabe.",
   },
 
   // Ohne Makler verkaufen: Argumentation, kein Rechtstext und keine Angabe

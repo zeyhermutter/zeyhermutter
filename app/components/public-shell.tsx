@@ -91,6 +91,7 @@ export function PublicFooter() {
         <Link to="/bewertung">Bewertung anfragen</Link>
         <Link to="/verkaufsfertig-check">Verkaufsstrategie-Check</Link>
         <Link to="/technisches-aufmass">Aufmaß &amp; Grundrisse</Link>
+        <Link to="/#kosten">Was kostet ein Makler?</Link>
         <Link to="/ohne-makler-verkaufen">Ohne Makler verkaufen?</Link>
       </nav>
       <nav aria-label="Für Käufer">
