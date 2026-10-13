@@ -2,13 +2,15 @@ import { data, Form, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/crm-search";
 import { requireActiveUser } from "~/lib/auth.server";
 import { euroGenau, tagKurz } from "~/lib/format";
+import { ABSCHLUSSSTATUS, ANFRAGESTATUS, AUFGABENSTATUS, IMMOBILIENSTATUS, KAUFANGEBOTSTATUS, KONTAKTSTATUS, LEADSTATUS, beschrifte, type Beschriftungen } from "~/lib/labels";
 import "~/module04-fixes.css";
+import "~/programm-liste.css";
 
 type SearchResult={entity_type:string;entity_id:string;reference:string;title:string;subtitle:string;status:string;updated_at:string;archived:boolean;version:number};
 function one(v:any){return Array.isArray(v)?v[0]:v;}
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const { supabase, responseHeaders, profile } = await requireActiveUser(request, context.cloudflare.env);
+  const { supabase, responseHeaders } = await requireActiveUser(request, context.cloudflare.env);
   const url = new URL(request.url);
   const q = (url.searchParams.get("q") ?? "").trim();
   const includeArchived = url.searchParams.get("archived") === "1";
@@ -25,7 +27,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     const closingResults=((closings??[]) as any[]).filter(row=>includeArchived||!row.archived_at).filter(row=>{const p=one(row.properties),b=one(row.buyer),offer=one(row.purchase_offers);return [row.closing_number,p?.property_number,p?.internal_title,b?.first_name,b?.last_name,offer?.offer_number].filter(Boolean).join(" ").toLocaleLowerCase("de-DE").includes(needle);}).map(row=>{const p=one(row.properties),b=one(row.buyer);return {entity_type:"CLOSING",entity_id:row.id,reference:row.closing_number,title:`${p?.property_number??"Immobilie"} · ${b?.first_name??""} ${b?.last_name??""}`.trim(),subtitle:`Verkaufsabschluss · ${euroGenau(row.notarial_purchase_price??row.agreed_purchase_price)}`,status:row.status,updated_at:row.updated_at,archived:Boolean(row.archived_at),version:Number(row.version)} satisfies SearchResult;});
     results=[...((searchResults??[]) as SearchResult[]),...offerResults,...closingResults].sort((a,b)=>new Date(b.updated_at).getTime()-new Date(a.updated_at).getTime()).slice(0,100);
   }
-  return data({ q, includeArchived, results, profile }, { headers: responseHeaders() });
+  return data({ q, includeArchived, results }, { headers: responseHeaders() });
 }
 function target(result:{entity_type:string;entity_id:string}) {
   if (result.entity_type === "CONTACT") return `/crm/contacts/${result.entity_id}`;
@@ -40,7 +42,40 @@ function target(result:{entity_type:string;entity_id:string}) {
 }
 const LABELS:Record<string,string>={CONTACT:"Kontakt",ORGANIZATION:"Organisation",TASK:"Aufgabe",PROPERTY:"Immobilie",LEAD:"Lead",SEARCH_PROFILE:"Suchprofil",INQUIRY:"Anfrage",OFFER:"Kaufangebot",CLOSING:"Abschluss & Notar"};
 const STATUS_LABELS:Record<string,string>={OPEN:"Offen",IN_PROGRESS:"In Bearbeitung",DONE:"Erledigt",CANCELLED:"Abgebrochen",ACTIVE:"Aktiv",PAUSED:"Pausiert",CLOSED:"Erledigt",NEW:"Neu",CONTACTED:"Kontaktiert",QUALIFIED:"Qualifiziert",VIEWING_PLANNED:"Besichtigung geplant",LOST:"Kein weiteres Interesse",ARCHIVED:"Archiviert",DRAFT:"Entwurf",SUBMITTED:"Abgegeben",COUNTERED:"Gegenangebot",ACCEPTED:"Angenommen",REJECTED:"Abgelehnt",WITHDRAWN:"Zurückgezogen",REPLACED:"Ersetzt",FAILED:"Abschluss gescheitert",PREPARATION:"Abschlussvorbereitung",NOTARY_INSTRUCTED:"Notariat beauftragt",DRAFT_RECEIVED:"Entwurf eingegangen",APPOINTMENT_SCHEDULED:"Beurkundung terminiert",NOTARIZED:"Beurkundet",PURCHASE_PRICE_DUE:"Kaufpreis fällig",PURCHASE_PRICE_PAID:"Kaufpreis bezahlt",HANDOVER_COMPLETED:"Übergabe erfolgt",COMPLETED:"Abgeschlossen"};
+// Der Stand haengt an der Art: MARKETING ist bei einer Immobilie
+// "Vermarktung", NEW bei einem Lead "Neu". Vorher stand fuer Immobilien der
+// gespeicherte Wert MARKETING in der Trefferliste (live auf BETA, 13.10.2026).
+const STATUS_JE_ART:Record<string,Beschriftungen>={PROPERTY:IMMOBILIENSTATUS,LEAD:LEADSTATUS,INQUIRY:ANFRAGESTATUS,OFFER:KAUFANGEBOTSTATUS,CLOSING:ABSCHLUSSSTATUS,CONTACT:KONTAKTSTATUS,TASK:AUFGABENSTATUS};
+function standText(result:SearchResult){
+  if(result.archived) return "Archiviert";
+  const tabelle=STATUS_JE_ART[result.entity_type];
+  return beschrifte(tabelle&&result.status in tabelle?tabelle:STATUS_LABELS,result.status);
+}
 export default function CrmSearch() {
-  const { q, includeArchived, results, profile } = useLoaderData<typeof loader>();
-  return <main className="editor-shell programm-seite"><header className="editor-header"><div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">ZeyherMutterOS</p><h1 className="editor-title">Globale Suche</h1><p className="editor-meta">Kontakte, Leads, Immobilien, Suchprofile, Anfragen, Kaufangebote und Abschlüsse an einer Stelle finden.</p></div><div className="header-user"><span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div></header><div className="crm-search-page"><section className="data-card global-search-card"><Form method="get" className="global-search-form"><div className="global-search-field"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m21 21-4.35-4.35m1.35-5.65a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg><input name="q" defaultValue={q} placeholder="Name, Nummer, Ort, Adresse oder E-Mail suchen …" minLength={2} autoFocus aria-label="CRM durchsuchen"/></div><label className="checkbox-row"><input type="checkbox" name="archived" value="1" defaultChecked={includeArchived}/><span>Archiv einbeziehen</span></label><button className="primary-button" type="submit">Suchen</button></Form></section><section className="data-card"><div className="card-head"><div><p className="eyebrow">Ergebnisse</p><h2>{q.length>=2?`${results.length} Treffer`:"Was möchtest du finden?"}</h2></div><div className="inline-actions"><Link className="subtle-link" to="/purchase-offers">Kaufangebote</Link><Link className="subtle-link" to="/closings">Abschlüsse</Link><Link className="subtle-link" to="/leads">Leads</Link><Link className="subtle-link" to="/properties">Immobilien</Link></div></div>{q.length<2?<p className="empty-state">Gib mindestens zwei Zeichen ein. Du kannst nach Namen, CRM-Nummern, Orten, Adressen, E-Mail-Adressen oder Telefonnummern suchen.</p>:null}{q.length>=2&&results.length===0?<p className="empty-state">Keine Treffer gefunden.</p>:null}<div className="data-list search-result-list">{results.map(result=><Link className="data-row data-row-link" to={target(result)} key={`${result.entity_type}-${result.entity_id}`}><div><strong>{result.title}</strong><small>{LABELS[result.entity_type]??result.entity_type} · {result.reference}{result.subtitle?` · ${result.subtitle}`:""}</small></div><div className="row-meta"><span>{result.archived?"Archiviert":STATUS_LABELS[result.status]??result.status}</span><small>{tagKurz(result.updated_at)}</small></div></Link>)}</div></section></div></main>;
+  const { q, includeArchived, results } = useLoaderData<typeof loader>();
+  // Programmliste (13.10.2026): Suchleiste als Werkzeugleiste, Treffer als
+  // Tabelle mit Spalten -- vorher grosses Suchfeld und Zeilen ohne Spalten.
+  return <main className="editor-shell programm-liste">
+    <Form method="get" className="programm-liste-werkzeuge" role="search">
+      <label className="programm-liste-suche"><span className="sr-only">CRM durchsuchen</span><input type="search" name="q" defaultValue={q} placeholder="Name, Nummer, Ort, Adresse oder E-Mail …" minLength={2} autoFocus autoComplete="off"/></label>
+      <label className="programm-liste-haken"><input type="checkbox" name="archived" value="1" defaultChecked={includeArchived}/><span>Archiv einbeziehen</span></label>
+      <button className="secondary-button" type="submit">Suchen</button>
+      <span className="programm-liste-zaehler">{q.length>=2?`${results.length} Treffer`:""}</span>
+    </Form>
+    <div className="programm-tabelle-rahmen">
+      {q.length<2?<p className="programm-liste-leer">Mindestens zwei Zeichen eingeben. Gesucht wird in Namen, CRM-Nummern, Orten, Adressen, E-Mail-Adressen und Telefonnummern.</p>:null}
+      {q.length>=2&&results.length===0?<p className="programm-liste-leer">Keine Treffer.</p>:null}
+      {results.length>0?<table className="programm-tabelle">
+        <thead><tr><th>Nummer</th><th>Bezeichnung</th><th>Art</th><th>Details</th><th>Stand</th><th className="rechts">Geändert</th></tr></thead>
+        <tbody>{results.map(result=><tr key={`${result.entity_type}-${result.entity_id}`}>
+          <td className="zahl"><Link to={target(result)}>{result.reference}</Link></td>
+          <td><Link to={target(result)}>{result.title}</Link></td>
+          <td>{LABELS[result.entity_type]??result.entity_type}</td>
+          <td className="leise">{result.subtitle||"—"}</td>
+          <td>{standText(result)}</td>
+          <td className="zahl rechts leise">{tagKurz(result.updated_at)}</td>
+        </tr>)}</tbody>
+      </table>:null}
+    </div>
+  </main>;
 }

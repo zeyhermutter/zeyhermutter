@@ -30,6 +30,7 @@ import { requireActiveUser } from "~/lib/auth.server";
 import { euroGenau as geld, tag, zeitpunkt } from "~/lib/format";
 import { crmToday } from "~/lib/local-time";
 import "~/pipeline.css";
+import "~/programm-liste.css";
 
 const ANGEBOTSSTATUS: Record<string, string> = {
   DRAFT: "Entwurf", SUBMITTED: "Abgegeben", COUNTERED: "Gegenangebot", ACCEPTED: "Angenommen",
@@ -217,24 +218,11 @@ export default function Pipeline() {
   const d = useLoaderData<typeof loader>();
   const inGruppe = (schluessel: string) => d.zeilen.filter((z) => gruppe(z.frist, d.heute) === schluessel);
 
+  // Programmliste (13.10.2026): Kennzahlen als eine Zeile, darunter eine
+  // Tabelle mit Spaltenkoepfen. Die vier Fristgruppen sind Zwischenzeilen
+  // derselben Tabelle -- vorher je eine Karte mit Zeilen ohne Spalten.
   return (
-    <main className="editor-shell programm-seite">
-      <header className="editor-header">
-        <div>
-          <Link className="back-link" to="/crm">← CRM</Link>
-          <p className="eyebrow">Arbeitsplatz</p>
-          <h1 className="editor-title">In Bewegung</h1>
-          <p className="editor-meta">
-            Kaufangebote, Reservierungen und Abschlüsse in einer Liste, sortiert nach dem Datum,
-            auf das es ankommt. Jede Zeile führt in ihren Vorgang.
-          </p>
-        </div>
-        <div className="header-user">
-          <span className="badge">{__APP_ENV_LABEL__}</span>
-          <small>{d.profile.display_name}</small>
-        </div>
-      </header>
-
+    <main className="editor-shell programm-liste">
       {d.ladefehler.length > 0 ? (
         <div className="form-warning pipeline-breite">
           <strong>Ein Teil der Vorgänge konnte nicht geladen werden.</strong>
@@ -242,66 +230,44 @@ export default function Pipeline() {
         </div>
       ) : null}
 
-      {d.fehlendeRechte.length > 0 ? (
-        <div className="data-card pipeline-breite">
-          <p className="empty-state">
-            Ohne Berechtigung nicht enthalten: {d.fehlendeRechte.join(", ")}. Die übrigen Vorgänge stehen unten.
-          </p>
-        </div>
-      ) : null}
-
-      <section className="metric-grid">
+      <p className="programm-kennzahlen">
         {GRUPPEN.map((g) => (
-          <article className="metric-card" key={g.schluessel}>
-            <span>{g.titel}</span>
-            <strong>{inGruppe(g.schluessel).length}</strong>
-            <small>{g.hinweis}</small>
-          </article>
+          <span className={g.schluessel === "UEBERFAELLIG" && inGruppe(g.schluessel).length > 0 ? "warnung" : undefined} key={g.schluessel} title={g.hinweis}>
+            <strong>{inGruppe(g.schluessel).length}</strong> {g.titel}
+          </span>
         ))}
-      </section>
+        {d.fehlendeRechte.length > 0 ? <span>Ohne Berechtigung nicht enthalten: {d.fehlendeRechte.join(", ")}</span> : null}
+      </p>
 
-      {GRUPPEN.map((g) => {
-        const zeilen = inGruppe(g.schluessel);
-        if (zeilen.length === 0) return null;
-        return (
-          <section className="data-card" key={g.schluessel}>
-            <div className="card-head">
-              <div>
-                <p className="eyebrow">{g.hinweis}</p>
-                <h2>{g.titel} · {zeilen.length}</h2>
-              </div>
-            </div>
-            <div className="data-list">
-              {zeilen.map((z) => (
-                <Link className="data-row data-row-link" to={z.pfad} key={z.id}>
-                  <div>
-                    <strong>{z.nummer}{z.betrag === null ? "" : ` · ${geld(z.betrag)}`}</strong>
-                    <small>{z.objekt}</small>
-                    <small>{z.partei}</small>
-                  </div>
-                  <div className="row-meta">
-                    <span className={`pipeline-art pipeline-art-${z.art.toLowerCase()}`}>{z.artText}</span>
-                    <small>{z.statusText}</small>
-                  </div>
-                  <div className="row-meta">
-                    <span>{z.frist ? (z.frist.length > 10 ? zeitpunkt(z.frist) : tag(z.frist)) : "—"}</span>
-                    <small>{z.fristText}</small>
-                  </div>
-                  <span className="subtle-link">Öffnen →</span>
-                </Link>
-              ))}
-            </div>
-          </section>
-        );
-      })}
-
-      {d.zeilen.length === 0 ? (
-        <section className="data-card">
-          <p className="empty-state">
-            Zurzeit ist kein Kaufangebot, keine Reservierung und kein Abschluss offen.
-          </p>
-        </section>
-      ) : null}
+      <div className="programm-tabelle-rahmen">
+        {d.zeilen.length === 0 ? (
+          <p className="programm-liste-leer">Zurzeit ist kein Kaufangebot, keine Reservierung und kein Abschluss offen.</p>
+        ) : (
+          <table className="programm-tabelle">
+            <thead><tr><th>Nummer</th><th>Objekt</th><th>Partei</th><th>Vorgang</th><th>Stand</th><th className="rechts">Betrag</th><th>Frist</th></tr></thead>
+            <tbody>
+              {GRUPPEN.map((g) => {
+                const zeilen = inGruppe(g.schluessel);
+                if (zeilen.length === 0) return null;
+                return [
+                  <tr className="programm-gruppe" key={g.schluessel}><th colSpan={7} scope="rowgroup">{g.titel} · {zeilen.length}<span className="leise"> — {g.hinweis}</span></th></tr>,
+                  ...zeilen.map((z) => (
+                    <tr className={g.schluessel === "UEBERFAELLIG" ? "frist-vorbei" : undefined} key={z.id}>
+                      <td className="zahl"><Link to={z.pfad}>{z.nummer}</Link></td>
+                      <td><Link to={z.pfad}>{z.objekt}</Link></td>
+                      <td>{z.partei}</td>
+                      <td><span className={`pipeline-art pipeline-art-${z.art.toLowerCase()}`}>{z.artText}</span></td>
+                      <td>{z.statusText}</td>
+                      <td className="zahl rechts">{z.betrag === null ? "—" : geld(z.betrag)}</td>
+                      <td className="zahl">{z.frist ? (z.frist.length > 10 ? zeitpunkt(z.frist) : tag(z.frist)) : "—"}<div className="leise">{z.fristText}</div></td>
+                    </tr>
+                  )),
+                ];
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
     </main>
   );
 }

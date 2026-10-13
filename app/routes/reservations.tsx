@@ -215,6 +215,25 @@ export default function Reservations(){
       <label><span>Immobilie</span><select name="property_id" defaultValue={d.filters.propertyId}><option value="">Alle Immobilien</option>{d.properties.map((p:any)=><option value={p.id} key={p.id}>{p.property_number} · {p.internal_title}</option>)}</select></label>
       <button className="secondary-button" type="submit">Filtern</button>
     </Form></section>
+    {d.canWrite?<Aufklapper id="anlegen" knopf="+ Reservierung anlegen"><section className="editor-card"><div className="card-head"><div><p className="eyebrow">Neu</p><h2>Reservierung anlegen</h2></div></div>
+      <Form method="post">
+        <input type="hidden" name="_intent" value="create"/>
+        <div className="form-grid">
+          <label className="form-field"><span>Immobilie *</span><select name="property_id" defaultValue={d.filters.propertyId} required><option value="">Auswählen…</option>{d.properties.map((p:any)=><option value={p.id} key={p.id}>{p.property_number} · {p.internal_title}</option>)}</select><small className="subtle">Nur Verkaufsobjekte, die noch nicht verkauft sind.</small></label>
+          <label className="form-field"><span>Interessent *</span><select name="contact_id" defaultValue="" required><option value="">Auswählen…</option>{d.contacts.map((c:any)=><option value={c.id} key={c.id}>{contactLabel(c)} · {c.contact_number}</option>)}</select></label>
+          <label className="form-field"><span>Reserviert ab</span><input name="reserved_from" type="date" defaultValue={today()}/></label>
+          <label className="form-field"><span>Reserviert bis *</span><input name="reserved_until" type="date" required/></label>
+          <label className="form-field"><span>Reservierter Preis €</span><input name="reserved_price" inputMode="decimal"/></label>
+          <label className="form-field"><span>Vereinbarung dokumentiert</span><select name="agreement_documented" defaultValue="no"><option value="no">Nein</option><option value="yes">Ja</option></select></label>
+          <label className="form-field"><span>Reservierungsentgelt €</span><input name="fee_amount" inputMode="decimal"/><small className="subtle">Nur erfassbar, wenn die Vereinbarung dokumentiert ist.</small></label>
+          <label className="form-field"><span>Verantwortlich</span><select name="primary_responsible_user" defaultValue="">{d.profiles.map((p:any)=><option value={p.user_id} key={p.user_id}>{p.display_name}</option>)}</select></label>
+        </div>
+        <label className="form-field full-width"><span>Bedingungen</span><textarea name="conditions" rows={3} placeholder="Was für die Dauer der Reservierung gilt"/></label>
+        <label className="form-field full-width"><span>Notiz zum Entgelt</span><input name="fee_note"/></label>
+        <label className="form-field full-width"><span>Interne Notizen</span><textarea name="internal_notes" rows={2}/></label>
+        <div className="form-actions"><button className="primary-button" type="submit">Reservierung anlegen</button></div>
+      </Form>
+    </section></Aufklapper>:null}
 
     <section className="data-card"><div className="card-head"><div><p className="eyebrow">Verzeichnis</p><h2>{rows.length} Reservierungen</h2></div></div><div className="data-list">
       {rows.map((row:any)=>{
@@ -266,25 +285,6 @@ export default function Reservations(){
       </Form>:null}
     </section></Aufklapper>)}
 
-    {d.canWrite?<Aufklapper id="anlegen" knopf="+ Reservierung anlegen"><section className="editor-card"><div className="card-head"><div><p className="eyebrow">Neu</p><h2>Reservierung anlegen</h2></div></div>
-      <Form method="post">
-        <input type="hidden" name="_intent" value="create"/>
-        <div className="form-grid">
-          <label className="form-field"><span>Immobilie *</span><select name="property_id" defaultValue={d.filters.propertyId} required><option value="">Auswählen…</option>{d.properties.map((p:any)=><option value={p.id} key={p.id}>{p.property_number} · {p.internal_title}</option>)}</select><small className="subtle">Nur Verkaufsobjekte, die noch nicht verkauft sind.</small></label>
-          <label className="form-field"><span>Interessent *</span><select name="contact_id" defaultValue="" required><option value="">Auswählen…</option>{d.contacts.map((c:any)=><option value={c.id} key={c.id}>{contactLabel(c)} · {c.contact_number}</option>)}</select></label>
-          <label className="form-field"><span>Reserviert ab</span><input name="reserved_from" type="date" defaultValue={today()}/></label>
-          <label className="form-field"><span>Reserviert bis *</span><input name="reserved_until" type="date" required/></label>
-          <label className="form-field"><span>Reservierter Preis €</span><input name="reserved_price" inputMode="decimal"/></label>
-          <label className="form-field"><span>Vereinbarung dokumentiert</span><select name="agreement_documented" defaultValue="no"><option value="no">Nein</option><option value="yes">Ja</option></select></label>
-          <label className="form-field"><span>Reservierungsentgelt €</span><input name="fee_amount" inputMode="decimal"/><small className="subtle">Nur erfassbar, wenn die Vereinbarung dokumentiert ist.</small></label>
-          <label className="form-field"><span>Verantwortlich</span><select name="primary_responsible_user" defaultValue="">{d.profiles.map((p:any)=><option value={p.user_id} key={p.user_id}>{p.display_name}</option>)}</select></label>
-        </div>
-        <label className="form-field full-width"><span>Bedingungen</span><textarea name="conditions" rows={3} placeholder="Was für die Dauer der Reservierung gilt"/></label>
-        <label className="form-field full-width"><span>Notiz zum Entgelt</span><input name="fee_note"/></label>
-        <label className="form-field full-width"><span>Interne Notizen</span><textarea name="internal_notes" rows={2}/></label>
-        <div className="form-actions"><button className="primary-button" type="submit">Reservierung anlegen</button></div>
-      </Form>
-    </section></Aufklapper>:null}
 
     <Aufklapper knopf="Vor produktiver Nutzung: anwaltlich abzunehmen"><section className="data-card"><div className="card-head"><div><p className="eyebrow">Vor produktiver Nutzung</p><h2>Anwaltlich abzunehmen</h2></div></div>
       <ul className="subtle">

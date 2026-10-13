@@ -119,6 +119,24 @@ export default function CaseStudies(){
         <button className="secondary-button" type="submit">Filtern</button>
       </Form>
     </section>
+    {d.canWrite?<Aufklapper id="anlegen" knopf="+ Case Study anlegen"><section className="data-card">
+      <div className="card-head"><div><p className="eyebrow">Neu</p><h2>Case Study anlegen</h2></div></div>
+      {d.openClosings.length===0
+        ?<p className="empty-state">{d.notarizedCount===0
+            ?"Es ist noch kein Verkauf beurkundet. Eine Case Study entsteht erst danach."
+            :"Zu allen beurkundeten Verkäufen ist bereits eine Case Study erfasst."}</p>
+        :<Form method="post" className="form-grid">
+          <label className="form-field"><span>Abgeschlossener Verkauf *</span>
+            <select name="sale_closing_id" defaultValue="">
+              <option value="">— bitte wählen</option>
+              {d.openClosings.map((row:any)=>{const property=one(row.properties);return <option key={row.id} value={row.id}>{row.closing_number} · {property?.property_number} · {property?.internal_title}</option>;})}
+            </select>
+          </label>
+          <label className="form-field"><span>Titel *</span><input name="title" placeholder="z. B. Sanierungsfall im Bestand"/></label>
+          <div className="form-field full-width inline-actions"><button className="primary-button" type="submit">Case Study anlegen</button></div>
+          <p className="form-field full-width subtle">Die Kennzahlen kommen aus dem Vorgang selbst. Texte schreibt ausschließlich der Benutzer; die Software formuliert nichts.</p>
+        </Form>}
+    </section></Aufklapper>:null}
 
     <section className="data-card">
       <div className="card-head"><div><p className="eyebrow">Referenzen</p><h2>Fälle</h2></div></div>
@@ -145,23 +163,5 @@ export default function CaseStudies(){
         })}</div>}
     </section>
 
-    {d.canWrite?<Aufklapper id="anlegen" knopf="+ Case Study anlegen"><section className="data-card">
-      <div className="card-head"><div><p className="eyebrow">Neu</p><h2>Case Study anlegen</h2></div></div>
-      {d.openClosings.length===0
-        ?<p className="empty-state">{d.notarizedCount===0
-            ?"Es ist noch kein Verkauf beurkundet. Eine Case Study entsteht erst danach."
-            :"Zu allen beurkundeten Verkäufen ist bereits eine Case Study erfasst."}</p>
-        :<Form method="post" className="form-grid">
-          <label className="form-field"><span>Abgeschlossener Verkauf *</span>
-            <select name="sale_closing_id" defaultValue="">
-              <option value="">— bitte wählen</option>
-              {d.openClosings.map((row:any)=>{const property=one(row.properties);return <option key={row.id} value={row.id}>{row.closing_number} · {property?.property_number} · {property?.internal_title}</option>;})}
-            </select>
-          </label>
-          <label className="form-field"><span>Titel *</span><input name="title" placeholder="z. B. Sanierungsfall im Bestand"/></label>
-          <div className="form-field full-width inline-actions"><button className="primary-button" type="submit">Case Study anlegen</button></div>
-          <p className="form-field full-width subtle">Die Kennzahlen kommen aus dem Vorgang selbst. Texte schreibt ausschließlich der Benutzer; die Software formuliert nichts.</p>
-        </Form>}
-    </section></Aufklapper>:null}
   </main>;
 }

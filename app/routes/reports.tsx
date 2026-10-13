@@ -1,9 +1,11 @@
 import { data, Form, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/reports";
+import { Aufklapper } from "~/components/aufklapper";
 import { requireActiveUser } from "~/lib/auth.server";
 import { euroRund as formatCurrency, prozent, zahl, zahl as formatNumber, zeitpunkt as formatGenerated } from "~/lib/format";
 import { crmToday as berlinToday } from "~/lib/local-time";
 import "~/reporting.css";
+import "~/programm-liste.css";
 
 type PipelineRow = { status: string; count: number };
 type LeadSourceRow = {
@@ -275,48 +277,28 @@ export default function Reports() {
   const marketingDays = formatDays(period.avg_marketing_days);
 
   return <main className="reporting-shell">
-    <header className="reporting-header">
-      <div>
-        <p className="eyebrow">Arbeitsplatz · Management</p>
-        <h1>Reporting & Controlling</h1>
-        <p>{scope === "company" ? "Unternehmensweite Maklersteuerung" : `Persönliche Auswertung · ${profile.display_name}`}</p>
-      </div>
-      <span className="badge">{__APP_ENV_LABEL__}</span>
-    </header>
-
-    <section className="reporting-toolbar data-card">
-      <div className="reporting-control-group">
-        <span className="reporting-control-label">Auswertungsebene</span>
-        <div className="reporting-scope-switch" aria-label="Auswertungsebene">
-          <Link className={scope === "mine" ? "primary-button link-button" : "secondary-button link-button"} to={reportUrl("mine", periodPreset, from, to)}>Mein Arbeitsplatz</Link>
-          {canReadCompany ? <Link className={scope === "company" ? "primary-button link-button" : "secondary-button link-button"} to={reportUrl("company", periodPreset, from, to)}>Unternehmen</Link> : null}
-        </div>
-      </div>
-
-      <div className="reporting-control-group reporting-period-control">
-        <span className="reporting-control-label">Schnellzeitraum</span>
-        <div className="reporting-period-presets">
-          {PERIOD_PRESETS.map((preset) => <Link
-            className={`reporting-preset${periodPreset === preset.key ? " active" : ""}`}
-            to={reportUrl(scope, preset.key)}
-            key={preset.key}
-          >{preset.label}</Link>)}
-          <span className={`reporting-preset reporting-preset-static${periodPreset === "custom" ? " active" : ""}`}>Freier Zeitraum</span>
-        </div>
-      </div>
-
-      <div className="reporting-control-group">
-        <span className="reporting-control-label">Freier Zeitraum</span>
-        <Form method="get" className="reporting-period-form">
-          <input type="hidden" name="scope" value={scope}/>
-          <input type="hidden" name="period" value="custom"/>
-          <label><span>Von</span><input type="date" name="from" defaultValue={from}/></label>
-          <label><span>Bis</span><input type="date" name="to" defaultValue={to}/></label>
-          <button className="secondary-button" type="submit">Anwenden</button>
-        </Form>
-        {rangeError ? <p className="reporting-range-error">{rangeError}</p> : null}
-      </div>
-    </section>
+    {/* Programmansicht (13.10.2026): Ebene, Zeitraum und freie Daten in einer
+        Werkzeugleiste -- vorher Seitentitel und eine hohe Karte mit drei
+        beschrifteten Gruppen. */}
+    <div className="programm-liste-werkzeuge">
+      <nav className="programm-umfang" aria-label="Auswertungsebene">
+        <Link className={scope === "mine" ? "aktiv" : undefined} to={reportUrl("mine", periodPreset, from, to)}>Mein Arbeitsplatz</Link>
+        {canReadCompany ? <Link className={scope === "company" ? "aktiv" : undefined} to={reportUrl("company", periodPreset, from, to)}>Unternehmen</Link> : null}
+      </nav>
+      <nav className="programm-umfang" aria-label="Zeitraum">
+        {PERIOD_PRESETS.map((preset) => <Link className={periodPreset === preset.key ? "aktiv" : undefined} to={reportUrl(scope, preset.key)} key={preset.key}>{preset.label}</Link>)}
+      </nav>
+      <Form method="get" className="programm-liste-zeitraum">
+        <input type="hidden" name="scope" value={scope}/>
+        <input type="hidden" name="period" value="custom"/>
+        <label><span className="sr-only">Von</span><input type="date" name="from" defaultValue={from}/></label>
+        <span aria-hidden="true">–</span>
+        <label><span className="sr-only">Bis</span><input type="date" name="to" defaultValue={to}/></label>
+        <button className={periodPreset === "custom" ? "primary-button" : "secondary-button"} type="submit">Zeitraum</button>
+      </Form>
+      <span className="programm-liste-zaehler">{scope === "company" ? "Unternehmen" : profile.display_name} · {formatDate(from)} – {formatDate(to)}</span>
+    </div>
+    {rangeError ? <p className="form-error">{rangeError}</p> : null}
 
     <section className="reporting-section data-card">
       <div className="reporting-section-head"><div><p className="eyebrow">Stand heute</p><h2>Operative Steuerung</h2></div><small>Aktualisiert {formatGenerated(summary.generated_at)}</small></div>
@@ -369,11 +351,21 @@ export default function Reports() {
       </div>
       {campaigns.length === 0
         ? <p className="empty-state">Im gewählten Zeitraum ist keiner Kampagne ein Lead zugeordnet.</p>
-        : <div className="data-list">{campaigns.map((row: any) => <div className="data-row" key={row.campaign_id}>
-            <div><strong>{row.campaign_number} · {row.name}</strong><small>{row.channel_label} · {row.area_path ?? "Gebiet offen"}</small></div>
-            <div className="row-meta"><span>{pluralLabel(row.responses, "Reaktion", "Reaktionen")} · {pluralLabel(row.owner_talks, "Gespräch", "Gespräche")} · {pluralLabel(row.readiness_checks, "Check", "Checks")}</span><small>{pluralLabel(row.mandates, "Auftrag", "Aufträge")} · {pluralLabel(row.sales, "Verkauf", "Verkäufe")}{row.household_count ? ` · ${pluralLabel(row.household_count, "Haushalt", "Haushalte")}` : ""}</small></div>
-            <span>{canReadCommission ? formatCurrency(row.commission_expected) : "—"}</span>
-          </div>)}</div>}
+        : <div className="programm-tabelle-rahmen"><table className="programm-tabelle">
+            <thead><tr><th>Nummer</th><th>Kampagne</th><th>Kanal</th><th>Gebiet</th><th className="rechts">Reaktionen</th><th className="rechts">Gespräche</th><th className="rechts">Checks</th><th className="rechts">Aufträge</th><th className="rechts">Verkäufe</th><th className="rechts">Provision erw.</th></tr></thead>
+            <tbody>{campaigns.map((row: any) => <tr key={row.campaign_id}>
+              <td className="zahl"><Link to={`/acquisition/${row.campaign_id}`}>{row.campaign_number}</Link></td>
+              <td><Link to={`/acquisition/${row.campaign_id}`}>{row.name}</Link></td>
+              <td>{row.channel_label}</td>
+              <td>{row.area_path ?? <span className="leise">offen</span>}</td>
+              <td className="zahl rechts">{formatNumber(row.responses)}</td>
+              <td className="zahl rechts">{formatNumber(row.owner_talks)}</td>
+              <td className="zahl rechts">{formatNumber(row.readiness_checks)}</td>
+              <td className="zahl rechts">{formatNumber(row.mandates)}</td>
+              <td className="zahl rechts">{formatNumber(row.sales)}</td>
+              <td className="zahl rechts">{canReadCommission ? formatCurrency(row.commission_expected) : "—"}</td>
+            </tr>)}</tbody>
+          </table></div>}
       <p className="reporting-quality-note"><strong>Datenbasis:</strong> Ausschließlich Leads, die in der Leadakte einer Kampagne zugeordnet wurden. Ohne Zuordnung erscheint ein Lead hier nicht.{canReadCommission ? "" : " Provisionswerte bleiben leer, weil die Berechtigung zum Lesen von Provisionen fehlt."}</p>
     </section>
 
@@ -384,11 +376,18 @@ export default function Reports() {
       </div>
       {partners.length === 0
         ? <p className="empty-state">Im gewählten Zeitraum ist keinem Partner ein Lead als Empfehlung zugeordnet.</p>
-        : <div className="data-list">{partners.map((row: any) => <Link className="data-row data-row-link" to={`/crm/organizations/${row.organization_id}/partner`} key={row.organization_id}>
-            <div><strong>{row.name}</strong><small>{row.trade ?? "Gewerk offen"}{row.regulated_profession && row.regulated_profession !== "NONE" ? " · regulierte Berufsgruppe" : ""}{row.blocked ? " · gesperrt" : ""}</small></div>
-            <div className="row-meta"><span>{pluralLabel(row.referrals, "Empfehlung", "Empfehlungen")} · {pluralLabel(row.appointments, "Termin", "Termine")}</span><small>{pluralLabel(row.readiness_checks, "Check", "Checks")} · {pluralLabel(row.mandates, "Auftrag", "Aufträge")} · {pluralLabel(row.sales, "Verkauf", "Verkäufe")}</small></div>
-            <span className="subtle-link">Öffnen →</span>
-          </Link>)}</div>}
+        : <div className="programm-tabelle-rahmen"><table className="programm-tabelle">
+            <thead><tr><th>Partner</th><th>Gewerk</th><th className="rechts">Empfehlungen</th><th className="rechts">Termine</th><th className="rechts">Checks</th><th className="rechts">Aufträge</th><th className="rechts">Verkäufe</th></tr></thead>
+            <tbody>{partners.map((row: any) => <tr key={row.organization_id}>
+              <td><Link to={`/crm/organizations/${row.organization_id}/partner`}>{row.name}</Link>{row.blocked ? <div className="warnung-text">gesperrt</div> : null}</td>
+              <td>{row.trade ?? <span className="leise">offen</span>}{row.regulated_profession && row.regulated_profession !== "NONE" ? <div className="leise">regulierte Berufsgruppe</div> : null}</td>
+              <td className="zahl rechts">{formatNumber(row.referrals)}</td>
+              <td className="zahl rechts">{formatNumber(row.appointments)}</td>
+              <td className="zahl rechts">{formatNumber(row.readiness_checks)}</td>
+              <td className="zahl rechts">{formatNumber(row.mandates)}</td>
+              <td className="zahl rechts">{formatNumber(row.sales)}</td>
+            </tr>)}</tbody>
+          </table></div>}
     </section>
 
     <section className="reporting-section data-card">
@@ -398,12 +397,23 @@ export default function Reports() {
       </div>
       {(referrals as any[]).length === 0
         ? <p className="empty-state">Im gewählten Zeitraum ist keine Empfehlung erfasst.</p>
-        : <div className="data-list">{(referrals as any[]).map((row: any) => <Link className="data-row data-row-link" to={row.referrer_kind === "ORGANIZATION" ? `/crm/organizations/${row.referrer_id}/partner` : `/crm/contacts/${row.referrer_id}`} key={`${row.referrer_kind}-${row.referrer_id}`}>
-            <div><strong>{row.referrer_label}</strong><small>{row.referrer_kind === "ORGANIZATION" ? "Organisation" : "Person"}{row.last_referral_on ? ` · zuletzt ${formatDate(row.last_referral_on)}` : ""}</small></div>
-            <div className="row-meta"><span>{pluralLabel(row.referrals, "Empfehlung", "Empfehlungen")} · {pluralLabel(row.leads, "Lead", "Leads")}</span><small>{pluralLabel(row.won, "Auftrag", "Aufträge")} · {pluralLabel(row.lost, "verloren", "verloren")} · {pluralLabel(row.declined, "ohne Interesse", "ohne Interesse")}</small></div>
-            <div className="row-meta"><span>{pluralLabel(row.acknowledged, "Dank dokumentiert", "Danksagungen dokumentiert")}</span><small>{Number(row.referrals) - Number(row.acknowledged) > 0 ? `${pluralLabel(Number(row.referrals) - Number(row.acknowledged), "Empfehlung", "Empfehlungen")} ohne Rückmeldung` : "vollständig zurückgemeldet"}</small></div>
-            <span className="subtle-link">Öffnen →</span>
-          </Link>)}</div>}
+        : <div className="programm-tabelle-rahmen"><table className="programm-tabelle">
+            <thead><tr><th>Empfehlungsgeber</th><th>Art</th><th className="rechts">Empfehlungen</th><th className="rechts">Leads</th><th className="rechts">Aufträge</th><th className="rechts">Verloren</th><th className="rechts">Ohne Interesse</th><th className="rechts">Ohne Rückmeldung</th><th>Zuletzt</th></tr></thead>
+            <tbody>{(referrals as any[]).map((row: any) => {
+              const ohneDank = Number(row.referrals) - Number(row.acknowledged);
+              return <tr key={`${row.referrer_kind}-${row.referrer_id}`}>
+                <td><Link to={row.referrer_kind === "ORGANIZATION" ? `/crm/organizations/${row.referrer_id}/partner` : `/crm/contacts/${row.referrer_id}`}>{row.referrer_label}</Link></td>
+                <td>{row.referrer_kind === "ORGANIZATION" ? "Organisation" : "Person"}</td>
+                <td className="zahl rechts">{formatNumber(row.referrals)}</td>
+                <td className="zahl rechts">{formatNumber(row.leads)}</td>
+                <td className="zahl rechts">{formatNumber(row.won)}</td>
+                <td className="zahl rechts">{formatNumber(row.lost)}</td>
+                <td className="zahl rechts">{formatNumber(row.declined)}</td>
+                <td className={`zahl rechts${ohneDank > 0 ? " warnung" : ""}`}>{formatNumber(ohneDank)}</td>
+                <td className="zahl">{row.last_referral_on ? formatDate(row.last_referral_on) : "—"}</td>
+              </tr>;
+            })}</tbody>
+          </table></div>}
       {(referralGaps as any[]).length > 0
         ? <p className="form-warning" style={{ marginTop: "0.75rem" }}>{pluralLabel((referralGaps as any[]).length, "Empfehlung weicht", "Empfehlungen weichen")} von der Herkunft des zugehörigen Leads ab. Für die Partnerauswertung oben zählt die Herkunft am Lead. <Link className="subtle-link" to="/referrals">Abweichungen ansehen →</Link></p>
         : null}
@@ -420,8 +430,7 @@ export default function Reports() {
       </div>
     </section>
 
-    <section className="data-card reporting-definition">
-      <div><p className="eyebrow">Nachvollziehbarkeit</p><h2>Definitionen & Datenbasis</h2></div>
+    <Aufklapper knopf="Definitionen & Datenbasis"><section className="data-card reporting-definition">
       <ul>
         <li><strong>Lead-Conversion:</strong> Anteil der im gewählten Zeitraum neu angelegten Verkäufer-Leads, die bis zum Ende dieses Zeitraums über das dokumentierte Feld <code>converted_at</code> in eine Immobilie überführt wurden.</li>
         <li><strong>Besichtigung → Angebot:</strong> Anteil der im Zeitraum abgeschlossenen Besichtigungen, für die bis zum Periodenende ein abgegebenes Kaufangebot mit direkter <code>viewing_id</code>-Verknüpfung existiert.</li>
@@ -429,6 +438,6 @@ export default function Reports() {
         <li><strong>Provision:</strong> Erwartete Provision basiert auf im Zeitraum erfassten, nicht stornierten Provisionsdatensätzen; realisierte Provision ausschließlich auf dokumentierten Zahlungen mit <code>paid_at</code> im Zeitraum.</li>
         <li><strong>Mein Arbeitsplatz:</strong> berücksichtigt die jeweils hinterlegte verantwortliche Person. Die Unternehmenssicht ist separat über <code>reporting.company.read</code> berechtigt.</li>
       </ul>
-    </section>
+    </section></Aufklapper>
   </main>;
 }

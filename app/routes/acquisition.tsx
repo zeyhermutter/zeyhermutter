@@ -4,6 +4,7 @@ import { Aufklapper } from "~/components/aufklapper";
 import { requirePermission } from "~/lib/auth.server";
 import { euroRund as money, tag as formatDate } from "~/lib/format";
 import { KAMPAGNENSTATUS as CAMPAIGN_STATUS } from "~/lib/labels";
+import "~/programm-liste.css";
 
 type ActionResult={error?:string};
 
@@ -16,7 +17,6 @@ function dateOrNull(fd:FormData,key:string){const v=text(fd,key);return /^\d{4}-
 function numOrNull(fd:FormData,key:string){const raw=text(fd,key);if(!raw)return null;const n=Number(raw.includes(",")?raw.replace(/\./g,"").replace(",","."):raw);return Number.isFinite(n)?n:NaN;}
 function intOrNull(fd:FormData,key:string){const raw=text(fd,key);if(!raw)return null;const n=Number.parseInt(raw,10);return Number.isFinite(n)?n:NaN;}
 
-function plural(count:any,one:string,many:string){return `${Number(count)||0} ${Number(count)===1?one:many}`;}
 
 function errorMessage(error:any){
   const message=String(error?.message??"");
@@ -151,40 +151,51 @@ export default function Acquisition(){
     commission:acc.commission+Number(row.commission_expected||0),
   }),{responses:0,mandates:0,sales:0,cost:0,commission:0});
 
-  return <div className="editor-shell programm-seite">
-    <div className="editor-header">
-      <div>
-        <p className="eyebrow">Arbeitsplatz · Akquise</p>
-        <h1>Kampagnen & Gebiete</h1>
-        <p className="subtle">Woraus ein Auftrag entstanden ist — vom Kanal über die Kampagne bis zur einzelnen Welle.</p>
-      </div>
-      <div className="inline-actions"><Link className="subtle-link" to="/reports">Reporting öffnen →</Link></div>
+  // Programmliste (13.10.2026): Kennzahlen als eine Zeile, Kampagnen und
+  // Gebiete als Tabellen mit Spaltenkoepfen; Anlegen klappt darunter auf.
+  return <div className="editor-shell programm-liste">
+    <div className="programm-liste-werkzeuge">
+      <span className="programm-liste-zaehler programm-liste-zaehler-links">Zeitraum {formatDate(d.from)} – {formatDate(d.to)}</span>
+      <Link className="secondary-button link-button programm-liste-rechts" to="/reports">Auswertung öffnen</Link>
     </div>
 
     {actionData?.error?<p className="form-error">{actionData.error}</p>:null}
 
-    <div className="metric-grid">
-      <article className="metric"><span>Kampagnen</span><strong>{campaigns.length}</strong><small>nicht archiviert</small></article>
-      <article className="metric"><span>Reaktionen</span><strong>{totals.responses}</strong><small>zugeordnete Leads im Zeitraum</small></article>
-      <article className="metric"><span>Aufträge</span><strong>{totals.mandates}</strong><small>aus zugeordneten Leads</small></article>
-      <article className="metric"><span>Verkäufe</span><strong>{totals.sales}</strong><small>beurkundet</small></article>
-      <article className="metric"><span>Provision erwartet</span><strong>{d.canReadCommission?money(totals.commission):"—"}</strong><small>{d.canReadCommission?"aus verknüpften Objekten":"keine Berechtigung für Provisionen"}</small></article>
-    </div>
+    <p className="programm-kennzahlen" title="Die Kennzahlen entstehen ausschließlich aus Leads, die einer Kampagne zugeordnet wurden. Ein nicht zugeordneter Lead taucht hier nicht auf — die Zahlen sind eine Auswertung der Zuordnung, keine Marktmessung.">
+      <span><strong>{campaigns.length}</strong> Kampagnen</span>
+      <span><strong>{totals.responses}</strong> Reaktionen</span>
+      <span><strong>{totals.mandates}</strong> Aufträge</span>
+      <span><strong>{totals.sales}</strong> Verkäufe</span>
+      <span><strong>{d.canReadCommission?money(totals.commission):"—"}</strong> Provision erwartet</span>
+      <span>nur aus Leads, die einer Kampagne zugeordnet sind</span>
+    </p>
 
-    <p className="form-warning">Die Kennzahlen entstehen ausschließlich aus Leads, die einer Kampagne zugeordnet wurden. Ein nicht zugeordneter Lead taucht hier nicht auf — die Zahlen sind eine Auswertung der Zuordnung, keine Marktmessung.</p>
-
-    <section className="data-card" id="kampagnen">
-      <div className="card-head"><div><p className="eyebrow">Kanal › Kampagne › Gebiet</p><h2>Kampagnen</h2></div><span className="status-pill">{d.from} bis {d.to}</span></div>
+    <section className="programm-abschnitt" id="kampagnen">
+      <h2 className="programm-abschnitt-kopf">Kampagnen <span className="leise">· {campaigns.length}</span></h2>
+      <div className="programm-tabelle-rahmen">
       {campaigns.length===0
-        ?<p className="empty-state">Noch keine Kampagne erfasst.</p>
-        :<div className="data-list">{campaigns.map((c:any)=>{
-          const p=performance.get(c.id);
-          return <Link className="data-row data-row-link" to={`/acquisition/${c.id}`} key={c.id}>
-            <div><strong>{c.campaign_number} · {c.name}</strong><small>{c.lead_sources?.label??"Kanal offen"} · {c.acquisition_areas?.name??"Gebiet offen"}{c.starts_on?` · ab ${formatDate(c.starts_on)}`:""}</small></div>
-            <div className="row-meta"><span>{p?`${plural(p.responses,"Reaktion","Reaktionen")} · ${plural(p.mandates,"Auftrag","Aufträge")} · ${plural(p.sales,"Verkauf","Verkäufe")}`:"keine Zuordnung im Zeitraum"}</span><small>{c.household_count?`${plural(c.household_count,"Haushalt","Haushalte")}`:"Haushalte offen"}{c.actual_cost!=null?` · ${money(c.actual_cost)} Kosten`:c.planned_cost!=null?` · ${money(c.planned_cost)} geplant`:""}</small></div>
-            <span className={`status-pill ${CAMPAIGN_CLASS[c.status]??""}`}>{CAMPAIGN_STATUS[c.status]??c.status}</span>
-          </Link>;
-        })}</div>}
+        ?<p className="programm-liste-leer">Noch keine Kampagne erfasst.</p>
+        :<table className="programm-tabelle">
+          <thead><tr><th>Nummer</th><th>Kampagne</th><th>Kanal</th><th>Gebiet</th><th>Status</th><th className="rechts">Haushalte</th><th className="rechts">Reaktionen</th><th className="rechts">Aufträge</th><th className="rechts">Verkäufe</th><th className="rechts">Kosten</th><th>Beginn</th></tr></thead>
+          <tbody>{campaigns.map((c:any)=>{
+            const p=performance.get(c.id);
+            const pfad=`/acquisition/${c.id}`;
+            return <tr key={c.id}>
+              <td className="zahl"><Link to={pfad}>{c.campaign_number}</Link></td>
+              <td><Link to={pfad}>{c.name}</Link></td>
+              <td>{c.lead_sources?.label??<span className="leise">offen</span>}</td>
+              <td>{c.acquisition_areas?.name??<span className="leise">offen</span>}</td>
+              <td><span className={`status-pill ${CAMPAIGN_CLASS[c.status]??""}`}>{CAMPAIGN_STATUS[c.status]??c.status}</span></td>
+              <td className="zahl rechts">{c.household_count??"—"}</td>
+              <td className="zahl rechts">{p?p.responses:0}</td>
+              <td className="zahl rechts">{p?p.mandates:0}</td>
+              <td className="zahl rechts">{p?p.sales:0}</td>
+              <td className="zahl rechts">{c.actual_cost!=null?money(c.actual_cost):c.planned_cost!=null?<span className="leise">{money(c.planned_cost)} geplant</span>:"—"}</td>
+              <td className="zahl">{c.starts_on?formatDate(c.starts_on):"—"}</td>
+            </tr>;
+          })}</tbody>
+        </table>}
+      </div>
 
       <Aufklapper id="kampagne-anlegen" knopf="+ Kampagne anlegen"><Form method="post" className="form-grid" >
         <input type="hidden" name="_intent" value="campaign_add"/>
@@ -204,16 +215,23 @@ export default function Acquisition(){
       </Form></Aufklapper>
     </section>
 
-    <section className="data-card" id="gebiete">
-      <div className="card-head"><div><p className="eyebrow">Hyperlokal</p><h2>Gebiete</h2></div><span className="status-pill">{d.areas.length}</span></div>
+    <section className="programm-abschnitt" id="gebiete">
+      <h2 className="programm-abschnitt-kopf">Gebiete <span className="leise">· {d.areas.length}</span></h2>
+      <div className="programm-tabelle-rahmen">
       {d.areas.length===0
-        ?<p className="empty-state">Noch kein Gebiet erfasst. Ein Gebiet ist die Voraussetzung für eine Kampagne.</p>
-        :<div className="data-list">{d.areas.map((a:any)=>
-          <div className="data-row" key={a.id}>
-            <div style={{paddingLeft:`${a.depth*1.25}rem`}}><strong>{a.name}</strong><small>{AREA_TYPE[a.area_type]??a.area_type}{a.postal_code?` · ${a.postal_code}`:""}{a.household_estimate?` · ca. ${a.household_estimate} Haushalte`:""}</small></div>
-            <div className="row-meta"><small>{a.path}</small></div>
-            <span>{plural(campaigns.filter((c:any)=>c.area_id===a.id).length,"Kampagne","Kampagnen")}</span>
-          </div>)}</div>}
+        ?<p className="programm-liste-leer">Noch kein Gebiet erfasst. Ein Gebiet ist die Voraussetzung für eine Kampagne.</p>
+        :<table className="programm-tabelle">
+          <thead><tr><th>Gebiet</th><th>Art</th><th>PLZ</th><th className="rechts">Haushalte (ca.)</th><th className="rechts">Kampagnen</th><th>Pfad</th></tr></thead>
+          <tbody>{d.areas.map((a:any)=><tr key={a.id}>
+            <td style={{paddingLeft:`calc(12px + ${a.depth*1.25}rem)`}}><strong>{a.name}</strong></td>
+            <td>{AREA_TYPE[a.area_type]??a.area_type}</td>
+            <td className="zahl">{a.postal_code??"—"}</td>
+            <td className="zahl rechts">{a.household_estimate??"—"}</td>
+            <td className="zahl rechts">{campaigns.filter((c:any)=>c.area_id===a.id).length}</td>
+            <td className="leise">{a.path}</td>
+          </tr>)}</tbody>
+        </table>}
+      </div>
 
       <Aufklapper id="gebiet-anlegen" knopf="+ Gebiet anlegen"><Form method="post" className="form-grid" >
         <input type="hidden" name="_intent" value="area_add"/>

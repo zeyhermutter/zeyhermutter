@@ -13,6 +13,7 @@ import { OWNER_DECISION_LABELS } from "~/lib/sales-readiness";
 // AS_IS_SALE gestanden.
 const OWNER_DECISION: Record<string, string> = OWNER_DECISION_LABELS;
 import "~/lead.css";
+import "~/programm-liste.css";
 
 const CHECK_STATUS_CLASS: Record<string, string> = {
   DRAFT: "status-draft",
@@ -90,108 +91,61 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export default function SalesReadinessOverview() {
-  const { profile, leads, checkByLead, summary } = useLoaderData<typeof loader>();
+  const { leads, checkByLead, summary } = useLoaderData<typeof loader>();
 
+  // Programmliste (13.10.2026) wie Makleraufträge: Werkzeugleiste, eine
+  // Zeile Kennzahlen, Tabelle mit Spaltenkoepfen.
   return (
-    <main className="editor-shell lead-shell programm-seite">
-      <header className="editor-header">
-        <div>
-          <Link className="back-link" to="/crm">← CRM</Link>
-          <p className="eyebrow">Modul 03 · Eigentümer & Leads</p>
-          <h1 className="editor-title">Verkaufsstrategie-Checks</h1>
-          <p className="editor-meta">Vom ersten Objektbild bis zur abgestimmten Entscheidung für den Marktstart.</p>
-        </div>
-        <div className="header-user">
-          <Link className="secondary-button link-button" to="/leads">Verkäufer-Leads</Link>
-          <span className="badge">{__APP_ENV_LABEL__}</span>
-          <small>{profile.display_name}</small>
-        </div>
-      </header>
-
-      <div className="sales-readiness-overview-width">
-        <Aufklapper knopf="Worum geht es beim Verkaufsstrategie-Check?"><section className="data-card">
-          <div className="card-head">
-            <div>
-              <p className="eyebrow">Verkaufsstrategie</p>
-              <h2>Verkaufsfertig vor dem Marktstart</h2>
-            </div>
-          </div>
-          <p className="lead-explainer">
-            <strong>Der Check ist Teil der Verkäufer-Akte.</strong> Ausgangslage, drei Verkaufsszenarien,
+    <main className="editor-shell programm-liste">
+      <div className="programm-liste-werkzeuge">
+        <Aufklapper knopf="Worum geht es beim Verkaufsstrategie-Check?">
+          <p className="programm-erklaerung">
+            Der Check ist Teil der Verkäufer-Akte. Ausgangslage, drei Verkaufsszenarien,
             Maßnahmen und Eigentümerentscheidung werden strukturiert vorbereitet und anschließend direkt
             mit dem Lead weitergeführt.
           </p>
-        </section></Aufklapper>
+        </Aufklapper>
+        <span className="programm-liste-zaehler">{summary.started} von {summary.total} gestartet</span>
+        <Link className="secondary-button link-button" to="/leads">Verkäufer-Leads</Link>
+      </div>
 
-        <section className="metric-grid">
-          <article className="metric-card">
-            <span>Verkäufer-Leads</span>
-            <strong>{summary.total}</strong>
-            <small>aktive Leads</small>
-          </article>
-          <article className="metric-card">
-            <span>Entwürfe</span>
-            <strong>{summary.drafts}</strong>
-            <small>in Bearbeitung</small>
-          </article>
-          <article className="metric-card">
-            <span>Prüfbereit</span>
-            <strong>{summary.ready}</strong>
-            <small>zur Entscheidung</small>
-          </article>
-          <article className="metric-card">
-            <span>Finalisiert</span>
-            <strong>{summary.finalized}</strong>
-            <small>aktuelle Revisionen</small>
-          </article>
-        </section>
+      <p className="programm-kennzahlen">
+        <span><strong>{summary.total}</strong> aktive Verkäufer-Leads</span>
+        <span><strong>{summary.drafts}</strong> Entwürfe</span>
+        <span><strong>{summary.ready}</strong> prüfbereit</span>
+        <span><strong>{summary.finalized}</strong> finalisiert</span>
+      </p>
 
-        <section className="data-card">
-          <div className="card-head">
-            <div>
-              <p className="eyebrow">Arbeitsliste</p>
-              <h2>Verkäufer-Leads & Check-Status</h2>
-            </div>
-            <span className="subtle">{summary.started} von {summary.total} gestartet</span>
-          </div>
-
-          <div className="data-list">
-            {leads.map((lead: any) => {
-              const contact = one(lead.contacts);
-              const check = checkByLead[lead.id];
-              const date = check?.finalized_at ?? check?.updated_at ?? lead.updated_at;
-
-              return (
-                <Link className="data-row data-row-link lead-list-row" to={`/leads/${lead.id}/sales-readiness`} key={lead.id}>
-                  <div>
-                    <strong>{contact ? `${contact.first_name} ${contact.last_name}` : lead.lead_number}</strong>
-                    <small>{lead.lead_number}{lead.property_city ? ` · ${lead.property_city}` : ""}</small>
-                  </div>
-
-                  <div>
-                    <span className={`lead-status-pill ${check ? CHECK_STATUS_CLASS[check.status] ?? "status-draft" : "status-archived"}`}>
-                      {check ? CHECK_STATUS[check.status] ?? check.status : "Nicht gestartet"}
-                    </span>
-                    <small>{check ? `Revision ${check.revision_no}` : "Entwurf anlegen"}</small>
-                  </div>
-
-                  <div className="lead-row-secondary">
-                    <strong>{check ? OWNER_DECISION[check.owner_decision] ?? check.owner_decision ?? "Entscheidung offen" : "Noch kein Check"}</strong>
-                    <small>Lead-Status {beschrifte(LEADSTATUS, lead.status)}</small>
-                  </div>
-
-                  <div className="row-meta lead-row-secondary">
-                    <span>{formatDate(date)}</span>
-                    <small>{check?.finalized_at ? "finalisiert" : check ? "zuletzt bearbeitet" : "Lead aktualisiert"}</small>
-                  </div>
-
-                  <span className="subtle-link">Öffnen →</span>
-                </Link>
-              );
-            })}
-            {leads.length === 0 ? <p className="empty-state">Keine aktiven Verkäufer-Leads vorhanden.</p> : null}
-          </div>
-        </section>
+      <div className="programm-tabelle-rahmen">
+        {leads.length === 0 ? <p className="programm-liste-leer">Keine aktiven Verkäufer-Leads vorhanden.</p> : (
+          <table className="programm-tabelle">
+            <thead><tr><th>Lead</th><th>Eigentümer</th><th>Ort</th><th>Check</th><th>Entscheidung</th><th>Lead-Status</th><th className="rechts">Zuletzt</th></tr></thead>
+            <tbody>
+              {leads.map((lead: any) => {
+                const contact = one(lead.contacts);
+                const check = checkByLead[lead.id];
+                const date = check?.finalized_at ?? check?.updated_at ?? lead.updated_at;
+                const pfad = `/leads/${lead.id}/sales-readiness`;
+                return (
+                  <tr key={lead.id}>
+                    <td className="zahl"><Link to={pfad}>{lead.lead_number}</Link></td>
+                    <td><Link to={pfad}>{contact ? `${contact.first_name} ${contact.last_name}` : "—"}</Link></td>
+                    <td>{lead.property_city ?? <span className="leise">—</span>}</td>
+                    <td>
+                      <span className={`status-pill ${check ? CHECK_STATUS_CLASS[check.status] ?? "status-draft" : "status-archived"}`}>
+                        {check ? CHECK_STATUS[check.status] ?? check.status : "Nicht gestartet"}
+                      </span>
+                      <div className="leise">{check ? `Revision ${check.revision_no}` : "Entwurf anlegen"}</div>
+                    </td>
+                    <td>{check ? OWNER_DECISION[check.owner_decision] ?? check.owner_decision ?? "offen" : <span className="leise">noch kein Check</span>}</td>
+                    <td>{beschrifte(LEADSTATUS, lead.status)}</td>
+                    <td className="zahl rechts">{formatDate(date)}<div className="leise">{check?.finalized_at ? "finalisiert" : check ? "bearbeitet" : "Lead"}</div></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
       </div>
     </main>
   );

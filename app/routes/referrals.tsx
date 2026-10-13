@@ -153,32 +153,6 @@ export default function Referrals(){
         <button className="secondary-button" type="submit">Filtern</button>
       </Form>
     </section>
-
-    <section className="data-card">
-      <div className="card-head"><div><p className="eyebrow">Wer empfiehlt wen</p><h2>Empfehlungen</h2></div></div>
-      {d.rows.length===0
-        ?<p className="empty-state">In dieser Ansicht ist keine Empfehlung erfasst.</p>
-        :<div className="data-list">{d.rows.map((row:any)=>{
-          const lead=one(row.leads);
-          return <Link className="data-row data-row-link" to={`/referrals/${row.id}`} key={row.id}>
-            <div>
-              <strong>{row.referral_number} · {referrerLabel(row)}</strong>
-              <small>empfiehlt {referredLabel(row)}</small>
-              <small>{row.occasion??"ohne Anlass erfasst"}</small>
-            </div>
-            <div className="row-meta">
-              <span>{formatDay(row.received_on)}</span>
-              <small>{row.channel?REFERRAL_CHANNEL[row.channel]??row.channel:"Weg offen"}</small>
-            </div>
-            <div className="row-meta">
-              <span className={`status-pill ${REFERRAL_STATUS_CLASS[row.status]??"status-draft"}`}>{row.archived_at?"Archiviert":REFERRAL_STATUS[row.status]??row.status}</span>
-              <small>{lead?`${lead.lead_number}`:row.acknowledged_on?`bedankt ${formatDay(row.acknowledged_on)}`:"kein Lead"}</small>
-            </div>
-            <span className="subtle-link">Öffnen →</span>
-          </Link>;
-        })}</div>}
-    </section>
-
     {d.canWrite?<Aufklapper id="anlegen" knopf="+ Empfehlung erfassen"><section className="data-card">
       <div className="card-head"><div><p className="eyebrow">Neu</p><h2>Empfehlung erfassen</h2></div></div>
       <Form method="post" className="form-grid">
@@ -226,5 +200,31 @@ export default function Referrals(){
         <p className="form-field full-width subtle">Wähle entweder eine Person oder eine Organisation — je nachdem, was oben eingestellt ist. Die jeweils andere Auswahl bleibt unberücksichtigt.</p>
       </Form>
     </section></Aufklapper>:null}
+
+    <section className="data-card">
+      <div className="card-head"><div><p className="eyebrow">Wer empfiehlt wen</p><h2>Empfehlungen</h2></div></div>
+      {d.rows.length===0
+        ?<p className="empty-state">In dieser Ansicht ist keine Empfehlung erfasst.</p>
+        :<div className="data-list">{d.rows.map((row:any)=>{
+          const lead=one(row.leads);
+          return <Link className="data-row data-row-link" to={`/referrals/${row.id}`} key={row.id}>
+            <div>
+              <strong>{row.referral_number} · {referrerLabel(row)}</strong>
+              <small>empfiehlt {referredLabel(row)}</small>
+              <small>{row.occasion??"ohne Anlass erfasst"}</small>
+            </div>
+            <div className="row-meta">
+              <span>{formatDay(row.received_on)}</span>
+              <small>{row.channel?REFERRAL_CHANNEL[row.channel]??row.channel:"Weg offen"}</small>
+            </div>
+            <div className="row-meta">
+              <span className={`status-pill ${REFERRAL_STATUS_CLASS[row.status]??"status-draft"}`}>{row.archived_at?"Archiviert":REFERRAL_STATUS[row.status]??row.status}</span>
+              <small>{lead?`${lead.lead_number}`:row.acknowledged_on?`bedankt ${formatDay(row.acknowledged_on)}`:"kein Lead"}</small>
+            </div>
+            <span className="subtle-link">Öffnen →</span>
+          </Link>;
+        })}</div>}
+    </section>
+
   </main>;
 }

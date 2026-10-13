@@ -132,6 +132,21 @@ export default function Projects(){
         <Link className="subtle-link" to={d.showAll?"/projects?ansicht=tabelle":"/projects?ansicht=tabelle&alle=1"}>{d.showAll?"Nur laufende":"Auch abgeschlossene"}</Link>
       </div>
     </div>
+    <Aufklapper id="projekt-anlegen" knopf="+ Projekt anlegen"><section className="data-card">
+      <div className="card-head"><div><p className="eyebrow">Neu</p><h2>Projekt anlegen</h2></div></div>
+      <Form method="post" className="form-grid">
+        <input type="hidden" name="_intent" value="project_add"/>
+        <label className="form-field"><span>Eigentümer *</span><select name="contact_id" defaultValue="" disabled={disabled}><option value="">—</option>{(d.contacts as any[]).map((c:any)=><option key={c.id} value={c.id}>{c.last_name}, {c.first_name} · {c.contact_number}</option>)}</select></label>
+        <label className="form-field"><span>Immobilie</span><select name="property_id" defaultValue="" disabled={disabled}><option value="">— noch keine</option>{(d.properties as any[]).map((p:any)=><option key={p.id} value={p.id}>{p.property_number} · {p.internal_title}</option>)}</select></label>
+        <label className="form-field"><span>Lead</span><select name="lead_id" defaultValue="" disabled={disabled}><option value="">— ohne Lead</option>{(d.leads as any[]).map((l:any)=><option key={l.id} value={l.id}>{l.lead_number}</option>)}</select><small className="subtle">Nur die Herkunft; der Lead bleibt unverändert bestehen.</small></label>
+        <label className="form-field"><span>Phase</span><select name="phase" defaultValue="LEAD" disabled={disabled}>{Object.entries(PHASE).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label>
+        <label className="form-field"><span>Nächster Schritt</span><input name="next_step" disabled={disabled} placeholder="Eigentümer anrufen"/></label>
+        <label className="form-field"><span>Fällig am</span><input type="date" name="next_step_due_on" disabled={disabled}/><small className="subtle">Ohne Fälligkeit wird kein Schritt gespeichert.</small></label>
+        <label className="form-field"><span>Ziel Vermarktungsstart</span><input type="date" name="target_marketing_start" disabled={disabled}/></label>
+        <label className="form-field full-width"><span>Notiz</span><input name="notes" disabled={disabled}/></label>
+        <div className="form-field full-width inline-actions"><button className="primary-button" type="submit" disabled={disabled}>Projekt anlegen</button></div>
+      </Form>
+    </section></Aufklapper>
 
     {actionData?.error?<p className="form-error">{actionData.error}</p>:null}
 
@@ -166,20 +181,5 @@ export default function Projects(){
         })}</div>}
     </section>
 
-    <Aufklapper id="projekt-anlegen" knopf="+ Projekt anlegen"><section className="data-card">
-      <div className="card-head"><div><p className="eyebrow">Neu</p><h2>Projekt anlegen</h2></div></div>
-      <Form method="post" className="form-grid">
-        <input type="hidden" name="_intent" value="project_add"/>
-        <label className="form-field"><span>Eigentümer *</span><select name="contact_id" defaultValue="" disabled={disabled}><option value="">—</option>{(d.contacts as any[]).map((c:any)=><option key={c.id} value={c.id}>{c.last_name}, {c.first_name} · {c.contact_number}</option>)}</select></label>
-        <label className="form-field"><span>Immobilie</span><select name="property_id" defaultValue="" disabled={disabled}><option value="">— noch keine</option>{(d.properties as any[]).map((p:any)=><option key={p.id} value={p.id}>{p.property_number} · {p.internal_title}</option>)}</select></label>
-        <label className="form-field"><span>Lead</span><select name="lead_id" defaultValue="" disabled={disabled}><option value="">— ohne Lead</option>{(d.leads as any[]).map((l:any)=><option key={l.id} value={l.id}>{l.lead_number}</option>)}</select><small className="subtle">Nur die Herkunft; der Lead bleibt unverändert bestehen.</small></label>
-        <label className="form-field"><span>Phase</span><select name="phase" defaultValue="LEAD" disabled={disabled}>{Object.entries(PHASE).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label>
-        <label className="form-field"><span>Nächster Schritt</span><input name="next_step" disabled={disabled} placeholder="Eigentümer anrufen"/></label>
-        <label className="form-field"><span>Fällig am</span><input type="date" name="next_step_due_on" disabled={disabled}/><small className="subtle">Ohne Fälligkeit wird kein Schritt gespeichert.</small></label>
-        <label className="form-field"><span>Ziel Vermarktungsstart</span><input type="date" name="target_marketing_start" disabled={disabled}/></label>
-        <label className="form-field full-width"><span>Notiz</span><input name="notes" disabled={disabled}/></label>
-        <div className="form-field full-width inline-actions"><button className="primary-button" type="submit" disabled={disabled}>Projekt anlegen</button></div>
-      </Form>
-    </section></Aufklapper>
   </div>;
 }

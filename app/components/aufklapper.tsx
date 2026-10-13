@@ -14,6 +14,10 @@ import { useLocation } from "react-router";
 //
 // Ein Verweis auf "#<id>" (etwa "+ Neu" im Arbeitsplatz oder im Seitenkopf)
 // oeffnet den Abschnitt und rollt zu ihm -- auch beim Laden der Seite.
+//
+// Beginnt die Beschriftung mit "+ ", ist es ein Anlegen-Knopf: er sieht aus
+// wie "+ Neuer Auftrag" in den Programmlisten (dunkel) und steht auf einer
+// Programmseite rechts oben neben der Werkzeugleiste (app/programmansicht.css).
 
 export function Aufklapper({ id, knopf, offen = false, children }: {
   id?: string;
@@ -31,7 +35,7 @@ export function Aufklapper({ id, knopf, offen = false, children }: {
     ref.current.scrollIntoView({ block: "start" });
   }, [hash, id]);
   return (
-    <details className="programm-aufklapper" id={id} ref={ref} open={offen || undefined}>
+    <details className={typeof knopf === "string" && knopf.startsWith("+ ") ? "programm-aufklapper programm-aufklapper-neu" : "programm-aufklapper"} id={id} ref={ref} open={offen || undefined}>
       <summary className="programm-aufklapper-knopf">{knopf}</summary>
       <div className="programm-aufklapper-inhalt">{children}</div>
     </details>

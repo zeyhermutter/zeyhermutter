@@ -5,6 +5,7 @@ import { requireActiveUser } from "~/lib/auth.server";
 import { zeitpunkt as formatDate } from "~/lib/format";
 import { crmLocalDateTimeToIso as berlinLocalToIso, crmNowLocalDateTime as berlinInputNow } from "~/lib/local-time";
 import "~/communication.css";
+import "~/programm-liste.css";
 
 type ContextType = "CONTACT" | "LEAD" | "INQUIRY";
 type ContextRef = { type: ContextType; id: string };
@@ -135,12 +136,65 @@ function directionLabel(metadata: unknown) {
   return "E-Mail";
 }
 
+type JournalZeile = { id: string; zeitpunkt: string; betreff: string; text: string | null; richtung: string; von: string; bezug: { art: string; nummer: string; pfad: string } | null; kontakt: string | null };
+
+/** Alle dokumentierten E-Mails, neueste zuerst. activity_events.contact_id
+ * hat keinen Fremdschluessel -- Kontakte, Leads und Anfragen werden deshalb
+ * getrennt nachgeladen statt eingebettet. null heisst: Fehler beim Laden. */
+async function ladeJournal(supabase: any): Promise<JournalZeile[] | null> {
+  const { data: rows, error } = await supabase
+    .from("activity_events")
+    .select("id,title,description,actor_user_id,occurred_at,metadata,contact_id,lead_id,inquiry_id")
+    .eq("activity_type", "EMAIL")
+    .order("occurred_at", { ascending: false })
+    .limit(100);
+  if (error) return null;
+  const zeilen = (rows ?? []) as any[];
+  const ids = (schluessel: string) => [...new Set(zeilen.map((r) => r[schluessel]).filter(Boolean))] as string[];
+  const leer = Promise.resolve({ data: [], error: null });
+  const [kontakte, leads, anfragen, profile] = await Promise.all([
+    ids("contact_id").length ? supabase.from("contacts").select("id,contact_number,first_name,last_name").in("id", ids("contact_id")) : leer,
+    ids("lead_id").length ? supabase.from("leads").select("id,lead_number").in("id", ids("lead_id")) : leer,
+    ids("inquiry_id").length ? supabase.from("inquiries").select("id,inquiry_number").in("id", ids("inquiry_id")) : leer,
+    zeilen.length ? supabase.from("profiles").select("user_id,display_name") : leer,
+  ]);
+  if (kontakte.error || leads.error || anfragen.error || profile.error) return null;
+  const kontaktJe = new Map((kontakte.data ?? []).map((k: any) => [k.id, k]));
+  const leadJe = new Map((leads.data ?? []).map((l: any) => [l.id, l]));
+  const anfrageJe = new Map((anfragen.data ?? []).map((a: any) => [a.id, a]));
+  const nameJe = new Map((profile.data ?? []).map((p: any) => [p.user_id, p.display_name]));
+  return zeilen.map((r) => {
+    const kontakt: any = r.contact_id ? kontaktJe.get(r.contact_id) : null;
+    const lead: any = r.lead_id ? leadJe.get(r.lead_id) : null;
+    const anfrage: any = r.inquiry_id ? anfrageJe.get(r.inquiry_id) : null;
+    const bezug = lead ? { art: "Verkäufer-Lead", nummer: lead.lead_number, pfad: `/leads/${lead.id}` }
+      : anfrage ? { art: "Anfrage", nummer: anfrage.inquiry_number, pfad: `/inquiries/${anfrage.id}` }
+      : kontakt ? { art: "Kontakt", nummer: kontakt.contact_number, pfad: `/crm/contacts/${kontakt.id}` }
+      : null;
+    return {
+      id: r.id,
+      zeitpunkt: r.occurred_at,
+      betreff: r.title ?? "E-Mail",
+      text: r.description ?? null,
+      richtung: directionLabel(r.metadata),
+      von: r.actor_user_id ? (nameJe.get(r.actor_user_id) as string | undefined) ?? "Benutzer" : "System",
+      bezug,
+      kontakt: kontakt ? `${kontakt.first_name} ${kontakt.last_name}`.trim() : null,
+    };
+  });
+}
+
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { supabase, responseHeaders, profile } = await requireActiveUser(request, context.cloudflare.env);
   const url = new URL(request.url);
   const ref = resolveContext(url);
   if (!ref) {
-    return data({ context: null, activities: [], profileMap: {}, canWrite: false, profile, nowLocal: berlinInputNow() }, { headers: responseHeaders() });
+    // Ohne CRM-Bezug: das E-Mail-Journal -- alle dokumentierten E-Mails des
+    // Bueros, neueste zuerst (13.10.2026). Vorher stand hier nur ein Text,
+    // der erklaerte, wo man E-Mails findet.
+    const journal = await ladeJournal(supabase);
+    if (!journal) throw new Response("E-Mail-Journal konnte nicht geladen werden.", { status: 500, headers: responseHeaders() });
+    return data({ context: null, activities: [], journal, profileMap: {}, canWrite: false, profile, nowLocal: berlinInputNow() }, { headers: responseHeaders() });
   }
 
   const emailContext = await loadContext(supabase, ref);
@@ -168,7 +222,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   }
 
   const profileMap = Object.fromEntries((profiles ?? []).map((item: any) => [item.user_id, item.display_name]));
-  return data({ context: emailContext, activities: activities ?? [], profileMap, canWrite: canWrite === true, profile, nowLocal: berlinInputNow() }, { headers: responseHeaders() });
+  return data({ context: emailContext, activities: activities ?? [], journal: [] as JournalZeile[], profileMap, canWrite: canWrite === true, profile, nowLocal: berlinInputNow() }, { headers: responseHeaders() });
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
@@ -214,8 +268,10 @@ export async function action({ request, context }: Route.ActionArgs) {
 }
 
 export default function EmailCompose() {
-  const { context, activities, profileMap, canWrite, profile, nowLocal } = useLoaderData<typeof loader>();
+  const { context, activities, journal, profileMap, canWrite, profile, nowLocal } = useLoaderData<typeof loader>();
   const result = useActionData<typeof action>();
+
+  if (!context) return <EmailJournal journal={journal} />;
 
   return <main className="communication-shell">
     <header className="communication-header">
@@ -263,11 +319,7 @@ export default function EmailCompose() {
               {activities.length === 0 ? <p className="empty-state">Noch keine E-Mail-Aktivität für diesen CRM-Bezug dokumentiert.</p> : null}
             </div>
           </section>
-        </> : <section className="data-card">
-          <div className="card-head"><div><p className="eyebrow">Kontext erforderlich</p><h2>E-Mail aus dem CRM öffnen</h2></div></div>
-          <p className="communication-note">Öffne einen Kontakt, Verkäufer-Lead oder eine Anfrage. Der Reiter „E-Mail“ übernimmt den aktuellen CRM-Bezug automatisch.</p>
-          <div className="communication-empty-links"><Link className="secondary-button link-button" to="/crm">CRM öffnen</Link><Link className="secondary-button link-button" to="/leads">Verkäufer-Leads</Link><Link className="secondary-button link-button" to="/inquiries">Anfragen</Link></div>
-        </section>}
+        </> : null}
       </div>
 
       <aside className="communication-stack">
@@ -291,6 +343,33 @@ export default function EmailCompose() {
           <div className="communication-actions" style={{ marginTop: 14 }}><Link className="secondary-button link-button" to="/crm/calendar">Kalender öffnen →</Link></div>
         </section>
       </aside>
+    </div>
+  </main>;
+}
+
+/** Der Reiter "E-Mail" ohne CRM-Bezug: Programmliste wie die Aufgaben. */
+function EmailJournal({ journal }: { journal: JournalZeile[] }) {
+  return <main className="editor-shell programm-liste">
+    <div className="programm-liste-werkzeuge">
+      <Aufklapper knopf="Mail-Provider nicht verbunden">
+        <p className="programm-erklaerung">Ein automatischer Postfach-Abgleich ist nicht eingerichtet. Eine E-Mail wird im Mailprogramm geschrieben und danach am Kontakt, am Verkäufer-Lead oder an der Anfrage im Reiter „E-Mail“ dokumentiert.</p>
+        <p className="programm-erklaerung">Das Öffnen des Mailprogramms wird nicht als Versand gewertet. Hier steht nur, was bewusst als gesendet oder empfangen erfasst wurde.</p>
+      </Aufklapper>
+      <span className="programm-liste-zaehler">{journal.length === 100 ? "die letzten 100 E-Mails" : `${journal.length} ${journal.length === 1 ? "E-Mail" : "E-Mails"}`}</span>
+      <Link className="secondary-button link-button" to="/crm/contacts">Kontakte</Link>
+    </div>
+    <div className="programm-tabelle-rahmen">
+      {journal.length === 0 ? <p className="programm-liste-leer">Noch keine E-Mail dokumentiert. Erfasst wird sie im Reiter „E-Mail“ eines <Link to="/crm/contacts">Kontakts</Link>, eines <Link to="/leads">Verkäufer-Leads</Link> oder einer <Link to="/inquiries">Anfrage</Link>.</p> : <table className="programm-tabelle">
+        <thead><tr><th>Zeitpunkt</th><th>Betreff</th><th>Richtung</th><th>Kontakt</th><th>Bezug</th><th>Erfasst von</th></tr></thead>
+        <tbody>{journal.map((zeile) => <tr key={zeile.id}>
+          <td className="zahl">{formatDate(zeile.zeitpunkt)}</td>
+          <td>{zeile.bezug ? <Link to={zeile.bezug.pfad}>{zeile.betreff}</Link> : <strong>{zeile.betreff}</strong>}{zeile.text ? <div className="leise">{zeile.text}</div> : null}</td>
+          <td>{zeile.richtung}</td>
+          <td>{zeile.kontakt ?? <span className="leise">—</span>}</td>
+          <td>{zeile.bezug ? <Link to={zeile.bezug.pfad}>{zeile.bezug.art} {zeile.bezug.nummer}</Link> : <span className="leise">—</span>}</td>
+          <td className="leise">{zeile.von}</td>
+        </tr>)}</tbody>
+      </table>}
     </div>
   </main>;
 }

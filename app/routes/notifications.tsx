@@ -4,6 +4,7 @@ import { requireActiveUser } from "~/lib/auth.server";
 import { zeitpunkt as formatDate } from "~/lib/format";
 import { benachrichtigungsZiel } from "~/lib/benachrichtigungsziele";
 import "~/notifications.css";
+import "~/programm-liste.css";
 
 type ActionResult = { error?: string };
 function text(formData: FormData, key: string) { return String(formData.get(key) ?? "").trim(); }
@@ -11,10 +12,10 @@ function text(formData: FormData, key: string) { return String(formData.get(key)
 function safeRedirectTarget(value: string) { return value.startsWith("/") && !value.startsWith("//") ? value : "/crm/notifications"; }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const { supabase, responseHeaders, profile } = await requireActiveUser(request, context.cloudflare.env);
+  const { supabase, responseHeaders } = await requireActiveUser(request, context.cloudflare.env);
   const { data: notifications, error } = await supabase.from("notifications").select("id, type, title, message, entity_type, entity_id, created_at, read_at").order("created_at", { ascending: false }).limit(100);
   if (error) throw new Response("Benachrichtigungen konnten nicht geladen werden.", { status: 500 });
-  return data({ notifications: notifications ?? [], profile }, { headers: responseHeaders() });
+  return data({ notifications: notifications ?? [] }, { headers: responseHeaders() });
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
@@ -25,15 +26,28 @@ export async function action({ request, context }: Route.ActionArgs) {
 }
 
 export default function Notifications() {
-  const { notifications, profile } = useLoaderData<typeof loader>(); const result = useActionData<typeof action>(); const unread = notifications.filter((item) => !item.read_at).length;
-  return <main className="editor-shell notifications-shell programm-seite">
-    <header className="editor-header notifications-header"><div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">Zusammenarbeit</p><h1 className="editor-title">Benachrichtigungen</h1></div><div className="header-user"><span className="badge">{unread} ungelesen</span><small>{profile.display_name}</small></div></header>
-    <div className="notifications-page-width">
-      {result?.error ? <div className="form-error">{result.error}</div> : null}
-      <section className="data-card"><div className="card-head"><div><p className="eyebrow">Inbox</p><h2>Letzte 100</h2></div>{unread > 0 ? <Form method="post"><button className="secondary-button compact" type="submit" name="_intent" value="read_all">Alle als gelesen</button></Form> : null}</div><div className="data-list notifications-list">{notifications.map((notification) => {
-        const target=benachrichtigungsZiel(notification.entity_type, notification.entity_id);
-        return <div className={`data-row notification-row${notification.read_at ? "" : " is-unread"}`} key={notification.id}><div className="notification-copy"><strong>{notification.read_at ? notification.title : `● ${notification.title}`}</strong><small>{notification.message ?? notification.type} · {formatDate(notification.created_at)}</small></div><div className="notification-actions">{notification.read_at ? <Link className="secondary-button compact link-button" to={target}>Öffnen</Link> : <Form method="post"><input type="hidden" name="notification_id" value={notification.id}/><input type="hidden" name="redirect_to" value={target}/><button className="primary-button compact" type="submit" name="_intent" value="read">Öffnen</button></Form>}{!notification.read_at ? <Form method="post"><input type="hidden" name="notification_id" value={notification.id}/><input type="hidden" name="redirect_to" value="/crm/notifications"/><button className="secondary-button compact" type="submit" name="_intent" value="read">Als gelesen markieren</button></Form> : <span className="notification-read-state">Gelesen</span>}</div></div>;
-      })}{notifications.length === 0 ? <p className="empty-state">Keine Benachrichtigungen vorhanden.</p> : null}</div></section>
+  const { notifications } = useLoaderData<typeof loader>(); const result = useActionData<typeof action>(); const unread = notifications.filter((item) => !item.read_at).length;
+  // Programmliste (13.10.2026): Posteingang als Tabelle -- Eingang, Meldung,
+  // Text, Aktion. Vorher je Meldung eine hohe Zeile mit zwei grossen Knoepfen.
+  return <main className="editor-shell programm-liste">
+    <div className="programm-liste-werkzeuge">
+      <span className="programm-liste-zaehler programm-liste-zaehler-links"><strong>{unread}</strong> ungelesen · letzte {notifications.length}</span>
+      {unread > 0 ? <Form method="post" className="programm-liste-rechts"><button className="secondary-button" type="submit" name="_intent" value="read_all">Alle als gelesen</button></Form> : null}
+    </div>
+    {result?.error ? <div className="form-error notifications-page-width">{result.error}</div> : null}
+    <div className="programm-tabelle-rahmen">
+      {notifications.length === 0 ? <p className="programm-liste-leer">Keine Benachrichtigungen vorhanden.</p> : <table className="programm-tabelle benachrichtigungen">
+        <thead><tr><th>Eingang</th><th>Meldung</th><th>Text</th><th className="rechts">Aktion</th></tr></thead>
+        <tbody>{notifications.map((notification) => {
+          const target = benachrichtigungsZiel(notification.entity_type, notification.entity_id);
+          return <tr className={notification.read_at ? undefined : "ungelesen"} key={notification.id}>
+            <td className="zahl">{formatDate(notification.created_at)}</td>
+            <td>{notification.read_at ? <Link to={target}>{notification.title}</Link> : <Form method="post"><input type="hidden" name="notification_id" value={notification.id}/><input type="hidden" name="redirect_to" value={target}/><button className="programm-tabelle-verweis" type="submit" name="_intent" value="read">{notification.title}</button></Form>}</td>
+            <td className="leise">{notification.message ?? "—"}</td>
+            <td className="rechts">{notification.read_at ? <span className="leise">gelesen</span> : <Form method="post"><input type="hidden" name="notification_id" value={notification.id}/><input type="hidden" name="redirect_to" value="/crm/notifications"/><button className="secondary-button" type="submit" name="_intent" value="read">Als gelesen markieren</button></Form>}</td>
+          </tr>;
+        })}</tbody>
+      </table>}
     </div>
   </main>;
 }

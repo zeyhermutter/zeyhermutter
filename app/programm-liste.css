@@ -221,3 +221,101 @@
 .programm-tabelle td > .leise,
 .programm-tabelle td .leise { font-size: 12px; }
 .programm-liste-leer a { color: #0b5cad; }
+
+/* Zwischenzeile einer gruppierten Tabelle ("Ueberfaellig · 2"). Sie steht
+ * nicht klebend oben wie der Tabellenkopf. */
+.programm-tabelle tr.programm-gruppe th {
+  position: static;
+  padding: 6px 12px;
+  border-top: 1px solid #cdd3d9;
+  background: #f7f9fa;
+  color: #1b2733;
+  font-size: 12px;
+}
+.programm-tabelle tr.programm-gruppe:first-child th { border-top: 0; }
+.programm-tabelle tr.programm-gruppe .leise { font-weight: 400; }
+.programm-tabelle tr.frist-vorbei td:last-child { color: #a12a1f; font-weight: 600; }
+
+/* Ein Aufklapper in der Werkzeugleiste ("Worum geht es ...?") oeffnet als
+ * Tafel unter dem Knopf, statt die Leiste umzubrechen. */
+.programm-liste-werkzeuge .programm-aufklapper { position: relative; width: auto; }
+.programm-liste-werkzeuge .programm-aufklapper-inhalt {
+  position: absolute;
+  z-index: 20;
+  top: 100%;
+  left: 0;
+  width: min(520px, 86vw);
+  margin-top: 6px;
+  padding: var(--crm-card-padding-sm);
+  border: 1px solid #cdd3d9;
+  border-radius: var(--crm-card-radius-sm);
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(6, 32, 55, 0.12);
+}
+.programm-erklaerung { margin: 0; color: #3d4a56; font-size: 13px; line-height: 1.5; }
+.programm-erklaerung + .programm-erklaerung { margin-top: 8px; }
+
+/* Ein Haken in der Werkzeugleiste ("Archiv einbeziehen"). */
+.programm-liste-haken { display: inline-flex; align-items: center; gap: 6px; color: #3d4a56; font-size: 13px; white-space: nowrap; }
+.programm-liste-haken input { width: 15px; height: 15px; margin: 0; }
+
+/* Zaehler links, Knopf rechts (Benachrichtigungen). */
+.programm-liste-zaehler-links { margin-left: 0; }
+.programm-liste-zaehler strong { color: #1b2733; font-variant-numeric: tabular-nums; }
+.programm-liste-rechts { margin: 0 0 0 auto; }
+
+/* Ungelesen: Meldung fett und ein Punkt davor, sonst ruhig. */
+.programm-tabelle tr.ungelesen td:nth-child(2) { font-weight: 600; }
+.programm-tabelle tr.ungelesen td:first-child::before { content: "●"; margin-right: 6px; color: #0b5cad; font-size: 9px; vertical-align: 2px; }
+.programm-tabelle td form { margin: 0; }
+
+/* Ein Verweis, der ein Formular abschickt (Meldung oeffnen und dabei als
+ * gelesen markieren) -- sieht aus wie die Verweise daneben. */
+.programm-tabelle-verweis {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #1b2733;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.programm-tabelle-verweis:hover { color: #0b5cad; text-decoration: underline; }
+
+/* Mehrere Tabellen auf einer Seite (Kampagnen, Gebiete): je eine kleine
+ * Kopfzeile, Tabelle, darunter der Aufklapper zum Anlegen. */
+.programm-abschnitt {
+  max-width: var(--crm-content-max);
+  margin-left: auto;
+  margin-right: auto;
+  display: grid;
+  gap: 8px;
+}
+.programm-abschnitt-kopf { margin: 0; color: #1b2733; font-size: 14px; font-weight: 600; }
+.programm-abschnitt-kopf .leise { color: #6b7782; font-weight: 400; }
+.programm-abschnitt > .programm-tabelle-rahmen { width: 100%; }
+.programm-abschnitt .programm-aufklapper-inhalt > form {
+  padding: 14px var(--crm-card-padding-x);
+  border: 1px solid #cdd3d9;
+  border-radius: var(--crm-card-radius-sm);
+  background: #ffffff;
+}
+.programm-tabelle td.warnung { color: #a12a1f; font-weight: 600; }
+
+/* Freier Zeitraum in der Werkzeugleiste (Auswertung): zwei Datumsfelder in
+ * der Hoehe der anderen Felder. */
+.programm-liste-zeitraum { display: inline-flex; align-items: center; gap: 6px; margin: 0; color: #4a5763; font-size: 13px; }
+.programm-liste-zeitraum input[type="date"] {
+  box-sizing: border-box;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #c3cad1;
+  border-radius: var(--crm-field-radius);
+  background: #ffffff;
+  color: #1b2733;
+  font: inherit;
+  font-size: 13px;
+}
+.programm-liste-zeitraum .primary-button,
+.programm-liste-zeitraum .secondary-button { min-height: 32px; padding: 0 12px; font-size: 13px; }
