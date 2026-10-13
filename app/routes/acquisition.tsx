@@ -150,7 +150,7 @@ export default function Acquisition(){
     commission:acc.commission+Number(row.commission_expected||0),
   }),{responses:0,mandates:0,sales:0,cost:0,commission:0});
 
-  return <div className="editor-shell">
+  return <div className="editor-shell programm-seite">
     <div className="editor-header">
       <div>
         <p className="eyebrow">Arbeitsplatz · Akquise</p>

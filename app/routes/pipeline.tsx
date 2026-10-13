@@ -218,7 +218,7 @@ export default function Pipeline() {
   const inGruppe = (schluessel: string) => d.zeilen.filter((z) => gruppe(z.frist, d.heute) === schluessel);
 
   return (
-    <main className="editor-shell">
+    <main className="editor-shell programm-seite">
       <header className="editor-header">
         <div>
           <Link className="back-link" to="/crm">← CRM</Link>

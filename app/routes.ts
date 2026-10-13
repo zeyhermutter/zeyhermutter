@@ -70,11 +70,17 @@ export default [
       route("projects/:projectId", "routes/project-detail.tsx"),
     ]),
     route("acquisition", "routes/acquisition.tsx"),
-    route("acquisition/:campaignId", "routes/acquisition-campaign.tsx"),
+    layout("routes/kampagne-arbeitsplatz.tsx", [
+      route("acquisition/:campaignId", "routes/acquisition-campaign.tsx"),
+    ]),
     route("case-studies", "routes/case-studies.tsx"),
-    route("case-studies/:caseStudyId", "routes/case-study-detail.tsx"),
+    layout("routes/case-study-arbeitsplatz.tsx", [
+      route("case-studies/:caseStudyId", "routes/case-study-detail.tsx"),
+    ]),
     route("referrals", "routes/referrals.tsx"),
-    route("referrals/:referralId", "routes/referral-detail.tsx"),
+    layout("routes/empfehlung-arbeitsplatz.tsx", [
+      route("referrals/:referralId", "routes/referral-detail.tsx"),
+    ]),
     route("after-sales", "routes/after-sales.tsx"),
     route("mandates", "routes/mandates.tsx"),
     route("mandates/new", "routes/mandate-new.tsx"),
@@ -88,15 +94,21 @@ export default [
     ]),
     route("commissions", "routes/commissions.tsx"),
     route("commissions/new", "routes/commission-new.tsx"),
-    route("commissions/:commissionId", "routes/commission-detail.tsx"),
+    layout("routes/provision-arbeitsplatz.tsx", [
+      route("commissions/:commissionId", "routes/commission-detail.tsx"),
+    ]),
     route("pipeline", "routes/pipeline.tsx"),
     route("purchase-offers", "routes/purchase-offers.tsx"),
     route("purchase-offers/new", "routes/purchase-offer-new.tsx"),
-    route("purchase-offers/:offerId", "routes/purchase-offer-detail.tsx"),
+    layout("routes/kaufangebot-arbeitsplatz.tsx", [
+      route("purchase-offers/:offerId", "routes/purchase-offer-detail.tsx"),
+    ]),
     route("reservations", "routes/reservations.tsx"),
     route("closings", "routes/closings.tsx"),
-    route("closings/:closingId", "routes/closing-detail.tsx"),
-    route("closings/:closingId/milestones", "routes/closing-milestones.tsx"),
+    layout("routes/abschluss-arbeitsplatz.tsx", [
+      route("closings/:closingId", "routes/closing-detail.tsx"),
+      route("closings/:closingId/milestones", "routes/closing-milestones.tsx"),
+    ]),
     route("search-profiles", "routes/search-profiles.tsx"),
     route("search-profiles/new", "routes/search-profile-new.tsx"),
     layout("routes/suchprofil-arbeitsplatz.tsx", [
@@ -104,10 +116,14 @@ export default [
     ]),
     route("inquiries", "routes/inquiries.tsx"),
     route("inquiries/new", "routes/inquiry-new.tsx"),
-    route("inquiries/:inquiryId", "routes/inquiry-detail.tsx"),
+    layout("routes/anfrage-arbeitsplatz.tsx", [
+      route("inquiries/:inquiryId", "routes/inquiry-detail.tsx"),
+    ]),
     route("viewings", "routes/viewings.tsx"),
     route("viewings/new", "routes/viewing-new.tsx"),
-    route("viewings/:viewingId", "routes/viewing-detail.tsx"),
+    layout("routes/besichtigung-arbeitsplatz.tsx", [
+      route("viewings/:viewingId", "routes/viewing-detail.tsx"),
+    ]),
     route("properties", "routes/properties.tsx"),
     route("properties/new", "routes/property-new.tsx"),
     // Der Arbeitsplatz: Objektliste links, Akte rechts. Ohne eigenen Pfad --

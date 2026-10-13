@@ -90,7 +90,7 @@ export default function AfterSales(){
   const actionData=useActionData<typeof action>();
   const now=Date.now();
 
-  return <main className="editor-shell">
+  return <main className="editor-shell programm-seite">
     <header className="editor-header">
       <div>
         <Link className="back-link" to="/crm">← CRM</Link>

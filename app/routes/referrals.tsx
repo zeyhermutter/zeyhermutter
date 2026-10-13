@@ -1,4 +1,5 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
+import { istEinstieg } from "~/lib/einstieg";
 import type { Route } from "./+types/referrals";
 import { requirePermission } from "~/lib/auth.server";
 import { tag } from "~/lib/format";
@@ -43,6 +44,8 @@ export function referralErrorMessage(message:string){
 
 export async function loader({request,context}:Route.LoaderArgs){
   const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"referral.read");
+  // Einstieg: gleich den obersten Datensatz im Arbeitsplatz oeffnen (app/lib/einstieg.ts).
+  if(istEinstieg(request)){const {data:erster}=await supabase.from("referrals").select("id").is("archived_at",null).order("updated_at",{ascending:false}).limit(1).maybeSingle(); if(erster)throw redirect(`/referrals/${erster.id}`,{headers:responseHeaders()});}
   const url=new URL(request.url);
   const filter=url.searchParams.get("status")??"OPEN";
 
@@ -107,7 +110,7 @@ export async function action({request,context}:Route.ActionArgs){
 export default function Referrals(){
   const d=useLoaderData<typeof loader>();
   const actionData=useActionData<typeof action>();
-  return <main className="editor-shell">
+  return <main className="editor-shell programm-seite">
     <header className="editor-header">
       <div>
         <Link className="back-link" to="/crm">← CRM</Link>
@@ -139,7 +142,7 @@ export default function Referrals(){
     </section>:null}
 
     <section className="data-card">
-      <Form method="get" className="filter-grid">
+      <Form method="get" className="filter-grid"><input type="hidden" name="ansicht" value="tabelle"/>
         <label><span>Ansicht</span><select name="status" defaultValue={d.filter}>
           <option value="OPEN">In Arbeit</option>
           <option value="ALL">Alle</option>
@@ -175,7 +178,7 @@ export default function Referrals(){
         })}</div>}
     </section>
 
-    {d.canWrite?<section className="data-card">
+    {d.canWrite?<section className="data-card" id="anlegen">
       <div className="card-head"><div><p className="eyebrow">Neu</p><h2>Empfehlung erfassen</h2></div></div>
       <Form method="post" className="form-grid">
         <label className="form-field"><span>Empfehlung kommt von</span>

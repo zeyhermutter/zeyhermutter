@@ -26,7 +26,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 export default function Notifications() {
   const { notifications, profile } = useLoaderData<typeof loader>(); const result = useActionData<typeof action>(); const unread = notifications.filter((item) => !item.read_at).length;
-  return <main className="editor-shell notifications-shell">
+  return <main className="editor-shell notifications-shell programm-seite">
     <header className="editor-header notifications-header"><div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">Zusammenarbeit</p><h1 className="editor-title">Benachrichtigungen</h1></div><div className="header-user"><span className="badge">{unread} ungelesen</span><small>{profile.display_name}</small></div></header>
     <div className="notifications-page-width">
       {result?.error ? <div className="form-error">{result.error}</div> : null}

@@ -1,4 +1,5 @@
-import { data, Form, Link, useLoaderData } from "react-router";
+import { data, Form, Link, useLoaderData, redirect } from "react-router";
+import { istEinstieg } from "~/lib/einstieg";
 import type { Route } from "./+types/commissions";
 import { requirePermission } from "~/lib/auth.server";
 import { euroGenau as money, tag as formatDate } from "~/lib/format";
@@ -14,6 +15,8 @@ function targetAmount(row:any){const value=row.actual_amount??row.expected_amoun
 
 export async function loader({request,context}:Route.LoaderArgs){
   const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"commission.read");
+  // Einstieg: gleich den obersten Datensatz im Arbeitsplatz oeffnen (app/lib/einstieg.ts).
+  if(istEinstieg(request)){const {data:erster}=await supabase.from("commissions").select("id").is("archived_at",null).order("updated_at",{ascending:false}).limit(1).maybeSingle(); if(erster)throw redirect(`/commissions/${erster.id}`,{headers:responseHeaders()});}
   const url=new URL(request.url);
   const filters={q:(url.searchParams.get("q")??"").trim(),status:url.searchParams.get("status")??"OPEN",side:url.searchParams.get("side")??"",propertyId:url.searchParams.get("property_id")??""};
   const [{data:rows,error},{data:canWrite},{data:properties}]=await Promise.all([
@@ -49,7 +52,7 @@ export async function loader({request,context}:Route.LoaderArgs){
 
 export default function Commissions(){
   const {profile,rows,summary,canWrite,properties,filters}=useLoaderData<typeof loader>();
-  return <main className="editor-shell">
+  return <main className="editor-shell programm-seite">
     <header className="editor-header"><div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">Verkauf</p><h1 className="editor-title">Provisionen</h1><p className="editor-meta">Erwartete, fällige, abgerechnete und bezahlte Provisionen je Verkaufsimmobilie.</p></div><div className="header-actions">{canWrite?<Link className="primary-button link-button" to={filters.propertyId?`/commissions/new?property_id=${encodeURIComponent(filters.propertyId)}`:"/commissions/new"}>+ Provision</Link>:null}<span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div></header>
 
     <section className="metric-grid">
@@ -61,7 +64,7 @@ export default function Commissions(){
       <article className="metric-card"><span>Summe offen</span><strong>{money(summary.openSum)}</strong><small>abzüglich dokumentierter Zahlungen</small></article>
     </section>
 
-    <section className="data-card"><Form method="get" className="filter-grid">
+    <section className="data-card"><Form method="get" className="filter-grid"><input type="hidden" name="ansicht" value="tabelle"/>
       <label><span>Suche</span><input name="q" defaultValue={filters.q} placeholder="Provision, Objekt oder Partei"/></label>
       <label><span>Ansicht</span><select name="status" defaultValue={filters.status}><option value="OPEN">Offene Vorgänge</option><option value="ALL">Alle</option>{Object.entries(STATUS).map(([value,label])=><option value={value} key={value}>{label}</option>)}<option value="ARCHIVED">Archiviert</option></select></label>
       <label><span>Seite</span><select name="side" defaultValue={filters.side}><option value="">Alle</option><option value="SELLER">Innenprovision</option><option value="BUYER">Außenprovision</option></select></label>

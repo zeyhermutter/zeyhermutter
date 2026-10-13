@@ -96,7 +96,7 @@ export default function Compliance(){
   const {profile,rows,summary,filters,retentionDocuments}=d;
   const o=d.overview as any;
   const overdue=retentionDocuments.filter((row:any)=>row.retention_until<today());
-  return <main className="editor-shell">
+  return <main className="editor-shell programm-seite">
     <header className="editor-header"><div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">Verwaltung</p><h1 className="editor-title">Geldwäsche & Aufbewahrung</h1><p className="editor-meta">Risikoeinstufung, Identifizierung der Beteiligten und Ablauf der Aufbewahrungsfristen über alle Verkaufsfälle.</p></div><div className="header-actions"><span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div></header>
 
     <div className="form-warning"><strong>Dokumentation, keine Bewertung.</strong> Diese Übersicht zeigt nur, was erfasst wurde. Sie stellt nicht fest, ob eine geldwäscherechtliche Pflicht besteht oder erfüllt ist, und löst keine Meldung aus.</div>

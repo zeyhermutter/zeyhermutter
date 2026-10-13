@@ -134,7 +134,7 @@ export default function Properties() {
   const pageHref=(nextPage:number)=>{const p=new URLSearchParams({ansicht:"tabelle"});if(filters.q)p.set("q",filters.q);p.set("status",filters.status);if(filters.transaction)p.set("transaction",filters.transaction);if(filters.propertyType)p.set("type",filters.propertyType);p.set("page",String(nextPage));return `?${p.toString()}`;};
 
   return (
-    <main className="editor-shell">
+    <main className="editor-shell programm-seite">
       <header className="editor-header">
         <div><Link className="back-link" to="/crm">← ZeyherMutterOS</Link><p className="eyebrow">Modul 02 · Immobilien</p><h1 className="editor-title">Immobilien</h1></div>
         <div className="header-actions"><span className="badge">{total} Objekte</span><Link className="primary-button link-button" to="/properties/new">+ Immobilie</Link><small>{profile.display_name}</small></div>

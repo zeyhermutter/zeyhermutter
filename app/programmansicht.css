@@ -106,6 +106,14 @@
   line-height: 1.3;
 }
 
+/* In einer Listenzeile steht die Pille sonst als Block mit rechtsbuendigem
+ * Text (".row-meta span"), also als zu breite Flaeche. */
+.programm-arbeitsflaeche .data-row .status-pill {
+  display: inline-flex;
+  width: fit-content;
+  text-align: center;
+}
+
 /* --- Filterleisten --------------------------------------------------------- */
 
 /* Die Filter ueber einer Liste sind Werkzeug, nicht Formular: kleine
@@ -148,4 +156,146 @@
 
 @media (max-width: 760px) {
   .programm-arbeitsflaeche .editor-header { align-items: flex-start; }
+}
+
+/* ==========================================================================
+ * Programmseite -- eine Liste im selben Bild wie die Kontaktliste.
+ *
+ * Sebastian, 13.10.2026: "Setze das selbe design für alle punkte und
+ * unterpunkte die es gibt durch!" Die Listen hinter den Reitern bauen alle
+ * aus denselben Bausteinen: Seitenkopf mit Titel und "+ Neu", Kennzahlen-
+ * kacheln, ein Filterkasten, eine Karte mit Zeilen. Eine Seite, die
+ * className="... programm-seite" traegt, zeigt daraus:
+ *
+ *   [ Filter als Werkzeugleiste ............ ] [ + Neu ]
+ *   12 offen · 3 überfällig · ...                       <- Kennzahlenzeile
+ *   +-----------------------------------------------+
+ *   | Kopfzeile der Liste                           |
+ *   | Zeile                                         |   <- Liste im Rahmen
+ *
+ * Der Titel entfaellt -- er steht in der Bereichsleiste, wie bei den
+ * Kontakten. Die Seiten selbst aendern sich dafuer nur um diese eine
+ * Klasse; ihre Daten, Filter und Verweise bleiben, wie sie sind.
+ * ========================================================================== */
+
+.programm-arbeitsflaeche .programm-seite {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 10px;
+  row-gap: var(--crm-block-gap);
+  align-content: start;
+  align-items: start;
+}
+
+.programm-arbeitsflaeche .programm-seite > * { grid-column: 1 / -1; width: 100%; margin-top: 0; }
+
+/* Kopf: nur die Knoepfe bleiben, rechts oben neben der Werkzeugleiste. */
+.programm-arbeitsflaeche .programm-seite > .editor-header {
+  grid-column: 2;
+  grid-row: 1;
+  width: auto;
+  justify-content: flex-end;
+}
+
+.programm-arbeitsflaeche .programm-seite > .editor-header > div:first-child { display: none; }
+
+.programm-arbeitsflaeche .programm-seite > .editor-header:not(:has(.header-actions > :is(a, button, form), .header-user > :is(a, button, form))) { display: none; }
+
+/* Werkzeugleiste: der Filterkasten ohne Kasten, die Felder in einer Reihe.
+ * Steht er direkt auf der Seite, rueckt er neben die Knoepfe des Kopfes.
+ * Viele Seiten legen ihren Inhalt in einen eigenen Rahmen (inquiry-page,
+ * lead-page-width ...) -- deshalb gelten die Formen auch eine Ebene tiefer. */
+.programm-arbeitsflaeche .programm-seite > .data-card:has(> form[method="get"]) { grid-column: 1; grid-row: 1; }
+
+.programm-arbeitsflaeche .programm-seite .data-card:has(> form[method="get"]) {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none;
+}
+
+.programm-arbeitsflaeche .programm-seite .data-card > form[method="get"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.programm-arbeitsflaeche .programm-seite .data-card > form[method="get"] > label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.programm-arbeitsflaeche .programm-seite .data-card > form[method="get"] > label > span:first-child {
+  margin: 0;
+  color: #4a5763;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* Das Suchfeld braucht keine Beschriftung, es hat einen Platzhalter. */
+.programm-arbeitsflaeche .programm-seite .data-card > form[method="get"] > label:has(input[name="q"]) { flex: 1 1 240px; max-width: 380px; }
+.programm-arbeitsflaeche .programm-seite .data-card > form[method="get"] > label:has(input[name="q"]) > span:first-child {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.programm-arbeitsflaeche .programm-seite .data-card > form[method="get"] > label:has(input[name="q"]) input { width: 100%; }
+
+/* Kennzahlen: eine ruhige Zeile statt Kacheln. */
+.programm-arbeitsflaeche .programm-seite .metric-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+}
+
+.programm-arbeitsflaeche .programm-seite .metric-grid > .metric-card {
+  display: inline-flex;
+  flex-direction: row-reverse;
+  align-items: baseline;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none;
+}
+
+.programm-arbeitsflaeche .programm-seite .metric-grid > .metric-card > strong { margin: 0; font-size: 13px; }
+.programm-arbeitsflaeche .programm-seite .metric-grid > .metric-card > span { font-size: 12px; }
+.programm-arbeitsflaeche .programm-seite .metric-grid > .metric-card > small { display: none; }
+
+/* Die Liste im Rahmen, mit einer Kopfzeile wie eine Tabelle. */
+.programm-arbeitsflaeche .programm-seite .data-card:has(> .data-list) {
+  overflow: hidden;
+  padding: 0;
+  border-color: #cdd3d9;
+}
+
+.programm-arbeitsflaeche .programm-seite .data-card:has(> .data-list) > .card-head {
+  margin: 0;
+  padding: 9px 12px;
+  border-bottom: 1px solid #dde2e7;
+  background: #f4f6f8;
+}
+
+.programm-arbeitsflaeche .programm-seite .data-card:has(> .data-list) > .card-head .eyebrow { display: none; }
+.programm-arbeitsflaeche .programm-seite .data-card:has(> .data-list) > .card-head h2 { font-size: 13px; font-weight: 600; }
+
+.programm-arbeitsflaeche .programm-seite .data-card > .data-list { margin-top: 0; border-top: 0; }
+.programm-arbeitsflaeche .programm-seite .data-card > .data-list > .data-row { margin: 0; padding: 8px 12px; border-radius: 0; }
+.programm-arbeitsflaeche .programm-seite .data-card > .data-list > .data-row:last-child { border-bottom: 0; }
+.programm-arbeitsflaeche .programm-seite .data-card > .data-list > .empty-state,
+.programm-arbeitsflaeche .programm-seite .data-card:has(> .data-list) > .empty-state { margin: 0; padding: 14px 12px; font-size: 13px; }
+
+@media (max-width: 900px) {
+  .programm-arbeitsflaeche .programm-seite { grid-template-columns: minmax(0, 1fr); }
+  .programm-arbeitsflaeche .programm-seite > .editor-header { grid-column: 1; grid-row: auto; justify-content: flex-start; }
+  .programm-arbeitsflaeche .programm-seite > .data-card:has(> form[method="get"]) { grid-row: auto; }
 }

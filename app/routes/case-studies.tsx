@@ -1,4 +1,5 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
+import { istEinstieg } from "~/lib/einstieg";
 import type { Route } from "./+types/case-studies";
 import { requirePermission } from "~/lib/auth.server";
 import { euroRund, tag } from "~/lib/format";
@@ -41,6 +42,8 @@ export function caseStudyErrorMessage(message:string){
 
 export async function loader({request,context}:Route.LoaderArgs){
   const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"case_study.read");
+  // Einstieg: gleich den obersten Datensatz im Arbeitsplatz oeffnen (app/lib/einstieg.ts).
+  if(istEinstieg(request)){const {data:erster}=await supabase.from("sale_case_studies").select("id").is("archived_at",null).order("updated_at",{ascending:false}).limit(1).maybeSingle(); if(erster)throw redirect(`/case-studies/${erster.id}`,{headers:responseHeaders()});}
   const url=new URL(request.url);
   const filter=url.searchParams.get("status")??"ACTIVE";
 
@@ -85,7 +88,7 @@ export async function action({request,context}:Route.ActionArgs){
 export default function CaseStudies(){
   const d=useLoaderData<typeof loader>();
   const actionData=useActionData<typeof action>();
-  return <main className="editor-shell">
+  return <main className="editor-shell programm-seite">
     <header className="editor-header">
       <div>
         <Link className="back-link" to="/crm">← CRM</Link>
@@ -105,7 +108,7 @@ export default function CaseStudies(){
     </div>
 
     <section className="data-card">
-      <Form method="get" className="filter-grid">
+      <Form method="get" className="filter-grid"><input type="hidden" name="ansicht" value="tabelle"/>
         <label><span>Ansicht</span><select name="status" defaultValue={d.filter}>
           <option value="ACTIVE">Aktive</option>
           <option value="ALL">Alle</option>
@@ -141,7 +144,7 @@ export default function CaseStudies(){
         })}</div>}
     </section>
 
-    {d.canWrite?<section className="data-card">
+    {d.canWrite?<section className="data-card" id="anlegen">
       <div className="card-head"><div><p className="eyebrow">Neu</p><h2>Case Study anlegen</h2></div></div>
       {d.openClosings.length===0
         ?<p className="empty-state">{d.notarizedCount===0

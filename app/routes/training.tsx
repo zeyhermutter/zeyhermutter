@@ -128,7 +128,7 @@ export default function Training(){
   const settings=d.settings as any;
   const records=(d.records as any[]);
 
-  return <main className="editor-shell">
+  return <main className="editor-shell programm-seite">
     <header className="editor-header">
       <div>
         <Link className="back-link" to="/crm">← CRM</Link>

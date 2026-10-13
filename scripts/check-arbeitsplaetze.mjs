@@ -98,7 +98,9 @@ for (const { datei } of layouts) {
   const volle = /volleListe="([^"]+)"/.exec(quelle)?.[1];
   pruefe(Boolean(volle), `${datei}: volleListe="..." fehlt oder ist kein fester Pfad.`);
   if (!volle) continue;
-  const [pfad, abfrage = ""] = volle.split("?");
+  const [pfadTeil, abfrageTeil = ""] = volle.split("?");
+  const pfad = pfadTeil.split("#")[0];
+  const abfrage = abfrageTeil.split("#")[0];
   const listenDatei = routenDateien.get(pfad);
   pruefe(Boolean(listenDatei), `${datei}: "Volle Liste" zeigt auf ${pfad}, das in app/routes.ts nicht haengt.`);
   if (!listenDatei) continue;

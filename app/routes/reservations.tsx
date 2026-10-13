@@ -194,7 +194,7 @@ export default function Reservations(){
   const d=useLoaderData<typeof loader>();
   const r=useActionData<typeof action>();
   const rows=d.rows as any[];
-  return <main className="editor-shell">
+  return <main className="editor-shell programm-seite">
     <header className="editor-header"><div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">Verkauf</p><h1 className="editor-title">Reservierungen</h1><p className="editor-meta">Reservierungsvereinbarungen mit Zeitraum, Bedingungen und Ablauf je Immobilie.</p></div><div className="header-actions"><span className="badge">{__APP_ENV_LABEL__}</span><small>{d.profile.display_name}</small></div></header>
 
     {r?.error?<div className="form-error">{r.error}</div>:null}

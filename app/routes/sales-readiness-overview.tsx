@@ -92,7 +92,7 @@ export default function SalesReadinessOverview() {
   const { profile, leads, checkByLead, summary } = useLoaderData<typeof loader>();
 
   return (
-    <main className="editor-shell lead-shell">
+    <main className="editor-shell lead-shell programm-seite">
       <header className="editor-header">
         <div>
           <Link className="back-link" to="/crm">← CRM</Link>

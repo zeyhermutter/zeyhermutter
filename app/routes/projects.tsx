@@ -120,7 +120,7 @@ export default function Projects(){
   const withoutProperty=projects.filter((p)=>!p.property_id).length;
   const overdue=projects.filter((p)=>p.next_step_due_on&&p.next_step_due_on<new Date().toISOString().slice(0,10)).length;
 
-  return <div className="editor-shell">
+  return <div className="editor-shell programm-seite">
     <div className="editor-header">
       <div>
         <p className="eyebrow">Arbeitsplatz · Verkauf</p>

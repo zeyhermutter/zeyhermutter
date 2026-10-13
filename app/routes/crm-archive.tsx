@@ -89,7 +89,7 @@ export default function CrmArchive() {
   const isArchived = view === "archived";
 
   return (
-    <main className="editor-shell">
+    <main className="editor-shell programm-seite">
       <header className="editor-header">
         <div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">Modul 01 · CRM</p><h1 className="editor-title">Archivverwaltung</h1></div>
         <div className="header-user"><span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div>
