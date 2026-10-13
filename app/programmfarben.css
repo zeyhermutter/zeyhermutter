@@ -1,0 +1,101 @@
+/*
+ * Bereichsfarben -- jeder der sieben Bereiche hat eine eigene Farbe.
+ *
+ * WARUM
+ *
+ * Der Rahmen war bis 13.10.2026 ganz in Navy und Grau. Alles sah gleich aus;
+ * wo man gerade ist, stand nur in Worten. In einem Arbeitsprogramm findet
+ * das Auge den Bereich ueber die Farbe schneller als ueber das Wort: das
+ * Symbol links, der Bereichstitel, der aktive Reiter, die geoeffnete Zeile
+ * der Liste und der Kopf der Akte tragen dieselbe Farbe.
+ *
+ * Navy bleibt die Farbe der Handlung ("+ Neu", Speichern) -- die Bereichs-
+ * farbe zeigt nur, wo man ist. Farbe ist nie das einzige Merkmal: Titel und
+ * Reiter stehen weiterhin in Worten da.
+ *
+ * KONTRAST (WCAG AA, Schrift ab 4,5:1), nachgerechnet:
+ *   Farbe auf Weiss / Farbe auf ihrer hellen Toenung / Weiss auf Farbe
+ *   tag          #0b5cad  6,7 / 5,8 / 6,7
+ *   adressen     #0f766e  5,5 / 4,8 / 5,5
+ *   immobilien   #2a7130  6,0 / 5,2 / 6,0
+ *   vermarktung  #b23c0a  5,9 / 5,2 / 5,9
+ *   abschluss    #855f1c  5,8 / 5,0 / 5,8
+ *   auswertung   #6d28d9  7,1 / 6,0 / 7,1
+ *   verwaltung   #475569  7,6 / 6,6 / 7,6
+ */
+
+[data-bereich="tag"]         { --bereich: #0b5cad; --bereich-hell: #e7f0fa; }
+[data-bereich="adressen"]    { --bereich: #0f766e; --bereich-hell: #e2f3f1; }
+[data-bereich="immobilien"]  { --bereich: #2a7130; --bereich-hell: #e6f3e7; }
+[data-bereich="vermarktung"] { --bereich: #b23c0a; --bereich-hell: #fdeee4; }
+[data-bereich="abschluss"]   { --bereich: #855f1c; --bereich-hell: #f6efe2; }
+[data-bereich="auswertung"]  { --bereich: #6d28d9; --bereich-hell: #efe8fc; }
+[data-bereich="verwaltung"]  { --bereich: #475569; --bereich-hell: #eceff3; }
+
+/* Alle Regeln unter .programmrahmen: eine Stufe genauer als die Regeln in
+ * programmrahmen.css und arbeitsplatz.css -- sonst entschiede die
+ * Reihenfolge, in der die Blaetter geladen werden. */
+
+/* --- Modulleiste: jedes Symbol in seiner Farbe --------------------------- */
+
+.programmrahmen .modulleiste-eintrag svg { color: var(--bereich); }
+.programmrahmen .modulleiste-eintrag:hover { background: var(--bereich-hell); color: #1b2733; }
+.programmrahmen .modulleiste-eintrag.aktiv,
+.programmrahmen .modulleiste-eintrag.aktiv:hover { background: var(--bereich); color: #ffffff; }
+.programmrahmen .modulleiste-eintrag.aktiv svg { color: #ffffff; }
+
+/* --- Bereichsleiste: Titel als Marke, nicht als Reiter ------------------- */
+
+.programmrahmen .bereichsleiste-titel {
+  gap: 6px;
+  align-self: center;
+  padding: var(--crm-pill-padding-sm);
+  border-radius: var(--crm-pill-radius);
+  background: var(--bereich-hell);
+  color: var(--bereich);
+}
+.programmrahmen .bereichsleiste-titel svg { width: 15px; height: 15px; flex: 0 0 auto; }
+.programmrahmen .bereichsleiste-eintrag.aktiv { border-bottom-color: var(--bereich); color: #1b2733; }
+
+/* --- Arbeitsplatz ---------------------------------------------------------- */
+
+.programmrahmen .arbeitsplatz-zeile.aktiv { background: var(--bereich-hell); box-shadow: inset 3px 0 0 var(--bereich); }
+.programmrahmen .arbeitsplatz-kopf { box-shadow: inset 0 3px 0 var(--bereich); }
+.programmrahmen .arbeitsplatz-reiter-eintrag.aktiv { border-bottom-color: var(--bereich); }
+.programmrahmen .arbeitsplatz-unterreiter-eintrag.aktiv { background: var(--bereich); }
+
+/* --- Listen und Kennzahlen -------------------------------------------------- */
+
+.programmrahmen .programm-tabelle-rahmen { box-shadow: inset 0 2px 0 var(--bereich); }
+.programmrahmen .programm-kennzahlen strong { color: var(--bereich); }
+.programmrahmen .programm-kennzahlen .warnung strong { color: #a12a1f; }
+.programmrahmen .programm-umfang a.aktiv { background: var(--bereich); }
+
+/* --- Statusleiste: Build-Stempel ------------------------------------------- */
+
+.programmrahmen .statusleiste-stand { color: #4a5763; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; }
+body:has(.programmrahmen) .build-version { display: none !important; }
+
+/* --- Hilfe in der Titelleiste ------------------------------------------------
+ * Vorher schwebte der Knopf unten rechts ueber Tabellen und Knoepfen. In der
+ * Titelleiste steht er neben der Glocke, hell auf Navy. */
+.programmrahmen .titelleiste .help-entry {
+  position: static;
+  min-height: 26px;
+  padding: 0 10px;
+  border-color: #2a4763;
+  background: transparent;
+  box-shadow: none;
+  color: #dce3ea;
+}
+.programmrahmen .titelleiste .help-entry:hover { border-color: #9fb2c6; background: #102d47; color: #ffffff; }
+
+/* --- Eine Farbe fuer die Handlung --------------------------------------------
+ * Der Hauptknopf war im alten Design dunkelgruen (#263b39), "+ Neu" in den
+ * Listen und im Arbeitsplatz Navy -- zwei Farben fuer dasselbe. Jetzt ueberall
+ * Navy, die Farbe der Marke. Weiss auf #062037: 17,1:1. */
+.persistent-app-frame.programmrahmen .primary-button { background: #062037 !important; border-color: #062037 !important; color: #ffffff !important; }
+.persistent-app-frame.programmrahmen .primary-button:hover { background: #102d47 !important; border-color: #102d47 !important; }
+
+/* Tastaturfokus in der Bereichsfarbe -- sichtbar, aber nicht schwarz. */
+.programmrahmen :is(a, button, summary):focus-visible { outline: 2px solid var(--bereich); outline-offset: 2px; }

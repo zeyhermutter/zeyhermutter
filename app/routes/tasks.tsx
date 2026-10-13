@@ -205,7 +205,7 @@ export default function Tasks() {
             <td><strong>{task.title}</strong><div className="leise">{task.task_number}{watchers.length ? ` · ${watchers.length} Beobachter` : ""}{comments.length ? ` · ${comments.length} Kommentare` : ""}</div></td>
             <td>{contextHref ? <Link to={contextHref}>{contextLabel}</Link> : <span className="leise">{contextLabel}</span>}</td>
             <td>{canWrite ? <Form method="post"><input type="hidden" name="_intent" value="assign"/><input type="hidden" name="task_id" value={task.id}/><input type="hidden" name="version" value={task.version}/><label><span className="sr-only">Verantwortlich für {task.title}</span><select name="responsible_user" defaultValue={task.responsible_user ?? ""} onChange={(e) => e.currentTarget.form?.requestSubmit()}>{profiles.map((x: any) => <option key={x.user_id} value={x.user_id}>{x.display_name}</option>)}</select></label></Form> : verantwortlich}</td>
-            <td>{PRIORITY[task.priority] ?? task.priority}</td>
+            <td><span className={`prioritaet prioritaet-${String(task.priority).toLowerCase()}`}>{PRIORITY[task.priority] ?? task.priority}</span></td>
             <td><span className={`task-status-badge status-${String(task.status).toLowerCase()}`}>{STATUS[task.status] ?? task.status}</span></td>
             <td className="rechts"><TaskModal task={task} responsibleName={verantwortlich} contextLabel={contextLabel} contextHref={contextHref} canWrite={canWrite} profiles={profiles} watchers={watchers} comments={comments} profileMap={profileMap}/></td>
           </tr>;

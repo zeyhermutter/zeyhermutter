@@ -4,6 +4,7 @@ import { requirePermission } from "~/lib/auth.server";
 import { tag } from "~/lib/format";
 import { LEADSTATUS, beschrifte } from "~/lib/labels";
 import { Arbeitsplatz, ArbeitsplatzKopf, ArbeitsplatzReiter, type ArbeitsplatzZeile } from "~/components/arbeitsplatz";
+import { standKlasse } from "~/lib/stand-ton";
 
 // Der Arbeitsplatz eines Verkäufer-Leads: links die Leads, rechts der Lead.
 // Derselbe Aufbau wie Kontakte und Objekte (12.10.2026).
@@ -75,7 +76,7 @@ export default function LeadArbeitsplatz() {
     titel: z.name,
     suchtext: [z.nummer, z.name, z.ort, z.erreichbar, beschrifte(LEADSTATUS, z.status)].filter(Boolean).join(" "),
     unterzeile: <>
-      <span className="status-pill">{beschrifte(LEADSTATUS, z.status)}</span>
+      <span className={`status-pill ${standKlasse(beschrifte(LEADSTATUS, z.status))}`}>{beschrifte(LEADSTATUS, z.status)}</span>
       <span>{z.ort ?? "Ort offen"}</span>
     </>,
   });
@@ -98,7 +99,7 @@ export default function LeadArbeitsplatz() {
       kopf={akte ? (
         <ArbeitsplatzKopf
           nummer={akte.nummer}
-          status={<span className="status-pill">{akte.archiviert ? "Archiviert" : beschrifte(LEADSTATUS, akte.status)}</span>}
+          status={<span className={`status-pill ${standKlasse(akte.archiviert ? "Archiviert" : beschrifte(LEADSTATUS, akte.status))}`}>{akte.archiviert ? "Archiviert" : beschrifte(LEADSTATUS, akte.status)}</span>}
           titel={akte.kopfName}
           kontext={[akte.quelle, akte.ort, akte.wiedervorlage ? `Wiedervorlage ${tag(akte.wiedervorlage)}` : null].filter(Boolean).join(" · ")}
         />

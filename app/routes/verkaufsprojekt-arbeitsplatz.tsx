@@ -5,6 +5,7 @@ import { tag } from "~/lib/format";
 import { eins, ladeArbeitsplatz } from "~/lib/arbeitsplatz.server";
 import { PHASE, PROJECT_STATUS } from "./projects";
 import { Arbeitsplatz, ArbeitsplatzKopf, type ArbeitsplatzZeile } from "~/components/arbeitsplatz";
+import { standKlasse } from "~/lib/stand-ton";
 
 // Der Arbeitsplatz der Verkaufsprojekte: links die Projekte, rechts eines.
 // Derselbe Aufbau wie Kontakte und Objekte (12.10.2026). Der Seitenkopf des
@@ -60,7 +61,7 @@ export default function VerkaufsprojektArbeitsplatz() {
     titel: z.titel,
     suchtext: [z.nummer, z.titel, z.phasenText, z.stand, z.objekt].filter(Boolean).join(" "),
     unterzeile: <>
-      <span className="status-pill">{z.phasenText}</span>
+      <span className={`status-pill ${standKlasse(z.phasenText)}`}>{z.phasenText}</span>
       <span>{z.objekt ?? "ohne Immobilie"}</span>
     </>,
   });
@@ -78,7 +79,7 @@ export default function VerkaufsprojektArbeitsplatz() {
       listeFehlt={listeFehlt}
       abgeschnitten={abgeschnitten ? `die zuletzt bearbeiteten ${HOECHSTENS}` : null}
       seitenkopf="ausblenden"
-      kopf={akte ? <ArbeitsplatzKopf nummer={akte.nummer} status={<span className="status-pill">{akte.stand}</span>} titel={akte.titel}
+      kopf={akte ? <ArbeitsplatzKopf nummer={akte.nummer} status={<span className={`status-pill ${standKlasse(akte.stand)}`}>{akte.stand}</span>} titel={akte.titel}
         kontext={[akte.phasenText, akte.objekt, akte.schritt ? `Nächster Schritt: ${akte.schritt}` : null].filter(Boolean).join(" · ")} /> : null}
       reiter={null}
     >

@@ -1,5 +1,6 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/crm-archive";
+import "~/programm-liste.css";
 import { requireActiveUser } from "~/lib/auth.server";
 import { AUFGABENPRIORITAET, AUFGABENSTATUS, KONTAKTSTATUS, beschrifte } from "~/lib/labels";
 
@@ -88,40 +89,45 @@ export default function CrmArchive() {
   const result = useActionData<typeof action>();
   const isArchived = view === "archived";
 
+  // Programmliste (13.10.2026): Datentyp und Ansicht als Umschalter,
+  // die Datensaetze als Tabelle mit Spalten.
+  const typen: [string, string][] = [["CONTACT", "Kontakte"], ["ORGANIZATION", "Organisationen"], ["TASK", "Aufgaben"]];
   return (
-    <main className="editor-shell programm-seite">
-      <header className="editor-header">
-        <div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">Modul 01 · CRM</p><h1 className="editor-title">Archivverwaltung</h1></div>
-        <div className="header-user"><span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div>
-      </header>
+    <main className="editor-shell programm-liste">
+      <div className="programm-liste-werkzeuge">
+        <nav className="programm-umfang" aria-label="Datentyp">
+          {typen.map(([wert, name]) => <Link key={wert} className={entityType === wert ? "aktiv" : undefined} to={`/crm/archive?type=${wert}&view=${view}`}>{name}</Link>)}
+        </nav>
+        <nav className="programm-umfang" aria-label="Ansicht">
+          <Link className={isArchived ? undefined : "aktiv"} to={`/crm/archive?type=${entityType}&view=active`}>Aktiv</Link>
+          <Link className={isArchived ? "aktiv" : undefined} to={`/crm/archive?type=${entityType}&view=archived`}>Archiviert</Link>
+        </nav>
+        <span className="programm-liste-zaehler">{items.length} Datensätze</span>
+      </div>
 
       {result?.error ? <div className="form-error">{result.error}</div> : null}
 
-      <section className="data-card">
-        <Form method="get" className="search-bar">
-          <label><span>Datentyp</span><select name="type" defaultValue={entityType}><option value="CONTACT">Kontakte</option><option value="ORGANIZATION">Organisationen</option><option value="TASK">Aufgaben</option></select></label>
-          <label><span>Ansicht</span><select name="view" defaultValue={view}><option value="active">Aktiv</option><option value="archived">Archiviert</option></select></label>
-          <button className="secondary-button" type="submit">Anzeigen</button>
-        </Form>
-      </section>
-
-      <section className="data-card">
-        <div className="card-head"><div><p className="eyebrow">{isArchived ? "Archiv" : "Aktiv"}</p><h2>{items.length} Datensätze</h2></div></div>
-        <div className="data-list">
-          {items.map((item) => (
-            <div className="data-row" key={item.id}>
-              <div><strong>{item.title}</strong><small>{item.reference} · {item.subtitle} · {item.statusLabel}</small></div>
-              <Form method="post">
-                <input type="hidden" name="entity_type" value={entityType} />
-                <input type="hidden" name="entity_id" value={item.id} />
-                <input type="hidden" name="version" value={item.version} />
-                <button className="text-button" name="_intent" value={isArchived ? "restore" : "archive"} type="submit">{isArchived ? "Wiederherstellen" : "Archivieren"}</button>
-              </Form>
-            </div>
-          ))}
-          {items.length === 0 ? <p className="empty-state">Keine Datensätze in dieser Ansicht.</p> : null}
-        </div>
-      </section>
+      <div className="programm-tabelle-rahmen">
+        {items.length === 0 ? <p className="programm-liste-leer">Keine Datensätze in dieser Ansicht.</p> : <table className="programm-tabelle">
+          <thead><tr><th>Nummer</th><th>Bezeichnung</th><th>Details</th><th>Stand</th><th className="rechts">Aktion</th></tr></thead>
+          <tbody>{items.map((item) => (
+            <tr key={item.id}>
+              <td className="zahl">{item.reference}</td>
+              <td><strong>{item.title}</strong></td>
+              <td className="leise">{item.subtitle}</td>
+              <td>{item.statusLabel}</td>
+              <td className="rechts">
+                <Form method="post">
+                  <input type="hidden" name="entity_type" value={entityType} />
+                  <input type="hidden" name="entity_id" value={item.id} />
+                  <input type="hidden" name="version" value={item.version} />
+                  <button className="secondary-button" name="_intent" value={isArchived ? "restore" : "archive"} type="submit">{isArchived ? "Wiederherstellen" : "Archivieren"}</button>
+                </Form>
+              </td>
+            </tr>
+          ))}</tbody>
+        </table>}
+      </div>
     </main>
   );
 }

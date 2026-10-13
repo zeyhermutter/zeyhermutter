@@ -4,6 +4,7 @@ import { requirePermission } from "~/lib/auth.server";
 import { zeitpunkt as formatDate } from "~/lib/format";
 import { AUFGABENPRIORITAET as PRIORITY_LABELS } from "~/lib/labels";
 import "~/module04-fixes.css";
+import "~/programm-liste.css";
 
 const PAGE_SIZE = 50;
 // Alle Felder, die tatsaechlich in field_changes vorkommen. Vorher war rund ein
@@ -34,7 +35,7 @@ const FIELD_LABELS:Record<string,string>={
 // wieder auseinanderlaufen.
 const ENTITY_GROUPS:{label:string;types:[string,string][]}[]=[
   {label:"Kontakte & Organisationen",types:[["CONTACT","Kontakt"],["CONTACT_ADDRESS","Kontaktadresse"],["CONTACT_RELATIONSHIP","Kontaktbeziehung"],["CONTACT_ORGANIZATION_RELATIONSHIP","Kontakt-Organisation-Verkn\u00fcpfung"],["ORGANIZATION","Organisation"],["PARTNER_PROFILE","Partnerprofil"],["PARTNER_REFERRAL_FEE","Empfehlungsverg\u00fctung"]]},
-  {label:"Immobilien",types:[["PROPERTY","Immobilie"],["PROPERTY_DISCLOSURE","Pflichtangabe zur Immobilie"],["PROPERTY_EXPOSE","Expos\u00e9"],["PROPERTY_EXPOSE_MEDIA","Expos\u00e9-Medium"],["PROPERTY_MARKETING_PLACEMENT","Portalschaltung"],["PROPERTY_PUBLICATION","Website-Ver\u00f6ffentlichung"],["VALUATION","Wertermittlung"],["WEBSITE_PAGE","Website-Seite"]]},
+  {label:"Immobilien",types:[["PROPERTY","Immobilie"],["PROPERTY_DISCLOSURE","Pflichtangabe zur Immobilie"],["PROPERTY_EXPOSE","Expos\u00e9"],["PROPERTY_EXPOSE_MEDIA","Expos\u00e9-Medium"],["PROPERTY_MARKETING_PLACEMENT","Portalschaltung"],["PROPERTY_PUBLICATION","Website-Ver\u00f6ffentlichung"],["VALUATION","Wertermittlung"],["WEBSITE_PAGE","Website-Seite"],["MEASUREMENT_ORDER","Aufma\u00df-Auftrag"]]},
   {label:"Verkauf",types:[["SALE_PROJECT","Verkaufsprojekt"],["LEAD","Verk\u00e4ufer-Lead"],["LEAD_ACQUISITION","Lead-Akquise"],["ACQUISITION_AREA","Akquisegebiet"],["CAMPAIGN","Kampagne"],["CAMPAIGN_WAVE","Kampagnenwelle"],["BROKERAGE_MANDATE","Maklerauftrag"],["BROKERAGE_MANDATE_CLIENT","Auftraggeber im Maklerauftrag"],["BROKERAGE_MANDATE_TERM","Konditionen im Maklerauftrag"],["OFFER","Kaufangebot"],["RESERVATION","Reservierung"],["CLOSING","Abschluss & Notar"],["COMMISSION","Provision"]]},
   {label:"Verkaufsstrategie-Check",types:[["LEAD_SALES_READINESS_CHECK","Verkaufsstrategie-Check"],["LEAD_SALES_READINESS_SCENARIO","Szenario im Check"],["LEAD_SALES_READINESS_MEASURE","Ma\u00dfnahme im Check"],["LEAD_SALES_READINESS_MEDIA","Medium im Check"]]},
   {label:"Interessenten",types:[["SEARCH_PROFILE","Suchprofil"],["SEARCH_PROFILE_MATCH","Suchprofil-Treffer"],["INQUIRY","Anfrage"],["RESPONSE_TARGET","Reaktionszeit-Vorgabe"],["VIEWING","Besichtigung"],["VIEWING_FEEDBACK","Besichtigungsfeedback"]]},
@@ -79,4 +80,41 @@ function valueLabel(value:unknown,field?:string){
 }
 export async function loader({request,context}:Route.LoaderArgs){const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"audit.read");const url=new URL(request.url);const entityType=(url.searchParams.get("entity")??"").trim();const action=(url.searchParams.get("action")??"").trim();const actor=(url.searchParams.get("actor")??"").trim();const reference=(url.searchParams.get("reference")??"").trim();const page=Math.max(1,Number(url.searchParams.get("page")??"1")||1);const from=(page-1)*PAGE_SIZE,to=from+PAGE_SIZE-1;let query=supabase.from("audit_events").select("id, occurred_at, actor_display_name_snapshot, entity_type, entity_id, entity_reference, action, field_changes, source, description",{count:"exact"}).order("occurred_at",{ascending:false}).range(from,to);if(entityType)query=query.eq("entity_type",entityType);if(action)query=query.eq("action",action);if(actor)query=query.ilike("actor_display_name_snapshot",`%${actor}%`);if(reference)query=query.ilike("entity_reference",`%${reference}%`);const {data:events,count,error}=await query;if(error)throw new Response("Systemhistorie konnte nicht geladen werden.",{status:500});const total=count??0;return data({events:events??[],total,page,pageCount:Math.max(1,Math.ceil(total/PAGE_SIZE)),filters:{entityType,action,actor,reference},profile},{headers:responseHeaders()});}
 function pageHref(page:number,filters:{entityType:string;action:string;actor:string;reference:string}){const params=new URLSearchParams();if(filters.entityType)params.set("entity",filters.entityType);if(filters.action)params.set("action",filters.action);if(filters.actor)params.set("actor",filters.actor);if(filters.reference)params.set("reference",filters.reference);params.set("page",String(page));return`/crm/history?${params.toString()}`;}
-export default function AuditHistory(){const {events,total,page,pageCount,filters,profile}=useLoaderData<typeof loader>();return <main className="editor-shell programm-seite"><header className="editor-header"><div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">Audit · Geschäftsführer</p><h1 className="editor-title">Systemhistorie</h1></div><div className="header-user"><span className="badge">{total} Ereignisse</span><small>{profile.display_name}</small></div></header><div className="audit-page"><section className="data-card"><Form method="get" className="filter-grid"><label><span>Bereich</span><select name="entity" defaultValue={filters.entityType}><option value="">Alle</option>{ENTITY_GROUPS.map(group=><optgroup key={group.label} label={group.label}>{group.types.map(([value,label])=><option key={value} value={value}>{label}</option>)}</optgroup>)}</select></label><label><span>Aktion</span><select name="action" defaultValue={filters.action}><option value="">Alle</option>{Object.entries(ACTION_LABELS).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label><label><span>Benutzer</span><input name="actor" defaultValue={filters.actor} placeholder="Name"/></label><label><span>Referenz</span><input name="reference" defaultValue={filters.reference} placeholder="z. B. ZM-S-000002"/></label><button className="secondary-button" type="submit">Filtern</button></Form></section><section className="data-card"><div className="card-head"><div><p className="eyebrow">Append-only</p><h2>Änderungen</h2></div><span className="subtle">Seite {page} / {pageCount}</span></div><div className="history-list">{events.map((event)=>{const changes=(event.field_changes??{}) as Record<string,{old?:unknown;new?:unknown}>;return <article className="history-event" key={event.id}><div className="history-head"><strong>{ENTITY_LABELS[event.entity_type]??event.entity_type} · {event.entity_reference??event.entity_id??"—"} · {ACTION_LABELS[event.action]??event.action}</strong><small>{formatDate(event.occurred_at)}</small></div><p>{event.actor_display_name_snapshot??"System"}</p>{event.description?<div className="history-change"><small>{event.description}</small></div>:null}{Object.entries(changes).slice(0,12).map(([field,change])=><div className="history-change" key={field}><span>{FIELD_LABELS[field]??field.replaceAll("_"," ")}</span><small>{valueLabel(change?.old,field)} → {valueLabel(change?.new,field)}</small></div>)}</article>;})}{events.length===0?<p className="empty-state">Keine Ereignisse für diese Filter.</p>:null}</div>{pageCount>1?<div className="pagination">{page>1?<Link className="secondary-button link-button" to={pageHref(page-1,filters)}>← Zurück</Link>:<span/>}{page<pageCount?<Link className="secondary-button link-button" to={pageHref(page+1,filters)}>Weiter →</Link>:null}</div>:null}</section></div></main>;}
+// Farbe je Aktion: angelegt gruen, geaendert blau, archiviert grau,
+// wiederhergestellt bernstein, geloescht rot (13.10.2026).
+const ACTION_CLASS:Record<string,string>={CREATE:"status-sold",UPDATE:"status-marketing",STATUS_CHANGE:"status-marketing",ROLE_ASSIGNED:"status-marketing",ARCHIVE:"status-archived",RESTORE:"status-preparation",DELETE:"status-lost"};
+
+export default function AuditHistory(){
+  const {events,total,page,pageCount,filters}=useLoaderData<typeof loader>();
+  // Programmliste (13.10.2026): Werkzeugleiste und eine Tabelle -- Zeitpunkt,
+  // Aktion, Bereich, Referenz, Benutzer. Die geaenderten Felder klappen je
+  // Zeile auf; vorher stand jeder Eintrag als Karte mit dem vollen
+  // Datensatz als JSON darunter.
+  return <main className="editor-shell programm-liste">
+    <Form method="get" className="programm-liste-werkzeuge">
+      <label><span className="sr-only">Bereich</span><select name="entity" defaultValue={filters.entityType}><option value="">Alle Bereiche</option>{ENTITY_GROUPS.map(group=><optgroup key={group.label} label={group.label}>{group.types.map(([value,label])=><option key={value} value={value}>{label}</option>)}</optgroup>)}</select></label>
+      <label><span className="sr-only">Aktion</span><select name="action" defaultValue={filters.action}><option value="">Alle Aktionen</option>{Object.entries(ACTION_LABELS).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label>
+      <label className="programm-liste-suche"><span className="sr-only">Benutzer</span><input name="actor" defaultValue={filters.actor} placeholder="Benutzer"/></label>
+      <label className="programm-liste-suche"><span className="sr-only">Referenz</span><input name="reference" defaultValue={filters.reference} placeholder="Referenz, z. B. ZM-S-000002"/></label>
+      <button className="secondary-button" type="submit">Filtern</button>
+      <span className="programm-liste-zaehler">{total} Ereignisse · Seite {page} / {pageCount}</span>
+    </Form>
+    <div className="programm-tabelle-rahmen">
+      {events.length===0?<p className="programm-liste-leer">Keine Ereignisse für diese Filter.</p>:<table className="programm-tabelle historie">
+        <thead><tr><th>Zeitpunkt</th><th>Aktion</th><th>Bereich</th><th>Referenz</th><th>Benutzer</th><th>Änderungen</th></tr></thead>
+        <tbody>{events.map((event)=>{
+          const changes=Object.entries((event.field_changes??{}) as Record<string,{old?:unknown;new?:unknown}>);
+          return <tr key={event.id}>
+            <td className="zahl">{formatDate(event.occurred_at)}</td>
+            <td><span className={`status-pill ${ACTION_CLASS[event.action]??""}`}>{ACTION_LABELS[event.action]??event.action}</span></td>
+            <td>{ENTITY_LABELS[event.entity_type]??event.entity_type}</td>
+            <td className="zahl">{event.entity_reference??<span className="leise">—</span>}</td>
+            <td>{event.actor_display_name_snapshot??<span className="leise">System</span>}</td>
+            <td>{event.description?<div>{event.description}</div>:null}{changes.length===0?(event.description?null:<span className="leise">—</span>):<details className="historie-felder"><summary>{changes.length===1?(FIELD_LABELS[changes[0][0]]??changes[0][0].replaceAll("_"," ")):`${changes.length} Felder`}</summary><dl>{changes.slice(0,24).map(([field,change])=><div key={field}><dt>{FIELD_LABELS[field]??field.replaceAll("_"," ")}</dt><dd>{valueLabel(change?.old,field)} → {valueLabel(change?.new,field)}</dd></div>)}</dl></details>}</td>
+          </tr>;
+        })}</tbody>
+      </table>}
+    </div>
+    {pageCount>1?<div className="programm-liste-seiten">{page>1?<Link to={pageHref(page-1,filters)}>← Zurück</Link>:<span/>}<span>Seite {page} von {pageCount}</span>{page<pageCount?<Link to={pageHref(page+1,filters)}>Weiter →</Link>:<span/>}</div>:null}
+  </main>;
+}

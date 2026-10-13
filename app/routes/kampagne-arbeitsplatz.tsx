@@ -5,6 +5,7 @@ import { KAMPAGNENSTATUS, beschrifte } from "~/lib/labels";
 import { tag } from "~/lib/format";
 import { ladeArbeitsplatz } from "~/lib/arbeitsplatz.server";
 import { Arbeitsplatz, ArbeitsplatzKopf, type ArbeitsplatzZeile } from "~/components/arbeitsplatz";
+import { standKlasse } from "~/lib/stand-ton";
 
 // Der Arbeitsplatz der Kampagnen: links die Liste, rechts der Datensatz.
 // Derselbe Aufbau wie Kontakte und Objekte (13.10.2026). "/acquisition"
@@ -44,7 +45,7 @@ export default function KampagneArbeitsplatz() {
     titel: z.titel,
     suchtext: [z.nummer, z.titel, z.stand, z.unter].filter(Boolean).join(" "),
     unterzeile: <>
-      <span className="status-pill">{z.stand}</span>
+      <span className={`status-pill ${standKlasse(z.stand)}`}>{z.stand}</span>
       {z.unter ? <span>{z.unter}</span> : null}
     </>,
   });
@@ -62,7 +63,7 @@ export default function KampagneArbeitsplatz() {
       listeFehlt={listeFehlt}
       abgeschnitten={abgeschnitten ? `die zuletzt bearbeiteten ${HOECHSTENS}` : null}
       seitenkopf="ausblenden"
-      kopf={akte ? <ArbeitsplatzKopf nummer={akte.nummer} status={<span className="status-pill">{akte.stand}</span>} titel={akte.titel} kontext={akte.kontext} /> : null}
+      kopf={akte ? <ArbeitsplatzKopf nummer={akte.nummer} status={<span className={`status-pill ${standKlasse(akte.stand)}`}>{akte.stand}</span>} titel={akte.titel} kontext={akte.kontext} /> : null}
       reiter={null}
     >
       <Outlet />

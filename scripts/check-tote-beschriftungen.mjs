@@ -119,7 +119,7 @@ const AUSNAHMEN = {
   // Schluessel der Nachbetreuungsschritte, aus den Vorlagen der Verwaltung.
   "app/routes/after-sales.tsx": ["STEP_KEY"],
   // Vorgangsart und Bereich einer Protokollzeile: von den Triggern gesetzt.
-  "app/routes/audit-history.tsx": ["FIELD_LABELS", "ACTION_LABELS"],
+  "app/routes/audit-history.tsx": ["FIELD_LABELS", "ACTION_LABELS", "ACTION_CLASS"],
   // Schluessel der Abschlussmeilensteine, aus der Seed-Funktion.
   "app/routes/closing-milestones.tsx": ["MILESTONE_HINT"],
   // Grund einer Dublettenwarnung, in der Route selbst berechnet.

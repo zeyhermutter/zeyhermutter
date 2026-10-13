@@ -4,6 +4,9 @@ import { NotificationBell, type HeaderNotification } from "~/components/notifica
 import { BEREICHE, bereichAusPfad, emailZiel, type Bereichsschluessel } from "~/lib/programmbereiche";
 import "~/programmrahmen.css";
 import "~/programmansicht.css";
+import "~/programmfarben.css";
+
+declare const __BUILD_COMMIT__: string;
 
 // Der Rahmen um jede interne Seite -- wie ein Arbeitsprogramm, nicht wie eine
 // Webseite.
@@ -39,8 +42,10 @@ function Symbol({ schluessel }: { schluessel: Bereichsschluessel }) {
   );
 }
 
-export function Programmrahmen({ children, notifications, unreadCount, benutzer }: {
+export function Programmrahmen({ children, notifications, unreadCount, benutzer, hilfe }: {
   children: ReactNode;
+  /** Der Hilfe-Knopf -- steht in der Titelleiste, nicht schwebend ueber der Seite. */
+  hilfe?: ReactNode;
   notifications?: HeaderNotification[];
   unreadCount?: number;
   benutzer?: string | null;
@@ -56,6 +61,7 @@ export function Programmrahmen({ children, notifications, unreadCount, benutzer 
       <Link
         key={b.schluessel}
         to={b.start}
+        data-bereich={b.schluessel}
         className={`modulleiste-eintrag${aktiv ? " aktiv" : ""}`}
         aria-current={aktiv ? "true" : undefined}
       >
@@ -66,7 +72,7 @@ export function Programmrahmen({ children, notifications, unreadCount, benutzer 
   };
 
   return (
-    <div className="persistent-app-frame programmrahmen">
+    <div className="persistent-app-frame programmrahmen" data-bereich={bereich.schluessel}>
       <header className="titelleiste">
         <Link className="titelleiste-marke" to="/crm" aria-label="Zur Übersicht">
           <span className="titelleiste-zeichen" aria-hidden="true">ZM</span>
@@ -82,6 +88,7 @@ export function Programmrahmen({ children, notifications, unreadCount, benutzer 
         </form>
 
         <div className="titelleiste-rechts">
+          {hilfe}
           {notifications
             ? <NotificationBell notifications={notifications} unreadCount={unreadCount ?? 0} />
             : <Link className="titelleiste-glocke" to="/crm/notifications" aria-label="Benachrichtigungen">
@@ -103,7 +110,7 @@ export function Programmrahmen({ children, notifications, unreadCount, benutzer 
 
       <div className="programm-arbeitsflaeche">
         <nav className="bereichsleiste" aria-label={`Unterpunkte ${bereich.beschriftung}`}>
-          <strong className="bereichsleiste-titel">{bereich.beschriftung}</strong>
+          <strong className="bereichsleiste-titel"><Symbol schluessel={bereich.schluessel} />{bereich.beschriftung}</strong>
           <div className="bereichsleiste-reiter">
             {bereich.unterpunkte.map((u) => {
               const aktiv = unterpunkt?.pfad === u.pfad;
@@ -122,6 +129,9 @@ export function Programmrahmen({ children, notifications, unreadCount, benutzer 
         <footer className="statusleiste">
           <span>{bereich.beschriftung}{unterpunkt ? ` › ${unterpunkt.beschriftung}` : ""}</span>
           <span className="statusleiste-rechts">{__APP_ENV_LABEL__}{benutzer ? ` · angemeldet als ${benutzer}` : ""}</span>
+          {/* Der Build-Stempel stand schwebend unten rechts und lag ueber
+              Knoepfen und Tabellenspalten (BETA, 13.10.2026). */}
+          <span className="statusleiste-stand" title="Git-Commit des ausgelieferten Builds">Stand {__BUILD_COMMIT__}</span>
         </footer>
       </div>
     </div>

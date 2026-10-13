@@ -5,6 +5,7 @@ import { PROVISIONSSTATUS, beschrifte } from "~/lib/labels";
 import { euroRund, tag } from "~/lib/format";
 import { eins, ladeArbeitsplatz } from "~/lib/arbeitsplatz.server";
 import { Arbeitsplatz, ArbeitsplatzKopf, type ArbeitsplatzZeile } from "~/components/arbeitsplatz";
+import { standKlasse } from "~/lib/stand-ton";
 
 // Der Arbeitsplatz der Provisionen: links die Liste, rechts der Datensatz.
 // Derselbe Aufbau wie Kontakte und Objekte (13.10.2026).
@@ -42,7 +43,7 @@ export default function ProvisionArbeitsplatz() {
     titel: z.titel,
     suchtext: [z.nummer, z.titel, z.stand, z.unter].filter(Boolean).join(" "),
     unterzeile: <>
-      <span className="status-pill">{z.stand}</span>
+      <span className={`status-pill ${standKlasse(z.stand)}`}>{z.stand}</span>
       {z.unter ? <span>{z.unter}</span> : null}
     </>,
   });
@@ -59,7 +60,7 @@ export default function ProvisionArbeitsplatz() {
       volleListe="/commissions?ansicht=tabelle"
       listeFehlt={listeFehlt}
       abgeschnitten={abgeschnitten ? `die zuletzt bearbeiteten ${HOECHSTENS}` : null}
-      kopf={akte ? <ArbeitsplatzKopf nummer={akte.nummer} status={<span className="status-pill">{akte.stand}</span>} titel={akte.titel} kontext={akte.kontext} /> : null}
+      kopf={akte ? <ArbeitsplatzKopf nummer={akte.nummer} status={<span className={`status-pill ${standKlasse(akte.stand)}`}>{akte.stand}</span>} titel={akte.titel} kontext={akte.kontext} /> : null}
       reiter={null}
     >
       <Outlet />

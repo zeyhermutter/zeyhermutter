@@ -3,6 +3,7 @@ import type { Route } from "./+types/suchprofil-arbeitsplatz";
 import { requirePermission } from "~/lib/auth.server";
 import { euroRund, flaeche } from "~/lib/format";
 import { Arbeitsplatz, ArbeitsplatzKopf, type ArbeitsplatzZeile } from "~/components/arbeitsplatz";
+import { standKlasse } from "~/lib/stand-ton";
 
 // Der Arbeitsplatz der Suchprofile: links die Suchprofile, rechts eines.
 // Derselbe Aufbau wie Kontakte und Objekte (12.10.2026). Ein Suchprofil hat
@@ -68,7 +69,7 @@ export default function SuchprofilArbeitsplatz() {
     titel: z.name,
     suchtext: [z.nummer, z.name, z.titel, z.eckdaten, z.stand].filter(Boolean).join(" "),
     unterzeile: <>
-      {z.stand ? <span className="status-pill">{z.stand}</span> : null}
+      {z.stand ? <span className={`status-pill ${standKlasse(z.stand)}`}>{z.stand}</span> : null}
       <span>{z.eckdaten}</span>
     </>,
   });
@@ -90,7 +91,7 @@ export default function SuchprofilArbeitsplatz() {
       kopf={akte ? (
         <ArbeitsplatzKopf
           nummer={akte.nummer}
-          status={akte.stand ? <span className="status-pill">{akte.stand}</span> : null}
+          status={akte.stand ? <span className={`status-pill ${standKlasse(akte.stand)}`}>{akte.stand}</span> : null}
           titel={akte.titel ? `${akte.name.split(", ").reverse().join(" ")} · ${akte.titel}` : akte.name}
           kontext={akte.eckdaten}
         />

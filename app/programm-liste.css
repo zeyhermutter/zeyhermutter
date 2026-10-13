@@ -331,3 +331,56 @@
   background: transparent;
 }
 .programm-liste-werkzeuge .programm-aufklapper-neu .programm-aufklapper-inhalt > .data-card { box-shadow: 0 8px 24px rgba(6, 32, 55, 0.16); }
+
+/* Systemhistorie: die geaenderten Felder je Zeile zum Aufklappen. Lange
+ * Werte (ein ganzer Datensatz) brechen um, statt die Tabelle zu sprengen. */
+.programm-tabelle.historie td:last-child { max-width: 520px; }
+.historie-felder summary { color: #0b5cad; cursor: pointer; font-size: 12px; }
+.historie-felder dl { display: grid; gap: 4px; margin: 6px 0 0; }
+.historie-felder dt { color: #4a5763; font-size: 11px; }
+.historie-felder dd { margin: 0; font-size: 12px; overflow-wrap: anywhere; }
+
+/* Fortschrittsbalken (Weiterbildung: erreichte Stunden zum Zielwert).
+ * Farbe und Zahl sagen dasselbe; die Zahl steht immer daneben. */
+.fortschritt { display: inline-flex; align-items: center; gap: 8px; min-width: 160px; }
+.fortschritt-balken { position: relative; flex: 1 1 120px; height: 8px; border-radius: 999px; background: #e3e8ed; overflow: hidden; }
+.fortschritt-balken > span { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--ton, #0b5cad); }
+.fortschritt-zahl { color: #3d4a56; font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fortschritt.ton-erreicht  { --ton: #2a7130; }
+.fortschritt.ton-laeuft    { --ton: #0b5cad; }
+.fortschritt.ton-knapp     { --ton: #b7791f; }
+.fortschritt.ton-knapp-rot { --ton: #b42318; }
+
+/* Rollenmatrix (Benutzer & Rollen): je Zelle ein Schalter. Zugewiesen gruen
+ * mit Haken, sonst ein ruhiger Verweis -- Haken und Wort sagen dasselbe wie
+ * die Farbe. */
+.rollen-matrix th:nth-child(n+3),
+.rollen-matrix td:nth-child(n+3) { text-align: center; }
+.rolle-schalter {
+  min-height: 26px;
+  padding: 0 10px;
+  border: 1px solid #c3cad1;
+  border-radius: var(--crm-pill-radius);
+  background: #ffffff;
+  color: #3d4a56;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.rolle-schalter:hover { border-color: #0b5cad; color: #0b5cad; }
+.rolle-schalter.an { border-color: #98bea4; background: #e5f4e9; color: #275f3d; font-weight: 600; }
+.rolle-schalter.an:hover { border-color: #b42318; background: #fbe9e9; color: #873b3e; }
+.rolle-zelle { color: #6b7782; }
+.rolle-zelle.an { color: #275f3d; font-weight: 600; }
+.rolle-status { display: inline; margin-left: 6px; }
+.leise-verweis { color: #0b5cad; font-size: 12px; font-weight: 400; }
+
+/* Prioritaet einer Aufgabe: Hoch und Dringend fallen auf, Normal und
+ * Niedrig bleiben ruhig. Pfeil und Wort zusaetzlich zur Farbe. */
+.prioritaet { font-size: 12px; white-space: nowrap; }
+.prioritaet-low { color: #6b7782; }
+.prioritaet-normal { color: #3d4a56; }
+.prioritaet-high { color: #8a4a00; font-weight: 600; }
+.prioritaet-urgent { color: #b42318; font-weight: 700; }
+.prioritaet-high::before { content: "▲ "; }
+.prioritaet-urgent::before { content: "▲▲ "; }

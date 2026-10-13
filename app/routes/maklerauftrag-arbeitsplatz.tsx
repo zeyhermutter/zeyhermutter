@@ -5,6 +5,7 @@ import { tag } from "~/lib/format";
 import { MAKLERAUFTRAGART, MAKLERAUFTRAGSTATUS, beschrifte } from "~/lib/labels";
 import { eins, ladeArbeitsplatz } from "~/lib/arbeitsplatz.server";
 import { Arbeitsplatz, ArbeitsplatzKopf, type ArbeitsplatzZeile } from "~/components/arbeitsplatz";
+import { standKlasse } from "~/lib/stand-ton";
 
 // Der Arbeitsplatz der Makleraufträge: links die Aufträge, rechts einer.
 // Derselbe Aufbau wie Kontakte und Objekte (12.10.2026). Eine Seite je
@@ -56,7 +57,7 @@ export default function MaklerauftragArbeitsplatz() {
     titel: z.titel,
     suchtext: [z.nummer, z.titel, z.stand, z.art].join(" "),
     unterzeile: <>
-      <span className="status-pill">{z.stand}</span>
+      <span className={`status-pill ${standKlasse(z.stand)}`}>{z.stand}</span>
       <span>{z.art}</span>
       {z.bis ? <span className="arbeitsplatz-zeile-preis">bis {tag(z.bis)}</span> : null}
     </>,
@@ -74,7 +75,7 @@ export default function MaklerauftragArbeitsplatz() {
       volleListe="/mandates?ansicht=tabelle"
       listeFehlt={listeFehlt}
       abgeschnitten={abgeschnitten ? `die zuletzt bearbeiteten ${HOECHSTENS}` : null}
-      kopf={akte ? <ArbeitsplatzKopf nummer={akte.nummer} status={<span className="status-pill">{akte.stand}</span>} titel={akte.titel}
+      kopf={akte ? <ArbeitsplatzKopf nummer={akte.nummer} status={<span className={`status-pill ${standKlasse(akte.stand)}`}>{akte.stand}</span>} titel={akte.titel}
         kontext={[akte.art, akte.bis ? `Laufzeit bis ${tag(akte.bis)}` : null].filter(Boolean).join(" · ")} /> : null}
       reiter={null}
     >

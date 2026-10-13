@@ -123,15 +123,20 @@ function Zeile({ e, wann, warnung }: { e: Eintrag; wann: string; warnung?: boole
   );
 }
 
-function Feld({ titel, anzahl, mehr, leer, children }: {
+/** Die Farbe eines Feldes: Termine blau, Liegengebliebenes rot, Fristen
+ * bernstein, Neues gruen -- so findet das Auge das drueckende Feld zuerst. */
+type Ton = "termin" | "druck" | "frist" | "neu";
+
+function Feld({ titel, anzahl, mehr, leer, ton, children }: {
   titel: string;
+  ton: Ton;
   anzahl: number;
   mehr?: { pfad: string; beschriftung: string };
   leer: string;
   children: ReactNode;
 }) {
   return (
-    <section className="mein-tag-feld" aria-label={titel}>
+    <section className={`mein-tag-feld ton-${ton}${anzahl > 0 ? " hat-eintraege" : ""}`} aria-label={titel}>
       <header className="mein-tag-feld-kopf">
         <h2>{titel}</h2>
         <span className="mein-tag-zahl">{anzahl}</span>
@@ -189,29 +194,29 @@ export default function MeinTag() {
           dieser Reihenfolge. */}
       <div className="mein-tag-raster">
         <div className="mein-tag-spalte">
-          <Feld titel="Termine heute" anzahl={d.termineHeute.length} mehr={{ pfad: d.ansicht === "meins" ? "/crm/calendar" : `/crm/calendar?von=${encodeURIComponent(d.ansicht)}`, beschriftung: "Kalender" }}
+          <Feld ton="termin" titel="Termine heute" anzahl={d.termineHeute.length} mehr={{ pfad: d.ansicht === "meins" ? "/crm/calendar" : `/crm/calendar?von=${encodeURIComponent(d.ansicht)}`, beschriftung: "Kalender" }}
             leer="Heute steht kein Termin an.">
             {d.termineHeute.map((e) => <Termin key={e.key} e={e} />)}
           </Feld>
-          <Feld titel={`Nächste ${d.vorschauTage - 1} Tage`} anzahl={d.termineDanach.length}
+          <Feld ton="termin" titel={`Nächste ${d.vorschauTage - 1} Tage`} anzahl={d.termineDanach.length}
             leer="In den nächsten Tagen steht kein Termin an.">
             {d.termineDanach.map((e) => <Termin key={e.key} e={e} mitTag />)}
           </Feld>
         </div>
 
         <div className="mein-tag-spalte">
-          <Feld titel="Liegen geblieben" anzahl={d.liegengeblieben.length} mehr={{ pfad: "/crm/tasks", beschriftung: "Aufgaben" }}
+          <Feld ton="druck" titel="Liegen geblieben" anzahl={d.liegengeblieben.length} mehr={{ pfad: "/crm/tasks", beschriftung: "Aufgaben" }}
             leer="Nichts ist überfällig.">
             {d.liegengeblieben.map((e) => <Zeile key={e.key} e={e} wann={tagKurz(e.wann)} warnung />)}
           </Feld>
-          <Feld titel={`Fristen (${d.fristTage} Tage)`} anzahl={d.fristen.length}
+          <Feld ton="frist" titel={`Fristen (${d.fristTage} Tage)`} anzahl={d.fristen.length}
             leer={`Keine Frist in den nächsten ${d.fristTage} Tagen.`}>
             {d.fristen.map((e) => <Zeile key={e.key} e={e} wann={tagKurz(e.wann)} warnung={e.ueberfaellig} />)}
           </Feld>
         </div>
 
         <div className="mein-tag-spalte">
-          <Feld titel="Neu eingegangen" anzahl={d.neu.length} mehr={{ pfad: "/inquiries", beschriftung: "Anfragen" }}
+          <Feld ton="neu" titel="Neu eingegangen" anzahl={d.neu.length} mehr={{ pfad: "/inquiries", beschriftung: "Anfragen" }}
             leer="Keine neue Anfrage und kein neuer Lead.">
             {d.neu.map((e) => <Zeile key={e.key} e={e} wann={tagKurz(e.wann)} />)}
           </Feld>

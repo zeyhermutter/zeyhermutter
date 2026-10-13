@@ -1,5 +1,7 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/user-admin";
+import { Aufklapper } from "~/components/aufklapper";
+import "~/programm-liste.css";
 import { requireActiveUser, requirePermission } from "~/lib/auth.server";
 import "~/user-admin.css";
 
@@ -120,96 +122,71 @@ export default function UserAdmin() {
   }
   const activeUsers = users.filter((user: any) => user.status === "ACTIVE").length;
 
+  // Programmansicht (13.10.2026): eine Matrix -- Benutzer in den Zeilen,
+  // Rollen in den Spalten, in jeder Zelle der Schalter. Vorher je Benutzer
+  // eine Karte mit allen Rollen untereinander; bei zwei Benutzern und fuenf
+  // Rollen schon drei Bildschirme.
+  const rollenSchalter = (user: any, role: any, assigned: boolean) => {
+    const isSelf = user.user_id === currentUserId;
+    const adminProtected = role.key === "admin" && !actorIsAdmin;
+    if (isSelf || !canManagePermissions || adminProtected) {
+      return <span className={assigned ? "rolle-zelle an" : "rolle-zelle"} title={isSelf ? "Eigene Rollen lassen sich nicht ändern." : adminProtected ? "Nur ein Administrator vergibt diese Rolle." : undefined}>{assigned ? "✓" : "–"}</span>;
+    }
+    return (
+      <Form method="post">
+        <input type="hidden" name="_intent" value="role" />
+        <input type="hidden" name="target_user_id" value={user.user_id} />
+        <input type="hidden" name="expected_version" value={user.version} />
+        <input type="hidden" name="role_id" value={role.id} />
+        <input type="hidden" name="operation" value={assigned ? "revoke" : "assign"} />
+        <button className={assigned ? "rolle-schalter an" : "rolle-schalter"} type="submit" title={assigned ? `${role.name} entfernen` : `${role.name} zuweisen`} aria-pressed={assigned}>{assigned ? "✓ zugewiesen" : "zuweisen"}</button>
+      </Form>
+    );
+  };
+
   return (
-    <main className="editor-shell programm-seite">
-      <header className="editor-header">
-        <div>
-          <Link className="back-link" to="/crm">← CRM</Link>
-          <p className="eyebrow">Verwaltung · Sicherheit</p>
-          <h1 className="editor-title">Benutzer, Rollen & Berechtigungen</h1>
-        </div>
-        <div className="header-user"><span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div>
-      </header>
+    <main className="editor-shell programm-liste">
+      <div className="programm-liste-werkzeuge">
+        <span className="programm-liste-zaehler programm-liste-zaehler-links"><strong>{users.length}</strong> Benutzer · <strong>{activeUsers}</strong> aktiv · <strong>{roles.length}</strong> Rollen · <strong>{permissions.length}</strong> Berechtigungen</span>
+        <Aufklapper knopf="Wer darf was ändern?">
+          <p className="programm-erklaerung">Den Zugangsstatus ändert, wer <code>user.manage</code> hat; Rollen vergibt, wer <code>permission.manage</code> hat. Eigene Status- und Rollenänderungen sind serverseitig gesperrt. Die Rechte einer Rolle selbst lassen sich hier nicht ändern.</p>
+        </Aufklapper>
+      </div>
 
-      <div className="user-admin-page">
-        {result?.error ? <div className="form-error">{result.error}</div> : null}
+      {result?.error ? <div className="form-error">{result.error}</div> : null}
 
-        <section className="user-admin-summary">
-          <article className="data-card"><span>Benutzer</span><strong>{users.length}</strong><small>{activeUsers} aktiv</small></article>
-          <article className="data-card"><span>Rollen</span><strong>{roles.length}</strong><small>bestehendes Rollenmodell</small></article>
-          <article className="data-card"><span>Berechtigungen</span><strong>{permissions.length}</strong><small>zentral vergeben</small></article>
-        </section>
+      <div className="programm-tabelle-rahmen">
+        <table className="programm-tabelle rollen-matrix">
+          <thead><tr>
+            <th>Benutzer</th><th>Zugang</th>
+            {roles.map((role: any) => <th key={role.id} title={role.description ?? role.key}>{role.name}</th>)}
+          </tr></thead>
+          <tbody>{users.map((user: any) => {
+            const activeRoles = userRoleIds.get(user.user_id) ?? new Set<string>();
+            const isSelf = user.user_id === currentUserId;
+            return <tr key={user.user_id}>
+              <td><strong>{user.display_name}{isSelf ? " · Sie" : ""}</strong>{user.first_name || user.last_name ? <div className="leise">{[user.first_name, user.last_name].filter(Boolean).join(" ")}</div> : null}</td>
+              <td>
+                <span className={`status-pill ${user.status === "ACTIVE" ? "status-sold" : user.status === "LOCKED" ? "status-lost" : "status-archived"}`}>{STATUS_LABELS[user.status] ?? user.status}</span>
+                {!isSelf && user.status !== "LOCKED" && canManageUsers ? (
+                  <Form method="post" className="rolle-status">
+                    <input type="hidden" name="_intent" value="status" />
+                    <input type="hidden" name="target_user_id" value={user.user_id} />
+                    <input type="hidden" name="expected_version" value={user.version} />
+                    <input type="hidden" name="next_status" value={user.status === "ACTIVE" ? "DISABLED" : "ACTIVE"} />
+                    <button className="programm-tabelle-verweis leise-verweis" type="submit">{user.status === "ACTIVE" ? "deaktivieren" : "aktivieren"}</button>
+                  </Form>
+                ) : null}
+              </td>
+              {roles.map((role: any) => <td key={role.id}>{rollenSchalter(user, role, activeRoles.has(role.id))}</td>)}
+            </tr>;
+          })}</tbody>
+        </table>
+      </div>
 
-        <section className="data-card user-admin-notice">
-          <div><p className="eyebrow">Sicherheitsmodell</p><h2>Verwaltung bleibt getrennt</h2></div>
-          <p>Benutzerstatus erfordert <code>user.manage</code>. Rollenzuweisungen erfordern <code>permission.manage</code>. Eigene Status- und Rollenänderungen sind serverseitig gesperrt; Rollenrechte selbst bleiben in dieser Oberfläche bewusst schreibgeschützt.</p>
-        </section>
-
-        <section className="data-card">
-          <div className="card-head"><div><p className="eyebrow">Benutzerübersicht</p><h2>Konten und Rollen</h2></div><span className="subtle">{users.length}</span></div>
-          <div className="user-admin-list">
-            {users.map((user: any) => {
-              const activeRoles = userRoleIds.get(user.user_id) ?? new Set<string>();
-              const isSelf = user.user_id === currentUserId;
-              return (
-                <article className="user-admin-user" key={user.user_id}>
-                  <div className="user-admin-user-head">
-                    <div><strong>{user.display_name}{isSelf ? " · Sie" : ""}</strong><small>{user.first_name || user.last_name ? [user.first_name, user.last_name].filter(Boolean).join(" ") : "Kein zusätzlicher Anzeigename"}</small></div>
-                    <span className={`user-status ${String(user.status).toLowerCase()}`}>{STATUS_LABELS[user.status] ?? user.status}</span>
-                  </div>
-
-                  <div className="user-role-chips">
-                    {Array.from(activeRoles).map((roleId) => <span className="user-role-chip" key={roleId}>{(roleMap.get(roleId) as any)?.name ?? "Rolle"}</span>)}
-                    {activeRoles.size === 0 ? <span className="subtle">Keine aktive Rolle</span> : null}
-                  </div>
-
-                  <div className="user-admin-actions">
-                    <div>
-                      <span className="user-admin-action-label">Zugangsstatus</span>
-                      {isSelf ? <small>Eigene Statusänderung gesperrt.</small> : user.status === "LOCKED" ? <small>Gesperrte Konten werden hier nicht automatisch entsperrt.</small> : canManageUsers ? (
-                        <Form method="post">
-                          <input type="hidden" name="_intent" value="status" />
-                          <input type="hidden" name="target_user_id" value={user.user_id} />
-                          <input type="hidden" name="expected_version" value={user.version} />
-                          <input type="hidden" name="next_status" value={user.status === "ACTIVE" ? "DISABLED" : "ACTIVE"} />
-                          <button className="secondary-button compact" type="submit">{user.status === "ACTIVE" ? "Deaktivieren" : "Aktivieren"}</button>
-                        </Form>
-                      ) : <small>Nur Lesen.</small>}
-                    </div>
-
-                    <div className="user-role-admin">
-                      <span className="user-admin-action-label">Rollenzuweisung</span>
-                      <div className="user-role-grid">
-                        {roles.map((role: any) => {
-                          const assigned = activeRoles.has(role.id);
-                          const adminProtected = role.key === "admin" && !actorIsAdmin;
-                          return (
-                            <div className="user-role-row" key={role.id}>
-                              <span><strong>{role.name}</strong><small>{role.description ?? role.key}</small></span>
-                              {isSelf ? <small>Selbständerung gesperrt</small> : canManagePermissions && !adminProtected ? (
-                                <Form method="post">
-                                  <input type="hidden" name="_intent" value="role" />
-                                  <input type="hidden" name="target_user_id" value={user.user_id} />
-                                  <input type="hidden" name="expected_version" value={user.version} />
-                                  <input type="hidden" name="role_id" value={role.id} />
-                                  <input type="hidden" name="operation" value={assigned ? "revoke" : "assign"} />
-                                  <button className="text-button" type="submit">{assigned ? "Entfernen" : "Zuweisen"}</button>
-                                </Form>
-                              ) : <small>{assigned ? "Zugewiesen" : adminProtected ? "Nur Administrator" : "Nicht zugewiesen"}</small>}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="data-card">
-          <div className="card-head"><div><p className="eyebrow">Rechtematrix</p><h2>Berechtigungen je Rolle</h2></div><Link className="subtle-link" to="/crm/history">Audit-Historie öffnen →</Link></div>
+      <section className="programm-abschnitt">
+        <Aufklapper knopf="Berechtigungen je Rolle anzeigen"><section className="data-card">
+          <div className="card-head"><div><h2>Berechtigungen je Rolle</h2></div><Link className="subtle-link" to="/crm/history">Systemhistorie öffnen →</Link></div>
           <div className="role-permission-grid">
             {roles.map((role: any) => {
               const rolePermissionIds = rolePermissions.filter((row: any) => row.role_id === role.id).map((row: any) => row.permission_id);
@@ -225,8 +202,8 @@ export default function UserAdmin() {
               );
             })}
           </div>
-        </section>
-      </div>
+        </section></Aufklapper>
+      </section>
     </main>
   );
 }

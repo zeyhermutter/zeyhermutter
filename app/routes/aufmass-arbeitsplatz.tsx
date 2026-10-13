@@ -5,6 +5,7 @@ import { zeitpunktKurz } from "~/lib/format";
 import { AUFMASSPAKET, AUFMASSSTATUS, beschrifte } from "~/lib/labels";
 import { eins, ladeArbeitsplatz } from "~/lib/arbeitsplatz.server";
 import { Arbeitsplatz, ArbeitsplatzKopf, type ArbeitsplatzZeile } from "~/components/arbeitsplatz";
+import { standKlasse } from "~/lib/stand-ton";
 
 // Der Arbeitsplatz der Aufmaß-Aufträge: links die Auftraege, rechts einer.
 // Derselbe Aufbau wie Kontakte und Objekte (12.10.2026). Der Seitenkopf
@@ -59,7 +60,7 @@ export default function AufmassArbeitsplatz() {
     titel: z.titel,
     suchtext: [z.nummer, z.titel, z.paket, z.stand, z.ort].filter(Boolean).join(" "),
     unterzeile: <>
-      <span className="status-pill">{z.stand}</span>
+      <span className={`status-pill ${standKlasse(z.stand)}`}>{z.stand}</span>
       <span>{z.ort ?? z.paket}</span>
     </>,
   });
@@ -77,7 +78,7 @@ export default function AufmassArbeitsplatz() {
       listeFehlt={listeFehlt}
       abgeschnitten={abgeschnitten ? `die zuletzt bearbeiteten ${HOECHSTENS}` : null}
       seitenkopf="ausblenden"
-      kopf={akte ? <ArbeitsplatzKopf nummer={akte.nummer} status={<span className="status-pill">{akte.stand}</span>} titel={akte.titel}
+      kopf={akte ? <ArbeitsplatzKopf nummer={akte.nummer} status={<span className={`status-pill ${standKlasse(akte.stand)}`}>{akte.stand}</span>} titel={akte.titel}
         kontext={[akte.paket, akte.ort, akte.termin ? `Termin ${zeitpunktKurz(akte.termin)}` : null].filter(Boolean).join(" · ")} /> : null}
       reiter={null}
     >

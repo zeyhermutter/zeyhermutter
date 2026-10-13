@@ -152,3 +152,15 @@
   .mein-tag-zeile:not(:has(.termin-marke)) { grid-template-columns: 56px auto minmax(0, 1fr); }
   .mein-tag-zeile:not(:has(.termin-marke)) { grid-template-columns: 56px minmax(0, 1fr); }
 }
+
+/* --- Farbe je Feld (13.10.2026) ---------------------------------------------
+ * Ein farbiger Strich am Kopf; die Zahl nimmt die Farbe an, sobald etwas im
+ * Feld steht. Leere Felder bleiben grau -- Farbe heisst "hier ist etwas".
+ * Kontrast der Zahl (Weiss auf Farbe): blau 6,7, rot 7,2, bernstein 5,0,
+ * gruen 5,9. */
+.mein-tag-feld.ton-termin { --ton: #0b5cad; }
+.mein-tag-feld.ton-druck  { --ton: #b42318; }
+.mein-tag-feld.ton-frist  { --ton: #8a5a00; }
+.mein-tag-feld.ton-neu    { --ton: #2a7130; }
+.mein-tag-feld-kopf { box-shadow: inset 3px 0 0 var(--ton, #cdd3d9); }
+.mein-tag-feld.hat-eintraege .mein-tag-zahl { background: var(--ton); color: #ffffff; }

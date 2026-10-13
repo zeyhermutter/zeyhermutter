@@ -1,5 +1,7 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/training";
+import "~/programm-liste.css";
+import { Aufklapper } from "~/components/aufklapper";
 import { requirePermission } from "~/lib/auth.server";
 import { tag } from "~/lib/format";
 
@@ -120,6 +122,17 @@ export async function action({request,context}:Route.ActionArgs){
   return data<ActionResult>({error:"Unbekannte Aktion."},{status:400,headers:responseHeaders()});
 }
 
+/** Ein Balken: erreichte Stunden im Verhaeltnis zum Zielwert. Die Farbe sagt
+ * den Stand (erreicht gruen, laeuft blau, knapp bernstein, sehr knapp rot);
+ * die Zahl daneben sagt ihn in Worten. */
+function Fortschritt({erreicht,ziel,ton}:{erreicht:number;ziel:number;ton:"erreicht"|"laeuft"|"knapp"|"knapp-rot"}){
+  const anteil=ziel>0?Math.min(100,Math.round(erreicht/ziel*100)):0;
+  return <span className={`fortschritt ton-${ton}`} role="img" aria-label={`${anteil} Prozent des Zielwerts erreicht`}>
+    <span className="fortschritt-balken"><span style={{width:`${anteil}%`}}/></span>
+    <span className="fortschritt-zahl">{anteil} %</span>
+  </span>;
+}
+
 export default function Training(){
   const d=useLoaderData<typeof loader>();
   const actionData=useActionData<typeof action>();
@@ -139,59 +152,7 @@ export default function Training(){
       <div className="header-user"><span className="badge">{__APP_ENV_LABEL__}</span><small>{d.profile.display_name}</small></div>
     </header>
 
-    {actionData?.error?<p className="form-error">{actionData.error}</p>:null}
-    {warning?<p className={warning.level==="error"?"form-error":"form-warning"}>{warning.text}</p>:null}
-
-    {own?<div className="metric-grid">
-      <article className="metric"><span>Erreicht</span><strong>{hoursLabel(own.achieved_hours)}</strong><small>von {hoursLabel(own.required_hours)} im Zeitraum</small></article>
-      <article className="metric"><span>Offen</span><strong>{hoursLabel(own.remaining_hours)}</strong><small>{Number(own.remaining_hours)>0?"noch zu belegen":"Zielwert erreicht"}</small></article>
-      <article className="metric"><span>Zeitraum</span><strong>{formatDay(own.period_from)}</strong><small>bis {formatDay(own.period_to)} · {plural(Number(own.days_left)||0,"Tag","Tage")} übrig</small></article>
-      <article className="metric"><span>Maßnahmen</span><strong>{own.records}</strong><small>im laufenden Zeitraum erfasst</small></article>
-    </div>:<p className="empty-state">Für dieses Konto ist kein aktives Benutzerprofil hinterlegt.</p>}
-
-    {d.canManage?<section className="data-card" id="uebersicht">
-      <div className="card-head"><div><p className="eyebrow">Alle Benutzer</p><h2>Stand im laufenden Zeitraum</h2></div><Link className="subtle-link" to="/crm/users">Benutzer & Rollen →</Link></div>
-      <div className="data-list">{(d.summary as any[]).map((row:any)=>{
-        const rowWarning=trainingWarning(row);
-        return <div className="data-row" key={row.user_id}>
-          <div><strong>{row.display_name}</strong><small>{plural(Number(row.records)||0,"Maßnahme","Maßnahmen")}{row.last_completed_on?` · zuletzt ${formatDay(row.last_completed_on)}`:" · noch keine erfasst"}</small></div>
-          <div className="row-meta"><span>{hoursLabel(row.achieved_hours)} von {hoursLabel(row.required_hours)}</span><small>offen {hoursLabel(row.remaining_hours)}</small></div>
-          <div className="row-meta">
-            <span className={`status-pill ${Number(row.remaining_hours)===0?"status-sold":rowWarning?.level==="error"?"status-lost":rowWarning?"status-marketing":"status-draft"}`}>
-              {Number(row.remaining_hours)===0?"Zielwert erreicht":rowWarning?"Wird knapp":"Im Zeitraum"}
-            </span>
-            <small>bis {formatDay(row.period_to)}</small>
-          </div>
-        </div>;
-      })}</div>
-    </section>:null}
-
-    <section className="data-card" id="nachweise">
-      <div className="card-head"><div><p className="eyebrow">Belegte Maßnahmen</p><h2>{d.canManage?"Nachweise":"Meine Nachweise"}</h2></div><span className="status-pill">{records.length}</span></div>
-      {records.length===0
-        ?<p className="empty-state">Es ist noch kein Nachweis erfasst.</p>
-        :<div className="data-list">{records.map((row:any)=>{
-          const person=Array.isArray(row.profiles)?row.profiles[0]:row.profiles;
-          return <div className="data-row" key={row.id}>
-            <div>
-              <strong>{row.title}</strong>
-              <small>{row.provider??"Anbieter offen"}{row.topic?` · ${row.topic}`:""}{row.format?` · ${TRAINING_FORMAT[row.format]??row.format}`:""}</small>
-              {d.canManage?<small>{person?.display_name??"—"}</small>:null}
-            </div>
-            <div className="row-meta"><span>{hoursLabel(row.hours)}</span><small>{formatDay(row.completed_on)}</small></div>
-            <div className="row-meta"><span>{row.document_id?"Nachweis hinterlegt":"ohne Nachweisdokument"}</span><small>{row.notes??""}</small></div>
-            {d.canManage?<Form method="post">
-              <input type="hidden" name="_intent" value="record_archive"/>
-              <input type="hidden" name="record_id" value={row.id}/>
-              <input type="hidden" name="version" value={row.version}/>
-              <button className="text-button" type="submit">Archivieren</button>
-            </Form>:null}
-          </div>;
-        })}</div>}
-    </section>
-
-    {d.canWrite?<section className="data-card">
-      <div className="card-head"><div><p className="eyebrow">Neu</p><h2>Maßnahme erfassen</h2></div></div>
+    {d.canWrite?<Aufklapper id="erfassen" knopf="+ Maßnahme erfassen"><section className="data-card">
       <Form method="post" className="form-grid">
         <input type="hidden" name="_intent" value="record_add"/>
         {d.canManage
@@ -226,10 +187,68 @@ export default function Training(){
           ?<p className="form-field full-width subtle">Ein Nachweisdokument lässt sich hier noch nicht hochladen; die Dokumentenakte kennt bisher nur Objekt- und Kontaktdokumente. Die Kategorie „Weiterbildungsnachweis" ist angelegt, der Upload steht auf der Restpunktliste.</p>
           :null}
       </Form>
+    </section></Aufklapper>:null}
+
+    {actionData?.error?<p className="form-error">{actionData.error}</p>:null}
+    {warning?<p className={warning.level==="error"?"form-error":"form-warning"}>{warning.text}</p>:null}
+
+    {own?<div className="metric-grid">
+      <article className="metric"><span>Erreicht</span><strong>{hoursLabel(own.achieved_hours)}</strong><small>von {hoursLabel(own.required_hours)} im Zeitraum</small></article>
+      <article className="metric"><span>Offen</span><strong>{hoursLabel(own.remaining_hours)}</strong><small>{Number(own.remaining_hours)>0?"noch zu belegen":"Zielwert erreicht"}</small></article>
+      <article className="metric"><span>Zeitraum</span><strong>{formatDay(own.period_from)}</strong><small>bis {formatDay(own.period_to)} · {plural(Number(own.days_left)||0,"Tag","Tage")} übrig</small></article>
+      <article className="metric"><span>Maßnahmen</span><strong>{own.records}</strong><small>im laufenden Zeitraum erfasst</small></article>
+      <Fortschritt erreicht={Number(own.achieved_hours)||0} ziel={Number(own.required_hours)||0} ton={Number(own.remaining_hours)===0?"erreicht":warning?.level==="error"?"knapp-rot":warning?"knapp":"laeuft"}/>
+    </div>:<p className="empty-state">Für dieses Konto ist kein aktives Benutzerprofil hinterlegt.</p>}
+
+    {d.canManage?<section className="data-card" id="uebersicht">
+      <div className="card-head"><div><p className="eyebrow">Alle Benutzer</p><h2>Stand im laufenden Zeitraum</h2></div><Link className="subtle-link" to="/crm/users">Benutzer & Rollen →</Link></div>
+      <div className="programm-tabelle-rahmen"><table className="programm-tabelle">
+        <thead><tr><th>Benutzer</th><th>Fortschritt</th><th className="rechts">Erreicht</th><th className="rechts">Offen</th><th className="rechts">Maßnahmen</th><th>Zuletzt</th><th>Stand</th></tr></thead>
+        <tbody>{(d.summary as any[]).map((row:any)=>{
+          const rowWarning=trainingWarning(row);
+          const ton=Number(row.remaining_hours)===0?"erreicht":rowWarning?.level==="error"?"knapp-rot":rowWarning?"knapp":"laeuft";
+          return <tr key={row.user_id}>
+            <td><strong>{row.display_name}</strong></td>
+            <td><Fortschritt erreicht={Number(row.achieved_hours)||0} ziel={Number(row.required_hours)||0} ton={ton}/></td>
+            <td className="zahl rechts">{hoursLabel(row.achieved_hours)}</td>
+            <td className="zahl rechts">{hoursLabel(row.remaining_hours)}</td>
+            <td className="zahl rechts">{Number(row.records)||0}</td>
+            <td className="zahl">{row.last_completed_on?formatDay(row.last_completed_on):<span className="leise">noch keine</span>}</td>
+            <td><span className={`status-pill ${ton==="erreicht"?"status-sold":ton==="knapp-rot"?"status-lost":ton==="knapp"?"status-preparation":"status-marketing"}`}>{ton==="erreicht"?"Zielwert erreicht":ton==="laeuft"?"Im Zeitraum":"Wird knapp"}</span><div className="leise">bis {formatDay(row.period_to)}</div></td>
+          </tr>;
+        })}</tbody>
+      </table></div>
     </section>:null}
 
-    {d.canManage&&settings?<section className="data-card" id="zielwert">
-      <div className="card-head"><div><p className="eyebrow">Vorgabe</p><h2>Zielwert und Zeitraum</h2></div></div>
+    <section className="data-card" id="nachweise">
+      <div className="card-head"><div><p className="eyebrow">Belegte Maßnahmen</p><h2>{d.canManage?"Nachweise":"Meine Nachweise"}</h2></div><span className="status-pill">{records.length}</span></div>
+      {records.length===0
+        ?<p className="empty-state">Es ist noch kein Nachweis erfasst.</p>
+        :<div className="programm-tabelle-rahmen"><table className="programm-tabelle">
+          <thead><tr><th>Abgeschlossen</th><th>Maßnahme</th>{d.canManage?<th>Benutzer</th>:null}<th>Anbieter</th><th>Form</th><th className="rechts">Stunden</th><th>Nachweis</th>{d.canManage?<th></th>:null}</tr></thead>
+          <tbody>{records.map((row:any)=>{
+            const person=Array.isArray(row.profiles)?row.profiles[0]:row.profiles;
+            return <tr key={row.id}>
+              <td className="zahl">{formatDay(row.completed_on)}</td>
+              <td><strong>{row.title}</strong>{row.topic?<div className="leise">{row.topic}</div>:null}</td>
+              {d.canManage?<td>{person?.display_name??"—"}</td>:null}
+              <td>{row.provider??<span className="leise">offen</span>}</td>
+              <td>{row.format?TRAINING_FORMAT[row.format]??row.format:<span className="leise">—</span>}</td>
+              <td className="zahl rechts">{hoursLabel(row.hours)}</td>
+              <td>{row.document_id?"hinterlegt":<span className="leise">ohne Dokument</span>}</td>
+              {d.canManage?<td className="rechts"><Form method="post">
+                <input type="hidden" name="_intent" value="record_archive"/>
+                <input type="hidden" name="record_id" value={row.id}/>
+                <input type="hidden" name="version" value={row.version}/>
+                <button className="secondary-button" type="submit">Archivieren</button>
+              </Form></td>:null}
+            </tr>;
+          })}</tbody>
+        </table></div>}
+    </section>
+
+
+    {d.canManage&&settings?<Aufklapper id="zielwert" knopf="Zielwert und Zeitraum ändern"><section className="data-card">
       <Form method="post" className="form-grid">
         <input type="hidden" name="_intent" value="settings_save"/>
         <input type="hidden" name="version" value={settings.version}/>
@@ -240,6 +259,6 @@ export default function Training(){
         <div className="form-field full-width inline-actions"><button className="secondary-button" type="submit">Vorgabe speichern</button></div>
         <p className="form-field full-width subtle">Der Wert ist eine betriebliche Vorgabe. Ob und in welchem Umfang eine Weiterbildungspflicht besteht, ist anwaltlich zu klären; die Software trifft dazu keine Aussage.</p>
       </Form>
-    </section>:null}
+    </section></Aufklapper>:null}
   </main>;
 }

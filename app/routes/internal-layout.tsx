@@ -128,6 +128,7 @@ export default function InternalLayout({ loaderData }: Route.ComponentProps) {
       notifications={loaderData?.notifications ?? undefined}
       unreadCount={loaderData?.unreadCount ?? 0}
       benutzer={loaderData?.benutzer ?? null}
+      hilfe={<HelpEntry />}
     >
       <CrmFormGuardrails />
       <SmartBackNavigation />
@@ -136,7 +137,6 @@ export default function InternalLayout({ loaderData }: Route.ComponentProps) {
       <SalesReadinessLeadEntryEnhancer />
       <LiveListFilters />
       <RecordSectionNavigation />
-      <HelpEntry />
       <Outlet />
     </Programmrahmen>
   );
