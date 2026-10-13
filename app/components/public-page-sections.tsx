@@ -134,8 +134,8 @@ export function HomePageSections({ content: c, objekte = [] }: { content: Websit
         {/* Monogramme statt Fotos, solange keine freigegebenen Fotos vorliegen --
             ein Bild von irgendwem waere bei einem Makler eine Behauptung. */}
         <div className="zm-team-personen">
-          {[c.team_person_1, c.team_person_2].filter((n) => n && n.trim()).map((name) => (
-            <span key={name}><span className="zm-monogramm" aria-hidden="true">{name.trim().charAt(0)}</span>{name}</span>
+          {[[c.team_person_1, c.team_person_1_rolle], [c.team_person_2, c.team_person_2_rolle]].filter(([n]) => n && n.trim()).map(([name, rolle]) => (
+            <span key={name}><span className="zm-monogramm" aria-hidden="true">{name.trim().charAt(0)}</span><span><strong>{name}</strong>{rolle ? <small>{rolle}</small> : null}</span></span>
           ))}
         </div>
       </div>
@@ -225,9 +225,7 @@ export function AboutSections({ content: c }: { content: WebsiteContent }) {
             </article>
           ))}
         </div>
-      ) : (
-        <p className="zm-referenz-hinweis">Die Personen werden im CRM unter Website-CMS eingetragen. Solange dort niemand hinterlegt ist, steht hier niemand.</p>
-      )}
+      ) : null}
     </section>
   </>;
 }

@@ -865,7 +865,9 @@
 }
 .zm-team-text { padding-left: 28px; border-left: 2px solid var(--zm-gold); }
 .zm-team-personen { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 22px; }
-.zm-team-personen > span { display: inline-flex; align-items: center; gap: 12px; font-size: 17px; font-weight: 600; }
+.zm-team-personen > span { display: inline-flex; align-items: center; gap: 12px; }
+.zm-team-personen strong { display: block; font-size: 17px; font-weight: 650; }
+.zm-team-personen small { display: block; color: var(--zm-text-leise); font-size: 14px; }
 .zm-monogramm {
   display: inline-flex; align-items: center; justify-content: center;
   width: 56px; height: 56px; border-radius: 50%;
