@@ -78,6 +78,8 @@ for (const datei of ["contact-overview", "contact-relations", "lead-detail", "in
   pruefe(!/intent\s*===\s*"(task|task_status|create_task|complete_task)"/.test(inhalt), `${datei}.tsx: eigene Aufgaben-Aktion neben dem Baustein`);
 }
 
+pruefe((await lies("app/routes/api-aufgaben.ts")).includes('"doppelt"'), "api-aufgaben.ts: legt eine gleiche offene Aufgabe am selben Vorgang ohne Rueckfrage ein zweites Mal an");
+
 if (fehler.length) {
   console.error("P1:\n  " + fehler.join("\n  "));
   process.exit(1);

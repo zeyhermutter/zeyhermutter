@@ -54,7 +54,13 @@ export function AufgabenBaustein({
 }) {
   const ort = useLocation();
   const [suche] = useSearchParams();
-  const [offen, setOffen] = useState(false);
+  // Rueckfrage "gibt es schon" vom Server: Formular offen, Eingaben wieder da.
+  const doppelt = suche.get("aufgabe") === "doppelt" ? {
+    nr: suche.get("doppelt_nr") ?? "", wer: suche.get("doppelt_wer") ?? "",
+    titel: suche.get("titel") ?? "", faellig: suche.get("faellig") ?? "", uhrzeit: suche.get("uhrzeit") ?? "",
+    prioritaet: suche.get("prioritaet") ?? "", verantwortlich: suche.get("verantwortlich") ?? "", beschreibung: suche.get("beschreibung") ?? "",
+  } : null;
+  const [offen, setOffen] = useState(Boolean(doppelt));
   // "#aufgabe-neu" oeffnet das Formular -- so fuehrt "+ Aufgabe" im Kopf
   // einer Akte direkt hierher.
   useEffect(() => {
@@ -66,7 +72,7 @@ export function AufgabenBaustein({
   const heute = crmToday();
   const zurueck = (() => {
     const p = new URLSearchParams(ort.search);
-    p.delete("aufgabe");
+    for (const k of ["aufgabe", "doppelt_nr", "doppelt_wer", "titel", "faellig", "uhrzeit", "prioritaet", "verantwortlich", "beschreibung"]) p.delete(k);
     const q = p.toString();
     return `${ort.pathname}${q ? `?${q}` : ""}`;
   })();
@@ -126,19 +132,23 @@ export function AufgabenBaustein({
           <input type="hidden" name="zurueck" value={zurueck} />
           <input type="hidden" name="kontext_art" value={art} />
           <input type="hidden" name="kontext_id" value={id} />
-          <label className="form-field aufgaben-neu-titel"><span>Was ist zu tun? *</span><input name="titel" required maxLength={300} defaultValue={vorschlagTitel ?? ""} autoFocus /></label>
-          <label className="form-field"><span>Fällig am *</span><input name="faellig" type="date" required defaultValue={vorschlagFaellig ?? heute} /></label>
-          <label className="form-field"><span>Uhrzeit</span><input name="uhrzeit" type="time" defaultValue="09:00" /></label>
+          {doppelt ? <>
+            <input type="hidden" name="trotzdem" value="1" />
+            <p className="form-warning aufgaben-neu-titel">Es gibt an diesem Vorgang schon eine offene Aufgabe mit diesem Titel: <strong>{doppelt.nr}</strong>{doppelt.wer ? ` (verantwortlich: ${doppelt.wer})` : ""}. Soll sie trotzdem ein zweites Mal angelegt werden? Damit zwei Personen dieselbe Aufgabe sehen, genügt eine Aufgabe mit einem Beobachter (Aufgabe öffnen).</p>
+          </> : null}
+          <label className="form-field aufgaben-neu-titel"><span>Was ist zu tun? *</span><input name="titel" required maxLength={300} defaultValue={doppelt?.titel || vorschlagTitel || ""} autoFocus /></label>
+          <label className="form-field"><span>Fällig am *</span><input name="faellig" type="date" required defaultValue={doppelt?.faellig || vorschlagFaellig || heute} /></label>
+          <label className="form-field"><span>Uhrzeit</span><input name="uhrzeit" type="time" defaultValue={doppelt?.uhrzeit || "09:00"} /></label>
           <label className="form-field"><span>Priorität</span>
-            <select name="prioritaet" defaultValue="NORMAL">{Object.entries(AUFGABENPRIORITAET).map(([w, l]) => <option key={w} value={w}>{l}</option>)}</select>
+            <select name="prioritaet" defaultValue={doppelt?.prioritaet || "NORMAL"}>{Object.entries(AUFGABENPRIORITAET).map(([w, l]) => <option key={w} value={w}>{l}</option>)}</select>
           </label>
           <label className="form-field"><span>Verantwortlich</span>
-            <select name="verantwortlich" defaultValue={verantwortlich ?? ich}>{nutzer.map((n) => <option key={n.user_id} value={n.user_id}>{n.display_name}</option>)}</select>
+            <select name="verantwortlich" defaultValue={doppelt?.verantwortlich || verantwortlich || ich}>{nutzer.map((n) => <option key={n.user_id} value={n.user_id}>{n.display_name}</option>)}</select>
           </label>
-          <label className="form-field aufgaben-neu-titel"><span>Beschreibung</span><textarea name="beschreibung" rows={2} /></label>
+          <label className="form-field aufgaben-neu-titel"><span>Beschreibung</span><textarea name="beschreibung" rows={2} defaultValue={doppelt?.beschreibung ?? ""} /></label>
           <div className="form-actions aufgaben-neu-titel">
             <button type="button" className="secondary-button" onClick={() => setOffen(false)}>Abbrechen</button>
-            <button type="submit" className="primary-button">Aufgabe anlegen</button>
+            <button type="submit" className="primary-button">{doppelt ? "Trotzdem anlegen" : "Aufgabe anlegen"}</button>
           </div>
         </Form>
       ) : null}

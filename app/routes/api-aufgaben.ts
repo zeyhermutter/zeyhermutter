@@ -23,14 +23,18 @@ const ARTEN: Art[] = ["contact", "lead", "inquiry", "viewing", "search_profile",
 const PRIORITAETEN = new Set(["LOW", "NORMAL", "HIGH", "URGENT"]);
 const STATUS = new Set(["OPEN", "IN_PROGRESS", "DONE", "CANCELLED"]);
 const KENNUNG = /^[0-9a-f-]{36}$/i;
+const SPALTE: Record<Art, string> = {
+  contact: "contact_id", lead: "lead_id", inquiry: "inquiry_id", viewing: "viewing_id", search_profile: "search_profile_id", property: "property_id",
+};
 
 const text = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
 /** Nur Pfade dieser Anwendung -- nie eine fremde Adresse. */
-function rueckweg(roh: string, ergebnis: string) {
+function rueckweg(roh: string, ergebnis: string, extra: Record<string, string> = {}) {
   const sicher = roh.startsWith("/") && !roh.startsWith("//") ? roh : "/crm/tasks";
   const url = new URL(sicher, "https://intern.invalid");
   url.searchParams.set("aufgabe", ergebnis);
+  for (const [k, v] of Object.entries(extra)) url.searchParams.set(k, v.slice(0, 300));
   return `${url.pathname}${url.search}#aufgaben`;
 }
 
@@ -76,6 +80,26 @@ export async function action({ request, context }: any) {
     const bezug = await verknuepfungen(supabase, art, id);
     if (!due || !bezug) return geh("fehler");
     const verantwortlich = text(fd, "verantwortlich");
+
+    // Doppelt angelegt? (14.10.2026) Am Lead ZM-L-000009 standen zwei
+    // gleiche Wiedervorlagen, 42 Sekunden nacheinander angelegt -- eine fuer
+    // jeden der beiden. Gibt es am selben Vorgang schon eine offene Aufgabe
+    // mit gleichem Titel, fragt das Formular einmal nach.
+    if (text(fd, "trotzdem") !== "1") {
+      const gleich = (s: string) => s.toLocaleLowerCase("de-DE").replace(/\s+/g, " ").trim();
+      const { data: offen } = await supabase.from("tasks").select("task_number,title,responsible_user")
+        .eq(SPALTE[art], id).in("status", ["OPEN", "IN_PROGRESS"]).is("archived_at", null).limit(200);
+      const treffer = ((offen ?? []) as any[]).find((t) => gleich(t.title) === gleich(titel));
+      if (treffer) {
+        const { data: wer } = treffer.responsible_user
+          ? await supabase.from("profiles").select("display_name").eq("user_id", treffer.responsible_user).maybeSingle()
+          : { data: null };
+        return redirect(rueckweg(zurueck, "doppelt", {
+          doppelt_nr: treffer.task_number, doppelt_wer: wer?.display_name ?? "",
+          titel, faellig, uhrzeit, prioritaet, verantwortlich, beschreibung: text(fd, "beschreibung"),
+        }), { headers: responseHeaders() });
+      }
+    }
     const { error } = await supabase.from("tasks").insert({
       title: titel.slice(0, 300),
       description: text(fd, "beschreibung") || null,
