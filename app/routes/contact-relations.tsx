@@ -235,7 +235,7 @@ export default function ContactRelations() {
     <main className="editor-shell">
       <header className="editor-header">
         <div>
-          <Link className="back-link" to={`/crm/contacts/${contact.id}`}>← Stammdaten</Link>
+          <Link className="back-link" to={`/crm/contacts/${contact.id}`}>← Übersicht</Link>
           <p className="eyebrow">{contact.contact_number} · CRM-Arbeitsbereich</p>
           <h1 className="editor-title">{contact.first_name} {contact.last_name}</h1>
         </div>
@@ -286,7 +286,7 @@ export default function ContactRelations() {
         </section>
       </div>
 
-      <section className="data-card">
+      <section className="data-card" id="aufgaben">
         <div className="card-head"><div><p className="eyebrow">Wiedervorlage</p><h2>Aufgaben</h2></div></div>
         <div className="data-list">
           {tasks.map((task) => (
@@ -297,7 +297,7 @@ export default function ContactRelations() {
           ))}
           {tasks.length === 0 ? <p className="empty-state">Noch keine Aufgaben zu diesem Kontakt.</p> : null}
         </div>
-        <Form method="post" className="form-grid">
+        <Form method="post" className="form-grid" id="aufgabe-neu">
           <input type="hidden" name="_intent" value="create_task" />
           <label className="form-field"><span>Titel</span><input name="title" required /></label>
           <label className="form-field"><span>Fällig am</span><input name="due_date" type="date" required /></label>

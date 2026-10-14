@@ -78,7 +78,7 @@ export async function loader({request,context,params}:Route.LoaderArgs){
   if(propertyError||!property)throw new Response("Immobilie nicht gefunden.",{status:404,headers:responseHeaders()});
   const [{data:record},{data:partiesRaw},{data:owners},{data:contacts},{data:profiles},{data:canWrite},{data:canArchive},{data:canTask},{data:gapsResult}]=await Promise.all([
     supabase.from("property_dispositions").select("*").eq("property_id",propertyId).maybeSingle(),
-    supabase.from("property_disposition_parties").select("*,contacts!property_disposition_parties_contact_id_fkey(id,contact_number,first_name,last_name),represents:contacts!property_disposition_parties_represents_contact_id_fkey(id,first_name,last_name)").order("party_role").order("created_at"),
+    supabase.from("property_disposition_parties").select("*,contacts!property_disposition_parties_contact_id_fkey(id,contact_number,first_name,last_name),represents:contacts!property_disposition_parties_represents_contact_id_fkey(id,first_name,last_name),property_dispositions!inner(property_id)").eq("property_dispositions.property_id",propertyId).order("party_role").order("created_at"),
     supabase.from("property_owners").select("contact_id,ownership_percentage,primary_contact").eq("property_id",propertyId),
     supabase.from("contacts").select("id,contact_number,first_name,last_name").is("archived_at",null).order("last_name").limit(1000),
     supabase.from("profiles").select("user_id,display_name").eq("status","ACTIVE").order("display_name"),
@@ -87,7 +87,7 @@ export async function loader({request,context,params}:Route.LoaderArgs){
     supabase.rpc("current_user_has_permission",{p_permission:"task.write"}),
     supabase.rpc("property_disposition_gaps",{p_property_id:propertyId}),
   ]);
-  const parties=((partiesRaw??[]) as any[]).filter((row)=>!record||row.disposition_id===record.id);
+  const parties=((partiesRaw??[]) as any[]).filter((row)=>Boolean(record)&&row.disposition_id===record.id);
   return data({profile,property,record,parties,gaps:(gapsResult??[]) as string[],owners:owners??[],contacts:contacts??[],profiles:profiles??[],canWrite:canWrite===true,canArchive:canArchive===true,canTask:canTask===true},{headers:responseHeaders()});
 }
 

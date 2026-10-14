@@ -191,7 +191,8 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         "Über der Liste „+ Neu“. Beim Anlegen genügen Vor- und Nachname; alles weitere kann später ergänzt werden.",
         "Das System prüft beim Speichern auf mögliche Dubletten und weist darauf hin, statt stillschweigend eine zweite Karteileiche anzulegen.",
         "Oben rechts in der Kontaktakte öffnet **E-Mail** das Mailprogramm und hält die E-Mail danach am Kontakt fest. Aktivitäten am Verkäufer-Lead erscheinen auch im Verlauf des Kontakts.",
-        "Die Kontaktakte hat vier Reiter: **Stammdaten** (Name, Erreichbarkeit, Empfehlungen, Historie), **Rollen & Aufgaben** (Rollen an Vorgängen, verbundene Personen wie Ehepartner, Miterben oder Bevollmächtigte, offene Aufgaben), **Adressen & Firmen** (nachgewiesene Objekte, Organisationen, Anschriften) und **Verlauf** (Aktivitäten, Kommentare und @Erwähnungen).",
+        "Die Kontaktakte öffnet mit der **Übersicht**: wer die Person für das Büro ist (Suchprofil, eigenes Objekt, Verkaufsinteresse), Telefon und E-Mail zum Antippen, die Zahl passender Objekte und offener Aufgaben, der **nächste Schritt** (das früheste Datum aus Aufgaben, Besichtigungen, Wiedervorlagen und unbeantworteten Anfragen), alle laufenden Vorgänge mit Stand und der letzte Kontakt. Die Übersicht ändert nichts; jede Zeile führt in die zugehörige Akte.",
+        "Dahinter vier Reiter: **Stammdaten** (Name, Erreichbarkeit, Empfehlungen, Historie), **Rollen & Aufgaben** (Rollen an Vorgängen, verbundene Personen wie Ehepartner, Miterben oder Bevollmächtigte, offene Aufgaben), **Adressen & Firmen** (nachgewiesene Objekte, Organisationen, Anschriften) und **Verlauf** (Aktivitäten, Kommentare und @Erwähnungen).",
       ]},
       { art: "absatz", text:
         "Organisationen sind Firmen und Partner: Notariate, Handwerksbetriebe, "
@@ -657,7 +658,9 @@ export const HELP_CHAPTERS: HelpChapter[] = [
       ]},
       { art: "absatz", text:
         "Exposés werden aus einer konkreten Publikationsversion erzeugt und ebenfalls "
-        + "versioniert. Unter **Portale** wird je Kanal festgehalten, wo das Objekt "
+        + "versioniert. In ein Exposé kommen nur Bilder und Grundrisse, die unter "
+        + "**Medien** für die Veröffentlichung freigegeben sind; interne Fotos bleiben "
+        + "draußen, auch im PDF. Unter **Portale** wird je Kanal festgehalten, wo das Objekt "
         + "läuft. Es gibt keine vorgetäuschte Portalanbindung — geschaltet wird beim "
         + "Portal, dokumentiert wird hier." },
       { art: "absatz", text:

@@ -84,6 +84,12 @@ export const KAUFANGEBOTSTATUS: Beschriftungen = {
   FAILED: "Abschluss gescheitert",
 };
 
+// Finanzierung beim Suchprofil und beim Kaufangebot -- dieselben vier Werte
+// wie in der Datenbank (search_profiles / purchase_offers.financing_status).
+export const FINANZIERUNGSSTAND: Beschriftungen = {
+  OPEN: "Noch offen", IN_PROGRESS: "In Klärung", CONFIRMED: "Bestätigt", NOT_REQUIRED: "Nicht erforderlich",
+};
+
 export const ABSCHLUSSSTATUS: Beschriftungen = {
   PREPARATION: "Abschlussvorbereitung", NOTARY_INSTRUCTED: "Notariat beauftragt",
   DRAFT_RECEIVED: "Entwurf eingegangen", APPOINTMENT_SCHEDULED: "Beurkundung terminiert",

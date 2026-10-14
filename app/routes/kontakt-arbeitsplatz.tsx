@@ -13,6 +13,10 @@ import { Arbeitsplatz, ArbeitsplatzKopf, EmailKnopf, ArbeitsplatzReiter, type Ar
 // "Arbeitsbereich", und welche Seiten es ueberhaupt gab, sah man erst, wenn
 // man sie fand. Jetzt stehen alle vier als Reiter da.
 //
+// Seit 14.10.2026 ist der erste Reiter die Uebersicht (contact-overview.tsx):
+// Wer einen Kontakt oeffnet, sieht zuerst, was mit der Person laeuft, nicht
+// das Formular. Die Stammdaten liegen unter /stammdaten.
+//
 // Die Seitenkoepfe der vier Seiten zeigen nur Nummer und Name -- beides
 // steht im Kopf darueber. Sie werden im Arbeitsplatz ausgeblendet.
 
@@ -124,7 +128,8 @@ export default function KontaktArbeitsplatz() {
         <ArbeitsplatzReiter
           beschriftung="Bereiche der Kontaktakte"
           eintraege={[
-            { beschriftung: "Stammdaten", pfad: basis, genau: true },
+            { beschriftung: "Übersicht", pfad: basis, genau: true },
+            { beschriftung: "Stammdaten", pfad: `${basis}/stammdaten` },
             { beschriftung: "Rollen & Aufgaben", pfad: `${basis}/relations` },
             { beschriftung: "Adressen & Firmen", pfad: `${basis}/associations` },
             { beschriftung: "Verlauf", pfad: `${basis}/collaboration` },

@@ -26,7 +26,7 @@ Deno.serve(async(req:Request)=>{
  if(exposeError||!expose)return response({ok:false,error:"EXPOSE_NOT_FOUND"},404);
  if(expose.status!=="DRAFT")return expose.storage_path?response({ok:true,expose:{id:expose.id,expose_number:expose.expose_number,version_number:expose.version_number,status:expose.status},reused:true}):response({ok:false,error:"EXPOSE_NOT_DRAFT"},400);
  if(!safeText(expose.title))return response({ok:false,error:"TITLE_REQUIRED"},400);
- const {data:mediaRows,error:mediaError}=await db.from("property_expose_media").select("role,sort_order,property_media!inner(id,media_type,storage_bucket,storage_path,title,alt_text)").eq("expose_id",exposeId).order("sort_order");
+ const {data:mediaRows,error:mediaError}=await db.from("property_expose_media").select("role,sort_order,property_media!inner(id,media_type,storage_bucket,storage_path,title,alt_text)").eq("expose_id",exposeId).eq("property_media.public_approved",true).is("property_media.archived_at",null).order("sort_order");
  if(mediaError)return response({ok:false,error:"MEDIA_LOAD_FAILED"},500);
  const media=(mediaRows??[]).map((row:any)=>({role:row.role,sort_order:row.sort_order,...one(row.property_media)}));
  const facts:any=expose.facts??{},energy:any=expose.energy??{};

@@ -152,7 +152,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     );
   }
 
-  return redirect(`/crm/contacts/${contactId}?saved=1`, { headers: responseHeaders() });
+  return redirect(`/crm/contacts/${contactId}/stammdaten?saved=1`, { headers: responseHeaders() });
 }
 
 export default function ContactDetail() {
@@ -176,7 +176,7 @@ export default function ContactDetail() {
           <input type="hidden" name="version" value={contact.version} />
           {saved ? <div className="form-success">Änderungen gespeichert.</div> : null}
           {result?.error ? <div className={result.conflict ? "form-warning" : "form-error"}>{result.error}</div> : null}
-          {result?.conflict ? <Link className="secondary-button link-button inline-action" to={`/crm/contacts/${contact.id}`}>Aktuelle Version laden</Link> : null}
+          {result?.conflict ? <Link className="secondary-button link-button inline-action" to={`/crm/contacts/${contact.id}/stammdaten`}>Aktuelle Version laden</Link> : null}
 
           <div className="form-grid">
             <label className="form-field"><span>Anrede</span><select name="salutation" defaultValue={contact.salutation ?? ""}><option value="">—</option><option value="Herr">Herr</option><option value="Frau">Frau</option><option value="Divers">Divers</option></select></label>
@@ -191,7 +191,7 @@ export default function ContactDetail() {
           </div>
 
           <label className="form-field full-width"><span>Interne Notiz</span><textarea name="internal_notes" rows={6} defaultValue={contact.internal_notes ?? ""} /></label>
-          <div className="form-actions"><Link className="secondary-button link-button" to="/crm">Zurück</Link><button className="primary-button" type="submit">Änderungen speichern</button></div>
+          <div className="form-actions"><Link className="secondary-button link-button" to={`/crm/contacts/${contact.id}`}>Abbrechen</Link><button className="primary-button" type="submit">Änderungen speichern</button></div>
         </Form>
 
         <aside className="history-card">

@@ -124,6 +124,9 @@ const AUSNAHMEN = {
   "app/routes/closing-milestones.tsx": ["MILESTONE_HINT"],
   // Grund einer Dublettenwarnung, in der Route selbst berechnet.
   "app/routes/contact-new.tsx": ["reasonLabel"],
+  // Art eines Verlaufseintrags: freier Text in activity_events.activity_type,
+  // gesetzt von der Verlaufsmaske und den Website-Eingaengen.
+  "app/routes/contact-overview.tsx": ["AKTIVITAET"],
   // Trefferart der globalen Suche, in der Route selbst gebildet.
   "app/routes/crm-search.tsx": ["LABELS"],
   // Antwortstand einer Anfrage: aus Fristen berechnet, nicht gespeichert.
