@@ -97,7 +97,7 @@ export function KontaktAuswahl({ name, beschriftung, vorbelegt, vorbelegtId, pfl
       ) : disabled ? (
         <div className="kontakt-auswahl-gewaehlt"><span className="leise">—</span></div>
       ) : (
-        <>
+        <div className="kontakt-auswahl-suche">
           <input
             id={feldId}
             type="search"
@@ -119,7 +119,7 @@ export function KontaktAuswahl({ name, beschriftung, vorbelegt, vorbelegtId, pfl
               ))}
             </div>
           ) : null}
-        </>
+        </div>
       )}
       {hinweis ? <small>{hinweis}</small> : null}
     </div>

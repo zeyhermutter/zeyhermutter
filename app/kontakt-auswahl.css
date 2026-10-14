@@ -1,6 +1,7 @@
 /* Kontakt waehlen mit Suche (app/components/kontakt-auswahl.tsx). */
 
-.kontakt-auswahl { display: grid; gap: 6px; min-width: 0; }
+.kontakt-auswahl { display: grid; gap: 6px; min-width: 0; align-self: start; }
+.kontakt-auswahl-suche { position: relative; display: grid; }
 .kontakt-auswahl > label span { font-size: 13px; font-weight: 600; color: #26323c; }
 
 .kontakt-auswahl-gewaehlt {
@@ -15,7 +16,15 @@
 }
 .kontakt-auswahl-gewaehlt .subtle-link { margin-left: auto; border: 0; background: none; cursor: pointer; }
 
+/* Die Treffer liegen ueber dem Formular, statt es nach unten zu schieben --
+ * sonst wuchs im Raster das Nachbarfeld mit (Lead anlegen, 14.10.2026). */
 .kontakt-auswahl-treffer {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  box-shadow: 0 6px 16px rgba(17, 24, 39, .12);
   display: grid;
   max-height: 240px;
   overflow-y: auto;
