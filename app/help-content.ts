@@ -358,7 +358,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         "Die Akte hat neun Reiter, die immer gleich dastehen. Unter manchen Reitern "
         + "stehen mehrere Seiten als kleine Unterreiter:" },
       { art: "liste", punkte: [
-        "**Übersicht** — Status und Statuswechsel, Fahrplan, offene Aufgaben zum Objekt, Checkliste zur Vermarktungsreife und der Stand der einzelnen Abschnitte auf einen Blick. Bei Vermietung steht dort die Kaltmiete statt des Kaufpreises.",
+        "**Übersicht** — oben die Karte „auf einen Blick“: Preis (bei Vermietung die Kaltmiete), Flächen und Zimmer, die Eigentümer mit Telefon, die Zahl der Interessenten (jede Person mit Anfrage, Besichtigung oder Kaufangebot, einmal gezählt), offene Anfragen, anstehende Besichtigungen, laufende Kaufangebote, offene Aufgaben und Dokumente sowie das, was als Nächstes fällig ist. Dort klappt auch **Status ändern** auf. Darunter folgen Fahrplan, Anfragen & Besichtigungen, letzte Aktivitäten, offene Aufgaben, dann Pflichtangaben und Checkliste, Verfügungsberechtigung, Recht & Lasten, Geldwäsche, Preis & Wert sowie WEG & Miete.",
         "**Objektdaten** — Basisdaten & Ausstattung, WEG & Miete, Pflichtangaben.",
         "**Eigentümer & Recht** — Eigentümer, Recht & Lasten, Verfügungsberechtigung.",
         "**Preis & Wert** — Preisverlauf und Wertermittlung.",

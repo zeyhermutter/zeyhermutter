@@ -10,6 +10,7 @@ import { RESERVATION_STATUS } from "~/lib/reservierung";
 import { fahrplan } from "~/lib/objektakte-fahrplan";
 import { ObjektakteFahrplan } from "~/components/objektakte-fahrplan";
 import { ObjektAufgaben } from "~/components/objekt-aufgaben";
+import { ObjektAufEinenBlick, ObjektInteressentenLage } from "~/components/objekt-auf-einen-blick";
 import { ankerPfad, teilAusPfad } from "~/lib/objektakte-navigation";
 
 type FeatureChoice = { key:string; label:string };
@@ -60,7 +61,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     // Namen der Eigentuemer direkt mitladen (14.10.2026). Vorher kamen sie aus
     // einer Liste der ersten 1000 Kontakte -- wer dahinter lag, erschien nur
     // als Kennung und war als Eigentuemer nicht waehlbar.
-    supabase.from("property_owners").select("*,contacts!property_owners_contact_id_fkey(id,contact_number,first_name,last_name,email)").eq("property_id",propertyId).order("primary_contact",{ascending:false}),
+    supabase.from("property_owners").select("*,contacts!property_owners_contact_id_fkey(id,contact_number,first_name,last_name,email,mobile,phone)").eq("property_id",propertyId).order("primary_contact",{ascending:false}),
     /^[0-9a-f-]{36}$/i.test(newOwner)?supabase.from("contacts").select("id, contact_number, first_name, last_name, email").eq("id",newOwner).limit(1):Promise.resolve({data:[] as any[],error:null}),
     supabase.from("property_features").select("*").eq("property_id",propertyId).order("label"),
     supabase.from("property_features").select("feature_key,label").like("feature_key","CUSTOM_%").order("label").limit(1000),
@@ -90,7 +91,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     // dieses Haus" musste man sie einzeln oeffnen. Jede Abfrage holt nur,
     // was eine Fahrplanzeile anzeigt -- Nummer, Stand, Kennung.
     supabase.from("measurement_orders").select("id,order_number,status").eq("property_id",propertyId).is("archived_at",null).order("updated_at",{ascending:false}).limit(20),
-    supabase.from("purchase_offers").select("id,offer_number,status").eq("property_id",propertyId).is("archived_at",null).order("updated_at",{ascending:false}).limit(20),
+    supabase.from("purchase_offers").select("id,offer_number,status,contact_id").eq("property_id",propertyId).is("archived_at",null).order("updated_at",{ascending:false}).limit(20),
     supabase.from("property_reservations").select("id,reservation_number,status").eq("property_id",propertyId).is("archived_at",null).order("updated_at",{ascending:false}).limit(20),
     supabase.from("sale_closings").select("id,closing_number,status").eq("property_id",propertyId).is("archived_at",null).order("updated_at",{ascending:false}).limit(20),
     supabase.from("commissions").select("id,commission_number,status").eq("property_id",propertyId).is("archived_at",null).order("updated_at",{ascending:false}).limit(20),
@@ -99,6 +100,16 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     supabase.from("tasks").select("id,task_number,title,status,priority,due_at,responsible_user").eq("property_id",propertyId).in("status",["OPEN","IN_PROGRESS"]).is("archived_at",null).order("due_at",{ascending:true,nullsFirst:false}).limit(30),
   ]);
   const firstError=[addressRes,ownersRes,contactsRes,featuresRes,customFeaturesRes,energyRes,checklistRes,transitionsRes,usersRes].find((r)=>r.error)?.error;
+  // Nur fuer die Uebersicht: Anfragen, Besichtigungen, Aktivitaeten und die
+  // Zahl der Dokumente (P1, 14.10.2026). Die anderen Teile der Akte brauchen
+  // sie nicht und laden sie nicht.
+  const leer={data:[] as any[],error:null,count:null as number|null};
+  const [blickAnfragen,blickBesichtigungen,blickAktivitaeten,blickDokumente]=teilAusPfad(new URL(request.url).pathname)==="record"?await Promise.all([
+    supabase.from("inquiries").select("id,inquiry_number,status,received_at,answered_at,contact_id,contacts(id,first_name,last_name)").eq("property_id",propertyId).is("archived_at",null).order("received_at",{ascending:false}).limit(50),
+    supabase.from("viewings").select("id,viewing_number,status,starts_at,contact_id,contacts(id,first_name,last_name)").eq("property_id",propertyId).is("archived_at",null).order("starts_at",{ascending:false}).limit(100),
+    supabase.from("activity_events").select("id,activity_type,title,occurred_at").eq("property_id",propertyId).order("occurred_at",{ascending:false}).limit(5),
+    supabase.from("documents").select("id",{count:"exact",head:true}).eq("property_id",propertyId).is("archived_at",null),
+  ]):[leer,leer,leer,leer];
   if(firstError) throw new Response("Objektdaten konnten nicht vollständig geladen werden.",{status:500,headers:responseHeaders()});
 
   let auditEvents:any[]=[];
@@ -119,10 +130,20 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     {MAKLERAUFTRAGSTATUS:MANDATE_STATUS,MAKLERAUFTRAGART:MANDATE_TYPE,AUFMASSSTATUS,KAUFANGEBOTSTATUS,
       ABSCHLUSSSTATUS,PROVISIONSSTATUS,RESERVIERUNGSSTATUS:RESERVATION_STATUS,PROJEKTPHASE:PROJECT_PHASE_LABELS},
   );
+  const blick={
+    eigentuemer:((ownersRes.data??[]) as any[]).filter((o)=>o.contacts&&(!o.valid_until||o.valid_until>=new Date().toISOString().slice(0,10))).map((o)=>({id:o.id as string,contact_id:o.contact_id as string,name:`${o.contacts.first_name} ${o.contacts.last_name}`,telefon:(o.contacts.mobile??o.contacts.phone??null) as string|null,email:(o.contacts.email??null) as string|null,anteil:o.ownership_percentage===null?null:Number(o.ownership_percentage),haupt:Boolean(o.primary_contact)})),
+    anfragen:(blickAnfragen.data??[]) as any[],
+    besichtigungen:(blickBesichtigungen.data??[]) as any[],
+    angebotKontakte:((offersRes.data??[]) as any[]).filter((o)=>o.status!=="REPLACED").map((o)=>o.contact_id as string),
+    aktiveAngebote:((offersRes.data??[]) as any[]).filter((o)=>["SUBMITTED","COUNTERED","ACCEPTED"].includes(o.status)).length,
+    aktivitaeten:(blickAktivitaeten.data??[]) as any[],
+    dokumente:blickDokumente.error?null:(blickDokumente.count??0),
+    fehlt:Boolean(blickAnfragen.error||blickBesichtigungen.error||blickAktivitaeten.error||offersRes.error),
+  };
   const contactMap=Object.fromEntries(((ownersRes.data??[]) as any[]).map((o)=>o.contacts).filter(Boolean).map((c:any)=>[c.id,c]));
   const neuerEigentuemer=((contactsRes.data??[]) as any[])[0]??null;
   const customFeatureOptions=Array.from(new Map((customFeaturesRes.data??[]).map((f)=>[f.feature_key,{key:f.feature_key,label:f.label}])).values());
-  return data({property,haltepunkte,vorgangsFehler,offeneAufgaben:tasksRes.error?null:(tasksRes.data??[]),mandates:mandatesRes.data??[],hoa:hoaRes.data??null,specialLevies:leviesRes.data??[],tenancies:tenanciesRes.data??[],disclosureGaps:(disclosureGapsRes.data??[]) as string[],dispositionGaps:(dispositionGapsRes.data??[]) as string[],saleProject:saleProjectRes.data??null,canGwgRead:gwgPermissionRes.data===true,gwgCase:(gwgCaseRes.data??[])[0]??null,legal:legalRes.data??null,encumbrances:encumbranceRes.data??[],canDispositionRead:dispositionPermissionRes.data===true,priceStages:priceStagesRes.data??[],valuations:valuationsRes.data??[],disposition:dispositionRes.data??null,dispositionParties:((dispositionPartyRes.data??[]) as any[]).filter((row)=>Boolean(dispositionRes.data)&&row.disposition_id===(dispositionRes.data as any).id),address:addressRes.data,owners:ownersRes.data??[],neuerEigentuemer:neuerEigentuemer?{id:neuerEigentuemer.id,name:`${neuerEigentuemer.first_name} ${neuerEigentuemer.last_name}`.trim(),nummer:neuerEigentuemer.contact_number}:null,contactMap,features:featuresRes.data??[],customFeatureOptions,energy:energyRes.data,checklist:checklistRes.data??[],transitions:transitionsRes.data??[],users:usersRes.data??[],auditEvents,profile,newOwner},{headers:responseHeaders()});
+  return data({property,blick,jetzt:new Date().toISOString(),haltepunkte,vorgangsFehler,offeneAufgaben:tasksRes.error?null:(tasksRes.data??[]),mandates:mandatesRes.data??[],hoa:hoaRes.data??null,specialLevies:leviesRes.data??[],tenancies:tenanciesRes.data??[],disclosureGaps:(disclosureGapsRes.data??[]) as string[],dispositionGaps:(dispositionGapsRes.data??[]) as string[],saleProject:saleProjectRes.data??null,canGwgRead:gwgPermissionRes.data===true,gwgCase:(gwgCaseRes.data??[])[0]??null,legal:legalRes.data??null,encumbrances:encumbranceRes.data??[],canDispositionRead:dispositionPermissionRes.data===true,priceStages:priceStagesRes.data??[],valuations:valuationsRes.data??[],disposition:dispositionRes.data??null,dispositionParties:((dispositionPartyRes.data??[]) as any[]).filter((row)=>Boolean(dispositionRes.data)&&row.disposition_id===(dispositionRes.data as any).id),address:addressRes.data,owners:ownersRes.data??[],neuerEigentuemer:neuerEigentuemer?{id:neuerEigentuemer.id,name:`${neuerEigentuemer.first_name} ${neuerEigentuemer.last_name}`.trim(),nummer:neuerEigentuemer.contact_number}:null,contactMap,features:featuresRes.data??[],customFeatureOptions,energy:energyRes.data,checklist:checklistRes.data??[],transitions:transitionsRes.data??[],users:usersRes.data??[],auditEvents,profile,newOwner},{headers:responseHeaders()});
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
@@ -170,7 +191,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       return data<ActionResult>({error:"Dieser Statuswechsel ist fachlich nicht zulässig."},{status:400,headers:responseHeaders()});
     }
     if(!updated)return conflict();
-    return redirect(ankerPfad(propertyId,"status"),{headers:responseHeaders()});
+    return redirect(ankerPfad(propertyId,"ueberblick"),{headers:responseHeaders()});
   }
 
   if(intent==="address"){
@@ -307,11 +328,63 @@ export default function PropertyDetail(){
     {result?.error?<div className="form-error">{result.error}</div>:null}
 
     {teil==="record"?<div className="property-summary-grid">
-      <section className="data-card" id="status"><div className="card-head"><div><p className="eyebrow">Ablauf</p><h2>Status</h2></div><span className="badge">{labelStatus(p.status)}</span></div><div className="inline-actions">
-        {p.status==="ARCHIVED" && p.status_before_archive ? <Form method="post"><input type="hidden" name="_intent" value="status"/><input type="hidden" name="version" value={p.version}/><input type="hidden" name="target_status" value={p.status_before_archive}/><button className="secondary-button" type="submit">Wiederherstellen → {labelStatus(p.status_before_archive)}</button></Form> : d.transitions.map((t)=><Form method="post" key={t.to_status}><input type="hidden" name="_intent" value="status"/><input type="hidden" name="version" value={p.version}/><input type="hidden" name="target_status" value={t.to_status}/><button className="secondary-button" type="submit" title={t.description??""}>→ {labelStatus(t.to_status)}</button></Form>)}
-      </div></section>
+      <ObjektAufEinenBlick id="ueberblick" p={p} blick={d.blick as any} aufgaben={d.offeneAufgaben as any} uebergaenge={d.transitions as any} jetzt={d.jetzt}/>
       <ObjektakteFahrplan haltepunkte={d.haltepunkte} vorgangsFehler={d.vorgangsFehler}/>
+      <ObjektInteressentenLage p={p} blick={d.blick as any} jetzt={d.jetzt}/>
       <ObjektAufgaben aufgaben={d.offeneAufgaben as any} nutzer={d.users}/>
+      <section className="data-card" id="energie"><div className="card-head"><div><p className="eyebrow">Vor der Veröffentlichung</p><h2>Pflichtangaben</h2></div><Link className="subtle-link" to={`/properties/${p.id}/mandatory-data`}>Erfassen & prüfen →</Link></div>{(()=>{
+        const gaps=(d.disclosureGaps??[]) as string[];
+        const e=d.energy as any;
+        return <>
+          <dl className="detail-list">
+            <div><dt>Energieausweis</dt><dd>{e?.exemption_reason?`Ausnahme: ${ENERGY_EXEMPTION[e.exemption_reason]??e.exemption_reason}`:e?.certificate_present?`${ENERGY_CERTIFICATE_TYPE[e.certificate_type]??"Art offen"}${e.valid_until?` · gültig bis ${formatDay(e.valid_until)}`:""}`:"nicht erfasst"}</dd></div>
+            <div><dt>Endenergie</dt><dd>{e?.energy_value_kwh!=null?`${Number(e.energy_value_kwh).toLocaleString("de-DE")} kWh/(m²·a)`:"—"}</dd></div>
+            <div><dt>Energieträger</dt><dd>{e?.energy_source||"—"}</dd></div>
+            <div><dt>Effizienzklasse</dt><dd>{e?.efficiency_class||"—"}</dd></div>
+            <div><dt>Baujahr laut Ausweis</dt><dd>{e?.building_year||"—"}</dd></div>
+          </dl>
+          {gaps.length
+            ?<div className="form-warning" style={{marginTop:"0.75rem"}}><strong>Vermarktung und Veröffentlichung sind blockiert:</strong><ul>{gaps.map((gap)=><li key={gap}>{gap}</li>)}</ul></div>
+            :<p className="form-success" style={{marginTop:"0.75rem"}}>Die Pflichtangaben sind vollständig erfasst. Das ist eine Vollständigkeitsprüfung, keine rechtliche Freigabe.</p>}
+        </>;
+      })()}</section>
+      <section className="data-card" id="checkliste"><div className="card-head"><div><p className="eyebrow">Vermarktungsreife</p><h2>Checkliste</h2></div><span className="subtle">{d.checklist.filter((i)=>i.status==="DONE"||i.status==="WAIVED").length}/{d.checklist.length}</span></div>{d.checklist.map((item)=><Form method="post" className={`checklist-row checklist-${item.status.toLowerCase().replace("_","-")}`} key={item.id}><input type="hidden" name="_intent" value="checklist"/><input type="hidden" name="checklist_id" value={item.id}/><input type="hidden" name="checklist_version" value={item.version}/><div><strong>{item.title}</strong><small>{beschrifte(CHECKLISTENKATEGORIE,item.category)}{item.required?" · Pflicht":" · optional"}</small></div><select name="checklist_status" defaultValue={item.status} onChange={(e)=>e.currentTarget.form?.requestSubmit()}><option value="TODO">Offen</option><option value="IN_PROGRESS">In Arbeit</option><option value="DONE">Erledigt</option><option value="WAIVED">Entfällt</option></select></Form>)}</section>
+      {d.canDispositionRead?<section className="data-card" id="verfuegungsberechtigung"><div className="card-head"><div><p className="eyebrow">Wer darf verkaufen</p><h2>Verfügungsberechtigung</h2></div><Link className="subtle-link" to={`/properties/${p.id}/disposition`}>Erfassen & prüfen →</Link></div>{(()=>{
+        const rec=d.disposition as any;const parties=((d.dispositionParties??[]) as any[]).filter((row)=>!row.archived_at);
+        const gaps=(d.dispositionGaps??[]) as string[];
+        return <>
+          <div className={gaps.length?"form-warning":"form-success"}><strong>{gaps.length?"Verfügungsberechtigung offen":"Verfügungsberechtigung geklärt"}</strong>{gaps.length?<ul>{gaps.map((gap:string)=><li key={gap}>{gap}</li>)}</ul>:<p>Alle im System geführten Angaben, Zustimmungen und Genehmigungen sind dokumentiert.</p>}</div>
+          {rec?<dl className="detail-list"><div><dt>Eigentümerstellung</dt><dd>{DISPOSITION_STRUCTURE[rec.ownership_structure]??rec.ownership_structure}</dd></div><div><dt>Erbfall</dt><dd>{rec.inheritance_case?`ja${rec.date_of_death?` · verstorben ${formatDay(rec.date_of_death)}`:""}`:"nein"}</dd></div>{rec.inheritance_case?<div><dt>Erbnachweis</dt><dd>{rec.succession_proof_issued_on?`erteilt ${formatDay(rec.succession_proof_issued_on)}`:rec.succession_proof_type?"beantragt bzw. offen":"nicht festgelegt"}</dd></div>:null}<div><dt>Beteiligte</dt><dd>{parties.length}</dd></div></dl>:null}
+          {parties.length?<div className="data-list" style={{marginTop:"0.75rem"}}>{parties.map((row:any)=>{const c=Array.isArray(row.contacts)?row.contacts[0]:row.contacts;return <Link className="data-row data-row-link" to={`/properties/${p.id}/disposition#beteiligte`} key={row.id}>
+            <div><strong>{c?`${c.last_name}, ${c.first_name}`:"Kontakt"} · {DISPOSITION_ROLE[row.party_role]??row.party_role}</strong><small>{row.share_percentage?`Quote ${Number(row.share_percentage).toLocaleString("de-DE",{maximumFractionDigits:3})} %`:row.is_minor?"minderjährig":"—"}</small></div>
+            <div className="row-meta"><span className={`status-pill ${row.consent_status==="GIVEN"?"status-sold":row.consent_status==="REFUSED"?"status-lost":row.consent_status==="OPEN"?"status-draft":"status-archived"}`}>{DISPOSITION_CONSENT[row.consent_status]??row.consent_status}</span><small>{row.court_approval_required&&!row.court_approval_granted_on?"Genehmigung ausstehend":row.power_of_attorney_revoked_on?"Vollmacht widerrufen":""}</small></div>
+            <span className="subtle-link">Öffnen →</span>
+          </Link>;})}</div>:null}
+        </>;
+      })()}</section>:null}
+      <section className="data-card" id="recht-lasten"><div className="card-head"><div><p className="eyebrow">Rechtsobjekt</p><h2>Recht & Lasten</h2></div><Link className="subtle-link" to={`/properties/${p.id}/legal`}>Erfassen & prüfen →</Link></div>{(()=>{
+        const l=d.legal as any;const rows=(d.encumbrances??[]) as any[];
+        const flags=l?[l.monument_protection?"Denkmalschutz":null,l.milieu_protection?"Milieuschutz":null,l.redevelopment_area?"Sanierungsgebiet":null,l.contamination_suspicion?"Altlastenverdacht":null,l.development_charges_open?"Erschließungsbeiträge offen":null,l.heritable_building_right?"Erbbaurecht":null].filter(Boolean) as string[]:[];
+        if(!l&&rows.length===0)return <p className="empty-state">Für diese Immobilie sind keine Grundbuchdaten und keine Belastungen erfasst. Ohne diese Angaben lässt sich nicht beurteilen, was verkauft wird.</p>;
+        const undeleted=rows.filter((row)=>row.section==="LAND_REGISTER_II"&&row.deletable!=="YES").length;
+        const debt=rows.filter((row)=>row.section==="LAND_REGISTER_III").reduce((sum,row)=>sum+Number(row.remaining_amount??row.nominal_amount??0),0);
+        return <>
+          <dl className="detail-list">
+            <div><dt>Grundbuch</dt><dd>{l?.land_registry_court||l?.land_register_sheet?[l?.land_registry_court,l?.land_register_sheet].filter(Boolean).join(" · "):"nicht erfasst"}</dd></div>
+            <div><dt>Auszug vom</dt><dd>{formatDay(l?.extract_dated_on??null)}</dd></div>
+            <div><dt>Wohnflächengrundlage</dt><dd>{l?.living_area_basis==="WOFLV"?"Wohnflächenverordnung":l?.living_area_basis==="DIN_277"?"DIN 277":l?.living_area_basis==="ESTIMATED"?"Geschätzt":"Unbekannt"}</dd></div>
+            {rows.some((row)=>row.section==="LAND_REGISTER_III")?<div><dt>Offene Grundpfandrechte</dt><dd>{euro(debt)}</dd></div>:null}
+          </dl>
+          {flags.length?<div className="inline-actions" style={{marginTop:"0.5rem"}}>{flags.map((flag)=><span className="status-pill status-lost" key={flag}>{flag}</span>)}</div>:null}
+          {rows.length?<div className="data-list" style={{marginTop:"0.75rem"}}>{rows.map((row:any)=><Link className="data-row data-row-link" to={`/properties/${p.id}/legal#${row.section.toLowerCase()}`} key={row.id}>
+            <div><strong>{ENCUMBRANCE_SECTION[row.section]}{row.rank_position?` · Rang ${row.rank_position}`:""} · {ENCUMBRANCE_KIND[row.kind]??row.kind}</strong><small>{row.beneficiary_name?`${row.beneficiary_name} · `:""}{row.content.length>80?`${row.content.slice(0,80)}…`:row.content}</small></div>
+            <div className="row-meta">{row.section==="LAND_REGISTER_III"?<span>{euro(row.remaining_amount??row.nominal_amount)}</span>:<span className={row.deletable==="NO"?"status-pill status-lost":""}>{row.deletable==="NO"?"nicht löschbar":row.deletable==="YES"?"löschbar":"Löschbarkeit offen"}</span>}<small>{ENCUMBRANCE_IMPACT[row.sale_impact]}</small></div>
+            <span className="subtle-link">Öffnen →</span>
+          </Link>)}</div>:<p className="subtle" style={{marginTop:"0.75rem"}}>Keine bestehenden Belastungen erfasst.</p>}
+          {undeleted?<p className="form-warning" style={{marginTop:"0.75rem"}}>{undeleted === 1 ? "Ein Recht" : `${undeleted} Rechte`} in Abteilung II {undeleted===1?"ist":"sind"} nicht als löschbar dokumentiert. Vor Vermarktungsstart klären, ob es beim Verkauf bestehen bleibt.</p>:null}
+        </>;
+      })()}</section>
+      {d.canGwgRead?<section className="data-card" id="geldwaesche"><div className="card-head"><div><p className="eyebrow">Sorgfaltspflichten</p><h2>Geldwäsche-Compliance</h2></div><Link className="subtle-link" to={`/properties/${p.id}/compliance`}>Akte öffnen →</Link></div>{(()=>{const g=d.gwgCase as any;if(!g)return <p className="empty-state">Für diese Immobilie ist keine Geldwäscheakte angelegt.</p>;const ids=(g.gwg_identifications??[]) as any[];const seller=ids.filter((i)=>i.party_role==="SELLER"&&i.identified_on).length;const buyer=ids.filter((i)=>i.party_role==="BUYER"&&i.identified_on).length;return <Link className="data-row data-row-link" to={`/properties/${p.id}/compliance`}><div><strong>{g.case_number}</strong><small>{g.risk_level?`Risiko ${GWG_RISK[g.risk_level]??g.risk_level}`:"Risikoeinstufung offen"} · Verkäuferseite {seller?"identifiziert":"offen"} · Käuferseite {buyer?"identifiziert":"offen"}</small></div><div className="row-meta">{g.risk_level&&seller?<span className="status-pill status-sold">Erfasst</span>:<span className="status-pill status-lost">Unvollständig</span>}<small>{g.retention_until?`Aufbewahrung bis ${formatDay(g.retention_until)}`:"Aufbewahrung offen"}</small></div><span className="subtle-link">Öffnen →</span></Link>;})()}</section>:null}
       <section className="data-card" id="preis-wert"><div className="card-head"><div><p className="eyebrow">Begründbar</p><h2>Preis & Wert</h2></div><Link className="subtle-link" to={`/properties/${p.id}/pricing`}>Verlauf & Wertermittlung →</Link></div>{(()=>{
         const stufen=(d.priceStages??[]) as any[];
         const bewertungen=(d.valuations??[]) as any[];
@@ -376,59 +449,6 @@ export default function PropertyDetail(){
           {aktiv&&aktiv.tenant_pre_emption_relevant?<p className="form-warning" style={{marginTop:"0.75rem"}}>Ein Vorkaufsrecht des Mieters ist als möglich vermerkt. Vor der Vermarktung anwaltlich klären lassen.</p>:null}
           {sperrfrist?<p className="form-warning" style={{marginTop:"0.75rem"}}>Eine Sperrfrist nach Umwandlung ist bis {formatDay(sperrfrist)} vermerkt.</p>:null}
           {aktiv&&Number(aktiv.arrears_amount)>0?<p className="form-warning" style={{marginTop:"0.75rem"}}>Mietrückstand von {euro(aktiv.arrears_amount)} erfasst.</p>:null}
-        </>;
-      })()}</section>
-      {d.canDispositionRead?<section className="data-card" id="verfuegungsberechtigung"><div className="card-head"><div><p className="eyebrow">Wer darf verkaufen</p><h2>Verfügungsberechtigung</h2></div><Link className="subtle-link" to={`/properties/${p.id}/disposition`}>Erfassen & prüfen →</Link></div>{(()=>{
-        const rec=d.disposition as any;const parties=((d.dispositionParties??[]) as any[]).filter((row)=>!row.archived_at);
-        const gaps=(d.dispositionGaps??[]) as string[];
-        return <>
-          <div className={gaps.length?"form-warning":"form-success"}><strong>{gaps.length?"Verfügungsberechtigung offen":"Verfügungsberechtigung geklärt"}</strong>{gaps.length?<ul>{gaps.map((gap:string)=><li key={gap}>{gap}</li>)}</ul>:<p>Alle im System geführten Angaben, Zustimmungen und Genehmigungen sind dokumentiert.</p>}</div>
-          {rec?<dl className="detail-list"><div><dt>Eigentümerstellung</dt><dd>{DISPOSITION_STRUCTURE[rec.ownership_structure]??rec.ownership_structure}</dd></div><div><dt>Erbfall</dt><dd>{rec.inheritance_case?`ja${rec.date_of_death?` · verstorben ${formatDay(rec.date_of_death)}`:""}`:"nein"}</dd></div>{rec.inheritance_case?<div><dt>Erbnachweis</dt><dd>{rec.succession_proof_issued_on?`erteilt ${formatDay(rec.succession_proof_issued_on)}`:rec.succession_proof_type?"beantragt bzw. offen":"nicht festgelegt"}</dd></div>:null}<div><dt>Beteiligte</dt><dd>{parties.length}</dd></div></dl>:null}
-          {parties.length?<div className="data-list" style={{marginTop:"0.75rem"}}>{parties.map((row:any)=>{const c=Array.isArray(row.contacts)?row.contacts[0]:row.contacts;return <Link className="data-row data-row-link" to={`/properties/${p.id}/disposition#beteiligte`} key={row.id}>
-            <div><strong>{c?`${c.last_name}, ${c.first_name}`:"Kontakt"} · {DISPOSITION_ROLE[row.party_role]??row.party_role}</strong><small>{row.share_percentage?`Quote ${Number(row.share_percentage).toLocaleString("de-DE",{maximumFractionDigits:3})} %`:row.is_minor?"minderjährig":"—"}</small></div>
-            <div className="row-meta"><span className={`status-pill ${row.consent_status==="GIVEN"?"status-sold":row.consent_status==="REFUSED"?"status-lost":row.consent_status==="OPEN"?"status-draft":"status-archived"}`}>{DISPOSITION_CONSENT[row.consent_status]??row.consent_status}</span><small>{row.court_approval_required&&!row.court_approval_granted_on?"Genehmigung ausstehend":row.power_of_attorney_revoked_on?"Vollmacht widerrufen":""}</small></div>
-            <span className="subtle-link">Öffnen →</span>
-          </Link>;})}</div>:null}
-        </>;
-      })()}</section>:null}
-      <section className="data-card" id="recht-lasten"><div className="card-head"><div><p className="eyebrow">Rechtsobjekt</p><h2>Recht & Lasten</h2></div><Link className="subtle-link" to={`/properties/${p.id}/legal`}>Erfassen & prüfen →</Link></div>{(()=>{
-        const l=d.legal as any;const rows=(d.encumbrances??[]) as any[];
-        const flags=l?[l.monument_protection?"Denkmalschutz":null,l.milieu_protection?"Milieuschutz":null,l.redevelopment_area?"Sanierungsgebiet":null,l.contamination_suspicion?"Altlastenverdacht":null,l.development_charges_open?"Erschließungsbeiträge offen":null,l.heritable_building_right?"Erbbaurecht":null].filter(Boolean) as string[]:[];
-        if(!l&&rows.length===0)return <p className="empty-state">Für diese Immobilie sind keine Grundbuchdaten und keine Belastungen erfasst. Ohne diese Angaben lässt sich nicht beurteilen, was verkauft wird.</p>;
-        const undeleted=rows.filter((row)=>row.section==="LAND_REGISTER_II"&&row.deletable!=="YES").length;
-        const debt=rows.filter((row)=>row.section==="LAND_REGISTER_III").reduce((sum,row)=>sum+Number(row.remaining_amount??row.nominal_amount??0),0);
-        return <>
-          <dl className="detail-list">
-            <div><dt>Grundbuch</dt><dd>{l?.land_registry_court||l?.land_register_sheet?[l?.land_registry_court,l?.land_register_sheet].filter(Boolean).join(" · "):"nicht erfasst"}</dd></div>
-            <div><dt>Auszug vom</dt><dd>{formatDay(l?.extract_dated_on??null)}</dd></div>
-            <div><dt>Wohnflächengrundlage</dt><dd>{l?.living_area_basis==="WOFLV"?"Wohnflächenverordnung":l?.living_area_basis==="DIN_277"?"DIN 277":l?.living_area_basis==="ESTIMATED"?"Geschätzt":"Unbekannt"}</dd></div>
-            {rows.some((row)=>row.section==="LAND_REGISTER_III")?<div><dt>Offene Grundpfandrechte</dt><dd>{euro(debt)}</dd></div>:null}
-          </dl>
-          {flags.length?<div className="inline-actions" style={{marginTop:"0.5rem"}}>{flags.map((flag)=><span className="status-pill status-lost" key={flag}>{flag}</span>)}</div>:null}
-          {rows.length?<div className="data-list" style={{marginTop:"0.75rem"}}>{rows.map((row:any)=><Link className="data-row data-row-link" to={`/properties/${p.id}/legal#${row.section.toLowerCase()}`} key={row.id}>
-            <div><strong>{ENCUMBRANCE_SECTION[row.section]}{row.rank_position?` · Rang ${row.rank_position}`:""} · {ENCUMBRANCE_KIND[row.kind]??row.kind}</strong><small>{row.beneficiary_name?`${row.beneficiary_name} · `:""}{row.content.length>80?`${row.content.slice(0,80)}…`:row.content}</small></div>
-            <div className="row-meta">{row.section==="LAND_REGISTER_III"?<span>{euro(row.remaining_amount??row.nominal_amount)}</span>:<span className={row.deletable==="NO"?"status-pill status-lost":""}>{row.deletable==="NO"?"nicht löschbar":row.deletable==="YES"?"löschbar":"Löschbarkeit offen"}</span>}<small>{ENCUMBRANCE_IMPACT[row.sale_impact]}</small></div>
-            <span className="subtle-link">Öffnen →</span>
-          </Link>)}</div>:<p className="subtle" style={{marginTop:"0.75rem"}}>Keine bestehenden Belastungen erfasst.</p>}
-          {undeleted?<p className="form-warning" style={{marginTop:"0.75rem"}}>{undeleted === 1 ? "Ein Recht" : `${undeleted} Rechte`} in Abteilung II {undeleted===1?"ist":"sind"} nicht als löschbar dokumentiert. Vor Vermarktungsstart klären, ob es beim Verkauf bestehen bleibt.</p>:null}
-        </>;
-      })()}</section>
-      {d.canGwgRead?<section className="data-card" id="geldwaesche"><div className="card-head"><div><p className="eyebrow">Sorgfaltspflichten</p><h2>Geldwäsche-Compliance</h2></div><Link className="subtle-link" to={`/properties/${p.id}/compliance`}>Akte öffnen →</Link></div>{(()=>{const g=d.gwgCase as any;if(!g)return <p className="empty-state">Für diese Immobilie ist keine Geldwäscheakte angelegt.</p>;const ids=(g.gwg_identifications??[]) as any[];const seller=ids.filter((i)=>i.party_role==="SELLER"&&i.identified_on).length;const buyer=ids.filter((i)=>i.party_role==="BUYER"&&i.identified_on).length;return <Link className="data-row data-row-link" to={`/properties/${p.id}/compliance`}><div><strong>{g.case_number}</strong><small>{g.risk_level?`Risiko ${GWG_RISK[g.risk_level]??g.risk_level}`:"Risikoeinstufung offen"} · Verkäuferseite {seller?"identifiziert":"offen"} · Käuferseite {buyer?"identifiziert":"offen"}</small></div><div className="row-meta">{g.risk_level&&seller?<span className="status-pill status-sold">Erfasst</span>:<span className="status-pill status-lost">Unvollständig</span>}<small>{g.retention_until?`Aufbewahrung bis ${formatDay(g.retention_until)}`:"Aufbewahrung offen"}</small></div><span className="subtle-link">Öffnen →</span></Link>;})()}</section>:null}
-      <section className="data-card" id="checkliste"><div className="card-head"><div><p className="eyebrow">Vermarktungsreife</p><h2>Checkliste</h2></div><span className="subtle">{d.checklist.filter((i)=>i.status==="DONE"||i.status==="WAIVED").length}/{d.checklist.length}</span></div>{d.checklist.map((item)=><Form method="post" className={`checklist-row checklist-${item.status.toLowerCase().replace("_","-")}`} key={item.id}><input type="hidden" name="_intent" value="checklist"/><input type="hidden" name="checklist_id" value={item.id}/><input type="hidden" name="checklist_version" value={item.version}/><div><strong>{item.title}</strong><small>{beschrifte(CHECKLISTENKATEGORIE,item.category)}{item.required?" · Pflicht":" · optional"}</small></div><select name="checklist_status" defaultValue={item.status} onChange={(e)=>e.currentTarget.form?.requestSubmit()}><option value="TODO">Offen</option><option value="IN_PROGRESS">In Arbeit</option><option value="DONE">Erledigt</option><option value="WAIVED">Entfällt</option></select></Form>)}</section>
-      <section className="data-card" id="energie"><div className="card-head"><div><p className="eyebrow">Vor der Veröffentlichung</p><h2>Pflichtangaben</h2></div><Link className="subtle-link" to={`/properties/${p.id}/mandatory-data`}>Erfassen & prüfen →</Link></div>{(()=>{
-        const gaps=(d.disclosureGaps??[]) as string[];
-        const e=d.energy as any;
-        return <>
-          <dl className="detail-list">
-            <div><dt>Energieausweis</dt><dd>{e?.exemption_reason?`Ausnahme: ${ENERGY_EXEMPTION[e.exemption_reason]??e.exemption_reason}`:e?.certificate_present?`${ENERGY_CERTIFICATE_TYPE[e.certificate_type]??"Art offen"}${e.valid_until?` · gültig bis ${formatDay(e.valid_until)}`:""}`:"nicht erfasst"}</dd></div>
-            <div><dt>Endenergie</dt><dd>{e?.energy_value_kwh!=null?`${Number(e.energy_value_kwh).toLocaleString("de-DE")} kWh/(m²·a)`:"—"}</dd></div>
-            <div><dt>Energieträger</dt><dd>{e?.energy_source||"—"}</dd></div>
-            <div><dt>Effizienzklasse</dt><dd>{e?.efficiency_class||"—"}</dd></div>
-            <div><dt>Baujahr laut Ausweis</dt><dd>{e?.building_year||"—"}</dd></div>
-          </dl>
-          {gaps.length
-            ?<div className="form-warning" style={{marginTop:"0.75rem"}}><strong>Vermarktung und Veröffentlichung sind blockiert:</strong><ul>{gaps.map((gap)=><li key={gap}>{gap}</li>)}</ul></div>
-            :<p className="form-success" style={{marginTop:"0.75rem"}}>Die Pflichtangaben sind vollständig erfasst. Das ist eine Vollständigkeitsprüfung, keine rechtliche Freigabe.</p>}
         </>;
       })()}</section>
     </div>:null}

@@ -4,9 +4,10 @@ import { requireActiveUser } from "~/lib/auth.server";
 import { tag, zeitpunkt } from "~/lib/format";
 import { standKlasse } from "~/lib/stand-ton";
 import {
-  ANFRAGESTATUS, AUFGABENPRIORITAET, BESICHTIGUNGSSTATUS, IMMOBILIENSTATUS, KAUFANGEBOTSTATUS, LEADSTATUS, beschrifte,
+  ANFRAGESTATUS, AUFGABENPRIORITAET, BESICHTIGUNGSSTATUS, IMMOBILIENSTATUS, KAUFANGEBOTSTATUS, LEADSTATUS, beschrifte, AKTIVITAETSART,
 } from "~/lib/labels";
 import "~/programm-liste.css";
+import "~/akte-blick.css";
 import "~/kontakt-uebersicht.css";
 
 // Die Uebersicht einer Kontaktakte -- der erste Reiter (P1-2, 14.10.2026).
@@ -38,11 +39,6 @@ const OBJEKTART: Record<string, string> = {
   PARKING_SPACE: "Stellplatz", OTHER: "Sonstiges",
 };
 const KONTAKTWEG: Record<string, string> = { EMAIL: "E-Mail", MOBILE: "Mobil", PHONE: "Telefon", LETTER: "Brief" };
-const AKTIVITAET: Record<string, string> = {
-  NOTE: "Notiz", PHONE_CALL: "Telefonat", EMAIL: "E-Mail", MEETING: "Termin/Gespräch",
-  WEBSITE_INQUIRY: "Anfrage über die Website", WEBSITE_SEARCH_PROFILE: "Suchauftrag über die Website",
-  WEBSITE_MEASUREMENT: "Aufmaß-Anfrage über die Website",
-};
 
 const eins = <T,>(x: T | T[] | null | undefined): T | null => (Array.isArray(x) ? x[0] ?? null : x ?? null);
 const objektName = (p: any) => (p ? [p.property_number, p.internal_title].filter(Boolean).join(" · ") : "Objekt");
@@ -184,34 +180,34 @@ export default function ContactOverview() {
     <div className="kontakt-uebersicht">
       {d.fehlt ? <p className="form-warning">Ein Teil der Übersicht konnte gerade nicht geladen werden. Die übrigen Angaben stimmen.</p> : null}
 
-      <section className="data-card kontakt-lage" aria-label="Auf einen Blick">
-        <div className="kontakt-lage-kopf">
+      <section className="data-card akte-blick" aria-label="Auf einen Blick">
+        <div className="akte-blick-kopf">
           <div>
             {lage.length
-              ? lage.map((z) => <p className="kontakt-lage-satz" key={z}>{z}</p>)
-              : <p className="kontakt-lage-satz leise">Noch kein Suchprofil, kein Objekt, kein Verkaufsinteresse.</p>}
-            <p className="kontakt-erreichbar">
+              ? lage.map((z) => <p className="akte-blick-satz" key={z}>{z}</p>)
+              : <p className="akte-blick-satz leise">Noch kein Suchprofil, kein Objekt, kein Verkaufsinteresse.</p>}
+            <p className="akte-blick-erreichbar">
               {telefon ? <a href={`tel:${telefon.replace(/[^+\d]/g, "")}`}>{telefon}</a> : null}
               {k.email ? <a href={`mailto:${k.email}`}>{k.email}</a> : null}
               {k.preferred_channel ? <span className="leise">bevorzugt: {KONTAKTWEG[k.preferred_channel] ?? k.preferred_channel}</span> : null}
               {!telefon && !k.email ? <span className="leise">Keine Telefonnummer und keine E-Mail hinterlegt.</span> : null}
             </p>
           </div>
-          <div className="kontakt-lage-aktionen">
+          <div className="akte-blick-aktionen">
             {telefon ? <a className="secondary-button link-button compact" href={`tel:${telefon.replace(/[^+\d]/g, "")}`}>Anrufen</a> : null}
             <Link className="secondary-button link-button compact" to={`${basis}/relations#aufgabe-neu`}>+ Aufgabe</Link>
             <Link className="secondary-button link-button compact" to={`${basis}/collaboration`}>+ Notiz</Link>
           </div>
         </div>
 
-        <p className="programm-kennzahlen kontakt-zahlen">
+        <p className="programm-kennzahlen akte-blick-zahlen">
           {aktiveSuche.length ? <a href="#vorgaenge"><strong>{d.passend ?? "—"}</strong> passende Objekte</a> : null}
           <a href="#aufgaben" className={ueberfaellig ? "warnung" : undefined}><strong>{d.aufgaben.length}</strong> offene Aufgaben{ueberfaellig ? `, ${ueberfaellig} überfällig` : ""}</a>
           <a href="#vorgaenge"><strong>{kommend.length}</strong> anstehende Besichtigungen</a>
           <a href="#vorgaenge"><strong>{eigentum.length}</strong> eigene Objekte</a>
         </p>
 
-        <div className={`kontakt-naechster${naechsterUeberfaellig ? " ueberfaellig" : ""}`}>
+        <div className={`akte-naechster${naechsterUeberfaellig ? " ueberfaellig" : ""}`}>
           <span>Nächster Schritt</span>
           {naechster ? <>
             <Link to={naechster.pfad}><strong>{naechster.was}</strong></Link>
@@ -233,7 +229,7 @@ export default function ContactOverview() {
             ? <p className="empty-state">Zu diesem Kontakt läuft gerade nichts.</p>
             : <div className="data-list">{vorgaenge.map((v) => (
                 <Link className="data-row data-row-link" to={v.pfad} key={`${v.art}-${v.id}`}>
-                  <div><small>{v.art}</small><strong>{v.titel}</strong>{v.zusatz ? <small>{v.zusatz}</small> : null}</div>
+                  <div><small className="akte-art">{v.art}</small><strong>{v.titel}</strong>{v.zusatz ? <small>{v.zusatz}</small> : null}</div>
                   <div className="row-meta"><span className={`status-pill ${standKlasse(v.stand)}`}>{v.stand}</span></div>
                 </Link>
               ))}</div>}
@@ -270,7 +266,7 @@ export default function ContactOverview() {
               ? <p className="empty-state">Telefonate, E-Mails und Notizen erscheinen hier, sobald sie im Verlauf erfasst sind.</p>
               : <div className="data-list">{d.verlauf.map((v) => (
                   <div className="data-row" key={v.id}>
-                    <div><strong>{v.title ?? AKTIVITAET[v.activity_type] ?? "Eintrag"}</strong><small>{AKTIVITAET[v.activity_type] ?? "Eintrag"} · {zeitpunkt(v.occurred_at)}</small></div>
+                    <div><strong>{v.title ?? AKTIVITAETSART[v.activity_type] ?? "Eintrag"}</strong><small>{AKTIVITAETSART[v.activity_type] ?? "Eintrag"} · {zeitpunkt(v.occurred_at)}</small></div>
                   </div>
                 ))}</div>}
           </section>

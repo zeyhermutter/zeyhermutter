@@ -99,7 +99,7 @@ const TEIL_JE_ANKER: Record<string, Teil> = {
   adresse: "objektdaten",
   ausstattung: "objektdaten",
   eigentuemer: "eigentuemer",
-  status: "record",
+  ueberblick: "record",
   checkliste: "record",
 };
 

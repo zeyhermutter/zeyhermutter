@@ -11,6 +11,8 @@
 //     Textfeld, die Datenbank kennt aber nur vier Werte. Jede andere Eingabe
 //     liess das Speichern scheitern.
 //  4. Kontaktakte: Der erste Reiter ist die Uebersicht, nicht das Formular.
+//  5. Objektakte: Die Uebersicht beginnt mit Preis, Eigentuemern, Interessenten
+//     und dem naechsten Faelligen; die sechs Statusknoepfe sind zugeklappt.
 
 import { readFile } from "node:fs/promises";
 import path from "node:path";
@@ -50,8 +52,14 @@ pruefe(routen.includes('route("crm/contacts/:contactId/stammdaten", "routes/cont
 pruefe((await lies("app/routes/kontakt-arbeitsplatz.tsx")).includes('{ beschriftung: "Übersicht", pfad: basis, genau: true }'), "kontakt-arbeitsplatz.tsx: Reiter „Übersicht“ fehlt");
 pruefe((await lies("app/routes/contact-detail.tsx")).includes("/stammdaten?saved=1"), "contact-detail.tsx: nach dem Speichern zurueck auf die Uebersicht statt auf die Stammdaten");
 
+// 5. Objektakte: zuerst die Lage, Status zugeklappt
+const objektakte = await lies("app/routes/property-detail.tsx");
+pruefe(objektakte.includes("<ObjektAufEinenBlick") && objektakte.indexOf("<ObjektAufEinenBlick") < objektakte.indexOf("<ObjektakteFahrplan"), "property-detail.tsx: Übersicht beginnt nicht mit „auf einen Blick“");
+pruefe(!objektakte.includes('id="status"'), "property-detail.tsx: Statusknöpfe wieder als eigene Karte oben in der Akte");
+pruefe((await lies("app/components/objekt-auf-einen-blick.tsx")).includes('<details className="akte-blick-status">'), "objekt-auf-einen-blick.tsx: Status ändern nicht mehr zugeklappt");
+
 if (fehler.length) {
   console.error("P1:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht.");
+console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage.");

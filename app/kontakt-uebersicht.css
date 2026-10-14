@@ -4,40 +4,8 @@
 
 .kontakt-uebersicht { display: grid; gap: var(--crm-card-gap); min-width: 0; }
 
-.kontakt-lage { display: grid; gap: 12px; }
-.kontakt-lage-kopf { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 10px 16px; }
-.kontakt-lage-satz { margin: 0; color: #1b2733; font-size: 15px; font-weight: 600; line-height: 1.4; }
-.kontakt-lage-satz + .kontakt-lage-satz { margin-top: 2px; }
-.kontakt-erreichbar { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 6px 0 0; font-size: 13px; }
-.kontakt-erreichbar a { color: #0b5cad; }
-.kontakt-lage-aktionen { display: flex; flex-wrap: wrap; gap: 6px; }
-
-.kontakt-zahlen { margin: 0; }
-.kontakt-zahlen a { color: inherit; text-decoration: none; }
-.kontakt-zahlen a:hover strong,
-.kontakt-zahlen a:focus-visible strong { text-decoration: underline; }
-
-/* Naechster Schritt: wie in der Objektakte (.fahrplan-naechster). */
-.kontakt-naechster {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 10px;
-  padding: var(--crm-card-padding-sm);
-  border: 1px solid #b9cde3;
-  border-radius: var(--crm-card-radius-sm);
-  background: #f3f7fb;
-  color: #17406b;
-}
-.kontakt-naechster.ueberfaellig { border-color: #e2b4ae; background: #fdf4f3; color: #a12a1f; }
-.kontakt-naechster > span { font-size: var(--crm-pill-font-sm); font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
-.kontakt-naechster a { color: inherit; }
-.kontakt-naechster strong { font-size: 15px; }
-.kontakt-naechster small { flex: 1 1 220px; color: #3d4a56; }
-
 .kontakt-uebersicht-raster { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: var(--crm-card-gap); align-items: start; }
 .kontakt-uebersicht-spalte { display: grid; gap: var(--crm-card-gap); min-width: 0; }
-.kontakt-uebersicht .data-row > div > small:first-child { display: block; color: #5b6772; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 
 @media (max-width: 900px) {
   .kontakt-uebersicht-raster { grid-template-columns: 1fr; }

@@ -293,6 +293,14 @@ export const AUFTRAGSQUELLE: Beschriftungen = {
  * Beschriftung nachschlagen. Ohne Treffer bleibt der gespeicherte Wert stehen:
  * ein unbekannter Zustand soll sichtbar sein, nicht verschwinden.
  */
+// Art eines Verlaufseintrags (activity_events.activity_type). Freier Text in
+// der Datenbank, gesetzt von der Verlaufsmaske und den Website-Eingaengen.
+export const AKTIVITAETSART: Beschriftungen = {
+  NOTE: "Notiz", PHONE_CALL: "Telefonat", EMAIL: "E-Mail", MEETING: "Termin/Gespräch",
+  WEBSITE_INQUIRY: "Anfrage über die Website", WEBSITE_SEARCH_PROFILE: "Suchauftrag über die Website",
+  WEBSITE_MEASUREMENT: "Aufmaß-Anfrage über die Website",
+};
+
 export function beschrifte(tabelle: Beschriftungen, wert: string | null | undefined): string {
   if (wert === null || wert === undefined || wert === "") return "—";
   return tabelle[wert] ?? wert;
