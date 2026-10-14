@@ -43,6 +43,7 @@ pruefe(!besichtigung.includes('<input name="financing_status"'), "viewing-detail
 pruefe(besichtigung.includes("financing_status:finanzierung(fd)"), "viewing-detail.tsx: Finanzierung wird ungeprueft gespeichert");
 
 // 4.
+pruefe((await lies("app/routes/contact-overview.tsx")).includes("Number(z.score) >= MINDESTENS_PASSEND"), "contact-overview.tsx: zaehlt auch nicht passende Objekte als passend");
 const routen = await lies("app/routes.ts");
 pruefe(routen.includes('route("crm/contacts/:contactId", "routes/contact-overview.tsx")'), "routes.ts: Kontaktakte oeffnet nicht mit der Uebersicht");
 pruefe(routen.includes('route("crm/contacts/:contactId/stammdaten", "routes/contact-detail.tsx")'), "routes.ts: Stammdaten ohne eigenen Reiter");

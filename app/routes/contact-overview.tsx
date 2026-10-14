@@ -6,6 +6,7 @@ import { standKlasse } from "~/lib/stand-ton";
 import {
   ANFRAGESTATUS, AUFGABENPRIORITAET, BESICHTIGUNGSSTATUS, IMMOBILIENSTATUS, KAUFANGEBOTSTATUS, LEADSTATUS, beschrifte,
 } from "~/lib/labels";
+import "~/programm-liste.css";
 import "~/kontakt-uebersicht.css";
 
 // Die Uebersicht einer Kontaktakte -- der erste Reiter (P1-2, 14.10.2026).
@@ -23,6 +24,7 @@ import "~/kontakt-uebersicht.css";
 // denen jede Zeile fuehrt. Der "Naechste Schritt" ist keine Empfehlung,
 // sondern das frueheste Datum, das schon im System steht.
 
+const MINDESTENS_PASSEND = 50;
 const OFFEN_AUFGABE = ["OPEN", "IN_PROGRESS"];
 const OFFEN_LEAD = ["NEW", "CONTACTED", "QUALIFIED", "APPOINTMENT", "VALUATION", "OFFER", "NURTURE"];
 const OFFEN_ANFRAGE = ["NEW", "CONTACTED", "QUALIFIED", "VIEWING_PLANNED"];
@@ -75,7 +77,9 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   let passendFehlt = false;
   treffer.forEach((t, i) => {
     if (t.error) { passendFehlt = true; return; }
-    const ids = ((t.data ?? []) as any[]).map((z) => z.property_id as string);
+    // Die Funktion liefert auch "nicht passend" (unter 50 %) -- gezaehlt wird
+    // wie im Suchprofil ab "teilweise passend".
+    const ids = ((t.data ?? []) as any[]).filter((z) => Number(z.score) >= MINDESTENS_PASSEND).map((z) => z.property_id as string);
     passendJeProfil[aktiveProfile[i].id] = ids.length;
     ids.forEach((pid) => passend.add(pid));
   });
@@ -201,7 +205,7 @@ export default function ContactOverview() {
         </div>
 
         <p className="programm-kennzahlen kontakt-zahlen">
-          <a href="#vorgaenge"><strong>{d.passend ?? "—"}</strong> passende Objekte</a>
+          {aktiveSuche.length ? <a href="#vorgaenge"><strong>{d.passend ?? "—"}</strong> passende Objekte</a> : null}
           <a href="#aufgaben" className={ueberfaellig ? "warnung" : undefined}><strong>{d.aufgaben.length}</strong> offene Aufgaben{ueberfaellig ? `, ${ueberfaellig} überfällig` : ""}</a>
           <a href="#vorgaenge"><strong>{kommend.length}</strong> anstehende Besichtigungen</a>
           <a href="#vorgaenge"><strong>{eigentum.length}</strong> eigene Objekte</a>
