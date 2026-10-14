@@ -141,6 +141,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
       { art: "liste", punkte: [
         "**Mein Tag › Aufgaben** zeigt offene und laufende Aufgaben als Programmliste, sortiert nach Fälligkeit. Überfällige sind hervorgehoben, die Priorität steht als Schildchen in der Zeile.",
         "Oben wird wie auf „Heute“ umgeschaltet: **Meins**, ein Kollege oder **Alle**. Status und Umschalter bleiben stehen, wenn eine Aufgabe erledigt wird.",
+        "**In jeder Akte dieselbe Aufgabenliste** — Kontakt, Objekt, Lead, Anfrage, Besichtigung und Suchprofil: oben **+ Aufgabe** (Titel und Fälligkeit genügen, Verantwortlich ist vorbelegt), jede offene Aufgabe mit einem Kreis zum **Abhaken in der Zeile**, Details und weitere Status über „Aufgabe öffnen“. Erledigte stehen zugeklappt darunter. Eine Aufgabe an der Besichtigung erscheint auch beim Kontakt, beim Objekt und bei der Anfrage.",
         "Jede Aufgabe hat genau einen Verantwortlichen. Beobachter können zusätzlich eingetragen werden — sie bekommen Benachrichtigungen, sind aber nicht zuständig.",
       ]},
       { art: "absatz", text:

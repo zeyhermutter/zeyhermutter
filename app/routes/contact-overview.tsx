@@ -4,8 +4,10 @@ import { requireActiveUser } from "~/lib/auth.server";
 import { tag, zeitpunkt } from "~/lib/format";
 import { standKlasse } from "~/lib/stand-ton";
 import {
-  ANFRAGESTATUS, AUFGABENPRIORITAET, BESICHTIGUNGSSTATUS, IMMOBILIENSTATUS, KAUFANGEBOTSTATUS, LEADSTATUS, beschrifte, AKTIVITAETSART,
+  ANFRAGESTATUS, BESICHTIGUNGSSTATUS, IMMOBILIENSTATUS, KAUFANGEBOTSTATUS, LEADSTATUS, beschrifte, AKTIVITAETSART,
 } from "~/lib/labels";
+import { AufgabenBaustein } from "~/components/aufgaben-baustein";
+import { aufgabenRahmen, AUFGABEN_SPALTEN } from "~/lib/aufgaben.server";
 import "~/programm-liste.css";
 import "~/akte-blick.css";
 import "~/kontakt-uebersicht.css";
@@ -44,7 +46,7 @@ const eins = <T,>(x: T | T[] | null | undefined): T | null => (Array.isArray(x) 
 const objektName = (p: any) => (p ? [p.property_number, p.internal_title].filter(Boolean).join(" · ") : "Objekt");
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
-  const { supabase, responseHeaders } = await requireActiveUser(request, context.cloudflare.env);
+  const { supabase, responseHeaders, userId } = await requireActiveUser(request, context.cloudflare.env);
   const id = params.contactId;
   if (!id) throw new Response("Kontakt fehlt.", { status: 404 });
 
@@ -56,9 +58,9 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     supabase.from("inquiries").select("id,inquiry_number,status,received_at,answered_at,properties(id,property_number,internal_title)").eq("contact_id", id).is("archived_at", null).order("received_at", { ascending: false }).limit(10),
     supabase.from("viewings").select("id,viewing_number,status,starts_at,properties(id,property_number,internal_title)").eq("contact_id", id).is("archived_at", null).order("starts_at", { ascending: false }).limit(10),
     supabase.from("purchase_offers").select("id,offer_number,status,amount,properties(id,property_number,internal_title)").eq("contact_id", id).is("archived_at", null).order("created_at", { ascending: false }).limit(10),
-    supabase.from("tasks").select("id,task_number,title,status,priority,due_at,responsible_user").eq("contact_id", id).in("status", OFFEN_AUFGABE).is("archived_at", null).order("due_at", { ascending: true, nullsFirst: false }).limit(20),
+    supabase.from("tasks").select(AUFGABEN_SPALTEN).eq("contact_id", id).in("status", OFFEN_AUFGABE).is("archived_at", null).order("due_at", { ascending: true, nullsFirst: false }).limit(20),
     supabase.from("activity_events").select("id,activity_type,title,occurred_at").eq("contact_id", id).order("occurred_at", { ascending: false }).limit(5),
-    supabase.from("profiles").select("user_id,display_name"),
+    aufgabenRahmen(supabase),
   ]);
   if (kontaktRes.error) throw new Response("Kontakt konnte nicht geladen werden.", { status: 500 });
   if (!kontaktRes.data) throw new Response("Kontakt nicht gefunden.", { status: 404 });
@@ -93,7 +95,9 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     angebote: (angebotRes.data ?? []) as any[],
     aufgaben: (aufgabeRes.data ?? []) as any[],
     verlauf: (verlaufRes.data ?? []) as any[],
-    nutzer: Object.fromEntries(((nutzerRes.data ?? []) as any[]).map((n) => [n.user_id, n.display_name])) as Record<string, string>,
+    nutzer: nutzerRes.nutzer,
+    darfAufgaben: nutzerRes.darfAufgaben,
+    ich: userId as string,
     passend: passendFehlt && passend.size === 0 ? null : passend.size,
     passendJeProfil,
     fehlt,
@@ -133,7 +137,7 @@ export default function ContactOverview() {
 
   // Naechster Schritt: das frueheste Datum, das im System schon steht.
   const schritte: Schritt[] = [
-    ...d.aufgaben.filter((a) => a.due_at).map((a) => ({ wann: a.due_at, was: a.title, wo: `Aufgabe ${a.task_number}`, pfad: `${basis}/relations#aufgaben` })),
+    ...d.aufgaben.filter((a) => a.due_at).map((a) => ({ wann: a.due_at, was: a.title, wo: `Aufgabe ${a.task_number}`, pfad: "#aufgaben" })),
     ...kommend.map((b) => ({ wann: b.starts_at, was: `Besichtigung ${objektName(eins(b.properties))}`, wo: b.viewing_number, pfad: `/viewings/${b.id}` })),
     ...offeneLeads.filter((l) => l.follow_up_at).map((l) => ({ wann: l.follow_up_at, was: "Wiedervorlage zum Verkaufsinteresse", wo: l.lead_number, pfad: `/leads/${l.id}` })),
     ...offeneAnfragen.filter((a) => a.status === "NEW" && !a.answered_at).map((a) => ({ wann: a.received_at, was: `Anfrage beantworten · ${objektName(eins(a.properties))}`, wo: a.inquiry_number, pfad: `/inquiries/${a.id}` })),
@@ -195,7 +199,7 @@ export default function ContactOverview() {
           </div>
           <div className="akte-blick-aktionen">
             {telefon ? <a className="secondary-button link-button compact" href={`tel:${telefon.replace(/[^+\d]/g, "")}`}>Anrufen</a> : null}
-            <Link className="secondary-button link-button compact" to={`${basis}/relations#aufgabe-neu`}>+ Aufgabe</Link>
+            {d.darfAufgaben ? <a className="secondary-button link-button compact" href="#aufgabe-neu">+ Aufgabe</a> : null}
             <Link className="secondary-button link-button compact" to={`${basis}/collaboration`}>+ Notiz</Link>
           </div>
         </div>
@@ -214,7 +218,7 @@ export default function ContactOverview() {
             <small>{naechster.wo} · {naechsterUeberfaellig ? "überfällig seit " : ""}{zeitpunkt(naechster.wann)}{schritte.length > 1 ? ` · danach ${schritte.length - 1} weitere` : ""}</small>
           </> : <>
             <strong>Kein nächster Schritt geplant</strong>
-            <Link className="subtle-link" to={`${basis}/relations#aufgabe-neu`}>Aufgabe anlegen →</Link>
+            {d.darfAufgaben ? <a className="subtle-link" href="#aufgabe-neu">Aufgabe anlegen →</a> : null}
           </>}
         </div>
       </section>
@@ -236,26 +240,7 @@ export default function ContactOverview() {
         </section>
 
         <div className="kontakt-uebersicht-spalte">
-          <section className="data-card" id="aufgaben">
-            <div className="card-head">
-              <div><p className="eyebrow">Zu erledigen</p><h2>Offene Aufgaben{d.aufgaben.length ? ` · ${d.aufgaben.length}` : ""}</h2></div>
-              <Link className="subtle-link" to={`${basis}/relations#aufgaben`}>Alle →</Link>
-            </div>
-            {d.aufgaben.length === 0
-              ? <p className="empty-state">Keine offene Aufgabe.</p>
-              : <div className="data-list">{d.aufgaben.slice(0, 5).map((a) => {
-                  const zuSpaet = a.due_at && a.due_at.slice(0, 10) < heute;
-                  return (
-                    <div className="data-row" key={a.id}>
-                      <div><strong>{a.title}</strong><small>{a.task_number} · {d.nutzer[a.responsible_user] ?? "—"}</small></div>
-                      <div className="row-meta">
-                        <span className={`prioritaet prioritaet-${String(a.priority).toLowerCase()}`}>{beschrifte(AUFGABENPRIORITAET, a.priority)}</span>
-                        <span className={zuSpaet ? "ueberfaellig-text" : undefined}>{a.due_at ? `fällig ${tag(a.due_at)}` : "ohne Datum"}</span>
-                      </div>
-                    </div>
-                  );
-                })}</div>}
-          </section>
+          <AufgabenBaustein aufgaben={d.aufgaben as any} art="contact" id={k.id} nutzer={d.nutzer} ich={d.ich} darfSchreiben={d.darfAufgaben} kontextName={`Kontakt ${k.contact_number}`} />
 
           <section className="data-card">
             <div className="card-head">

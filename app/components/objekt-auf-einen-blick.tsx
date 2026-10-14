@@ -38,7 +38,7 @@ const zahl = (n: unknown, einheit: string) => (n === null || n === undefined || 
 
 type Schritt = { wann: string; was: string; wo: string; pfad: string };
 
-export function ObjektAufEinenBlick({ id, p, blick, aufgaben, uebergaenge, jetzt }: {
+export function ObjektAufEinenBlick({ id, p, blick, aufgaben, uebergaenge, jetzt, aufgabeAnlegen }: {
   /** Anker, auf den die Akte nach einem Statuswechsel zurueckfuehrt. */
   id: string;
   p: any;
@@ -46,6 +46,8 @@ export function ObjektAufEinenBlick({ id, p, blick, aufgaben, uebergaenge, jetzt
   aufgaben: { id: string; task_number: string; title: string; due_at: string | null }[] | null;
   uebergaenge: { to_status: string; description: string | null }[];
   jetzt: string;
+  /** "+ Aufgabe" zeigen -- oeffnet das Formular im Aufgaben-Baustein. */
+  aufgabeAnlegen?: boolean;
 }) {
   const heute = jetzt.slice(0, 10);
   const basis = `/properties/${p.id}`;
@@ -97,6 +99,7 @@ export function ObjektAufEinenBlick({ id, p, blick, aufgaben, uebergaenge, jetzt
           </p>
         </div>
         <div className="akte-blick-aktionen">
+          {aufgabeAnlegen ? <a className="secondary-button link-button compact" href="#aufgabe-neu">+ Aufgabe</a> : null}
           {p.status === "ARCHIVED" && p.status_before_archive ? (
             <Form method="post">
               <input type="hidden" name="_intent" value="status" />

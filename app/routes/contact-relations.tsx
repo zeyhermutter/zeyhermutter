@@ -1,10 +1,9 @@
+import { AufgabenBaustein } from "~/components/aufgaben-baustein";
+import { aufgabenRahmen, AUFGABEN_SPALTEN } from "~/lib/aufgaben.server";
 import { KontaktAuswahl } from "~/components/kontakt-auswahl";
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/contact-relations";
 import { requireActiveUser } from "~/lib/auth.server";
-import { tag as dateOnly } from "~/lib/format";
-import { AUFGABENPRIORITAET, AUFGABENSTATUS, beschrifte } from "~/lib/labels";
-import { crmDateAtTimeToIso } from "~/lib/local-time";
 
 type ActionResult = { error?: string; success?: string };
 
@@ -32,6 +31,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   );
   const contactId = params.contactId;
   if (!contactId) throw new Response("Kontakt fehlt.", { status: 404 });
+  const rahmen = aufgabenRahmen(supabase);
 
   const [
     { data: contact, error: contactError },
@@ -63,7 +63,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
       .order("created_at", { ascending: false }),
     supabase
       .from("tasks")
-      .select("id, task_number, title, status, priority, due_at, version")
+      .select(AUFGABEN_SPALTEN)
       .eq("contact_id", contactId)
       .is("archived_at", null)
       .order("due_at", { ascending: true })
@@ -99,6 +99,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
       incoming: incoming ?? [],
       contactMap,
       tasks: tasks ?? [],
+      ...(await rahmen),
     },
     { headers: responseHeaders() },
   );
@@ -182,51 +183,11 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     return redirect(`/crm/contacts/${contactId}/relations`, { headers: responseHeaders() });
   }
 
-  if (intent === "create_task") {
-    const title = text(formData, "title");
-    const priority = text(formData, "priority") || "NORMAL";
-    const dueDate = text(formData, "due_date");
-    const allowedPriorities = new Set(["LOW", "NORMAL", "HIGH", "URGENT"]);
-
-    if (!title || !dueDate || !allowedPriorities.has(priority)) {
-      return data<ActionResult>({ error: "Titel, Fälligkeitsdatum und gültige Priorität sind erforderlich." }, { status: 400, headers: responseHeaders() });
-    }
-
-    const dueAt = crmDateAtTimeToIso(dueDate);
-    const { error } = await supabase.from("tasks").insert({
-      title,
-      priority,
-      due_at: dueAt,
-      responsible_user: userId,
-      contact_id: contactId,
-      created_by: userId,
-      updated_by: userId,
-    });
-    if (error) return data<ActionResult>({ error: "Aufgabe konnte nicht gespeichert werden." }, { status: 400, headers: responseHeaders() });
-    return redirect(`/crm/contacts/${contactId}/relations`, { headers: responseHeaders() });
-  }
-
-  if (intent === "complete_task") {
-    const taskId = text(formData, "task_id");
-    const version = Number(text(formData, "version"));
-    const { data: updated, error } = await supabase
-      .from("tasks")
-      .update({ status: "DONE", completed_at: new Date().toISOString() })
-      .eq("id", taskId)
-      .eq("contact_id", contactId)
-      .eq("version", version)
-      .select("id")
-      .maybeSingle();
-    if (error) return data<ActionResult>({ error: "Aufgabe konnte nicht abgeschlossen werden." }, { status: 400, headers: responseHeaders() });
-    if (!updated) return data<ActionResult>({ error: "Die Aufgabe wurde zwischenzeitlich geändert. Bitte neu laden." }, { status: 409, headers: responseHeaders() });
-    return redirect(`/crm/contacts/${contactId}/relations`, { headers: responseHeaders() });
-  }
-
   return data<ActionResult>({ error: "Unbekannte Aktion." }, { status: 400, headers: responseHeaders() });
 }
 
 export default function ContactRelations() {
-  const { contact, profile, roles, assignedRoleIds, outgoing, incoming, contactMap, tasks } = useLoaderData<typeof loader>();
+  const { contact, profile, roles, assignedRoleIds, outgoing, incoming, contactMap, tasks, nutzer, darfAufgaben } = useLoaderData<typeof loader>();
   const result = useActionData<typeof action>();
   const assigned = new Set(assignedRoleIds);
   const availableRoles = roles.filter((role) => !assigned.has(role.id));
@@ -286,25 +247,7 @@ export default function ContactRelations() {
         </section>
       </div>
 
-      <section className="data-card" id="aufgaben">
-        <div className="card-head"><div><p className="eyebrow">Wiedervorlage</p><h2>Aufgaben</h2></div></div>
-        <div className="data-list">
-          {tasks.map((task) => (
-            <div className="data-row" key={task.id}>
-              <div><strong>{task.title}</strong><small>{task.task_number} · {beschrifte(AUFGABENPRIORITAET, task.priority)} · fällig {dateOnly(task.due_at)}</small></div>
-              <div className="row-meta"><span>{beschrifte(AUFGABENSTATUS, task.status)}</span>{task.status !== "DONE" && task.status !== "CANCELLED" ? <Form method="post"><input type="hidden" name="_intent" value="complete_task" /><input type="hidden" name="task_id" value={task.id} /><input type="hidden" name="version" value={task.version} /><button className="text-button" type="submit">Erledigt</button></Form> : null}</div>
-            </div>
-          ))}
-          {tasks.length === 0 ? <p className="empty-state">Noch keine Aufgaben zu diesem Kontakt.</p> : null}
-        </div>
-        <Form method="post" className="form-grid" id="aufgabe-neu">
-          <input type="hidden" name="_intent" value="create_task" />
-          <label className="form-field"><span>Titel</span><input name="title" required /></label>
-          <label className="form-field"><span>Fällig am</span><input name="due_date" type="date" required /></label>
-          <label className="form-field"><span>Priorität</span><select name="priority" defaultValue="NORMAL"><option value="LOW">Niedrig</option><option value="NORMAL">Normal</option><option value="HIGH">Hoch</option><option value="URGENT">Dringend</option></select></label>
-          <div className="form-actions"><button className="primary-button" type="submit">Aufgabe anlegen</button></div>
-        </Form>
-      </section>
+      <AufgabenBaustein aufgaben={tasks as any} art="contact" id={contact.id} nutzer={nutzer} ich={profile.user_id} darfSchreiben={darfAufgaben} kontextName={`Kontakt ${contact.contact_number}`} />
     </main>
   );
 }

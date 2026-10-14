@@ -9,7 +9,8 @@ import { ABSCHLUSSSTATUS, IMMOBILIENSTATUS, AUFMASSSTATUS, CHECKLISTENKATEGORIE,
 import { RESERVATION_STATUS } from "~/lib/reservierung";
 import { fahrplan } from "~/lib/objektakte-fahrplan";
 import { ObjektakteFahrplan } from "~/components/objektakte-fahrplan";
-import { ObjektAufgaben } from "~/components/objekt-aufgaben";
+import { AufgabenBaustein } from "~/components/aufgaben-baustein";
+import { AUFGABEN_SPALTEN } from "~/lib/aufgaben.server";
 import { ObjektAufEinenBlick, ObjektInteressentenLage } from "~/components/objekt-auf-einen-blick";
 import { ankerPfad, teilAusPfad } from "~/lib/objektakte-navigation";
 
@@ -97,12 +98,13 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     supabase.from("commissions").select("id,commission_number,status").eq("property_id",propertyId).is("archived_at",null).order("updated_at",{ascending:false}).limit(20),
     // Offene Aufgaben zum Objekt (14.10.2026). Sie wurden an vielen Stellen
     // angelegt, waren in der Akte aber nirgends zu sehen.
-    supabase.from("tasks").select("id,task_number,title,status,priority,due_at,responsible_user").eq("property_id",propertyId).in("status",["OPEN","IN_PROGRESS"]).is("archived_at",null).order("due_at",{ascending:true,nullsFirst:false}).limit(30),
+    supabase.from("tasks").select(AUFGABEN_SPALTEN).eq("property_id",propertyId).in("status",["OPEN","IN_PROGRESS"]).is("archived_at",null).order("due_at",{ascending:true,nullsFirst:false}).limit(30),
   ]);
   const firstError=[addressRes,ownersRes,contactsRes,featuresRes,customFeaturesRes,energyRes,checklistRes,transitionsRes,usersRes].find((r)=>r.error)?.error;
   // Nur fuer die Uebersicht: Anfragen, Besichtigungen, Aktivitaeten und die
   // Zahl der Dokumente (P1, 14.10.2026). Die anderen Teile der Akte brauchen
   // sie nicht und laden sie nicht.
+  const taskRecht=supabase.rpc("current_user_has_permission",{p_permission:"task.write"});
   const leer={data:[] as any[],error:null,count:null as number|null};
   const [blickAnfragen,blickBesichtigungen,blickAktivitaeten,blickDokumente]=teilAusPfad(new URL(request.url).pathname)==="record"?await Promise.all([
     supabase.from("inquiries").select("id,inquiry_number,status,received_at,answered_at,contact_id,contacts(id,first_name,last_name)").eq("property_id",propertyId).is("archived_at",null).order("received_at",{ascending:false}).limit(50),
@@ -143,7 +145,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   const contactMap=Object.fromEntries(((ownersRes.data??[]) as any[]).map((o)=>o.contacts).filter(Boolean).map((c:any)=>[c.id,c]));
   const neuerEigentuemer=((contactsRes.data??[]) as any[])[0]??null;
   const customFeatureOptions=Array.from(new Map((customFeaturesRes.data??[]).map((f)=>[f.feature_key,{key:f.feature_key,label:f.label}])).values());
-  return data({property,blick,jetzt:new Date().toISOString(),haltepunkte,vorgangsFehler,offeneAufgaben:tasksRes.error?null:(tasksRes.data??[]),mandates:mandatesRes.data??[],hoa:hoaRes.data??null,specialLevies:leviesRes.data??[],tenancies:tenanciesRes.data??[],disclosureGaps:(disclosureGapsRes.data??[]) as string[],dispositionGaps:(dispositionGapsRes.data??[]) as string[],saleProject:saleProjectRes.data??null,canGwgRead:gwgPermissionRes.data===true,gwgCase:(gwgCaseRes.data??[])[0]??null,legal:legalRes.data??null,encumbrances:encumbranceRes.data??[],canDispositionRead:dispositionPermissionRes.data===true,priceStages:priceStagesRes.data??[],valuations:valuationsRes.data??[],disposition:dispositionRes.data??null,dispositionParties:((dispositionPartyRes.data??[]) as any[]).filter((row)=>Boolean(dispositionRes.data)&&row.disposition_id===(dispositionRes.data as any).id),address:addressRes.data,owners:ownersRes.data??[],neuerEigentuemer:neuerEigentuemer?{id:neuerEigentuemer.id,name:`${neuerEigentuemer.first_name} ${neuerEigentuemer.last_name}`.trim(),nummer:neuerEigentuemer.contact_number}:null,contactMap,features:featuresRes.data??[],customFeatureOptions,energy:energyRes.data,checklist:checklistRes.data??[],transitions:transitionsRes.data??[],users:usersRes.data??[],auditEvents,profile,newOwner},{headers:responseHeaders()});
+  return data({darfAufgaben:(await taskRecht).data===true,property,blick,jetzt:new Date().toISOString(),haltepunkte,vorgangsFehler,offeneAufgaben:tasksRes.error?null:(tasksRes.data??[]),mandates:mandatesRes.data??[],hoa:hoaRes.data??null,specialLevies:leviesRes.data??[],tenancies:tenanciesRes.data??[],disclosureGaps:(disclosureGapsRes.data??[]) as string[],dispositionGaps:(dispositionGapsRes.data??[]) as string[],saleProject:saleProjectRes.data??null,canGwgRead:gwgPermissionRes.data===true,gwgCase:(gwgCaseRes.data??[])[0]??null,legal:legalRes.data??null,encumbrances:encumbranceRes.data??[],canDispositionRead:dispositionPermissionRes.data===true,priceStages:priceStagesRes.data??[],valuations:valuationsRes.data??[],disposition:dispositionRes.data??null,dispositionParties:((dispositionPartyRes.data??[]) as any[]).filter((row)=>Boolean(dispositionRes.data)&&row.disposition_id===(dispositionRes.data as any).id),address:addressRes.data,owners:ownersRes.data??[],neuerEigentuemer:neuerEigentuemer?{id:neuerEigentuemer.id,name:`${neuerEigentuemer.first_name} ${neuerEigentuemer.last_name}`.trim(),nummer:neuerEigentuemer.contact_number}:null,contactMap,features:featuresRes.data??[],customFeatureOptions,energy:energyRes.data,checklist:checklistRes.data??[],transitions:transitionsRes.data??[],users:usersRes.data??[],auditEvents,profile,newOwner},{headers:responseHeaders()});
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
@@ -328,10 +330,10 @@ export default function PropertyDetail(){
     {result?.error?<div className="form-error">{result.error}</div>:null}
 
     {teil==="record"?<div className="property-summary-grid">
-      <ObjektAufEinenBlick id="ueberblick" p={p} blick={d.blick as any} aufgaben={d.offeneAufgaben as any} uebergaenge={d.transitions as any} jetzt={d.jetzt}/>
+      <ObjektAufEinenBlick id="ueberblick" aufgabeAnlegen={d.darfAufgaben&&p.status!=="ARCHIVED"} p={p} blick={d.blick as any} aufgaben={d.offeneAufgaben as any} uebergaenge={d.transitions as any} jetzt={d.jetzt}/>
       <ObjektakteFahrplan haltepunkte={d.haltepunkte} vorgangsFehler={d.vorgangsFehler}/>
       <ObjektInteressentenLage p={p} blick={d.blick as any} jetzt={d.jetzt}/>
-      <ObjektAufgaben aufgaben={d.offeneAufgaben as any} nutzer={d.users}/>
+      <AufgabenBaustein aufgaben={d.offeneAufgaben as any} art="property" id={p.id} nutzer={d.users as any} ich={d.profile.user_id} darfSchreiben={d.darfAufgaben&&p.status!=="ARCHIVED"} kontextName={`Objekt ${p.property_number}`}/>
       <section className="data-card" id="energie"><div className="card-head"><div><p className="eyebrow">Vor der Veröffentlichung</p><h2>Pflichtangaben</h2></div><Link className="subtle-link" to={`/properties/${p.id}/mandatory-data`}>Erfassen & prüfen →</Link></div>{(()=>{
         const gaps=(d.disclosureGaps??[]) as string[];
         const e=d.energy as any;

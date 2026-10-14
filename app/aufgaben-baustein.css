@@ -1,0 +1,41 @@
+/* Aufgaben-Baustein (app/components/aufgaben-baustein.tsx, 14.10.2026).
+ * Zeilen, Pillen und Knoepfe aus den gemeinsamen Bausteinen; hier nur der
+ * Haken und die Anordnung des Formulars. */
+
+.aufgaben-zeile { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+.aufgaben-zeile.erledigt strong { color: #5b6772; text-decoration: line-through; }
+.aufgaben-zeile .row-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px 10px; }
+
+.aufgaben-haken { margin: 0; }
+/* Ein Kreis zum Abhaken: 24 px Flaeche, Fokusrahmen sichtbar. */
+.aufgaben-haken button {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #8a96a1;
+  border-radius: 999px;
+  background: #ffffff;
+  cursor: pointer;
+}
+.aufgaben-haken button:hover { border-color: #1f7a4d; background: #e8f4ee; }
+.aufgaben-haken button:hover::after { content: "✓"; color: #1f7a4d; font-size: 13px; font-weight: 700; }
+.aufgaben-haken button:focus-visible { outline: 2px solid #0b5cad; outline-offset: 2px; }
+.aufgaben-haken-platz { width: 24px; text-align: center; color: #1f7a4d; font-weight: 700; }
+
+.aufgaben-neu {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px 12px;
+  margin: 4px 0 12px;
+}
+.aufgaben-neu-titel { grid-column: 1 / -1; }
+.aufgaben-neu .form-actions { justify-content: flex-end; }
+
+.aufgaben-erledigte { margin-top: 10px; }
+.aufgaben-erledigte > summary { cursor: pointer; color: #0b5cad; font-size: 13px; }
+.aufgaben-erledigte .data-list { margin-top: 8px; }
+
+@media (max-width: 760px) {
+  .aufgaben-neu { grid-template-columns: 1fr 1fr; }
+  .aufgaben-zeile { grid-template-columns: 28px minmax(0, 1fr); }
+  .aufgaben-zeile .row-meta { grid-column: 2; justify-content: flex-start; }
+}

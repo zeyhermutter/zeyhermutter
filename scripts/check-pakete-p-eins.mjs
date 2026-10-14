@@ -16,6 +16,8 @@
 //  6. Kontaktwahl: 22 Formulare luden die ersten 500 oder 1000 Kontakte als
 //     Auswahlliste; wer dahinter lag, war nicht waehlbar. Jetzt ueberall die
 //     Suche (KontaktAuswahl).
+//  7. Aufgaben: fuenf eigene Formulare -> ein Baustein (AufgabenBaustein,
+//     /api/aufgaben) in sieben Akten, mit Haken in der Zeile.
 
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
@@ -69,8 +71,15 @@ for (const datei of (await readdir(path.join(WURZEL, "app/routes"))).filter((n) 
 }
 pruefe(!(await lies("app/components/task-create-modal.tsx")).includes('<select name="contact_id"'), "task-create-modal.tsx: Kontakt wieder als vorab geladene Liste");
 
+// 7. Aufgaben: ein Baustein in jeder Akte, eine Stelle zum Speichern
+for (const datei of ["contact-overview", "contact-relations", "lead-detail", "inquiry-detail", "viewing-detail", "search-profile-detail", "property-detail"]) {
+  const inhalt = await lies(`app/routes/${datei}.tsx`);
+  pruefe(inhalt.includes("<AufgabenBaustein"), `${datei}.tsx: Aufgaben ohne den gemeinsamen Baustein`);
+  pruefe(!/intent\s*===\s*"(task|task_status|create_task|complete_task)"/.test(inhalt), `${datei}.tsx: eigene Aufgaben-Aktion neben dem Baustein`);
+}
+
 if (fehler.length) {
   console.error("P1:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche.");
+console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten.");

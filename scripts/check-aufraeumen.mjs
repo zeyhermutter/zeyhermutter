@@ -39,7 +39,7 @@ pruefe(leadEinfuegen.length > 0 && leadEinfuegen.every((z) => z.includes("contac
 // 3. Aufgaben in der Objektakte
 const objekt = await lies("app/routes/property-detail.tsx");
 pruefe(/from\("tasks"\)\.select\([^)]*\)\.eq\("property_id"/.test(objekt), "property-detail.tsx: offene Aufgaben werden nicht geladen");
-pruefe(objekt.includes("<ObjektAufgaben"), "property-detail.tsx: offene Aufgaben werden nicht angezeigt");
+pruefe(objekt.includes("<AufgabenBaustein"), "property-detail.tsx: offene Aufgaben werden nicht angezeigt");
 pruefe((await lies("app/lib/termine.ts")).includes("/crm/contacts/${task.contact_id}/relations"), "termine.ts: Aufgabe am Kontakt fuehrt nicht in die Kontaktakte");
 
 // 4. Keine vorab gekappten Kontaktlisten in diesen Auswahlfeldern

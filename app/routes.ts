@@ -164,5 +164,6 @@ export default [
   route("api/geocode-address", "routes/api-geocode-address.ts"),
   route("api/viewings/:viewingId/history", "routes/api-viewing-history.ts"),
   route("api/kontakte", "routes/api-kontakte.ts"),
+  route("api/aufgaben", "routes/api-aufgaben.ts"),
   route("logout", "routes/logout.tsx"),
 ] satisfies RouteConfig;
