@@ -15,20 +15,33 @@ const HOECHSTENS = 20;
 
 export async function loader({ request, context }: any) {
   const { supabase, responseHeaders } = await requirePermission(request, context.cloudflare.env, "contact.read");
-  const q = (new URL(request.url).searchParams.get("q") ?? "").trim().slice(0, 80);
-  if (q.length < 2) return data({ treffer: [] }, { headers: responseHeaders() });
+  const url = new URL(request.url);
+  const kopf = new Headers(responseHeaders());
+  kopf.set("Cache-Control", "private, no-store");
+
+  // Einen bereits gewaehlten Kontakt beschriften (?id=...). Das Feld kennt
+  // beim Laden nur die Kennung; Name und Nummer holt es hier.
+  const id = url.searchParams.get("id") ?? "";
+  if (id) {
+    if (!/^[0-9a-f-]{36}$/i.test(id)) return data({ treffer: [] }, { status: 400, headers: kopf });
+    const { data: k, error } = await supabase.from("contacts").select("id,contact_number,first_name,last_name").eq("id", id).maybeSingle();
+    if (error) return data({ treffer: [], fehler: "Kontakt nicht lesbar." }, { status: 500, headers: kopf });
+    const treffer = k ? [{ id: k.id as string, name: `${k.last_name}, ${k.first_name}`, nummer: k.contact_number as string, zusatz: null }] : [];
+    return data({ treffer }, { headers: kopf });
+  }
+
+  const q = (url.searchParams.get("q") ?? "").trim().slice(0, 80);
+  if (q.length < 2) return data({ treffer: [] }, { headers: kopf });
   const { data: zeilen, error } = await supabase
     .rpc("crm_global_search", { p_query: q, p_include_archived: false })
     .eq("entity_type", "CONTACT")
     .limit(HOECHSTENS);
-  if (error) return data({ treffer: [], fehler: "Suche nicht möglich." }, { status: 500, headers: responseHeaders() });
+  if (error) return data({ treffer: [], fehler: "Suche nicht möglich." }, { status: 500, headers: kopf });
   const treffer = ((zeilen ?? []) as any[]).map((z) => ({
     id: z.entity_id as string,
     name: z.title as string,
     nummer: z.reference as string,
     zusatz: z.subtitle && z.subtitle !== "—" ? (z.subtitle as string) : null,
   }));
-  const kopf = new Headers(responseHeaders());
-  kopf.set("Cache-Control", "private, no-store");
   return data({ treffer }, { headers: kopf });
 }

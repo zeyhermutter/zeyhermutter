@@ -1,6 +1,7 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/referral-detail";
 import { requirePermission } from "~/lib/auth.server";
+import { KontaktAuswahl } from "~/components/kontakt-auswahl";
 import { ACKNOWLEDGEMENT, REFERRAL_CHANNEL, REFERRAL_STATUS, REFERRAL_STATUS_CLASS, formatDay, one, referralErrorMessage, referredLabel, referrerLabel } from "./referrals";
 
 type ActionResult={error?:string};
@@ -17,10 +18,9 @@ export async function loader({request,context,params}:Route.LoaderArgs){
   if(error||!row)throw new Response("Empfehlung nicht gefunden.",{status:404,headers:responseHeaders()});
 
   const r=row as any;
-  const [leadsRes,profilesRes,contactsRes,acquisitionRes,canWriteRes,canArchiveRes]=await Promise.all([
+  const [leadsRes,profilesRes,acquisitionRes,canWriteRes,canArchiveRes]=await Promise.all([
     supabase.from("leads").select("id,lead_number,status,contacts(first_name,last_name)").is("archived_at",null).order("lead_number",{ascending:false}).limit(400),
     supabase.from("profiles").select("user_id,display_name").eq("status","ACTIVE").order("display_name"),
-    supabase.from("contacts").select("id,contact_number,first_name,last_name").is("archived_at",null).order("last_name").limit(1000),
     r.resulting_lead_id
       ?supabase.from("lead_acquisitions").select("id,referrer_contact_id,referrer_organization_id,campaign_id").eq("lead_id",r.resulting_lead_id).maybeSingle()
       :Promise.resolve({data:null,error:null}),
@@ -34,7 +34,7 @@ export async function loader({request,context,params}:Route.LoaderArgs){
   const acquisitionId=acquisition?(acquisition.referrer_organization_id??acquisition.referrer_contact_id):null;
   const attributionMatches=Boolean(acquisition)&&acquisitionId===referrerId;
 
-  return data({profile,row:r,leads:leadsRes.data??[],profiles:profilesRes.data??[],contacts:contactsRes.data??[],
+  return data({profile,row:r,leads:leadsRes.data??[],profiles:profilesRes.data??[],
     hasAcquisition:Boolean(acquisition),attributionMatches,
     canWrite:canWriteRes.data===true,canArchive:canArchiveRes.data===true},{headers:responseHeaders()});
 }
@@ -149,12 +149,7 @@ export default function ReferralDetail(){
             </select>
           </label>
           <label className="form-field full-width"><span>Anlass</span><input name="occasion" defaultValue={row.occasion??""} disabled={disabled}/></label>
-          <label className="form-field"><span>Empfohlener Kontakt</span>
-            <select name="referred_contact_id" defaultValue={row.referred_contact_id??""} disabled={disabled}>
-              <option value="">— noch nicht angelegt</option>
-              {(d.contacts as any[]).map((c:any)=><option key={c.id} value={c.id}>{c.last_name}, {c.first_name} · {c.contact_number}</option>)}
-            </select>
-          </label>
+          <KontaktAuswahl name="referred_contact_id" beschriftung="Empfohlener Kontakt" vorbelegt={one(row.referred_contact)?{id:one(row.referred_contact).id,name:`${one(row.referred_contact).last_name}, ${one(row.referred_contact).first_name}`,nummer:one(row.referred_contact).contact_number}:null} vorbelegtId={row.referred_contact_id||null} disabled={disabled} hinweis="Leer lassen, wenn die Person noch nicht angelegt ist."/>
           <label className="form-field"><span>oder Name</span><input name="referred_name" defaultValue={row.referred_name??""} disabled={disabled}/></label>
           <label className="form-field full-width"><span>Notiz zum Empfohlenen</span><textarea name="referred_note" rows={2} defaultValue={row.referred_note??""} disabled={disabled}/></label>
           <label className="form-field"><span>Zuständig</span>

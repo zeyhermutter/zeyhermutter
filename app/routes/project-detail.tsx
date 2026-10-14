@@ -1,6 +1,7 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/project-detail";
 import { requirePermission } from "~/lib/auth.server";
+import { KontaktAuswahl } from "~/components/kontakt-auswahl";
 import { BLOCKER_AREA, PHASE, PROJECT_STATUS, STATUS_CLASS, formatDay, nextAction, projectErrorMessage } from "./projects";
 import { euroRund as money, zeitpunkt as formatMoment } from "~/lib/format";
 import { CHECKSTATUS as CHECK_STATUS, MAKLERAUFTRAGSTATUS as MANDATE_STATUS } from "~/lib/labels";
@@ -31,11 +32,10 @@ export async function loader({request,context,params}:Route.LoaderArgs){
   if(error||!project)throw new Response("Verkaufsprojekt nicht gefunden.",{status:404,headers:responseHeaders()});
 
   const p=project as any;
-  const [blockersRes,checkRes,profilesRes,contactsRes,propertiesRes,mandatesRes,closingsRes,tasksRes,activityRes,canWriteRes,canAssignRes]=await Promise.all([
+  const [blockersRes,checkRes,profilesRes,propertiesRes,mandatesRes,closingsRes,tasksRes,activityRes,canWriteRes,canAssignRes]=await Promise.all([
     supabase.rpc("sale_project_blockers",{p_project_id:projectId}),
     supabase.from("lead_sales_readiness_checks").select("id,revision_no,status,is_current,lead_id,sale_project_id,owner_decision,owner_decision_at,finalized_at").or(`sale_project_id.eq.${projectId}${p.lead_id?`,lead_id.eq.${p.lead_id}`:""}`).order("revision_no",{ascending:false}),
     supabase.from("profiles").select("user_id,display_name").eq("status","ACTIVE").order("display_name"),
-    supabase.from("contacts").select("id,contact_number,first_name,last_name").is("archived_at",null).order("last_name").limit(1000),
     supabase.from("properties").select("id,property_number,internal_title").is("archived_at",null).order("property_number").limit(500),
     p.property_id?supabase.from("brokerage_mandates").select("id,mandate_number,mandate_type,status,term_start,term_end").eq("property_id",p.property_id).is("archived_at",null).order("updated_at",{ascending:false}):Promise.resolve({data:[],error:null}),
     p.property_id?supabase.from("sale_closings").select("id,closing_number,status,notary_appointment_at,notarized_date,handover_date").eq("property_id",p.property_id).is("archived_at",null).order("created_at",{ascending:false}):Promise.resolve({data:[],error:null}),
@@ -64,7 +64,6 @@ export async function loader({request,context,params}:Route.LoaderArgs){
     blockers:(blockersRes.data??[]) as any[],
     checks,currentCheck,measures,scenarios,
     profiles:profilesRes.data??[],
-    contacts:contactsRes.data??[],
     properties:propertiesRes.data??[],
     mandates:mandatesRes.data??[],
     closings:closingsRes.data??[],
@@ -214,7 +213,7 @@ export default function ProjectDetail(){
         <Form method="post" className="form-grid">
           <input type="hidden" name="_intent" value="core_save"/>
           <input type="hidden" name="version" value={p.version}/>
-          <label className="form-field"><span>Eigentümer *</span><select name="contact_id" defaultValue={p.contact_id} disabled={disabled}>{(d.contacts as any[]).map((c:any)=><option key={c.id} value={c.id}>{c.last_name}, {c.first_name}</option>)}</select></label>
+          <KontaktAuswahl name="contact_id" beschriftung="Eigentümer" pflicht vorbelegt={p.contacts?{id:p.contacts.id,name:`${p.contacts.last_name}, ${p.contacts.first_name}`,nummer:p.contacts.contact_number}:null} vorbelegtId={p.contact_id||null} disabled={disabled}/>
           <label className="form-field"><span>Immobilie</span><select name="property_id" defaultValue={p.property_id??""} disabled={disabled}><option value="">— noch keine</option>{(d.properties as any[]).map((x:any)=><option key={x.id} value={x.id}>{x.property_number} · {x.internal_title}</option>)}</select></label>
           <label className="form-field"><span>Phase</span><select name="phase" defaultValue={p.phase} disabled={disabled}>{Object.entries(PHASE).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label>
           <label className="form-field"><span>Status</span><select name="status" defaultValue={p.status} disabled={disabled}>{Object.entries(PROJECT_STATUS).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label>

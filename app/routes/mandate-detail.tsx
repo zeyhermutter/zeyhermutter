@@ -4,6 +4,7 @@ import { requirePermission } from "~/lib/auth.server";
 import { crmDateAtTimeToIso } from "~/lib/local-time";
 import { euroGenau as money, tag as formatDate, zeitpunkt } from "~/lib/format";
 import { AUFGABENSTATUS, MAKLERAUFTRAGART as TYPE, MAKLERAUFTRAGSTATUS as STATUS, PROVISIONSSTATUS, beschrifte } from "~/lib/labels";
+import { KontaktAuswahl } from "~/components/kontakt-auswahl";
 import { LeerOderFehler } from "~/components/leer-oder-fehler";
 
 type ActionResult={error?:string;ok?:string};
@@ -69,13 +70,12 @@ export async function loader({request,context,params}:Route.LoaderArgs){
   const id=params.mandateId!;
   const {data:row,error}=await supabase.from("brokerage_mandates").select("*,properties(id,property_number,internal_title,status,purchase_price),leads(id,lead_number)").eq("id",id).maybeSingle();
   if(error||!row)throw new Response("Maklerauftrag nicht gefunden.",{status:404,headers:responseHeaders()});
-  const [{data:clients,error:clientsFehler},{data:terms},{data:transitions,error:transitionsFehler},{data:commissions,error:commissionsFehler},{data:tasks,error:tasksFehler},{data:contacts},{data:profiles},{data:canWrite},{data:canArchive},{data:canTask},{data:canAudit}]=await Promise.all([
+  const [{data:clients,error:clientsFehler},{data:terms},{data:transitions,error:transitionsFehler},{data:commissions,error:commissionsFehler},{data:tasks,error:tasksFehler},{data:profiles},{data:canWrite},{data:canArchive},{data:canTask},{data:canAudit}]=await Promise.all([
     supabase.from("brokerage_mandate_clients").select("id,contact_id,signed_on,note,contacts(id,contact_number,first_name,last_name)").eq("mandate_id",id).order("created_at"),
     supabase.from("brokerage_mandate_commission_terms").select("*").eq("mandate_id",id).order("side"),
     supabase.from("brokerage_mandate_status_transitions").select("to_status,description").eq("from_status",row.status).order("to_status"),
     supabase.from("commissions").select("id,commission_number,side,status,expected_amount,actual_amount,due_date").eq("mandate_id",id).order("created_at"),
     supabase.from("tasks").select("id,task_number,title,status,due_at").eq("mandate_id",id).is("archived_at",null).order("due_at"),
-    supabase.from("contacts").select("id,contact_number,first_name,last_name").is("archived_at",null).order("last_name").limit(1000),
     supabase.from("profiles").select("user_id,display_name").eq("status","ACTIVE").order("display_name"),
     supabase.rpc("current_user_has_permission",{p_permission:"mandate.write"}),
     supabase.rpc("current_user_has_permission",{p_permission:"mandate.archive"}),
@@ -87,7 +87,7 @@ export async function loader({request,context,params}:Route.LoaderArgs){
     const result=await supabase.from("audit_events").select("id,occurred_at,actor_display_name_snapshot,action,field_changes,entity_type").eq("entity_type","BROKERAGE_MANDATE").eq("entity_id",id).order("occurred_at",{ascending:false}).limit(60);
     if(!result.error)audit=result.data??[];
   }
-  return data({ladefehler:[clientsFehler&&"clients",transitionsFehler&&"transitions",commissionsFehler&&"commissions",tasksFehler&&"tasks"].filter(Boolean) as string[],row,profile,clients:clients??[],terms:terms??[],transitions:transitions??[],commissions:commissions??[],tasks:tasks??[],contacts:contacts??[],profiles:profiles??[],canWrite:canWrite===true,canArchive:canArchive===true,canTask:canTask===true,audit},{headers:responseHeaders()});
+  return data({ladefehler:[clientsFehler&&"clients",transitionsFehler&&"transitions",commissionsFehler&&"commissions",tasksFehler&&"tasks"].filter(Boolean) as string[],row,profile,clients:clients??[],terms:terms??[],transitions:transitions??[],commissions:commissions??[],tasks:tasks??[],profiles:profiles??[],canWrite:canWrite===true,canArchive:canArchive===true,canTask:canTask===true,audit},{headers:responseHeaders()});
 }
 
 export async function action({request,context,params}:Route.ActionArgs){
@@ -288,13 +288,12 @@ function TermForm({side,term,disabled}:{side:"SELLER"|"BUYER";term:any;disabled:
 }
 
 export default function MandateDetail(){
-  const {row,profile,clients,terms,transitions,commissions,tasks,contacts,profiles,canWrite,canArchive,canTask,audit,ladefehler}=useLoaderData<typeof loader>();
+  const {row,profile,clients,terms,transitions,commissions,tasks,profiles,canWrite,canArchive,canTask,audit,ladefehler}=useLoaderData<typeof loader>();
   const result=useActionData<typeof action>();
   const property=one(row.properties),lead=one(row.leads),locked=Boolean(row.archived_at);
   const seller=terms.find((term:any)=>term.side==="SELLER"),buyer=terms.find((term:any)=>term.side==="BUYER");
   const notes=warnings(row,terms,clients);
   const editable=canWrite&&!locked;
-  const assignedContactIds=new Set(clients.map((client:any)=>client.contact_id));
 
   return <main className="editor-shell">
     <header className="editor-header">
@@ -378,7 +377,7 @@ export default function MandateDetail(){
       </div>
       {editable?<Form method="post" className="inline-actions">
         <input type="hidden" name="_intent" value="client_add"/>
-        <select name="contact_id" required defaultValue=""><option value="">Kontakt auswählen…</option>{contacts.filter((contact:any)=>!assignedContactIds.has(contact.id)).map((contact:any)=><option value={contact.id} key={contact.id}>{contact.last_name}, {contact.first_name} · {contact.contact_number}</option>)}</select>
+        <KontaktAuswahl name="contact_id" beschriftung="Auftraggeber" pflicht ausschliessen={clients.map((client:any)=>client.contact_id)}/>
         <input name="signed_on" type="date" aria-label="Unterzeichnet am"/>
         <input name="note" placeholder="Bemerkung · optional"/>
         <button className="secondary-button" type="submit">Auftraggeber hinzufügen</button>

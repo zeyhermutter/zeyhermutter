@@ -4,6 +4,7 @@ import { requirePermission } from "~/lib/auth.server";
 import { crmDateAtTimeToIso } from "~/lib/local-time";
 import { tag as formatDate } from "~/lib/format";
 import { VERFUEGUNGSROLLE as PARTY_ROLE } from "~/lib/labels";
+import { KontaktAuswahl } from "~/components/kontakt-auswahl";
 
 type ActionResult={error?:string};
 
@@ -76,11 +77,10 @@ export async function loader({request,context,params}:Route.LoaderArgs){
   const propertyId=params.propertyId!;
   const {data:property,error:propertyError}=await supabase.from("properties").select("id,property_number,internal_title,status,primary_responsible_user").eq("id",propertyId).maybeSingle();
   if(propertyError||!property)throw new Response("Immobilie nicht gefunden.",{status:404,headers:responseHeaders()});
-  const [{data:record},{data:partiesRaw},{data:owners},{data:contacts},{data:profiles},{data:canWrite},{data:canArchive},{data:canTask},{data:gapsResult}]=await Promise.all([
+  const [{data:record},{data:partiesRaw},{data:owners},{data:profiles},{data:canWrite},{data:canArchive},{data:canTask},{data:gapsResult}]=await Promise.all([
     supabase.from("property_dispositions").select("*").eq("property_id",propertyId).maybeSingle(),
     supabase.from("property_disposition_parties").select("*,contacts!property_disposition_parties_contact_id_fkey(id,contact_number,first_name,last_name),represents:contacts!property_disposition_parties_represents_contact_id_fkey(id,first_name,last_name),property_dispositions!inner(property_id)").eq("property_dispositions.property_id",propertyId).order("party_role").order("created_at"),
     supabase.from("property_owners").select("contact_id,ownership_percentage,primary_contact").eq("property_id",propertyId),
-    supabase.from("contacts").select("id,contact_number,first_name,last_name").is("archived_at",null).order("last_name").limit(1000),
     supabase.from("profiles").select("user_id,display_name").eq("status","ACTIVE").order("display_name"),
     supabase.rpc("current_user_has_permission",{p_permission:"disposition.write"}),
     supabase.rpc("current_user_has_permission",{p_permission:"disposition.archive"}),
@@ -88,7 +88,7 @@ export async function loader({request,context,params}:Route.LoaderArgs){
     supabase.rpc("property_disposition_gaps",{p_property_id:propertyId}),
   ]);
   const parties=((partiesRaw??[]) as any[]).filter((row)=>Boolean(record)&&row.disposition_id===record.id);
-  return data({profile,property,record,parties,gaps:(gapsResult??[]) as string[],owners:owners??[],contacts:contacts??[],profiles:profiles??[],canWrite:canWrite===true,canArchive:canArchive===true,canTask:canTask===true},{headers:responseHeaders()});
+  return data({profile,property,record,parties,gaps:(gapsResult??[]) as string[],owners:owners??[],profiles:profiles??[],canWrite:canWrite===true,canArchive:canArchive===true,canTask:canTask===true},{headers:responseHeaders()});
 }
 
 export async function action({request,context,params}:Route.ActionArgs){
@@ -251,7 +251,7 @@ export async function action({request,context,params}:Route.ActionArgs){
   return invalid("Unbekannte Aktion.");
 }
 
-function PartyForm({row,contacts,dispositionId,disabled,formKey}:{row?:any;contacts:any[];dispositionId:string;disabled:boolean;formKey:string}){
+function PartyForm({row,dispositionId,disabled,formKey}:{row?:any;dispositionId:string;disabled:boolean;formKey:string}){
   return <Form method="post" className="editor-card" key={formKey}>
     <input type="hidden" name="_intent" value="party_save"/>
     <input type="hidden" name="disposition_id" value={dispositionId}/>
@@ -259,9 +259,9 @@ function PartyForm({row,contacts,dispositionId,disabled,formKey}:{row?:any;conta
     {row?<input type="hidden" name="party_version" value={row.version}/>:null}
     <div className="card-head"><div><p className="eyebrow">{row?"Bestehender Beteiligter":"Neue Erfassung"}</p><h3>{row?`${PARTY_ROLE[row.party_role]??row.party_role} · ${contactLabel(one(row.contacts))}`:"Beteiligten erfassen"}</h3></div></div>
     <div className="form-grid">
-      <label className="form-field"><span>Person *</span><select name="contact_id" defaultValue={row?.contact_id??""} required disabled={disabled}><option value="">Auswählen…</option>{contacts.map((c:any)=><option value={c.id} key={c.id}>{contactLabel(c)} · {c.contact_number}</option>)}</select></label>
+      <KontaktAuswahl name="contact_id" beschriftung="Person" pflicht vorbelegtId={row?.contact_id||null} disabled={disabled}/>
       <label className="form-field"><span>Rolle *</span><select name="party_role" defaultValue={row?.party_role??"CO_HEIR"} required disabled={disabled}>{Object.entries(PARTY_ROLE).map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></label>
-      <label className="form-field"><span>Handelt für</span><select name="represents_contact_id" defaultValue={row?.represents_contact_id??""} disabled={disabled}><option value="">—</option>{contacts.map((c:any)=><option value={c.id} key={c.id}>{contactLabel(c)}</option>)}</select><small className="subtle">Pflicht bei Vollmacht, Betreuung und Ergänzungspflegschaft.</small></label>
+      <KontaktAuswahl name="represents_contact_id" beschriftung="Handelt für" vorbelegtId={row?.represents_contact_id||null} disabled={disabled} hinweis={<>Pflicht bei Vollmacht, Betreuung und Ergänzungspflegschaft.</>}/>
       <label className="form-field"><span>Quote %</span><input name="share_percentage" inputMode="decimal" defaultValue={row?.share_percentage??""} disabled={disabled}/><small className="subtle">Nur für Eigentümer und Miterben.</small></label>
       <label className="form-field"><span>Zustimmung</span><select name="consent_status" defaultValue={row?.consent_status??"OPEN"} disabled={disabled}>{Object.entries(CONSENT).map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></label>
       <label className="form-field"><span>Zustimmung am</span><input name="consent_on" type="date" defaultValue={row?.consent_on??""} max={today()} disabled={disabled}/></label>
@@ -335,7 +335,7 @@ export default function PropertyDisposition(){
         <div className="card-head" style={{marginTop:"1.25rem"}}><div><p className="eyebrow">Nachlass</p><h3>Erbfall</h3></div></div>
         <div className="form-grid">
           <label className="form-field"><span>Erbfall liegt vor</span><select name="inheritance_case" defaultValue={inheritance?"yes":"no"} disabled={locked}><option value="no">Nein</option><option value="yes">Ja</option></select><small className="subtle">Die folgenden Felder werden nur bei „Ja" gespeichert.</small></label>
-          <label className="form-field"><span>Erblasser · Kontakt</span><select name="decedent_contact_id" defaultValue={record?.decedent_contact_id??""} disabled={locked}><option value="">—</option>{d.contacts.map((c:any)=><option value={c.id} key={c.id}>{contactLabel(c)} · {c.contact_number}</option>)}</select></label>
+          <KontaktAuswahl name="decedent_contact_id" beschriftung="Erblasser · Kontakt" vorbelegtId={record?.decedent_contact_id||null} disabled={locked}/>
           <label className="form-field"><span>Erblasser · Freitext</span><input name="decedent_name" defaultValue={record?.decedent_name??""} disabled={locked}/></label>
           <label className="form-field"><span>Sterbedatum</span><input name="date_of_death" type="date" defaultValue={record?.date_of_death??""} max={today()} disabled={locked}/></label>
           <label className="form-field"><span>Erbnachweis</span><select name="succession_proof_type" defaultValue={record?.succession_proof_type??""} disabled={locked}><option value="">Noch nicht festgelegt</option>{Object.entries(PROOF).map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></label>
@@ -370,8 +370,8 @@ export default function PropertyDisposition(){
           </div>;
         })}
       </div>}
-      {parties.map((row:any)=><PartyForm key={`f-${row.id}`} formKey={`f-${row.id}`} row={row} contacts={d.contacts} dispositionId={record.id} disabled={locked||Boolean(row.archived_at)}/>)}
-      {d.canWrite?<PartyForm formKey="new-party" contacts={d.contacts} dispositionId={record.id} disabled={false}/>:null}
+      {parties.map((row:any)=><PartyForm key={`f-${row.id}`} formKey={`f-${row.id}`} row={row} dispositionId={record.id} disabled={locked||Boolean(row.archived_at)}/>)}
+      {d.canWrite?<PartyForm formKey="new-party" dispositionId={record.id} disabled={false}/>:null}
     </section>:null}
 
     <section className="data-card"><div className="card-head"><div><p className="eyebrow">Vor produktiver Nutzung</p><h2>Anwaltlich abzunehmen</h2></div></div>

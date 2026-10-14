@@ -2,6 +2,7 @@ import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-
 import type { Route } from "./+types/property-mandatory-data";
 import { requirePermission } from "~/lib/auth.server";
 import { tag as formatDate } from "~/lib/format";
+import { KontaktAuswahl } from "~/components/kontakt-auswahl";
 
 type ActionResult={error?:string};
 
@@ -51,11 +52,10 @@ export async function loader({request,context,params}:Route.LoaderArgs){
     .select("id,property_number,internal_title,property_type,status").eq("id",propertyId).maybeSingle();
   if(propertyError||!property)throw new Response("Immobilie nicht gefunden.",{status:404,headers:responseHeaders()});
 
-  const [energyRes,gapsRes,presentationsRes,contactsRes,viewingsRes,closingsRes,publicationRes,canWriteRes]=await Promise.all([
+  const [energyRes,gapsRes,presentationsRes,viewingsRes,closingsRes,publicationRes,canWriteRes]=await Promise.all([
     supabase.from("property_energy_data").select("*,profiles!property_energy_data_exemption_confirmed_by_fkey(display_name)").eq("property_id",propertyId).maybeSingle(),
     supabase.rpc("property_disclosure_gaps",{p_property_id:propertyId}),
     supabase.from("energy_certificate_presentations").select("*,contacts(id,contact_number,first_name,last_name),viewings(id,viewing_number),sale_closings(id,closing_number)").eq("property_id",propertyId).order("presented_on",{ascending:false}),
-    supabase.from("contacts").select("id,contact_number,first_name,last_name").is("archived_at",null).order("last_name").limit(1000),
     supabase.from("viewings").select("id,viewing_number,starts_at,contact_id").eq("property_id",propertyId).is("archived_at",null).order("starts_at",{ascending:false}).limit(200),
     supabase.from("sale_closings").select("id,closing_number,buyer_contact_id,status").eq("property_id",propertyId).is("archived_at",null).order("created_at",{ascending:false}).limit(50),
     supabase.from("property_publications").select("id,status,has_unpublished_changes").eq("property_id",propertyId).maybeSingle(),
@@ -70,7 +70,6 @@ export async function loader({request,context,params}:Route.LoaderArgs){
     energy:energyRes.data,
     gaps:(gapsRes.data??[]) as string[],
     presentations:presentationsRes.data??[],
-    contacts:contactsRes.data??[],
     viewings:viewingsRes.data??[],
     closings:closingsRes.data??[],
     publication:publicationRes.data??null,
@@ -294,7 +293,7 @@ export default function PropertyMandatoryData(){
 
       <Form method="post" className="form-grid" style={{marginTop:"1rem"}}>
         <input type="hidden" name="_intent" value="presentation_add"/>
-        <label className="form-field"><span>Interessent *</span><select name="contact_id" defaultValue="" disabled={disabled}><option value="">—</option>{(d.contacts as any[]).map((c)=><option key={c.id} value={c.id}>{contactLabel(c)}</option>)}</select></label>
+        <KontaktAuswahl name="contact_id" beschriftung="Interessent" pflicht disabled={disabled}/>
         <label className="form-field"><span>Anlass *</span><select name="occasion" defaultValue="VIEWING" disabled={disabled}>{Object.entries(OCCASION).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label>
         <label className="form-field"><span>Besichtigung</span><select name="viewing_id" defaultValue="" disabled={disabled}><option value="">—</option>{viewings.map((v)=><option key={v.id} value={v.id}>{v.viewing_number} · {formatDate(String(v.starts_at??"").slice(0,10))}</option>)}</select><small className="subtle">Beim Anlass Besichtigung erforderlich.</small></label>
         <label className="form-field"><span>Abschlussvorgang</span><select name="closing_id" defaultValue="" disabled={disabled}><option value="">—</option>{closings.map((c)=><option key={c.id} value={c.id}>{c.closing_number}</option>)}</select><small className="subtle">Beim Anlass Vertragsschluss erforderlich.</small></label>

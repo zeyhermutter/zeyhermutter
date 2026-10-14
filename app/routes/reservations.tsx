@@ -1,5 +1,6 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/reservations";
+import { KontaktAuswahl } from "~/components/kontakt-auswahl";
 import { LeererArbeitsplatz } from "~/components/leerer-arbeitsplatz";
 import { ReservierungHinweis } from "~/components/reservierung-hinweis";
 import { requirePermission } from "~/lib/auth.server";
@@ -26,10 +27,9 @@ export async function loader({request,context}:Route.LoaderArgs){
   }
   const url=new URL(request.url);
   const filters={q:(url.searchParams.get("q")??"").trim(),view:url.searchParams.get("view")??"ACTIVE",propertyId:url.searchParams.get("property_id")??""};
-  const [{data:rows,error},{data:properties},{data:contacts},{data:offers},{data:profiles},{data:canWrite},{data:canArchive},{data:canTask}]=await Promise.all([
+  const [{data:rows,error},{data:properties},{data:offers},{data:profiles},{data:canWrite},{data:canArchive},{data:canTask}]=await Promise.all([
     supabase.from("property_reservations").select("*,properties!inner(id,property_number,internal_title,status),contacts!inner(id,contact_number,first_name,last_name),purchase_offers(id,offer_number,amount)").order("created_at",{ascending:false}).limit(400),
     supabase.from("properties").select("id,property_number,internal_title,status").eq("transaction_type","SALE").not("status","in","(SOLD,LOST,WITHDRAWN,ARCHIVED)").order("updated_at",{ascending:false}).limit(500),
-    supabase.from("contacts").select("id,contact_number,first_name,last_name").is("archived_at",null).order("last_name").limit(1000),
     supabase.from("purchase_offers").select("id,offer_number,property_id,contact_id,amount,status").is("archived_at",null).order("created_at",{ascending:false}).limit(500),
     supabase.from("profiles").select("user_id,display_name").eq("status","ACTIVE").order("display_name"),
     supabase.rpc("current_user_has_permission",{p_permission:"reservation.write"}),
@@ -56,7 +56,7 @@ export async function loader({request,context}:Route.LoaderArgs){
     if(!needle)return true;
     return [row.reservation_number,property?.property_number,property?.internal_title,contactLabel(contact)].filter(Boolean).join(" ").toLocaleLowerCase("de-DE").includes(needle);
   });
-  return data({leer,neu:url.searchParams.get("neu")==="1",rows:filtered,summary,filters,properties:properties??[],contacts:contacts??[],offers:offers??[],profiles:profiles??[],canWrite:canWrite===true,canArchive:canArchive===true,canTask:canTask===true},{headers:responseHeaders()});
+  return data({leer,neu:url.searchParams.get("neu")==="1",rows:filtered,summary,filters,properties:properties??[],offers:offers??[],profiles:profiles??[],canWrite:canWrite===true,canArchive:canArchive===true,canTask:canTask===true},{headers:responseHeaders()});
 }
 
 export async function action(args:Route.ActionArgs){
@@ -69,7 +69,7 @@ function ReservierungAnlegen({d}:{d:any}){
     <input type="hidden" name="_intent" value="create"/>
     <div className="form-grid">
       <label className="form-field"><span>Immobilie *</span><select name="property_id" defaultValue={d.filters.propertyId} required><option value="">Auswählen…</option>{d.properties.map((p:any)=><option value={p.id} key={p.id}>{p.property_number} · {p.internal_title}</option>)}</select><small className="subtle">Nur Verkaufsobjekte, die noch nicht verkauft sind.</small></label>
-      <label className="form-field"><span>Interessent *</span><select name="contact_id" defaultValue="" required><option value="">Auswählen…</option>{d.contacts.map((c:any)=><option value={c.id} key={c.id}>{contactLabel(c)} · {c.contact_number}</option>)}</select></label>
+      <KontaktAuswahl name="contact_id" beschriftung="Interessent" pflicht/>
       <label className="form-field"><span>Reserviert ab</span><input name="reserved_from" type="date" defaultValue={today()}/></label>
       <label className="form-field"><span>Reserviert bis *</span><input name="reserved_until" type="date" required/></label>
       <label className="form-field"><span>Reservierter Preis €</span><input name="reserved_price" inputMode="decimal"/></label>

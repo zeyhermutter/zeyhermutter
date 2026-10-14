@@ -3,6 +3,7 @@ import type { Route } from "./+types/property-compliance";
 import { requirePermission } from "~/lib/auth.server";
 import { tag as formatDate } from "~/lib/format";
 import { LeerOderFehler } from "~/components/leer-oder-fehler";
+import { KontaktAuswahl } from "~/components/kontakt-auswahl";
 import { GELDWAESCHERISIKO as RISK } from "~/lib/labels";
 
 type ActionResult={error?:string};
@@ -54,9 +55,8 @@ export async function loader({request,context,params}:Route.LoaderArgs){
   const {data:gwgCase,error:caseError}=await supabase.from("gwg_cases").select("*").eq("property_id",propertyId).order("created_at",{ascending:false}).limit(1).maybeSingle();
   if(caseError)throw new Response("Geldwäscheakte konnte nicht geladen werden.",{status:500,headers:responseHeaders()});
   if(gwgCase)await supabase.rpc("log_gwg_case_access",{p_case_id:gwgCase.id});
-  const [{data:identifications,error:identificationsFehler},{data:contacts},{data:owners},{data:closings},{data:documents,error:documentsFehler},{data:profiles},{data:canWrite},{data:canArchive}]=await Promise.all([
+  const [{data:identifications,error:identificationsFehler},{data:owners},{data:closings},{data:documents,error:documentsFehler},{data:profiles},{data:canWrite},{data:canArchive}]=await Promise.all([
     gwgCase?supabase.from("gwg_identifications").select("*,contacts!gwg_identifications_contact_id_fkey(id,contact_number,first_name,last_name),represents:contacts!gwg_identifications_represents_contact_id_fkey(id,first_name,last_name)").eq("gwg_case_id",gwgCase.id).order("party_role").order("created_at"):Promise.resolve({data:[],error:null}),
-    supabase.from("contacts").select("id,contact_number,first_name,last_name").is("archived_at",null).order("last_name").limit(1000),
     supabase.from("property_owners").select("contact_id,primary_contact").eq("property_id",propertyId),
     supabase.from("sale_closings").select("id,closing_number,status,buyer_contact_id,notary_appointment_at,notarized_date").eq("property_id",propertyId).is("archived_at",null).order("created_at",{ascending:false}),
     supabase.from("documents").select("id,title,category,retention_until,legal_hold,archived_at").eq("property_id",propertyId).eq("category","IDENTITY_PROOF").is("archived_at",null).order("created_at",{ascending:false}),
@@ -64,7 +64,7 @@ export async function loader({request,context,params}:Route.LoaderArgs){
     supabase.rpc("current_user_has_permission",{p_permission:"gwg.write"}),
     supabase.rpc("current_user_has_permission",{p_permission:"gwg.archive"}),
   ]);
-  return data({ladefehler:[identificationsFehler&&"identifications",documentsFehler&&"documents"].filter(Boolean) as string[],profile,property,gwgCase,identifications:identifications??[],contacts:contacts??[],owners:owners??[],closings:closings??[],documents:documents??[],profiles:profiles??[],canWrite:canWrite===true,canArchive:canArchive===true},{headers:responseHeaders()});
+  return data({ladefehler:[identificationsFehler&&"identifications",documentsFehler&&"documents"].filter(Boolean) as string[],profile,property,gwgCase,identifications:identifications??[],owners:owners??[],closings:closings??[],documents:documents??[],profiles:profiles??[],canWrite:canWrite===true,canArchive:canArchive===true},{headers:responseHeaders()});
 }
 
 export async function action({request,context,params}:Route.ActionArgs){
@@ -197,7 +197,7 @@ export function complianceWarnings(gwgCase:any,identifications:any[],closings:an
   return warnings;
 }
 
-function IdentificationForm({row,contacts,documents,caseId,disabled}:{row?:any;contacts:any[];documents:any[];caseId:string;disabled:boolean}){
+function IdentificationForm({row,documents,caseId,disabled}:{row?:any;documents:any[];caseId:string;disabled:boolean}){
   return <Form method="post" className="editor-card">
     <input type="hidden" name="_intent" value="identification_save"/>
     <input type="hidden" name="case_id" value={caseId}/>
@@ -205,9 +205,9 @@ function IdentificationForm({row,contacts,documents,caseId,disabled}:{row?:any;c
     {row?<input type="hidden" name="identification_version" value={row.version}/>:null}
     <div className="card-head"><div><p className="eyebrow">{row?"Bestehender Eintrag":"Neue Erfassung"}</p><h3>{row?`${PARTY_ROLE[row.party_role]??row.party_role} · ${contactLabel(one(row.contacts))}`:"Beteiligte Person erfassen"}</h3></div></div>
     <div className="form-grid">
-      <label className="form-field"><span>Person *</span><select name="contact_id" defaultValue={row?.contact_id??""} required disabled={disabled}><option value="">Auswählen…</option>{contacts.map((contact:any)=><option value={contact.id} key={contact.id}>{contactLabel(contact)} · {contact.contact_number}</option>)}</select></label>
+      <KontaktAuswahl name="contact_id" beschriftung="Person" pflicht vorbelegtId={row?.contact_id||null} disabled={disabled}/>
       <label className="form-field"><span>Rolle *</span><select name="party_role" defaultValue={row?.party_role??"SELLER"} required disabled={disabled}>{Object.entries(PARTY_ROLE).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label>
-      <label className="form-field"><span>Handelt für</span><select name="represents_contact_id" defaultValue={row?.represents_contact_id??""} disabled={disabled}><option value="">—</option>{contacts.map((contact:any)=><option value={contact.id} key={contact.id}>{contactLabel(contact)}</option>)}</select><small className="subtle">Pflicht bei Vertretung und wirtschaftlich Berechtigten.</small></label>
+      <KontaktAuswahl name="represents_contact_id" beschriftung="Handelt für" vorbelegtId={row?.represents_contact_id||null} disabled={disabled} hinweis={<>Pflicht bei Vertretung und wirtschaftlich Berechtigten.</>}/>
       <label className="form-field"><span>Geburtsdatum</span><input type="date" name="birth_date" defaultValue={row?.birth_date??""} disabled={disabled}/></label>
       <label className="form-field"><span>Geburtsort</span><input name="birth_place" defaultValue={row?.birth_place??""} disabled={disabled}/></label>
       <label className="form-field"><span>Staatsangehörigkeit</span><input name="nationality" defaultValue={row?.nationality??""} disabled={disabled}/></label>
@@ -295,8 +295,8 @@ export default function PropertyCompliance(){
           {d.canWrite&&!archived?<Form method="post"><input type="hidden" name="_intent" value="identification_remove"/><input type="hidden" name="identification_id" value={row.id}/><button className="secondary-button" type="submit">Entfernen</button></Form>:null}
         </div>;})}
       </div>}
-      {d.identifications.map((row:any)=><IdentificationForm key={`form-${row.id}`} row={row} contacts={d.contacts} documents={d.documents} caseId={gwgCase.id} disabled={locked}/>)}
-      {d.canWrite&&!archived?<IdentificationForm contacts={d.contacts} documents={d.documents} caseId={gwgCase.id} disabled={false}/>:null}
+      {d.identifications.map((row:any)=><IdentificationForm key={`form-${row.id}`} row={row} documents={d.documents} caseId={gwgCase.id} disabled={locked}/>)}
+      {d.canWrite&&!archived?<IdentificationForm documents={d.documents} caseId={gwgCase.id} disabled={false}/>:null}
     </section>
 
     <div className="dashboard-grid property-section">

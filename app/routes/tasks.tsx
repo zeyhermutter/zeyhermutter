@@ -30,9 +30,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const ansicht = von === "alle" ? "alle" : kollegen.some((k) => k.id === von) ? von : "meins";
   if (ansicht !== "alle") query = query.eq("responsible_user", ansicht === "meins" ? userId : ansicht);
 
-  const [{ data: tasks, error: taskError }, { data: contacts, error: contactError }, { data: profiles, error: profileError }, { data: properties, error: propertyError }, { data: leads, error: leadError }, { data: inquiries, error: inquiryError }, { data: searchProfiles, error: searchProfileError }, { data: viewings, error: viewingError }, { data: canWrite }] = await Promise.all([
+  const [{ data: tasks, error: taskError }, { data: profiles, error: profileError }, { data: properties, error: propertyError }, { data: leads, error: leadError }, { data: inquiries, error: inquiryError }, { data: searchProfiles, error: searchProfileError }, { data: viewings, error: viewingError }, { data: canWrite }] = await Promise.all([
     query,
-    supabase.from("contacts").select("id,contact_number,first_name,last_name").is("archived_at", null).order("last_name").limit(500),
     supabase.from("profiles").select("user_id,display_name,status").eq("status", "ACTIVE").order("display_name"),
     supabase.from("properties").select("id,property_number,internal_title,status").neq("status", "ARCHIVED").order("updated_at", { ascending: false }).limit(500),
     supabase.from("leads").select("id,lead_number,status,contact_id,property_city,contacts!inner(first_name,last_name)").is("archived_at", null).order("updated_at", { ascending: false }).limit(500),
@@ -42,16 +41,23 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     supabase.rpc("current_user_has_permission", { p_permission: "task.write" }),
   ]);
 
-  if (taskError || contactError || profileError || propertyError || leadError || inquiryError || searchProfileError || viewingError) throw new Response("Aufgaben konnten nicht geladen werden.", { status: 500 });
+  if (taskError || profileError || propertyError || leadError || inquiryError || searchProfileError || viewingError) throw new Response("Aufgaben konnten nicht geladen werden.", { status: 500 });
   const taskIds = (tasks ?? []).map((task: any) => task.id);
   const watcherPromise = taskIds.length ? supabase.from("task_watchers").select("task_id,user_id,created_at").in("task_id", taskIds).order("created_at", { ascending: true }) : Promise.resolve({ data: [], error: null } as any);
   const commentPromise = taskIds.length ? supabase.from("comments").select("id,entity_id,body,author_user_id,created_at").eq("entity_type", "TASK").in("entity_id", taskIds).is("archived_at", null).order("created_at", { ascending: false }).limit(1000) : Promise.resolve({ data: [], error: null } as any);
-  const [{ data: watchers, error: watcherError }, { data: comments, error: commentError }] = await Promise.all([watcherPromise, commentPromise]);
+  // Kontakte nur fuer die angezeigten Aufgaben (14.10.2026). Vorher kamen
+  // Namen aus einer Liste der ersten 500 Kontakte -- eine Aufgabe zu einem
+  // Kontakt dahinter stand ohne Namen da. Gewaehlt wird beim Anlegen ueber
+  // die Suche (KontaktAuswahl).
+  const kontaktIds = Array.from(new Set((tasks ?? []).map((task: any) => task.contact_id).filter(Boolean)));
+  const contactPromise = kontaktIds.length ? supabase.from("contacts").select("id,contact_number,first_name,last_name").in("id", kontaktIds) : Promise.resolve({ data: [], error: null } as any);
+  const [{ data: watchers, error: watcherError }, { data: comments, error: commentError }, { data: contacts, error: contactError }] = await Promise.all([watcherPromise, commentPromise, contactPromise]);
+  if (contactError) throw new Response("Aufgaben konnten nicht geladen werden.", { status: 500 });
   if (watcherError || commentError) throw new Response("Aufgaben-Zusammenarbeit konnte nicht geladen werden.", { status: 500 });
 
   const map = (arr: any[], key: string) => Object.fromEntries(arr.map((x) => [x[key], x]));
   const group = (arr: any[], key: string) => arr.reduce((acc: Record<string, any[]>, item: any) => { (acc[item[key]] ??= []).push(item); return acc; }, {});
-  return data({ tasks: tasks ?? [], contacts: contacts ?? [], profiles: profiles ?? [], properties: properties ?? [], leads: leads ?? [], inquiries: inquiries ?? [], searchProfiles: searchProfiles ?? [], viewings: viewings ?? [], contactMap: map(contacts ?? [], "id"), profileMap: Object.fromEntries((profiles ?? []).map((x: any) => [x.user_id, x.display_name])), propertyMap: map(properties ?? [], "id"), leadMap: map(leads ?? [], "id"), inquiryMap: map(inquiries ?? [], "id"), searchProfileMap: map(searchProfiles ?? [], "id"), viewingMap: map(viewings ?? [], "id"), watchersByTask: group(watchers ?? [], "task_id"), commentsByTask: group(comments ?? [], "entity_id"), profile, status, ansicht, kollegen, canWrite: canWrite === true }, { headers: responseHeaders() });
+  return data({ tasks: tasks ?? [], profiles: profiles ?? [], properties: properties ?? [], leads: leads ?? [], inquiries: inquiries ?? [], searchProfiles: searchProfiles ?? [], viewings: viewings ?? [], contactMap: map(contacts ?? [], "id"), profileMap: Object.fromEntries((profiles ?? []).map((x: any) => [x.user_id, x.display_name])), propertyMap: map(properties ?? [], "id"), leadMap: map(leads ?? [], "id"), inquiryMap: map(inquiries ?? [], "id"), searchProfileMap: map(searchProfiles ?? [], "id"), viewingMap: map(viewings ?? [], "id"), watchersByTask: group(watchers ?? [], "task_id"), commentsByTask: group(comments ?? [], "entity_id"), profile, status, ansicht, kollegen, canWrite: canWrite === true }, { headers: responseHeaders() });
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
@@ -150,9 +156,8 @@ export async function action({ request, context }: Route.ActionArgs) {
 }
 
 export default function Tasks() {
-  const { tasks, contacts, profiles, properties, leads, inquiries, searchProfiles, viewings, contactMap, profileMap, propertyMap, leadMap, inquiryMap, searchProfileMap, viewingMap, watchersByTask, commentsByTask, profile, status, ansicht, kollegen, canWrite } = useLoaderData<typeof loader>();
+  const { tasks, profiles, properties, leads, inquiries, searchProfiles, viewings, contactMap, profileMap, propertyMap, leadMap, inquiryMap, searchProfileMap, viewingMap, watchersByTask, commentsByTask, profile, status, ansicht, kollegen, canWrite } = useLoaderData<typeof loader>();
   const result = useActionData<typeof action>();
-  const contactOptions = contacts.map((x: any) => ({ id: x.id, label: `${x.last_name}, ${x.first_name} · ${x.contact_number}` }));
   const leadOptions = leads.map((x: any) => ({ id: x.id, label: x.lead_number }));
   const propertyOptions = properties.map((x: any) => ({ id: x.id, label: `${x.property_number} · ${x.internal_title}` }));
   const searchProfileOptions = searchProfiles.map((x: any) => ({ id: x.id, label: `${x.search_profile_number} · ${x.title}` }));
@@ -187,7 +192,7 @@ export default function Tasks() {
         <label><span className="sr-only">Status</span><select name="status" defaultValue={status} onChange={(e) => e.currentTarget.form?.requestSubmit()}><option value="OPEN">Offen</option><option value="ALL">Alle</option><option value="DONE">Erledigt</option><option value="CANCELLED">Abgebrochen</option></select></label>
       </Form>
       <span className="programm-liste-zaehler">{tasks.length} {tasks.length === 1 ? "Aufgabe" : "Aufgaben"}</span>
-      {canWrite?<TaskCreateModal profiles={profiles} currentUserId={profile.user_id} contacts={contactOptions} leads={leadOptions} properties={propertyOptions} searchProfiles={searchProfileOptions} inquiries={inquiryOptions} viewings={viewingOptions}/>:null}
+      {canWrite?<TaskCreateModal profiles={profiles} currentUserId={profile.user_id} leads={leadOptions} properties={propertyOptions} searchProfiles={searchProfileOptions} inquiries={inquiryOptions} viewings={viewingOptions}/>:null}
     </div>
     <div className="programm-tabelle-rahmen">
       {tasks.length === 0 ? <p className="programm-liste-leer">Keine Aufgaben in dieser Ansicht.</p> : <table className="programm-tabelle aufgaben-tabelle">

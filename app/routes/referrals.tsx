@@ -2,6 +2,7 @@ import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-
 import { istEinstieg } from "~/lib/einstieg";
 import type { Route } from "./+types/referrals";
 import { Aufklapper } from "~/components/aufklapper";
+import { KontaktAuswahl } from "~/components/kontakt-auswahl";
 import { requirePermission } from "~/lib/auth.server";
 import { tag } from "~/lib/format";
 
@@ -50,11 +51,10 @@ export async function loader({request,context}:Route.LoaderArgs){
   const url=new URL(request.url);
   const filter=url.searchParams.get("status")??"OPEN";
 
-  const [rowsRes,contactsRes,organizationsRes,closingsRes,gapsRes,canWriteRes]=await Promise.all([
+  const [rowsRes,organizationsRes,closingsRes,gapsRes,canWriteRes]=await Promise.all([
     supabase.from("referrals")
       .select("id,referral_number,received_on,channel,status,occasion,acknowledged_on,acknowledgement_kind,archived_at,referred_name,referrer_contact:contacts!referrals_referrer_contact_id_fkey(id,first_name,last_name),referrer_organization:organizations!referrals_referrer_organization_id_fkey(id,name),referred_contact:contacts!referrals_referred_contact_id_fkey(id,first_name,last_name),leads(id,lead_number,status)")
       .order("received_on",{ascending:false}).limit(400),
-    supabase.from("contacts").select("id,contact_number,first_name,last_name").is("archived_at",null).order("last_name").limit(1000),
     supabase.from("organizations").select("id,name").is("archived_at",null).order("name").limit(500),
     supabase.from("sale_closings").select("id,closing_number,properties!inner(property_number)").is("archived_at",null).order("updated_at",{ascending:false}).limit(200),
     supabase.rpc("referral_attribution_gaps"),
@@ -73,7 +73,7 @@ export async function loader({request,context}:Route.LoaderArgs){
     open:all.filter((row:any)=>!row.archived_at&&["OPEN","CONTACTED"].includes(row.status)).length,
     won:all.filter((row:any)=>!row.archived_at&&row.status==="WON").length,
     unthanked:all.filter((row:any)=>!row.archived_at&&!row.acknowledged_on&&row.status!=="OPEN").length,
-    contacts:contactsRes.data??[],organizations:organizationsRes.data??[],closings:closingsRes.data??[],
+    organizations:organizationsRes.data??[],closings:closingsRes.data??[],
     gaps:(gapsRes.data??[]) as any[],
     filter,canWrite:canWriteRes.data===true},{headers:responseHeaders()});
 }
@@ -162,24 +162,14 @@ export default function Referrals(){
             <option value="ORGANIZATION">einer Organisation</option>
           </select>
         </label>
-        <label className="form-field"><span>Person</span>
-          <select name="referrer_contact_id" defaultValue="">
-            <option value="">—</option>
-            {(d.contacts as any[]).map((c:any)=><option key={c.id} value={c.id}>{c.last_name}, {c.first_name} · {c.contact_number}</option>)}
-          </select>
-        </label>
+        <KontaktAuswahl name="referrer_contact_id" beschriftung="Person"/>
         <label className="form-field"><span>Organisation</span>
           <select name="referrer_organization_id" defaultValue="">
             <option value="">—</option>
             {(d.organizations as any[]).map((o:any)=><option key={o.id} value={o.id}>{o.name}</option>)}
           </select>
         </label>
-        <label className="form-field"><span>Empfohlener Kontakt</span>
-          <select name="referred_contact_id" defaultValue="">
-            <option value="">— noch nicht angelegt</option>
-            {(d.contacts as any[]).map((c:any)=><option key={c.id} value={c.id}>{c.last_name}, {c.first_name} · {c.contact_number}</option>)}
-          </select>
-        </label>
+        <KontaktAuswahl name="referred_contact_id" beschriftung="Empfohlener Kontakt" hinweis="Leer lassen, wenn die Person noch nicht angelegt ist."/>
         <label className="form-field"><span>oder Name</span><input name="referred_name" placeholder="z. B. Familie Schneider"/></label>
         <label className="form-field"><span>Eingegangen am</span><input type="date" name="received_on" defaultValue={new Date().toISOString().slice(0,10)}/></label>
         <label className="form-field"><span>Weg</span>

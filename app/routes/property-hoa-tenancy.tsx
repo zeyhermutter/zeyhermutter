@@ -2,6 +2,7 @@ import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-
 import type { Route } from "./+types/property-hoa-tenancy";
 import { requirePermission } from "~/lib/auth.server";
 import { euroGenau as money, tag as formatDate } from "~/lib/format";
+import { KontaktAuswahl } from "~/components/kontakt-auswahl";
 
 type ActionResult={error?:string};
 
@@ -71,13 +72,12 @@ export async function loader({request,context,params}:Route.LoaderArgs){
     .eq("id",propertyId).maybeSingle();
   if(propertyError||!property)throw new Response("Immobilie nicht gefunden.",{status:404,headers:responseHeaders()});
 
-  const [hoaRes,leviesRes,tenanciesRes,legalRes,orgsRes,contactsRes,documentsRes,canWriteRes]=await Promise.all([
+  const [hoaRes,leviesRes,tenanciesRes,legalRes,orgsRes,documentsRes,canWriteRes]=await Promise.all([
     supabase.from("property_hoa_data").select("*,organizations(id,name),contacts(id,first_name,last_name)").eq("property_id",propertyId).maybeSingle(),
     supabase.from("property_hoa_special_levies").select("*").eq("property_id",propertyId).order("status").order("due_on",{nullsFirst:false}),
     supabase.from("property_tenancies").select("*,contacts(id,contact_number,first_name,last_name)").eq("property_id",propertyId).order("status").order("starts_on",{ascending:false}),
     supabase.from("property_legal_data").select("co_ownership_share").eq("property_id",propertyId).maybeSingle(),
     supabase.from("organizations").select("id,organization_number,name").is("archived_at",null).order("name").limit(500),
-    supabase.from("contacts").select("id,contact_number,first_name,last_name").is("archived_at",null).order("last_name").limit(1000),
     supabase.from("documents").select("id,category,title,created_at").eq("property_id",propertyId).is("archived_at",null).in("category",["WEG","BUSINESS_PLAN","MINUTES","TENANCY_AGREEMENT"]).order("created_at",{ascending:false}),
     supabase.rpc("current_user_has_permission",{p_permission:"property.write"}),
   ]);
@@ -89,7 +89,7 @@ export async function loader({request,context,params}:Route.LoaderArgs){
     profile,property,
     hoa:hoaRes.data,levies:leviesRes.data??[],tenancies:tenanciesRes.data??[],
     coOwnershipShare:(legalRes.data as any)?.co_ownership_share??null,
-    organizations:orgsRes.data??[],contacts:contactsRes.data??[],documents:documentsRes.data??[],
+    organizations:orgsRes.data??[],documents:documentsRes.data??[],
     canWrite:canWriteRes.data===true,
   },{headers:responseHeaders()});
 }
@@ -281,7 +281,7 @@ export default function PropertyHoaTenancy(){
           <label className="form-field"><span>Erhaltungsrücklage €</span><input name="maintenance_reserve_balance" inputMode="decimal" defaultValue={hoa?.maintenance_reserve_balance??""} disabled={locked}/></label>
           <label className="form-field"><span>Stichtag der Rücklage</span><input name="maintenance_reserve_date" type="date" defaultValue={hoa?.maintenance_reserve_date??""} max={today()} disabled={locked}/></label>
           <label className="form-field"><span>Verwaltung · Organisation</span><select name="manager_organization_id" defaultValue={hoa?.manager_organization_id??""} disabled={locked}><option value="">—</option>{d.organizations.map((o:any)=><option value={o.id} key={o.id}>{o.name}</option>)}</select></label>
-          <label className="form-field"><span>Verwaltung · Ansprechpartner</span><select name="manager_contact_id" defaultValue={hoa?.manager_contact_id??""} disabled={locked}><option value="">—</option>{d.contacts.map((c:any)=><option value={c.id} key={c.id}>{contactLabel(c)}</option>)}</select></label>
+          <KontaktAuswahl name="manager_contact_id" beschriftung="Verwaltung · Ansprechpartner" vorbelegtId={hoa?.manager_contact_id||null} disabled={locked}/>
           <label className="form-field"><span>Verwaltervertrag bis</span><input name="manager_contract_until" type="date" defaultValue={hoa?.manager_contract_until??""} disabled={locked}/></label>
           <label className="form-field"><span>Beschlusssammlung vorhanden</span><select name="resolution_record_available" defaultValue={hoa?.resolution_record_available?"yes":"no"} disabled={locked}><option value="no">Nein</option><option value="yes">Ja</option></select></label>
           <label className="form-field"><span>Wirtschaftsplan für Jahr</span><input name="economic_plan_year" type="number" min={1950} max={2100} defaultValue={hoa?.economic_plan_year??""} disabled={locked}/></label>
@@ -338,8 +338,8 @@ export default function PropertyHoaTenancy(){
         </div>;})}
       </div>}
 
-      {tenancies.filter((t:any)=>t.status==="ACTIVE").map((t:any)=><TenancyForm key={`f-${t.id}`} row={t} contacts={d.contacts} disabled={locked} formKey={`f-${t.id}`}/>)}
-      {d.canWrite&&!active?<TenancyForm contacts={d.contacts} disabled={false} formKey="new-tenancy"/>:null}
+      {tenancies.filter((t:any)=>t.status==="ACTIVE").map((t:any)=><TenancyForm key={`f-${t.id}`} row={t} disabled={locked} formKey={`f-${t.id}`}/>)}
+      {d.canWrite&&!active?<TenancyForm disabled={false} formKey="new-tenancy"/>:null}
 
       {d.canWrite&&active?<Form method="post" className="editor-card">
         <input type="hidden" name="_intent" value="tenancy_end"/>
@@ -366,14 +366,14 @@ export default function PropertyHoaTenancy(){
   </main>;
 }
 
-function TenancyForm({row,contacts,disabled,formKey}:{row?:any;contacts:any[];disabled:boolean;formKey:string}){
+function TenancyForm({row,disabled,formKey}:{row?:any;disabled:boolean;formKey:string}){
   return <Form method="post" className="editor-card" key={formKey}>
     <input type="hidden" name="_intent" value="tenancy_save"/>
     {row?<input type="hidden" name="tenancy_id" value={row.id}/>:null}
     {row?<input type="hidden" name="tenancy_version" value={row.version}/>:null}
     <div className="card-head"><div><p className="eyebrow">{row?"Laufendes Mietverhältnis":"Neu"}</p><h3>{row?"Konditionen bearbeiten":"Mietverhältnis erfassen"}</h3></div></div>
     <div className="form-grid">
-      <label className="form-field"><span>Mieter · Kontakt</span><select name="tenant_contact_id" defaultValue={row?.tenant_contact_id??""} disabled={disabled}><option value="">—</option>{contacts.map((c:any)=><option value={c.id} key={c.id}>{contactLabel(c)} · {c.contact_number}</option>)}</select></label>
+      <KontaktAuswahl name="tenant_contact_id" beschriftung="Mieter · Kontakt" vorbelegtId={row?.tenant_contact_id||null} disabled={disabled}/>
       <label className="form-field"><span>Mieter · Freitext</span><input name="tenant_name" defaultValue={row?.tenant_name??""} disabled={disabled}/><small className="subtle">Eines von beiden ist erforderlich.</small></label>
       <label className="form-field"><span>Vertragsdatum</span><input name="contract_date" type="date" defaultValue={row?.contract_date??""} max={today()} disabled={disabled}/></label>
       <label className="form-field"><span>Vertragsart *</span><select name="contract_type" defaultValue={row?.contract_type??"UNLIMITED"} required disabled={disabled}>{Object.entries(CONTRACT_TYPE).map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></label>

@@ -1,3 +1,4 @@
+import { KontaktAuswahl } from "~/components/kontakt-auswahl";
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/property-document-requirements";
 import { requirePermission } from "~/lib/auth.server";
@@ -47,10 +48,9 @@ export async function loader({request,context,params}:Route.LoaderArgs){
   const {data:property,error:propertyError}=await supabase.from("properties").select("id,property_number,internal_title,status,property_type,transaction_type").eq("id",propertyId).maybeSingle();
   if(propertyError||!property)throw new Response("Immobilie nicht gefunden.",{status:404,headers:responseHeaders()});
 
-  const [{data:rows,error:rowError},{data:documents},{data:contacts},{data:templates},{data:summary},{data:canWrite}]=await Promise.all([
+  const [{data:rows,error:rowError},{data:documents},{data:templates},{data:summary},{data:canWrite}]=await Promise.all([
     supabase.from("property_document_requirements").select("*,documents(id,title,category,archived_at),contacts(id,contact_number,first_name,last_name)").eq("property_id",propertyId).order("sort_order").order("title"),
     supabase.from("documents").select("id,title,category").eq("property_id",propertyId).is("archived_at",null).order("created_at",{ascending:false}).limit(500),
-    supabase.from("contacts").select("id,contact_number,first_name,last_name").is("archived_at",null).order("last_name").limit(1000),
     supabase.from("document_requirement_templates").select("template_key,title,active,property_type,transaction_type").eq("active",true).order("sort_order"),
     supabase.rpc("property_document_requirement_summary",{p_property_id:propertyId}),
     supabase.rpc("current_user_has_permission",{p_permission:"document.write"}),
@@ -70,7 +70,6 @@ export async function loader({request,context,params}:Route.LoaderArgs){
     profile,property,
     rows:(rows??[]) as any[],
     documents:documents??[],
-    contacts:contacts??[],
     offeneVorlagen,
     summary:(Array.isArray(summary)?summary[0]:summary)??null,
     canWrite:Boolean(canWrite),
@@ -249,12 +248,7 @@ export default function PropertyDocumentRequirements(){
                 <label className="form-field"><span>Eingegangen am</span><input type="date" name="received_on" defaultValue={r.received_on??""} max={heute}/></label>
                 <label className="form-field"><span>Geprüft am</span><input type="date" name="checked_on" defaultValue={r.checked_on??""} max={heute}/></label>
                 <label className="form-field"><span>Gültig bis</span><input type="date" name="valid_until" defaultValue={r.valid_until??""}/></label>
-                <label className="form-field"><span>Angefordert bei</span>
-                  <select name="responsible_contact_id" defaultValue={r.responsible_contact_id??""}>
-                    <option value="">Noch offen</option>
-                    {d.contacts.map((c:any)=><option value={c.id} key={c.id}>{c.last_name}, {c.first_name} · {c.contact_number}</option>)}
-                  </select>
-                </label>
+                <KontaktAuswahl name="responsible_contact_id" beschriftung="Angefordert bei" vorbelegt={zustaendig?{id:zustaendig.id,name:contactLabel(zustaendig)!,nummer:zustaendig.contact_number}:null} hinweis="Leer lassen, solange noch offen ist, bei wem."/>
                 <label className="form-field"><span>Dokument aus der Ablage</span>
                   <select name="document_id" defaultValue={r.document_id??""}>
                     <option value="">Nicht verknüpft</option>

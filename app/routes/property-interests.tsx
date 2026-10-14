@@ -5,6 +5,7 @@ import { crmLocalDateTimeToIso } from "~/lib/local-time";
 import { groupMatchingRows, isDeprioritizedDecision, MATCH_DECISION_LABELS } from "~/lib/matching-priority";
 import { euroRund as money, istLeer, tag, zahl, zeitpunkt as formatDate } from "~/lib/format";
 import { BESICHTIGUNGSSTATUS as VIEWING_STATUS, NACHWEISBESTAETIGUNG as DISCLOSURE_ACK, NACHWEISKANAL as DISCLOSURE_CHANNEL } from "~/lib/labels";
+import { KontaktAuswahl } from "~/components/kontakt-auswahl";
 import "~/inquiry.css";
 
 type ActionResult={error?:string;ok?:string};
@@ -40,17 +41,16 @@ export async function loader({request,context,params}:Route.LoaderArgs){
  ]);
  if(propertyError||!property)throw new Response("Immobilie nicht gefunden.",{status:404,headers:responseHeaders()});
  if(matchError||viewingError)throw new Response("Interessenten und Besichtigungen konnten nicht geladen werden.",{status:500,headers:responseHeaders()});
- let disclosures:any[]=[],disclosureContacts:any[]=[],publicationVersions:any[]=[],exposes:any[]=[];
+ let disclosures:any[]=[],publicationVersions:any[]=[],exposes:any[]=[];
  if(canReadDisclosures===true){
-  const [d,c,pv,ex]=await Promise.all([
+  const [d,pv,ex]=await Promise.all([
    supabase.from("property_disclosures").select("id,disclosure_number,contact_id,disclosed_at,channel,channel_reference,acknowledgement_kind,acknowledged_at,acknowledgement_reference,prior_knowledge_declared,prior_knowledge_source,prior_knowledge_on,resale_prohibition_notice_given,notes,primary_responsible_user,archived_at,publication_version_id,expose_id,viewing_id,contacts(id,contact_number,first_name,last_name)").eq("property_id",propertyId).order("disclosed_at",{ascending:false}).limit(300),
-   supabase.from("contacts").select("id,contact_number,first_name,last_name").is("archived_at",null).order("last_name").limit(1000),
    supabase.from("property_publication_versions").select("id,version_number,published_at,is_current_public,property_publications!inner(property_id)").eq("property_publications.property_id",propertyId).order("version_number",{ascending:false}).limit(50),
    supabase.from("property_exposes").select("id,expose_number,version_number,status").eq("property_id",propertyId).order("created_at",{ascending:false}).limit(50),
   ]);
-  disclosures=d.data??[];disclosureContacts=c.data??[];publicationVersions=pv.data??[];exposes=ex.data??[];
+  disclosures=d.data??[];publicationVersions=pv.data??[];exposes=ex.data??[];
  }
- return data({property,matches:matches??[],viewings:viewings??[],profiles:profiles??[],profile,canDecide:canDecide===true,canCreateViewing:canCreateViewing===true,canReadViewings:canReadViewings===true,disclosures,disclosureContacts,publicationVersions,exposes,canReadDisclosures:canReadDisclosures===true,canWriteDisclosures:canWriteDisclosures===true},{headers:responseHeaders()});
+ return data({property,matches:matches??[],viewings:viewings??[],profiles:profiles??[],profile,canDecide:canDecide===true,canCreateViewing:canCreateViewing===true,canReadViewings:canReadViewings===true,disclosures,publicationVersions,exposes,canReadDisclosures:canReadDisclosures===true,canWriteDisclosures:canWriteDisclosures===true},{headers:responseHeaders()});
 }
 
 function disclosureError(error:any){const m=String(error?.message??"");
@@ -127,7 +127,7 @@ export async function action({request,context,params}:Route.ActionArgs){
 }
 
 export default function PropertyInterests(){
- const {property,matches,viewings,profiles,profile,canDecide,canCreateViewing,canReadViewings,disclosures,disclosureContacts,publicationVersions,exposes,canReadDisclosures,canWriteDisclosures}=useLoaderData<typeof loader>();
+ const {property,matches,viewings,profiles,profile,canDecide,canCreateViewing,canReadViewings,disclosures,publicationVersions,exposes,canReadDisclosures,canWriteDisclosures}=useLoaderData<typeof loader>();
  const result=useActionData<typeof action>();
  const profileMap=Object.fromEntries(profiles.map((x:any)=>[x.user_id,x.display_name]));
  const matchGroups=groupMatchingRows(matches as any[]);
@@ -155,7 +155,7 @@ export default function PropertyInterests(){
      {canWriteDisclosures?<Form method="post" className="disclosure-form">
       <input type="hidden" name="_intent" value="disclosure"/>
       <div className="form-grid">
-       <label className="form-field"><span>Interessent *</span><select name="contact_id" required defaultValue=""><option value="">Auswählen…</option>{disclosureContacts.map((c:any)=><option value={c.id} key={c.id}>{c.last_name}, {c.first_name} · {c.contact_number}</option>)}</select></label>
+       <KontaktAuswahl name="contact_id" beschriftung="Interessent" pflicht/>
        <label className="form-field"><span>Nachgewiesen am *</span><input name="disclosed_at" type="datetime-local" defaultValue={nowLocal()} required/></label>
        <label className="form-field"><span>Weg *</span><select name="channel" defaultValue="EXPOSE_EMAIL" required>{Object.entries(DISCLOSURE_CHANNEL).map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></label>
        <label className="form-field"><span>Referenz zum Weg</span><input name="channel_reference" placeholder="z. B. E-Mail-Betreff, Portal-Vorgang"/></label>

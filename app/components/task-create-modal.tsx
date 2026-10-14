@@ -1,3 +1,4 @@
+import { KontaktAuswahl } from "~/components/kontakt-auswahl";
 import { useEffect, useState } from "react";
 import { Form } from "react-router";
 
@@ -7,7 +8,6 @@ type ProfileOption = { user_id: string; display_name: string };
 type Props = {
   profiles: ProfileOption[];
   currentUserId: string;
-  contacts: Option[];
   leads: Option[];
   properties: Option[];
   searchProfiles: Option[];
@@ -15,7 +15,7 @@ type Props = {
   viewings: Option[];
 };
 
-export function TaskCreateModal({ profiles, currentUserId, contacts, leads, properties, searchProfiles, inquiries, viewings }: Props) {
+export function TaskCreateModal({ profiles, currentUserId, leads, properties, searchProfiles, inquiries, viewings }: Props) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -46,7 +46,7 @@ export function TaskCreateModal({ profiles, currentUserId, contacts, leads, prop
               <label className="wide"><span>Beschreibung</span><textarea name="description" rows={4} /></label>
               <label><span>Fällig *</span><input name="due_date" type="date" required /></label>
               <label><span>Verantwortlich</span><select name="responsible_user" defaultValue={currentUserId}>{profiles.map((item) => <option key={item.user_id} value={item.user_id}>{item.display_name}</option>)}</select></label>
-              <label><span>Kontakt</span><select name="contact_id"><option value="">Ohne Kontaktbezug</option>{contacts.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+              <KontaktAuswahl name="contact_id" beschriftung="Kontakt" hinweis="Leer lassen für eine Aufgabe ohne Kontaktbezug." />
               <label><span>Lead</span><select name="lead_id"><option value="">Ohne Leadbezug</option>{leads.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
               <label><span>Immobilie</span><select name="property_id"><option value="">Ohne Objektbezug</option>{properties.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
               <label><span>Suchprofil</span><select name="search_profile_id"><option value="">Ohne Suchprofilbezug</option>{searchProfiles.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>

@@ -2,6 +2,7 @@ import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-
 import type { Route } from "./+types/property-legal";
 import { requirePermission } from "~/lib/auth.server";
 import { euroRund as money, tag as formatDate } from "~/lib/format";
+import { KontaktAuswahl } from "~/components/kontakt-auswahl";
 
 type ActionResult={error?:string};
 
@@ -64,15 +65,14 @@ export async function loader({request,context,params}:Route.LoaderArgs){
   const propertyId=params.propertyId!;
   const {data:property,error:propertyError}=await supabase.from("properties").select("id,property_number,internal_title,status,living_area_sqm,plot_area_sqm").eq("id",propertyId).maybeSingle();
   if(propertyError||!property)throw new Response("Immobilie nicht gefunden.",{status:404,headers:responseHeaders()});
-  const [{data:legal},{data:encumbrances},{data:contacts},{data:profiles},{data:canWrite},{data:canArchive}]=await Promise.all([
+  const [{data:legal},{data:encumbrances},{data:profiles},{data:canWrite},{data:canArchive}]=await Promise.all([
     supabase.from("property_legal_data").select("*").eq("property_id",propertyId).maybeSingle(),
     supabase.from("property_encumbrances").select("*,contacts!property_encumbrances_beneficiary_contact_id_fkey(id,contact_number,first_name,last_name)").eq("property_id",propertyId).order("section").order("rank_position",{nullsFirst:false}).order("created_at"),
-    supabase.from("contacts").select("id,contact_number,first_name,last_name").is("archived_at",null).order("last_name").limit(1000),
     supabase.from("profiles").select("user_id,display_name").eq("status","ACTIVE").order("display_name"),
     supabase.rpc("current_user_has_permission",{p_permission:"property.write"}),
     supabase.rpc("current_user_has_permission",{p_permission:"property.archive"}),
   ]);
-  return data({profile,property,legal,encumbrances:encumbrances??[],contacts:contacts??[],profiles:profiles??[],canWrite:canWrite===true,canArchive:canArchive===true},{headers:responseHeaders()});
+  return data({profile,property,legal,encumbrances:encumbrances??[],profiles:profiles??[],canWrite:canWrite===true,canArchive:canArchive===true},{headers:responseHeaders()});
 }
 
 export async function action({request,context,params}:Route.ActionArgs){
@@ -223,7 +223,7 @@ export function legalWarnings(legal:any,encumbrances:any[]){
   return warnings;
 }
 
-function EncumbranceForm({row,section,contacts,disabled,formKey}:{row?:any;section:string;contacts:any[];disabled:boolean;formKey:string}){
+function EncumbranceForm({row,section,disabled,formKey}:{row?:any;section:string;disabled:boolean;formKey:string}){
   const isThird=section==="LAND_REGISTER_III";
   return <Form method="post" className="editor-card" key={formKey}>
     <input type="hidden" name="_intent" value="encumbrance_save"/>
@@ -234,7 +234,7 @@ function EncumbranceForm({row,section,contacts,disabled,formKey}:{row?:any;secti
     <div className="form-grid">
       <label className="form-field"><span>Art *</span><select name="kind" defaultValue={row?.kind??Object.keys(KINDS[section])[0]} required disabled={disabled}>{Object.entries(KINDS[section]).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label>
       <label className="form-field"><span>Rang</span><input name="rank_position" type="number" min={1} step={1} defaultValue={row?.rank_position??""} disabled={disabled}/></label>
-      <label className="form-field"><span>Berechtigter · Kontakt</span><select name="beneficiary_contact_id" defaultValue={row?.beneficiary_contact_id??""} disabled={disabled}><option value="">—</option>{contacts.map((contact:any)=><option value={contact.id} key={contact.id}>{contactLabel(contact)} · {contact.contact_number}</option>)}</select></label>
+      <KontaktAuswahl name="beneficiary_contact_id" beschriftung="Berechtigter · Kontakt" vorbelegtId={row?.beneficiary_contact_id||null} disabled={disabled}/>
       <label className="form-field"><span>Berechtigter · Freitext</span><input name="beneficiary_name" defaultValue={row?.beneficiary_name??""} placeholder={isThird?"z. B. Sparkasse":"z. B. Name des Berechtigten"} disabled={disabled}/></label>
       <label className="form-field"><span>Zuständige Behörde</span><input name="authority" defaultValue={row?.authority??""} placeholder={section==="BUILDING_ENCUMBRANCE"?"Bauaufsichtsbehörde":"—"} disabled={disabled}/></label>
       <label className="form-field"><span>Laufende Nummer / Aktenzeichen</span><input name="reference" defaultValue={row?.reference??""} disabled={disabled}/></label>
@@ -301,7 +301,7 @@ export default function PropertyLegal(){
           <label className="form-field"><span>Erbbauzins €</span><input name="ground_rent_amount" inputMode="decimal" defaultValue={legal?.ground_rent_amount??""} disabled={locked}/></label>
           <label className="form-field"><span>Zahlungsrhythmus</span><select name="ground_rent_interval" defaultValue={legal?.ground_rent_interval??""} disabled={locked}><option value="">—</option>{Object.entries(INTERVAL).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label>
           <label className="form-field"><span>Laufzeit bis</span><input name="ground_lease_until" type="date" defaultValue={legal?.ground_lease_until??""} disabled={locked}/></label>
-          <label className="form-field"><span>Erbbaurechtsgeber · Kontakt</span><select name="ground_lessor_contact_id" defaultValue={legal?.ground_lessor_contact_id??""} disabled={locked}><option value="">—</option>{d.contacts.map((contact:any)=><option value={contact.id} key={contact.id}>{contactLabel(contact)} · {contact.contact_number}</option>)}</select></label>
+          <KontaktAuswahl name="ground_lessor_contact_id" beschriftung="Erbbaurechtsgeber · Kontakt" vorbelegtId={legal?.ground_lessor_contact_id||null} disabled={locked}/>
           <label className="form-field"><span>Erbbaurechtsgeber · Freitext</span><input name="ground_lessor_name" defaultValue={legal?.ground_lessor_name??""} placeholder="z. B. Kirchengemeinde, Kommune" disabled={locked}/></label>
         </div>
 
@@ -338,8 +338,8 @@ export default function PropertyLegal(){
             {d.canArchive?<Form method="post"><input type="hidden" name="_intent" value={row.archived_at?"encumbrance_restore":"encumbrance_archive"}/><input type="hidden" name="encumbrance_id" value={row.id}/><input type="hidden" name="encumbrance_version" value={row.version}/><button className="secondary-button" type="submit">{row.archived_at?"Wiederherstellen":"Archivieren"}</button></Form>:null}
           </div>;})}
         </div>}
-        {rows.map((row:any)=><EncumbranceForm key={`f-${row.id}`} formKey={`f-${row.id}`} row={row} section={section} contacts={d.contacts} disabled={locked||Boolean(row.archived_at)}/>)}
-        {d.canWrite?<EncumbranceForm formKey={`new-${section}`} section={section} contacts={d.contacts} disabled={false}/>:null}
+        {rows.map((row:any)=><EncumbranceForm key={`f-${row.id}`} formKey={`f-${row.id}`} row={row} section={section} disabled={locked||Boolean(row.archived_at)}/>)}
+        {d.canWrite?<EncumbranceForm formKey={`new-${section}`} section={section} disabled={false}/>:null}
       </section>;
     })}
 

@@ -1,6 +1,7 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import { istEinstieg } from "~/lib/einstieg";
 import { Aufklapper } from "~/components/aufklapper";
+import { KontaktAuswahl } from "~/components/kontakt-auswahl";
 import type { Route } from "./+types/projects";
 import { requirePermission } from "~/lib/auth.server";
 import { tag } from "~/lib/format";
@@ -53,11 +54,10 @@ export async function loader({request,context}:Route.LoaderArgs){
   const url=new URL(request.url);
   const showAll=url.searchParams.get("alle")==="1";
 
-  const [projectsRes,contactsRes,propertiesRes,leadsRes,canWriteRes]=await Promise.all([
+  const [projectsRes,propertiesRes,leadsRes,canWriteRes]=await Promise.all([
     supabase.from("sale_projects")
       .select("*,contacts(id,contact_number,first_name,last_name),properties(id,property_number,internal_title),leads(id,lead_number),profiles!sale_projects_primary_responsible_user_fkey(display_name)")
       .is("archived_at",null).order("updated_at",{ascending:false}).limit(200),
-    supabase.from("contacts").select("id,contact_number,first_name,last_name").is("archived_at",null).order("last_name").limit(1000),
     supabase.from("properties").select("id,property_number,internal_title").is("archived_at",null).order("property_number").limit(500),
     supabase.from("leads").select("id,lead_number,contact_id").is("archived_at",null).order("created_at",{ascending:false}).limit(500),
     supabase.rpc("current_user_has_permission",{p_permission:"project.write"}),
@@ -79,7 +79,6 @@ export async function loader({request,context}:Route.LoaderArgs){
     projects:visible,
     total:all.length,
     blockerMap,
-    contacts:contactsRes.data??[],
     properties:propertiesRes.data??[],
     leads:leadsRes.data??[],
     canWrite:canWriteRes.data===true,
@@ -135,7 +134,7 @@ export default function Projects(){
       <div className="card-head"><div><p className="eyebrow">Neu</p><h2>Projekt anlegen</h2></div></div>
       <Form method="post" className="form-grid">
         <input type="hidden" name="_intent" value="project_add"/>
-        <label className="form-field"><span>Eigentümer *</span><select name="contact_id" defaultValue="" disabled={disabled}><option value="">—</option>{(d.contacts as any[]).map((c:any)=><option key={c.id} value={c.id}>{c.last_name}, {c.first_name} · {c.contact_number}</option>)}</select></label>
+        <KontaktAuswahl name="contact_id" beschriftung="Eigentümer" pflicht disabled={disabled}/>
         <label className="form-field"><span>Immobilie</span><select name="property_id" defaultValue="" disabled={disabled}><option value="">— noch keine</option>{(d.properties as any[]).map((p:any)=><option key={p.id} value={p.id}>{p.property_number} · {p.internal_title}</option>)}</select></label>
         <label className="form-field"><span>Lead</span><select name="lead_id" defaultValue="" disabled={disabled}><option value="">— ohne Lead</option>{(d.leads as any[]).map((l:any)=><option key={l.id} value={l.id}>{l.lead_number}</option>)}</select><small className="subtle">Nur die Herkunft; der Lead bleibt unverändert bestehen.</small></label>
         <label className="form-field"><span>Phase</span><select name="phase" defaultValue="LEAD" disabled={disabled}>{Object.entries(PHASE).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label>

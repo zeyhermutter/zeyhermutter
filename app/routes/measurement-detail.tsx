@@ -8,6 +8,7 @@ import {
   DOKUMENTKATEGORIE, FLAECHENSTANDARD, beschrifte,
 } from "~/lib/labels";
 import { IMMOBILIENARTEN } from "~/lib/public-intake";
+import { KontaktAuswahl } from "~/components/kontakt-auswahl";
 import { LeerOderFehler } from "~/components/leer-oder-fehler";
 
 // Die Akte eines Aufmass-Auftrags.
@@ -78,13 +79,12 @@ export async function loader({request,context,params}:Route.LoaderArgs){
   const {data:row,error}=await supabase.from("measurement_orders").select("*,properties(id,property_number,internal_title,status,living_area_sqm,version),contacts(id,contact_number,first_name,last_name,email)").eq("id",id).maybeSingle();
   if(error||!row)throw new Response("Aufmaß-Auftrag nicht gefunden.",{status:404,headers:responseHeaders()});
   const property=one(row.properties);
-  const [{data:transitions,error:transitionsFehler},{data:unterlagen,error:unterlagenFehler},{data:tasks,error:tasksFehler},{data:objektDokumente},{data:legal},{data:contacts},{data:properties},{data:profiles},{data:canWrite},{data:canArchive},{data:canTask},{data:canProperty},{data:canAudit}]=await Promise.all([
+  const [{data:transitions,error:transitionsFehler},{data:unterlagen,error:unterlagenFehler},{data:tasks,error:tasksFehler},{data:objektDokumente},{data:legal},{data:properties},{data:profiles},{data:canWrite},{data:canArchive},{data:canTask},{data:canProperty},{data:canAudit}]=await Promise.all([
     supabase.from("measurement_order_status_transitions").select("to_status,description").eq("from_status",row.status).order("to_status"),
     supabase.from("measurement_order_documents").select("id,document_id,note,created_at,documents(id,title,category,classification)").eq("order_id",id).order("created_at"),
     supabase.from("tasks").select("id,task_number,title,status,due_at").eq("measurement_order_id",id).is("archived_at",null).order("due_at"),
     property?supabase.from("documents").select("id,title,category").eq("property_id",property.id).is("archived_at",null).order("created_at",{ascending:false}).limit(200):Promise.resolve({data:[]}),
     property?supabase.from("property_legal_data").select("id,version,living_area_basis").eq("property_id",property.id).maybeSingle():Promise.resolve({data:null}),
-    supabase.from("contacts").select("id,contact_number,first_name,last_name").is("archived_at",null).order("last_name").limit(1000),
     supabase.from("properties").select("id,property_number,internal_title").neq("status","ARCHIVED").order("updated_at",{ascending:false}).limit(500),
     supabase.from("profiles").select("user_id,display_name").eq("status","ACTIVE").order("display_name"),
     supabase.rpc("current_user_has_permission",{p_permission:"measurement.write"}),
@@ -93,8 +93,8 @@ export async function loader({request,context,params}:Route.LoaderArgs){
     supabase.rpc("current_user_has_permission",{p_permission:"property.write"}),
     supabase.rpc("current_user_has_permission",{p_permission:"audit.read"}),
   ]);
-  // Die Auswahllisten sind gefiltert: Immobilien ohne Archiv und auf 500
-  // begrenzt, Kontakte ohne Archiv und auf 1000. Stand die verknuepfte
+  // Die Immobilienauswahl ist gefiltert: ohne Archiv und auf 500 begrenzt
+  // (den Kunden waehlt seit 14.10.2026 die Kontaktsuche). Stand die verknuepfte
   // Immobilie nicht darin -- archiviert oder abgeschnitten --, hatte das
   // <select> keine passende Option. Der Browser nimmt dann die erste, und die
   // erste ist "Nicht im eigenen Bestand" mit dem Wert "". Ein Klick auf
@@ -103,14 +103,9 @@ export async function loader({request,context,params}:Route.LoaderArgs){
   //
   // Ein Auswahlfeld muss seinen eigenen Wert enthalten. Sonst ist das
   // Formular nicht die Anzeige des Datensatzes, sondern sein Ueberschreiber.
-  const verknuepfterKontakt=one(row.contacts) as any;
   const objektAuswahl:any[]=[...(properties??[])];
   if(property&&!objektAuswahl.some((eintrag:any)=>eintrag.id===property.id)){
     objektAuswahl.unshift({id:property.id,property_number:property.property_number,internal_title:property.internal_title,zusatz:"nicht in der Auswahl"});
-  }
-  const kontaktAuswahl:any[]=[...(contacts??[])];
-  if(verknuepfterKontakt&&!kontaktAuswahl.some((eintrag:any)=>eintrag.id===verknuepfterKontakt.id)){
-    kontaktAuswahl.unshift({id:verknuepfterKontakt.id,contact_number:verknuepfterKontakt.contact_number,first_name:verknuepfterKontakt.first_name,last_name:verknuepfterKontakt.last_name,zusatz:"nicht in der Auswahl"});
   }
 
   let audit:any[]=[];
@@ -121,7 +116,7 @@ export async function loader({request,context,params}:Route.LoaderArgs){
   return data({
     ladefehler:[transitionsFehler&&"transitions",unterlagenFehler&&"unterlagen",tasksFehler&&"tasks"].filter(Boolean) as string[],
     row,profile,transitions:transitions??[],unterlagen:unterlagen??[],tasks:tasks??[],objektDokumente:objektDokumente??[],
-    legal:legal??null,contacts:kontaktAuswahl,properties:objektAuswahl,profiles:profiles??[],
+    legal:legal??null,properties:objektAuswahl,profiles:profiles??[],
     canWrite:canWrite===true,canArchive:canArchive===true,canTask:canTask===true,canProperty:canProperty===true,audit,
   },{headers:responseHeaders()});
 }
@@ -309,7 +304,7 @@ export async function action({request,context,params}:Route.ActionArgs){
 }
 
 export default function MeasurementDetail(){
-  const {row,profile,transitions,unterlagen,tasks,objektDokumente,legal,contacts,properties,profiles,canWrite,canArchive,canTask,canProperty,audit,ladefehler}=useLoaderData<typeof loader>();
+  const {row,profile,transitions,unterlagen,tasks,objektDokumente,legal,properties,profiles,canWrite,canArchive,canTask,canProperty,audit,ladefehler}=useLoaderData<typeof loader>();
   const result=useActionData<typeof action>();
   const property=one(row.properties),contact=one(row.contacts);
   const locked=Boolean(row.archived_at),editable=canWrite&&!locked;
@@ -352,7 +347,7 @@ export default function MeasurementDetail(){
             <label className="form-field"><span>Leistungspaket</span><select name="service_package" defaultValue={row.service_package}>{Object.entries(PAKET).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
             <label className="form-field"><span>Quelle</span><select name="source" defaultValue={row.source}>{Object.entries(QUELLE).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
             <label className="form-field"><span>Immobilie aus dem Bestand</span><select name="property_id" defaultValue={row.property_id??""}><option value="">Nicht im eigenen Bestand</option>{properties.map((item:any)=><option key={item.id} value={item.id}>{item.property_number} · {item.internal_title}{item.zusatz?` (${item.zusatz})`:""}</option>)}</select></label>
-            <label className="form-field"><span>Kunde</span><select name="contact_id" defaultValue={row.contact_id??""}><option value="">Kein Kontakt verknüpft</option>{contacts.map((item:any)=><option key={item.id} value={item.id}>{item.contact_number} · {item.first_name} {item.last_name}{item.zusatz?` (${item.zusatz})`:""}</option>)}</select></label>
+            <KontaktAuswahl name="contact_id" beschriftung="Kunde" vorbelegt={contact?{id:contact.id,name:`${contact.last_name}, ${contact.first_name}`,nummer:contact.contact_number}:null} vorbelegtId={row.contact_id||null} disabled={!editable}/>
             <label className="form-field"><span>Immobilienart</span><select name="property_type" defaultValue={row.property_type??""}><option value="">Noch offen</option>{IMMOBILIENARTEN.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
             <label className="form-field"><span>Verantwortlich</span><select name="primary_responsible_user" defaultValue={row.primary_responsible_user}>{profiles.map((item:any)=><option key={item.user_id} value={item.user_id}>{item.display_name}</option>)}</select></label>
             <label className="form-field"><span>Straße</span><input name="object_street" defaultValue={row.object_street??""}/></label>

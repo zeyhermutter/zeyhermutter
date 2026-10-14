@@ -13,8 +13,11 @@
 //  4. Kontaktakte: Der erste Reiter ist die Uebersicht, nicht das Formular.
 //  5. Objektakte: Die Uebersicht beginnt mit Preis, Eigentuemern, Interessenten
 //     und dem naechsten Faelligen; die sechs Statusknoepfe sind zugeklappt.
+//  6. Kontaktwahl: 22 Formulare luden die ersten 500 oder 1000 Kontakte als
+//     Auswahlliste; wer dahinter lag, war nicht waehlbar. Jetzt ueberall die
+//     Suche (KontaktAuswahl).
 
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 
 const WURZEL = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
@@ -58,8 +61,16 @@ pruefe(objektakte.includes("<ObjektAufEinenBlick") && objektakte.indexOf("<Objek
 pruefe(!objektakte.includes('id="status"'), "property-detail.tsx: Statusknöpfe wieder als eigene Karte oben in der Akte");
 pruefe((await lies("app/components/objekt-auf-einen-blick.tsx")).includes('<details className="akte-blick-status">'), "objekt-auf-einen-blick.tsx: Status ändern nicht mehr zugeklappt");
 
+// 6. Kein Formular laedt mehr eine gekappte Kontaktliste vorab
+for (const datei of (await readdir(path.join(WURZEL, "app/routes"))).filter((n) => n.endsWith(".tsx"))) {
+  const inhalt = await lies(`app/routes/${datei}`);
+  pruefe(!/from\("contacts"\)\.select\("[^"]*"\)\.is\("archived_at",\s*null\)\.order\("last_name"\)\.limit\(/.test(inhalt),
+    `${datei}: laedt wieder die ersten N Kontakte fuer eine Auswahl -- Kontakt per <KontaktAuswahl> waehlen`);
+}
+pruefe(!(await lies("app/components/task-create-modal.tsx")).includes('<select name="contact_id"'), "task-create-modal.tsx: Kontakt wieder als vorab geladene Liste");
+
 if (fehler.length) {
   console.error("P1:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage.");
+console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche.");

@@ -1,5 +1,6 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/measurement-new";
+import { KontaktAuswahl } from "~/components/kontakt-auswahl";
 import { requirePermission } from "~/lib/auth.server";
 import { AUFMASSPAKET, AUFTRAGSQUELLE } from "~/lib/labels";
 import { IMMOBILIENARTEN } from "~/lib/public-intake";
@@ -21,14 +22,13 @@ export function errorMessage(error:any){
 
 export async function loader({request,context}:Route.LoaderArgs){
   const {supabase,responseHeaders,profile,userId}=await requirePermission(request,context.cloudflare.env,"measurement.write");
-  const [{data:properties,error:propertyError},{data:contacts,error:contactError},{data:profiles,error:profileError}]=await Promise.all([
+  const [{data:properties,error:propertyError},{data:profiles,error:profileError}]=await Promise.all([
     supabase.from("properties").select("id,property_number,internal_title").neq("status","ARCHIVED").order("updated_at",{ascending:false}).limit(500),
-    supabase.from("contacts").select("id,contact_number,first_name,last_name").is("archived_at",null).order("last_name").limit(1000),
     supabase.from("profiles").select("user_id,display_name").eq("status","ACTIVE").order("display_name"),
   ]);
-  if(propertyError||contactError||profileError)throw new Response("Auftragsoptionen konnten nicht geladen werden.",{status:500,headers:responseHeaders()});
+  if(propertyError||profileError)throw new Response("Auftragsoptionen konnten nicht geladen werden.",{status:500,headers:responseHeaders()});
   const url=new URL(request.url);
-  return data({profile,userId,propertyId:url.searchParams.get("property_id")??"",contactId:url.searchParams.get("contact_id")??"",properties:properties??[],contacts:contacts??[],profiles:profiles??[]},{headers:responseHeaders()});
+  return data({profile,userId,propertyId:url.searchParams.get("property_id")??"",contactId:url.searchParams.get("contact_id")??"",properties:properties??[],profiles:profiles??[]},{headers:responseHeaders()});
 }
 
 export async function action({request,context}:Route.ActionArgs){
@@ -68,7 +68,7 @@ export async function action({request,context}:Route.ActionArgs){
 }
 
 export default function MeasurementNew(){
-  const {profile,userId,propertyId,contactId,properties,contacts,profiles}=useLoaderData<typeof loader>();
+  const {profile,userId,propertyId,contactId,properties,profiles}=useLoaderData<typeof loader>();
   const result=useActionData<typeof action>();
   return <main className="editor-shell">
     <header className="editor-header"><div><Link className="back-link" to="/measurements">← Aufmaß-Aufträge</Link><p className="eyebrow">Verkauf · Dienstleistung</p><h1 className="editor-title">Aufmaß-Auftrag anlegen</h1><p className="editor-meta">Der Auftrag startet als Entwurf. Termin, Ergebnis und Honorar werden anschließend in der Auftragsakte erfasst.</p></div><div className="header-user"><span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div></header>
@@ -81,7 +81,7 @@ export default function MeasurementNew(){
             <label className="form-field"><span>Leistungspaket *</span><select name="service_package" defaultValue="AS_BUILT" required>{Object.entries(AUFMASSPAKET).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
             <label className="form-field"><span>Quelle *</span><select name="source" defaultValue="INTERNAL" required>{Object.entries(AUFTRAGSQUELLE).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
             <label className="form-field"><span>Immobilie aus dem Bestand</span><select name="property_id" defaultValue={propertyId}><option value="">Nicht im eigenen Bestand</option>{properties.map((property:any)=><option value={property.id} key={property.id}>{property.property_number} · {property.internal_title}</option>)}</select><small className="subtle">Ohne Objektakte genügt die Anschrift unten.</small></label>
-            <label className="form-field"><span>Kunde</span><select name="contact_id" defaultValue={contactId}><option value="">Noch kein Kontakt erfasst</option>{contacts.map((contact:any)=><option value={contact.id} key={contact.id}>{contact.contact_number} · {contact.first_name} {contact.last_name}</option>)}</select><small className="subtle">Immobilie oder Kunde — mindestens eines von beidem.</small></label>
+            <KontaktAuswahl name="contact_id" beschriftung="Kunde" vorbelegtId={contactId||null} hinweis={<>Immobilie oder Kunde — mindestens eines von beidem.</>}/>
             <label className="form-field"><span>Verantwortlich *</span><select name="primary_responsible_user" defaultValue={userId} required>{profiles.map((item:any)=><option key={item.user_id} value={item.user_id}>{item.display_name}</option>)}</select></label>
             <label className="form-field"><span>Immobilienart</span><select name="property_type" defaultValue=""><option value="">Noch offen</option>{IMMOBILIENARTEN.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
           </div>
