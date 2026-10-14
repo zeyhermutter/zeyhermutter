@@ -276,7 +276,7 @@ export default function EmailCompose() {
   return <main className="communication-shell">
     <header className="communication-header">
       <div>
-        <p className="eyebrow">Arbeitsplatz · Integration</p>
+        <p className="eyebrow">Mein Tag · E-Mail</p>
         <h1>E-Mail</h1>
         <p>Externe E-Mail-Kommunikation wird am bestehenden CRM-Bezug dokumentiert. Ein automatischer Postfach-Sync ist auf BETA derzeit nicht konfiguriert.</p>
       </div>
@@ -291,9 +291,9 @@ export default function EmailCompose() {
           <div className="card-head"><div><p className="eyebrow">Integrationsstatus</p><h2>Providerunabhängiger Arbeitsablauf</h2></div></div>
           <div className="communication-status">
             <div><span>Mail-Provider</span><strong>Nicht verbunden</strong></div>
-            <div><span>Verfügbar</span><strong>Mailprogramm öffnen + CRM-Activity</strong></div>
+            <div><span>Verfügbar</span><strong>Mailprogramm öffnen, danach hier festhalten</strong></div>
           </div>
-          <p className="communication-note">Das Öffnen des Mailprogramms wird nicht automatisch als Versand gewertet. Nur tatsächlich gesendete oder empfangene E-Mails werden anschließend bewusst als Activity dokumentiert.</p>
+          <p className="communication-note">Das Öffnen des Mailprogramms wird nicht automatisch als Versand gewertet. Nur tatsächlich gesendete oder empfangene E-Mails werden anschließend bewusst als Aktivität dokumentiert.</p>
         </section></Aufklapper>
 
         {context ? <>
@@ -324,7 +324,7 @@ export default function EmailCompose() {
 
       <aside className="communication-stack">
         {context && canWrite ? <section className="data-card">
-          <div className="card-head"><div><p className="eyebrow">Activity dokumentieren</p><h2>E-Mail erfassen</h2></div></div>
+          <div className="card-head"><div><p className="eyebrow">Aktivität festhalten</p><h2>E-Mail erfassen</h2></div></div>
           <Form method="post" className="auth-form">
             <input type="hidden" name="_intent" value="log_email" />
             <input type="hidden" name="context_type" value={context.type} />
@@ -333,9 +333,9 @@ export default function EmailCompose() {
             <label><span>Zeitpunkt *</span><input type="datetime-local" name="occurred_at" defaultValue={nowLocal} required /></label>
             <label><span>Betreff / Titel *</span><input name="title" required placeholder="Betreff der E-Mail" /></label>
             <label><span>Interne Dokumentation</span><textarea name="description" rows={5} placeholder="Kurze Zusammenfassung, Zusagen oder nächster Schritt" /></label>
-            <button className="secondary-button" type="submit">Als E-Mail-Activity speichern</button>
+            <button className="secondary-button" type="submit">E-Mail festhalten</button>
           </Form>
-        </section> : context ? <section className="data-card"><div className="card-head"><div><p className="eyebrow">Berechtigung</p><h2>Nur Lesen</h2></div></div><p className="communication-note">Du kannst die vorhandene Kommunikationshistorie lesen, aber für diesen CRM-Bezug keine neue Activity dokumentieren.</p></section> : null}
+        </section> : context ? <section className="data-card"><div className="card-head"><div><p className="eyebrow">Berechtigung</p><h2>Nur Lesen</h2></div></div><p className="communication-note">Du kannst die vorhandene Kommunikationshistorie lesen, aber für diesen CRM-Bezug keine neue Aktivität dokumentieren.</p></section> : null}
 
         <section className="data-card">
           <div className="card-head"><div><p className="eyebrow">Kalender</p><h2>CRM-Termine</h2></div></div>
@@ -352,14 +352,14 @@ function EmailJournal({ journal }: { journal: JournalZeile[] }) {
   return <main className="editor-shell programm-liste">
     <div className="programm-liste-werkzeuge">
       <Aufklapper knopf="Mail-Provider nicht verbunden">
-        <p className="programm-erklaerung">Ein automatischer Postfach-Abgleich ist nicht eingerichtet. Eine E-Mail wird im Mailprogramm geschrieben und danach am Kontakt, am Verkäufer-Lead oder an der Anfrage im Reiter „E-Mail“ dokumentiert.</p>
+        <p className="programm-erklaerung">Ein automatischer Postfach-Abgleich ist nicht eingerichtet. Eine E-Mail wird im Mailprogramm geschrieben und danach über den Knopf „E-Mail“ oben in der Akte eines Kontakts, Verkäufer-Leads oder einer Anfrage dokumentiert.</p>
         <p className="programm-erklaerung">Das Öffnen des Mailprogramms wird nicht als Versand gewertet. Hier steht nur, was bewusst als gesendet oder empfangen erfasst wurde.</p>
       </Aufklapper>
       <span className="programm-liste-zaehler">{journal.length === 100 ? "die letzten 100 E-Mails" : `${journal.length} ${journal.length === 1 ? "E-Mail" : "E-Mails"}`}</span>
       <Link className="secondary-button link-button" to="/crm/contacts">Kontakte</Link>
     </div>
     <div className="programm-tabelle-rahmen">
-      {journal.length === 0 ? <p className="programm-liste-leer">Noch keine E-Mail dokumentiert. Erfasst wird sie im Reiter „E-Mail“ eines <Link to="/crm/contacts">Kontakts</Link>, eines <Link to="/leads">Verkäufer-Leads</Link> oder einer <Link to="/inquiries">Anfrage</Link>.</p> : <table className="programm-tabelle">
+      {journal.length === 0 ? <p className="programm-liste-leer">Noch keine E-Mail dokumentiert. Erfasst wird sie über den Knopf „E-Mail“ oben in der Akte eines <Link to="/crm/contacts">Kontakts</Link>, eines <Link to="/leads">Verkäufer-Leads</Link> oder einer <Link to="/inquiries">Anfrage</Link>.</p> : <table className="programm-tabelle">
         <thead><tr><th>Zeitpunkt</th><th>Betreff</th><th>Richtung</th><th>Kontakt</th><th>Bezug</th><th>Erfasst von</th></tr></thead>
         <tbody>{journal.map((zeile) => <tr key={zeile.id}>
           <td className="zahl">{formatDate(zeile.zeitpunkt)}</td>

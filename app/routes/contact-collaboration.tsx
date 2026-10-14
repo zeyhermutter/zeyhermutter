@@ -127,7 +127,7 @@ export default function ContactCollaboration() {
 
       <div className="dashboard-grid">
         <section className="data-card">
-          <div className="card-head"><div><p className="eyebrow">Activity History</p><h2>Aktivitäten</h2></div></div>
+          <div className="card-head"><div><p className="eyebrow">Verlauf</p><h2>Aktivitäten</h2></div></div>
           <Form method="post" className="auth-form">
             <input type="hidden" name="_intent" value="add_activity" />
             <label><span>Typ</span><select name="activity_type" defaultValue="NOTE">{activityTypes.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>

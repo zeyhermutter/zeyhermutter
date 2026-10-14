@@ -204,11 +204,14 @@ export function Arbeitsplatz({
 }
 
 /** Der Kopf ueber dem Datensatz: Nummer, Status, Titel, eine Zeile Kontext. */
-export function ArbeitsplatzKopf({ nummer, status, titel, kontext }: {
+export function ArbeitsplatzKopf({ nummer, status, titel, kontext, aktionen }: {
   nummer: string;
   status?: ReactNode;
   titel: string;
   kontext?: string | null;
+  /** Knoepfe rechts im Kopf, etwa "E-Mail" (14.10.2026). Was hier steht,
+   * gilt fuer die ganze Akte und ist auf jedem Reiter erreichbar. */
+  aktionen?: ReactNode;
 }) {
   return (
     <div className="arbeitsplatz-kopf">
@@ -216,6 +219,14 @@ export function ArbeitsplatzKopf({ nummer, status, titel, kontext }: {
       {status}
       <strong className="arbeitsplatz-kopf-titel">{titel}</strong>
       {kontext ? <span className="arbeitsplatz-kopf-ort">{kontext}</span> : null}
+      {aktionen ? <span className="arbeitsplatz-kopf-aktionen">{aktionen}</span> : null}
     </div>
   );
+}
+
+/** Der Weg zur E-Mail eines Datensatzes: Mailprogramm oeffnen und die
+ * E-Mail danach am Datensatz festhalten. Bis 14.10.2026 nur ueber die
+ * Bereichsleiste erreichbar, die auf einer Akte nie zu sehen war. */
+export function EmailKnopf({ art, id }: { art: "contact" | "lead" | "inquiry"; id: string }) {
+  return <Link className="secondary-button link-button arbeitsplatz-kopf-knopf" to={`/crm/email?${art}_id=${encodeURIComponent(id)}`}>E-Mail</Link>;
 }

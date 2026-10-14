@@ -29,7 +29,7 @@ export function ObjektKarte({ row }: { row: any }) {
         <h2>{row.public_title}</h2>
         <p>{row.teaser || s.location_description || "Weitere Informationen zum Objekt."}</p>
         <div className="public-property-facts">
-          <strong>{money(s.price)}</strong>
+          <strong>{money(s.price)}{s.transaction_type === "RENT" && s.price != null ? <small> kalt / Monat</small> : null}</strong>
           <span>{s.living_area_sqm ? `${Number(s.living_area_sqm)} m²` : s.plot_area_sqm ? `${Number(s.plot_area_sqm)} m² Grundstück` : ""}{s.rooms ? ` · ${Number(s.rooms)} Zimmer` : ""}</span>
         </div>
       </div>

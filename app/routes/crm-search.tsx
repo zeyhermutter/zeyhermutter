@@ -1,6 +1,7 @@
 import { data, Form, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/crm-search";
 import { requireActiveUser } from "~/lib/auth.server";
+import { taskSourcePath } from "~/lib/termine";
 import { euroGenau, tagKurz } from "~/lib/format";
 import { ABSCHLUSSSTATUS, ANFRAGEKANAL, ANFRAGESTATUS, AUFGABENSTATUS, IMMOBILIENSTATUS, KAUFANGEBOTSTATUS, KONTAKTSTATUS, LEADSTATUS, beschrifte, type Beschriftungen } from "~/lib/labels";
 import "~/module04-fixes.css";
@@ -27,7 +28,15 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     const closingResults=((closings??[]) as any[]).filter(row=>includeArchived||!row.archived_at).filter(row=>{const p=one(row.properties),b=one(row.buyer),offer=one(row.purchase_offers);return [row.closing_number,p?.property_number,p?.internal_title,b?.first_name,b?.last_name,offer?.offer_number].filter(Boolean).join(" ").toLocaleLowerCase("de-DE").includes(needle);}).map(row=>{const p=one(row.properties),b=one(row.buyer);return {entity_type:"CLOSING",entity_id:row.id,reference:row.closing_number,title:`${p?.property_number??"Immobilie"} · ${b?.first_name??""} ${b?.last_name??""}`.trim(),subtitle:`Verkaufsabschluss · ${euroGenau(row.notarial_purchase_price??row.agreed_purchase_price)}`,status:row.status,updated_at:row.updated_at,archived:Boolean(row.archived_at),version:Number(row.version)} satisfies SearchResult;});
     results=[...((searchResults??[]) as SearchResult[]),...offerResults,...closingResults].sort((a,b)=>new Date(b.updated_at).getTime()-new Date(a.updated_at).getTime()).slice(0,100);
   }
-  return data({ q, includeArchived, results }, { headers: responseHeaders() });
+  // Eine gefundene Aufgabe fuehrt dorthin, wo sie zu sehen ist (14.10.2026),
+  // nicht in die allgemeine Aufgabenliste.
+  const aufgabenIds=results.filter(r=>r.entity_type==="TASK").map(r=>r.entity_id);
+  const aufgabenZiel:Record<string,string>={};
+  if(aufgabenIds.length){
+    const {data:aufgaben}=await supabase.from("tasks").select("id,contact_id,property_id,lead_id,inquiry_id,search_profile_id,viewing_id").in("id",aufgabenIds);
+    for(const a of (aufgaben??[]) as any[])aufgabenZiel[a.id]=taskSourcePath(a);
+  }
+  return data({ q, includeArchived, results, aufgabenZiel }, { headers: responseHeaders() });
 }
 function target(result:{entity_type:string;entity_id:string}) {
   if (result.entity_type === "CONTACT") return `/crm/contacts/${result.entity_id}`;
@@ -60,7 +69,7 @@ function standText(result:SearchResult){
   return beschrifte(tabelle&&result.status in tabelle?tabelle:STATUS_LABELS,result.status);
 }
 export default function CrmSearch() {
-  const { q, includeArchived, results } = useLoaderData<typeof loader>();
+  const { q, includeArchived, results, aufgabenZiel } = useLoaderData<typeof loader>();
   // Programmliste (13.10.2026): Suchleiste als Werkzeugleiste, Treffer als
   // Tabelle mit Spalten -- vorher grosses Suchfeld und Zeilen ohne Spalten.
   return <main className="editor-shell programm-liste">
@@ -76,8 +85,8 @@ export default function CrmSearch() {
       {results.length>0?<table className="programm-tabelle">
         <thead><tr><th>Nummer</th><th>Bezeichnung</th><th>Art</th><th>Details</th><th>Stand</th><th className="rechts">Geändert</th></tr></thead>
         <tbody>{results.map(result=><tr key={`${result.entity_type}-${result.entity_id}`}>
-          <td className="zahl"><Link to={target(result)}>{result.reference}</Link></td>
-          <td><Link to={target(result)}>{result.title}</Link></td>
+          <td className="zahl"><Link to={aufgabenZiel[result.entity_id] ?? target(result)}>{result.reference}</Link></td>
+          <td><Link to={aufgabenZiel[result.entity_id] ?? target(result)}>{result.title}</Link></td>
           <td>{LABELS[result.entity_type]??result.entity_type}</td>
           <td className="leise">{detailText(result)}</td>
           <td>{standText(result)}</td>

@@ -4,7 +4,7 @@ import { ConcurrencyConflictModal } from "~/components/concurrency-conflict-moda
 import { requirePermission } from "~/lib/auth.server";
 // Statuslabels nicht kopieren, sondern von der Immobilienliste beziehen —
 // sonst laufen zwei Uebersetzungen desselben Werts auseinander.
-import { STATUS_LABELS as PROPERTY_STATUS } from "./properties";
+import { IMMOBILIENSTATUS as PROPERTY_STATUS } from "~/lib/labels";
 import { euroGenau as money, tag, zeitpunkt } from "~/lib/format";
 import { crmIsoToLocalDateTime as isoToBerlinLocal, crmLocalDateTimeToIso as berlinLocalToIso } from "~/lib/local-time";
 

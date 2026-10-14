@@ -3,7 +3,7 @@ import type { Route } from "./+types/lead-arbeitsplatz";
 import { requirePermission } from "~/lib/auth.server";
 import { tag } from "~/lib/format";
 import { LEADSTATUS, beschrifte } from "~/lib/labels";
-import { Arbeitsplatz, ArbeitsplatzKopf, ArbeitsplatzReiter, type ArbeitsplatzZeile } from "~/components/arbeitsplatz";
+import { Arbeitsplatz, ArbeitsplatzKopf, EmailKnopf, ArbeitsplatzReiter, type ArbeitsplatzZeile } from "~/components/arbeitsplatz";
 import { standKlasse } from "~/lib/stand-ton";
 
 // Der Arbeitsplatz eines Verkäufer-Leads: links die Leads, rechts der Lead.
@@ -102,6 +102,7 @@ export default function LeadArbeitsplatz() {
           status={<span className={`status-pill ${standKlasse(akte.archiviert ? "Archiviert" : beschrifte(LEADSTATUS, akte.status))}`}>{akte.archiviert ? "Archiviert" : beschrifte(LEADSTATUS, akte.status)}</span>}
           titel={akte.kopfName}
           kontext={[akte.quelle, akte.ort, akte.wiedervorlage ? `Wiedervorlage ${tag(akte.wiedervorlage)}` : null].filter(Boolean).join(" · ")}
+          aktionen={leadId ? <EmailKnopf art="lead" id={leadId} /> : null}
         />
       ) : null}
       reiter={

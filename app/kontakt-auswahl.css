@@ -1,0 +1,37 @@
+/* Kontakt waehlen mit Suche (app/components/kontakt-auswahl.tsx). */
+
+.kontakt-auswahl { display: grid; gap: 6px; min-width: 0; }
+.kontakt-auswahl > label span { font-size: 13px; font-weight: 600; color: #26323c; }
+
+.kontakt-auswahl-gewaehlt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  padding: var(--crm-card-padding-sm);
+  border: 1px solid #c9d2da;
+  border-radius: var(--crm-card-radius-sm);
+  background: #f6f8f9;
+}
+.kontakt-auswahl-gewaehlt .subtle-link { margin-left: auto; border: 0; background: none; cursor: pointer; }
+
+.kontakt-auswahl-treffer {
+  display: grid;
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid #c9d2da;
+  border-radius: var(--crm-field-radius);
+  background: #ffffff;
+}
+.kontakt-auswahl-treffer p { margin: 0; padding: var(--crm-field-padding); }
+.kontakt-auswahl-treffer button {
+  padding: var(--crm-field-padding);
+  border: 0;
+  border-bottom: 1px solid #eef1f3;
+  background: #ffffff;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.kontakt-auswahl-treffer button:hover,
+.kontakt-auswahl-treffer button:focus-visible { background: #e7f0fa; }

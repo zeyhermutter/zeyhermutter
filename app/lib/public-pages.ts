@@ -68,6 +68,7 @@ export const NICHT_IN_DIE_SITEMAP: Record<string, string> = {
   "/api/sales-readiness-ai": "Schnittstelle, keine Seite",
   "/api/geocode-address": "Schnittstelle, keine Seite",
   "/api/viewings/:viewingId/history": "Schnittstelle, keine Seite",
+  "/api/kontakte": "Schnittstelle, keine Seite",
 };
 
 /**

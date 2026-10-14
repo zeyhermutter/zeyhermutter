@@ -156,9 +156,10 @@ export const HELP_CHAPTERS: HelpChapter[] = [
       ]},
       { art: "absatz", text:
         "**Mein Tag › E-Mail** bereitet eine Nachricht mit Bezug zu einem Kontakt, "
-        + "Lead oder einer Anfrage vor und hält fest, was geschrieben wurde. Wer den "
-        + "Unterpunkt aus einer geöffneten Kontaktakte, einem Lead oder einer Anfrage "
-        + "heraus anklickt, findet den Bezug schon vorbelegt. Versendet wird im "
+        + "Lead oder einer Anfrage vor und hält fest, was geschrieben wurde. Am "
+        + "schnellsten geht es über den Knopf **E-Mail** oben rechts in der Akte eines "
+        + "Kontakts, Leads oder einer Anfrage: dann ist der Bezug schon vorbelegt. "
+        + "Ohne Bezug zeigt der Unterpunkt das Journal aller erfassten E-Mails. Versendet wird im "
         + "eigenen E-Mail-Programm; unter „E-Mail erfassen“ wird die Nachricht danach "
         + "als Aktivität am Vorgang dokumentiert." },
       { art: "absatz", text:
@@ -189,6 +190,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         "**Adressen › Kontakte** öffnen. Links steht die Kontaktliste, rechts die Akte des gewählten Kontakts.",
         "Über der Liste „+ Neu“. Beim Anlegen genügen Vor- und Nachname; alles weitere kann später ergänzt werden.",
         "Das System prüft beim Speichern auf mögliche Dubletten und weist darauf hin, statt stillschweigend eine zweite Karteileiche anzulegen.",
+        "Oben rechts in der Kontaktakte öffnet **E-Mail** das Mailprogramm und hält die E-Mail danach am Kontakt fest. Aktivitäten am Verkäufer-Lead erscheinen auch im Verlauf des Kontakts.",
         "Die Kontaktakte hat vier Reiter: **Stammdaten** (Name, Erreichbarkeit, Empfehlungen, Historie), **Rollen & Aufgaben** (Rollen an Vorgängen, verbundene Personen wie Ehepartner, Miterben oder Bevollmächtigte, offene Aufgaben), **Adressen & Firmen** (nachgewiesene Objekte, Organisationen, Anschriften) und **Verlauf** (Aktivitäten, Kommentare und @Erwähnungen).",
       ]},
       { art: "absatz", text:
@@ -199,6 +201,10 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         + "Compliance**; im zweiten wird bei Partnern, die Empfehlungen aussprechen, "
         + "das Partnerprofil geführt — mehr dazu im Kapitel über Kampagnen und "
         + "Partner." },
+      { art: "absatz", text:
+        "Wo in einem Formular ein Kontakt gewählt wird — etwa ein Eigentümer oder eine "
+        + "Beziehung —, tippt man zwei Zeichen von Name, Nummer, E-Mail oder Telefon. "
+        + "Das System sucht dann im ganzen Bestand und zeigt bis zu 20 Treffer." },
       { art: "hinweis", text:
         "Kontakte werden nicht gelöscht, sondern archiviert. Sie verschwinden dann "
         + "aus allen Auswahllisten, bleiben aber in abgeschlossenen Vorgängen "
@@ -351,7 +357,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         "Die Akte hat neun Reiter, die immer gleich dastehen. Unter manchen Reitern "
         + "stehen mehrere Seiten als kleine Unterreiter:" },
       { art: "liste", punkte: [
-        "**Übersicht** — Status und Statuswechsel, Checkliste zur Vermarktungsreife und der Stand der einzelnen Abschnitte auf einen Blick.",
+        "**Übersicht** — Status und Statuswechsel, Fahrplan, offene Aufgaben zum Objekt, Checkliste zur Vermarktungsreife und der Stand der einzelnen Abschnitte auf einen Blick. Bei Vermietung steht dort die Kaltmiete statt des Kaufpreises.",
         "**Objektdaten** — Basisdaten & Ausstattung, WEG & Miete, Pflichtangaben.",
         "**Eigentümer & Recht** — Eigentümer, Recht & Lasten, Verfügungsberechtigung.",
         "**Preis & Wert** — Preisverlauf und Wertermittlung.",

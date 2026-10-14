@@ -160,7 +160,7 @@ export default function Organizations() {
   return (
     <main className="editor-shell programm-seite">
       <header className="editor-header">
-        <div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">Modul 01 · CRM</p><h1 className="editor-title">Organisationen</h1></div>
+        <div><Link className="back-link" to="/crm">← CRM</Link><h1 className="editor-title">Organisationen</h1></div>
         <div className="header-user">
           <button className="primary-button" type="button" onClick={() => setCreateOpen(true)}>+ Neue Organisation</button>
           <span className="badge">{__APP_ENV_LABEL__}</span>

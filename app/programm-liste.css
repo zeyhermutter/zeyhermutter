@@ -131,6 +131,18 @@
   .programm-tabelle td:nth-child(4),
   .programm-tabelle th:nth-child(7),
   .programm-tabelle td:nth-child(7) { display: none; }
+
+  /* Aufgaben (14.10.2026): Spalte 4 ist "Verantwortlich", Spalte 7 der
+   * Oeffnen-Knopf -- beide werden gebraucht. Stattdessen fallen Prioritaet
+   * und Status weg. */
+  .programm-tabelle.aufgaben-tabelle th:nth-child(4),
+  .programm-tabelle.aufgaben-tabelle td:nth-child(4),
+  .programm-tabelle.aufgaben-tabelle th:nth-child(7),
+  .programm-tabelle.aufgaben-tabelle td:nth-child(7) { display: table-cell; }
+  .programm-tabelle.aufgaben-tabelle th:nth-child(5),
+  .programm-tabelle.aufgaben-tabelle td:nth-child(5),
+  .programm-tabelle.aufgaben-tabelle th:nth-child(6),
+  .programm-tabelle.aufgaben-tabelle td:nth-child(6) { display: none; }
 }
 
 /*
@@ -379,6 +391,7 @@
  * Niedrig bleiben ruhig. Pfeil und Wort zusaetzlich zur Farbe. */
 .prioritaet { font-size: 12px; white-space: nowrap; }
 .prioritaet-low { color: #6b7782; }
+.ueberfaellig-text { color: #b42318; font-weight: 600; }
 .prioritaet-normal { color: #3d4a56; }
 .prioritaet-high { color: #8a4a00; font-weight: 600; }
 .prioritaet-urgent { color: #b42318; font-weight: 700; }

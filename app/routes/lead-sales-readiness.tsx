@@ -700,7 +700,6 @@ export default function LeadSalesReadiness() {
       <header className="editor-header">
         <div>
           <Link className="back-link" to={`/leads/${viewModel.lead.id}`}>← Lead-Detail</Link>
-          <p className="eyebrow">Modul 03 · Verkaufsfertig</p>
           <h1 className="editor-title">Verkaufsstrategie-Check</h1>
           <p className="editor-meta">Szenarien vergleichen, Eigentümerentscheidung dokumentieren und die Verkaufsaufbereitung steuern.</p>
         </div>

@@ -94,6 +94,9 @@ export function taskSourcePath(task: any) {
   if (task.lead_id) return `/leads/${task.lead_id}`;
   if (task.property_id) return `/properties/${task.property_id}`;
   if (task.search_profile_id) return `/search-profiles/${task.search_profile_id}`;
+  // Eine Aufgabe nur am Kontakt steht im Reiter "Rollen & Aufgaben" der
+  // Kontaktakte (14.10.2026) -- vorher fuehrte der Link in die Aufgabenliste.
+  if (task.contact_id) return `/crm/contacts/${task.contact_id}/relations`;
   return "/crm/tasks";
 }
 

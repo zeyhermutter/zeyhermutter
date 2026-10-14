@@ -188,6 +188,10 @@
 
 .arbeitsplatz-kopf-ort { color: #4a5763; font-size: 13px; }
 
+/* Knoepfe im Kopf einer Akte (14.10.2026): rechts, klein, immer sichtbar. */
+.arbeitsplatz-kopf-aktionen { display: inline-flex; gap: 6px; margin-left: auto; }
+.arbeitsplatz-kopf .arbeitsplatz-kopf-knopf { min-height: 28px; padding: 0 12px; font-size: 13px; }
+
 /* --- Reiter eines Datensatzes ---------------------------------------------- */
 
 .arbeitsplatz-reiter {

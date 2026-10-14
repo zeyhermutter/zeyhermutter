@@ -1,3 +1,4 @@
+import { KontaktAuswahl } from "~/components/kontakt-auswahl";
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/contact-relations";
 import { requireActiveUser } from "~/lib/auth.server";
@@ -38,7 +39,6 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     { data: assignments, error: assignmentError },
     { data: outgoing, error: outgoingError },
     { data: incoming, error: incomingError },
-    { data: contacts, error: contactsError },
     { data: tasks, error: tasksError },
   ] = await Promise.all([
     supabase
@@ -53,21 +53,14 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
       .eq("contact_id", contactId),
     supabase
       .from("contact_relationships")
-      .select("id, contact_id, related_contact_id, relationship_type, notes, valid_from, valid_until")
+      .select("id, contact_id, related_contact_id, relationship_type, notes, valid_from, valid_until, gegenueber:contacts!contact_relationships_related_contact_id_fkey(id, contact_number, first_name, last_name)")
       .eq("contact_id", contactId)
       .order("created_at", { ascending: false }),
     supabase
       .from("contact_relationships")
-      .select("id, contact_id, related_contact_id, relationship_type, notes, valid_from, valid_until")
+      .select("id, contact_id, related_contact_id, relationship_type, notes, valid_from, valid_until, gegenueber:contacts!contact_relationships_contact_id_fkey(id, contact_number, first_name, last_name)")
       .eq("related_contact_id", contactId)
       .order("created_at", { ascending: false }),
-    supabase
-      .from("contacts")
-      .select("id, contact_number, first_name, last_name")
-      .neq("id", contactId)
-      .is("archived_at", null)
-      .order("last_name")
-      .limit(250),
     supabase
       .from("tasks")
       .select("id, task_number, title, status, priority, due_at, version")
@@ -83,7 +76,6 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     assignmentError ||
     outgoingError ||
     incomingError ||
-    contactsError ||
     tasksError
   ) {
     throw new Response("Kontakt-Arbeitsbereich konnte nicht geladen werden.", { status: 500 });
@@ -91,7 +83,11 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   if (!contact) throw new Response("Kontakt nicht gefunden.", { status: 404 });
 
   const assignedRoleIds = new Set((assignments ?? []).map((item) => item.role_id));
-  const contactMap = Object.fromEntries((contacts ?? []).map((item) => [item.id, item]));
+  // Die Gegenueber kommen mit den Beziehungen (14.10.2026). Vorher aus einer
+  // Liste der ersten 250 Kontakte -- wer dahinter lag, erschien nur als
+  // "Kontakt" und war nicht waehlbar.
+  const gegenueber = [...(outgoing ?? []), ...(incoming ?? [])].map((rel: any) => Array.isArray(rel.gegenueber) ? rel.gegenueber[0] : rel.gegenueber).filter(Boolean);
+  const contactMap = Object.fromEntries(gegenueber.map((item: any) => [item.id, item]));
 
   return data(
     {
@@ -101,7 +97,6 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
       assignedRoleIds: Array.from(assignedRoleIds),
       outgoing: outgoing ?? [],
       incoming: incoming ?? [],
-      contacts: contacts ?? [],
       contactMap,
       tasks: tasks ?? [],
     },
@@ -231,7 +226,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 }
 
 export default function ContactRelations() {
-  const { contact, profile, roles, assignedRoleIds, outgoing, incoming, contacts, contactMap, tasks } = useLoaderData<typeof loader>();
+  const { contact, profile, roles, assignedRoleIds, outgoing, incoming, contactMap, tasks } = useLoaderData<typeof loader>();
   const result = useActionData<typeof action>();
   const assigned = new Set(assignedRoleIds);
   const availableRoles = roles.filter((role) => !assigned.has(role.id));
@@ -283,7 +278,7 @@ export default function ContactRelations() {
           </div>
           <Form method="post" className="auth-form">
             <input type="hidden" name="_intent" value="add_relationship" />
-            <label><span>Kontakt</span><select name="related_contact_id" required defaultValue=""><option value="" disabled>Bitte auswählen</option>{contacts.map((item) => <option key={item.id} value={item.id}>{item.last_name}, {item.first_name} · {item.contact_number}</option>)}</select></label>
+            <KontaktAuswahl name="related_contact_id" beschriftung="Kontakt" pflicht ausschliessen={[contact.id]} />
             <label><span>Beziehung</span><select name="relationship_type" required defaultValue=""><option value="" disabled>Bitte auswählen</option>{relationshipTypes.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
             <label><span>Notiz</span><input name="notes" /></label>
             <button className="secondary-button" type="submit">Beziehung hinzufügen</button>

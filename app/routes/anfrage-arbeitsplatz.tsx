@@ -4,7 +4,7 @@ import { requirePermission } from "~/lib/auth.server";
 import { ANFRAGEKANAL, ANFRAGESTATUS, beschrifte } from "~/lib/labels";
 import { zeitpunktKurz } from "~/lib/format";
 import { eins, ladeArbeitsplatz } from "~/lib/arbeitsplatz.server";
-import { Arbeitsplatz, ArbeitsplatzKopf, type ArbeitsplatzZeile } from "~/components/arbeitsplatz";
+import { Arbeitsplatz, ArbeitsplatzKopf, EmailKnopf, type ArbeitsplatzZeile } from "~/components/arbeitsplatz";
 import { standKlasse } from "~/lib/stand-ton";
 
 // Der Arbeitsplatz der Anfragen: links die Liste, rechts der Datensatz.
@@ -61,7 +61,7 @@ export default function AnfrageArbeitsplatz() {
       listeFehlt={listeFehlt}
       abgeschnitten={abgeschnitten ? `die zuletzt bearbeiteten ${HOECHSTENS}` : null}
       seitenkopf="ausblenden"
-      kopf={akte ? <ArbeitsplatzKopf nummer={akte.nummer} status={<span className={`status-pill ${standKlasse(akte.stand)}`}>{akte.stand}</span>} titel={akte.titel} kontext={akte.kontext} /> : null}
+      kopf={akte ? <ArbeitsplatzKopf nummer={akte.nummer} status={<span className={`status-pill ${standKlasse(akte.stand)}`}>{akte.stand}</span>} titel={akte.titel} kontext={akte.kontext} aktionen={inquiryId ? <EmailKnopf art="inquiry" id={inquiryId} /> : null} /> : null}
       reiter={null}
     >
       <Outlet />

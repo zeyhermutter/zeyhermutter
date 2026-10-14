@@ -77,7 +77,7 @@ export default function PropertyNew() {
   const result=useActionData<typeof action>();
   const f=result?.fields ?? {};
   return <main className="editor-shell">
-    <header className="editor-header"><div><Link className="back-link" to="/properties">← Immobilien</Link><p className="eyebrow">Modul 02 · Immobilien</p><h1 className="editor-title">Immobilie anlegen</h1><div className="creation-status-note"><span className="status-pill status-draft">Entwurf</span><small>Neue Immobilien starten immer als Entwurf. Fehlende Angaben können anschließend in der Objektakte ergänzt werden.</small></div></div><span className="badge">{__APP_ENV_LABEL__}</span></header>
+    <header className="editor-header"><div><Link className="back-link" to="/properties">← Immobilien</Link><h1 className="editor-title">Immobilie anlegen</h1><div className="creation-status-note"><span className="status-pill status-draft">Entwurf</span><small>Neue Immobilien starten immer als Entwurf. Fehlende Angaben können anschließend in der Objektakte ergänzt werden.</small></div></div><span className="badge">{__APP_ENV_LABEL__}</span></header>
     <Form method="post" className="editor-card">
       {result?.error ? <div className="form-error">{result.error}</div> : null}
       <div className="form-grid">

@@ -3,7 +3,7 @@ import type { Route } from "./+types/kontakt-arbeitsplatz";
 import { requireActiveUser } from "~/lib/auth.server";
 import { tag } from "~/lib/format";
 import { KONTAKTSTATUS, beschrifte } from "~/lib/labels";
-import { Arbeitsplatz, ArbeitsplatzKopf, ArbeitsplatzReiter, type ArbeitsplatzZeile } from "~/components/arbeitsplatz";
+import { Arbeitsplatz, ArbeitsplatzKopf, EmailKnopf, ArbeitsplatzReiter, type ArbeitsplatzZeile } from "~/components/arbeitsplatz";
 
 // Der Arbeitsplatz einer Kontaktakte: links die Kontaktliste, rechts der
 // Kontakt -- derselbe Aufbau wie bei den Immobilien.
@@ -117,6 +117,7 @@ export default function KontaktArbeitsplatz() {
           status={abweichend ? <span className="status-pill status-archived">{abweichend}</span> : null}
           titel={akte.kopfName}
           kontext={[akte.rollen.join(" · ") || null, akte.geaendert ? `geändert ${tag(akte.geaendert)}` : null].filter(Boolean).join(" · ")}
+          aktionen={contactId ? <EmailKnopf art="contact" id={contactId} /> : null}
         />
       ) : null}
       reiter={
