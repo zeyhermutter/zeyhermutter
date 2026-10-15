@@ -293,6 +293,13 @@ export const AUFTRAGSQUELLE: Beschriftungen = {
  * Beschriftung nachschlagen. Ohne Treffer bleibt der gespeicherte Wert stehen:
  * ein unbekannter Zustand soll sichtbar sein, nicht verschwinden.
  */
+// Art eines Protokolleintrags (audit_events.action), gesetzt von den
+// Triggern. Vorher stand der Code roh im Verlauf ("Sebastian · CREATE").
+export const AUDITAKTION: Beschriftungen = {
+  CREATE: "angelegt", UPDATE: "geändert", STATUS_CHANGE: "Status geändert", DELETE: "gelöscht",
+  ARCHIVE: "archiviert", RESTORE: "wiederhergestellt", ROLE_ASSIGNED: "Rolle zugewiesen",
+};
+
 // Art eines Verlaufseintrags (activity_events.activity_type). Freier Text in
 // der Datenbank, gesetzt von der Verlaufsmaske und den Website-Eingaengen.
 export const AKTIVITAETSART: Beschriftungen = {

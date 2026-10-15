@@ -3,7 +3,7 @@ import type { Route } from "./+types/mandate-detail";
 import { requirePermission } from "~/lib/auth.server";
 import { crmDateAtTimeToIso } from "~/lib/local-time";
 import { euroGenau as money, tag as formatDate, zeitpunkt } from "~/lib/format";
-import { AUFGABENSTATUS, MAKLERAUFTRAGART as TYPE, MAKLERAUFTRAGSTATUS as STATUS, PROVISIONSSTATUS, beschrifte } from "~/lib/labels";
+import { AUFGABENSTATUS, MAKLERAUFTRAGART as TYPE, MAKLERAUFTRAGSTATUS as STATUS, PROVISIONSSTATUS, beschrifte, AUDITAKTION } from "~/lib/labels";
 import { KontaktAuswahl } from "~/components/kontakt-auswahl";
 import { LeerOderFehler } from "~/components/leer-oder-fehler";
 
@@ -301,7 +301,7 @@ export default function MandateDetail(){
         <Link className="back-link" to="/mandates">← Makleraufträge</Link>
         <p className="eyebrow">{row.mandate_number} · {TYPE[row.mandate_type]??row.mandate_type}</p>
         <div className="property-title-row"><h1 className="editor-title">{property?.property_number??"Maklerauftrag"}</h1><span className={`status-pill ${STATUS_CLASS[row.status]??"status-draft"}`}>{locked?"Archiviert":STATUS[row.status]??row.status}</span></div>
-        <p className="editor-meta">{property?.internal_title??"—"} · {CLIENT_SIDE[row.client_side]??row.client_side} · Version {row.version}</p>
+        <p className="editor-meta">{property?.internal_title??"—"} · {CLIENT_SIDE[row.client_side]??row.client_side}</p>
       </div>
       <div className="header-actions">
         <Link className="secondary-button link-button" to={`/properties/${row.property_id}`}>Immobilie öffnen</Link>
@@ -443,7 +443,7 @@ export default function MandateDetail(){
     <section className="data-card">
       <div className="card-head"><div><p className="eyebrow">Historie</p><h2>Änderungsverlauf</h2></div><span className="subtle">{audit.length} Einträge</span></div>
       <div className="data-list">
-        {audit.map((event:any)=><div className="data-row" key={event.id}><div><strong>{auditLabel(event.field_changes)}</strong><small>{event.actor_display_name_snapshot??"System"} · {event.action}</small></div><div className="row-meta"><span>{zeitpunkt(event.occurred_at)}</span></div></div>)}
+        {audit.map((event:any)=><div className="data-row" key={event.id}><div><strong>{auditLabel(event.field_changes)}</strong><small>{event.actor_display_name_snapshot??"System"} · {beschrifte(AUDITAKTION,event.action)}</small></div><div className="row-meta"><span>{zeitpunkt(event.occurred_at)}</span></div></div>)}
         {audit.length===0?<p className="empty-state">Keine sichtbare Historie vorhanden.</p>:null}
       </div>
     </section>

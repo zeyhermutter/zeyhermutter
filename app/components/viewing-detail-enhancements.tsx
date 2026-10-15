@@ -1,3 +1,4 @@
+import { AUDITAKTION, beschrifte } from "~/lib/labels";
 import { useEffect } from "react";
 import { useLocation } from "react-router";
 import { zeitpunkt } from "~/lib/format";
@@ -132,7 +133,7 @@ function enhanceCombinedViewingHistory(viewingId: string, cleanups: Array<() => 
         head.className = "history-head";
         const strong = document.createElement("strong");
         const number = viewingNumber.get(event.entity_id) ?? "Frühere Besichtigung";
-        strong.textContent = `${number} · ${event.actor_display_name_snapshot ?? "System"} · ${event.action}`;
+        strong.textContent = `${number} · ${event.actor_display_name_snapshot ?? "System"} · ${beschrifte(AUDITAKTION, event.action)}`;
         const small = document.createElement("small");
         small.textContent = zeitpunkt(event.occurred_at);
         head.append(strong, small);

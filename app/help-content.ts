@@ -82,7 +82,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         "**Vermarktung** (orange): Anfragen, Besichtigungen, Kampagnen & Gebiete, Website.",
         "**Abschluss** (ocker): Kaufangebote, Reservierungen, Abschlüsse & Notar, Provisionen.",
         "**Auswertung** (violett): Dashboard, Nachbetreuung, Empfehlungen, Case Studies.",
-        "**Verwaltung** (grau): Anleitung, Geldwäsche & Aufbewahrung, Benutzer & Rollen, Weiterbildung, Archiv, Systemhistorie.",
+        "**Verwaltung** (grau): Anleitung, Geldwäsche & Aufbewahrung, Benutzer & Rollen, Weiterbildung, Anwaltsprüfung, Archiv, Systemhistorie.",
       ]},
       { art: "absatz", text:
         "**Der Arbeitsplatz: Liste links, Akte rechts.** Fast jeder Unterpunkt öffnet "
@@ -873,7 +873,9 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         "Der Bereich **Verwaltung** steht in der Modulleiste unten abgesetzt, weil "
         + "er selten gebraucht wird. Er enthält Anleitung, Geldwäsche & "
         + "Aufbewahrung (Kapitel 14), Benutzer & Rollen, Weiterbildung, Archiv und "
-        + "Systemhistorie." },
+        + "Systemhistorie. Unter **Anwaltsprüfung** stehen gesammelt alle Fragen, "
+        + "die vor der produktiven Nutzung anwaltlich zu klären sind — vorher standen "
+        + "sie verteilt auf neun Arbeitsseiten." },
       { art: "absatz", text:
         "Unter **Benutzer & Rollen** werden Zugänge freigeschaltet, deaktiviert und "
         + "Rollen zugewiesen. Die Tabelle **Berechtigungen je Rolle** zeigt als "

@@ -277,7 +277,7 @@ export default function PropertyLegal(){
 
     {warnings.length?<div className="form-warning"><strong>Offene Punkte</strong><ul>{warnings.map((warning)=><li key={warning}>{warning}</li>)}</ul></div>:<div className="form-success">Grundbuchdaten und Belastungen sind vollständig erfasst und bewertet.</div>}
 
-    <section className="editor-card"><div className="card-head"><div><p className="eyebrow">Rechtsobjekt</p><h2>Grundbuch, Erbbaurecht und öffentliches Recht</h2></div>{legal?<span className="status-pill">Version {legal.version}</span>:<span className="status-pill status-draft">Noch nicht erfasst</span>}</div>
+    <section className="editor-card"><div className="card-head"><div><p className="eyebrow">Rechtsobjekt</p><h2>Grundbuch, Erbbaurecht und öffentliches Recht</h2></div>{legal?<span className="status-pill">Erfasst</span>:<span className="status-pill status-draft">Noch nicht erfasst</span>}</div>
       <Form method="post">
         <input type="hidden" name="_intent" value="legal_save"/>
         {legal?<input type="hidden" name="legal_id" value={legal.id}/>:null}
@@ -343,14 +343,5 @@ export default function PropertyLegal(){
       </section>;
     })}
 
-    <section className="data-card"><div className="card-head"><div><p className="eyebrow">Vor produktiver Nutzung</p><h2>Anwaltlich abzunehmen</h2></div></div>
-      <ul className="subtle">
-        <li>Welche Angaben aus Grundbuch und Baulastenverzeichnis gegenüber Kaufinteressenten offenbart werden müssen und wann.</li>
-        <li>Ob und wie ein Altlastenverdacht mitgeteilt werden muss und welche Haftung an einem Verschweigen hängt.</li>
-        <li>Wie ein bestehendes Wohnrecht oder ein Nießbrauch im Exposé und im Kaufvertrag darzustellen ist.</li>
-        <li>Ob die erfassten Einschätzungen zur Auswirkung auf den Verkauf gegenüber Dritten verwendet werden dürfen.</li>
-        <li>Welche Aufbewahrungsfrist für Grundbuchauszüge und Behördenauskünfte gilt.</li>
-      </ul>
-    </section>
   </main>;
 }

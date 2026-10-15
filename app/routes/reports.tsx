@@ -431,11 +431,11 @@ export default function Reports() {
 
     <Aufklapper knopf="Definitionen & Datenbasis"><section className="data-card reporting-definition">
       <ul>
-        <li><strong>Lead-Conversion:</strong> Anteil der im gewählten Zeitraum neu angelegten Verkäufer-Leads, die bis zum Ende dieses Zeitraums über das dokumentierte Feld <code>converted_at</code> in eine Immobilie überführt wurden.</li>
-        <li><strong>Besichtigung → Angebot:</strong> Anteil der im Zeitraum abgeschlossenen Besichtigungen, für die bis zum Periodenende ein abgegebenes Kaufangebot mit direkter <code>viewing_id</code>-Verknüpfung existiert.</li>
-        <li><strong>Ø Vermarktungsdauer:</strong> Tage vom frühesten dokumentierten <code>live_at</code> eines Vermarktungskanals bis zum Beurkundungsdatum. Ohne vollständiges Datenpaar wird nicht geschätzt.</li>
-        <li><strong>Provision:</strong> Erwartete Provision basiert auf im Zeitraum erfassten, nicht stornierten Provisionsdatensätzen; realisierte Provision ausschließlich auf dokumentierten Zahlungen mit <code>paid_at</code> im Zeitraum.</li>
-        <li><strong>Mein Arbeitsplatz:</strong> berücksichtigt die jeweils hinterlegte verantwortliche Person. Die Unternehmenssicht ist separat über <code>reporting.company.read</code> berechtigt.</li>
+        <li><strong>Lead-Conversion:</strong> Anteil der im gewählten Zeitraum neu angelegten Verkäufer-Leads, die bis zum Ende dieses Zeitraums über die dokumentierte Umwandlung in eine Immobilie überführt wurden.</li>
+        <li><strong>Besichtigung → Angebot:</strong> Anteil der im Zeitraum abgeschlossenen Besichtigungen, für die bis zum Periodenende ein abgegebenes Kaufangebot mit direkter Verknüpfung zu dieser Besichtigung existiert.</li>
+        <li><strong>Ø Vermarktungsdauer:</strong> Tage vom frühesten dokumentierten Start („live seit“) eines Vermarktungskanals bis zum Beurkundungsdatum. Ohne vollständiges Datenpaar wird nicht geschätzt.</li>
+        <li><strong>Provision:</strong> Erwartete Provision basiert auf im Zeitraum erfassten, nicht stornierten Provisionsdatensätzen; realisierte Provision ausschließlich auf dokumentierten Zahlungen mit Zahlungsdatum im Zeitraum.</li>
+        <li><strong>Mein Arbeitsplatz:</strong> berücksichtigt die jeweils hinterlegte verantwortliche Person. Die Unternehmenssicht ist separat über ein eigenes Recht („Unternehmensauswertung lesen“) freigegeben.</li>
       </ul>
     </section></Aufklapper>
   </main>;

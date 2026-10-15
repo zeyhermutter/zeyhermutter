@@ -290,7 +290,7 @@ export default function ClosingMilestones(){
       </Form>)}
     </section>
 
-    <section className="editor-card" id="uebergabe"><div className="card-head"><div><p className="eyebrow">Schlüsselübergabe</p><h2>Übergabeprotokoll</h2></div>{protocol?<span className="status-pill">Version {protocol.version}</span>:<span className="status-pill status-draft">Noch nicht angelegt</span>}</div>
+    <section className="editor-card" id="uebergabe"><div className="card-head"><div><p className="eyebrow">Schlüsselübergabe</p><h2>Übergabeprotokoll</h2></div>{protocol?<span className="status-pill">Angelegt</span>:<span className="status-pill status-draft">Noch nicht angelegt</span>}</div>
       <Form method="post">
         <input type="hidden" name="_intent" value="protocol_save"/>
         {protocol?<input type="hidden" name="protocol_id" value={protocol.id}/>:null}
@@ -361,14 +361,5 @@ export default function ClosingMilestones(){
       </section>
     </div>:null}
 
-    <section className="data-card"><div className="card-head"><div><p className="eyebrow">Vor produktiver Nutzung</p><h2>Anwaltlich abzunehmen</h2></div></div>
-      <ul className="subtle">
-        <li>Welche Meilensteine im eigenen Bundesland und bei welcher Objektart tatsächlich einschlägig sind.</li>
-        <li>Wann ein Vorkaufsrecht des Mieters besteht, wie die Mitteilung zu erfolgen hat und wie die Frist läuft.</li>
-        <li>Ob und wie das Übergabeprotokoll als Beweismittel taugt und welche Form die Bestätigung beider Seiten braucht.</li>
-        <li>Wie mit bei der Übergabe festgestellten Mängeln umzugehen ist und wer sie wem mitteilt.</li>
-        <li>Ob ein Reservierungsentgelt im jeweiligen Fall überhaupt vereinbart werden darf.</li>
-      </ul>
-    </section>
   </main>;
 }

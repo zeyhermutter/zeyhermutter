@@ -54,7 +54,6 @@ export function SalesReadinessWorkspace({
     return (
       <div className="readiness-workspace">
         <section className="readiness-mode-banner preview">
-          <strong>BETA-Backend aktiv</strong>
           <span>Noch kein Verkaufsstrategie-Check für diesen Lead vorhanden.</span>
         </section>
         <section className="data-card readiness-empty-start">
@@ -146,7 +145,6 @@ export function SalesReadinessWorkspace({
             <p className="eyebrow">Next Best Action</p>
             <h2>{viewModel.workflow.nextAction}</h2>
           </div>
-          <span className="readiness-version">Version {check.version}</span>
         </div>
         {check.status === "DRAFT" && viewModel.workflow.missingForReview.length > 0 ? (
           <div className="readiness-disclaimer">

@@ -268,7 +268,7 @@ export default function PropertyHoaTenancy(){
 
     {yieldValue!==null?<div className="form-success"><strong>Berechnung:</strong> {money(active.rent_cold)} Kaltmiete × 12 = {money(Number(active.rent_cold)*12)} Jahreskaltmiete, geteilt durch {money(p.purchase_price)} Kaufpreis = {yieldValue.toLocaleString("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2})} % brutto. Ohne Kaufnebenkosten, ohne nicht umlagefähige Bewirtschaftungskosten und ohne Mietausfallrisiko.</div>:null}
 
-    <section className="editor-card" id="weg"><div className="card-head"><div><p className="eyebrow">Wohnungseigentum</p><h2>WEG-Daten</h2></div>{hoa?<span className="status-pill">Version {hoa.version}</span>:<span className="status-pill status-draft">Noch nicht erfasst</span>}</div>
+    <section className="editor-card" id="weg"><div className="card-head"><div><p className="eyebrow">Wohnungseigentum</p><h2>WEG-Daten</h2></div>{hoa?<span className="status-pill">Erfasst</span>:<span className="status-pill status-draft">Noch nicht erfasst</span>}</div>
       <p className="subtle">Miteigentumsanteil: {d.coOwnershipShare||"nicht erfasst"} — geführt unter <Link className="subtle-link" to={`/properties/${p.id}/legal`}>Recht & Lasten</Link>, damit er nicht doppelt gepflegt wird.</p>
       <Form method="post">
         <input type="hidden" name="_intent" value="hoa_save"/>
@@ -354,15 +354,6 @@ export default function PropertyHoaTenancy(){
       </Form>:null}
     </section>
 
-    <section className="data-card"><div className="card-head"><div><p className="eyebrow">Vor produktiver Nutzung</p><h2>Anwaltlich abzunehmen</h2></div></div>
-      <ul className="subtle">
-        <li>Ob und wann ein Vorkaufsrecht des Mieters besteht und wie es mitzuteilen ist.</li>
-        <li>Wann eine Sperrfrist nach Umwandlung in Wohnungseigentum läuft und wie lange.</li>
-        <li>Welche Angaben zu Mietverhältnis und Kaution dem Käufer offengelegt werden müssen.</li>
-        <li>Wie mit Mietrückständen und laufenden Mieterhöhungen beim Eigentümerwechsel umzugehen ist.</li>
-        <li>Ob die dargestellte Bruttomietrendite gegenüber Interessenten verwendet werden darf und welche Hinweise sie braucht.</li>
-      </ul>
-    </section>
   </main>;
 }
 

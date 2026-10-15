@@ -185,7 +185,6 @@ export default function CaseStudyDetail(){
       </div>
       <div className="header-actions">
         <span className={`status-pill ${CASE_STATUS_CLASS[row.status]??"status-draft"}`}>{row.archived_at?"Archiviert":CASE_STATUS[row.status]??row.status}</span>
-        <span className="status-pill">Version {row.version}</span>
       </div>
     </header>
 

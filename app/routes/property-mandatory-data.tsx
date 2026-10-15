@@ -305,15 +305,5 @@ export default function PropertyMandatoryData(){
       </Form>
     </section>
 
-    <section className="data-card">
-      <div className="card-head"><div><p className="eyebrow">Vor produktiver Nutzung</p><h2>Anwaltlich abzunehmen</h2></div></div>
-      <ul className="subtle">
-        <li>Welche Angaben eine Immobilienanzeige im konkreten Fall tragen muss und ab wann eine Veröffentlichung als Anzeige gilt.</li>
-        <li>Ob eine erfasste Ausnahme tatsächlich greift. Das System prüft nur, dass sie begründet und bestätigt ist.</li>
-        <li>Ob für Gewerbeobjekte und für Objekte ohne Gebäude die hier gewählte Abgrenzung zutrifft.</li>
-        <li>Wann der Energieausweis vorzulegen und wann er zu übergeben ist und was als Nachweis dafür genügt.</li>
-        <li>Welche Folgen ein abgelaufener Ausweis für eine bereits laufende Vermarktung hat.</li>
-      </ul>
-    </section>
   </div>;
 }

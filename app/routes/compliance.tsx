@@ -175,13 +175,5 @@ export default function Compliance(){
           </div>)}</div>}
     </section>
 
-    <section className="data-card"><div className="card-head"><div><p className="eyebrow">Vor produktiver Nutzung</p><h2>Anwaltlich abzunehmen</h2></div></div>
-      <ul className="subtle">
-        <li>Ob und ab wann für dieses Maklerbüro geldwäscherechtliche Pflichten bestehen und welche Fälle erfasst werden müssen.</li>
-        <li>Die zulässige Speicherung von Ausweisdaten und Ausweiskopien sowie die konkreten Löschfristen.</li>
-        <li>Der interne Ablauf bei einem Treffer im Listenabgleich und bei einem Verdachtsfall einschließlich der Frage, wer meldet.</li>
-        <li>Der Umgang mit dem Verbot, den Betroffenen über eine Meldung zu informieren.</li>
-      </ul>
-    </section>
   </main>;
 }

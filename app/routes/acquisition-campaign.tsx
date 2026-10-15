@@ -182,7 +182,7 @@ export default function AcquisitionCampaign(){
     {householdMismatch?<p className="form-warning">Die Wellen erreichen zusammen {waveHouseholds} Haushalte, die Kampagne führt {c.household_count}. Einer der beiden Werte stimmt nicht.</p>:null}
 
     <section className="data-card" id="kampagne">
-      <div className="card-head"><div><p className="eyebrow">Rahmen</p><h2>Kampagne</h2></div><span className="status-pill">Version {c.version}</span></div>
+      <div className="card-head"><div><p className="eyebrow">Rahmen</p><h2>Kampagne</h2></div></div>
       <Form method="post" className="form-grid">
         <input type="hidden" name="_intent" value="campaign_save"/>
         <input type="hidden" name="version" value={c.version}/>

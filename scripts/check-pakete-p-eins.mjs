@@ -87,8 +87,24 @@ pruefe((await lies("app/routes/api-aufgaben.ts")).includes('"doppelt"'), "api-au
   pruefe(nachricht > 0 && nachricht < anfrage.indexOf('<p className="eyebrow">Interessent</p>'), "inquiry-detail.tsx: Die Nachricht steht nicht mehr als erste Karte");
 }
 
+// 9. Interne Texte und Codes (P1-7, 15.10.2026)
+{
+  const dateien = [
+    ...(await readdir(path.join(WURZEL, "app/routes"))).filter((n) => n.endsWith(".tsx")).map((n) => `app/routes/${n}`),
+    ...(await readdir(path.join(WURZEL, "app/components"))).filter((n) => n.endsWith(".tsx")).map((n) => `app/components/${n}`),
+  ];
+  for (const datei of dateien) {
+    const inhalt = await lies(datei);
+    pruefe(!/Version \{[a-zA-Z]+\.version\}/.test(inhalt), `${datei}: zeigt den technischen Versionszaehler („Version 7“)`);
+    pruefe(!/\{(a|e|event)\.action\}/.test(inhalt), `${datei}: zeigt den rohen Aktionscode im Verlauf (CREATE/UPDATE)`);
+    pruefe(!/anwaltlich abzunehmen/i.test(inhalt) || datei.includes("public-page-sections") || datei.endsWith("anwaltspruefung.tsx"), `${datei}: Anwaltsprüfungs-Karte auf einer Arbeitsseite -- gehoert nach Verwaltung > Anwaltspruefung (app/lib/anwaltspruefung.ts)`);
+    pruefe(!/>Append-only<|BETA-Backend aktiv|Snapshot ver|den Snapshot/.test(inhalt), `${datei}: Entwicklerbegriff in der Oberflaeche`);
+  }
+  pruefe(!(await lies("app/routes/reports.tsx")).includes("<code>"), "reports.tsx: Feldnamen in den Definitionen statt Worten");
+}
+
 if (fehler.length) {
   console.error("P1:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten, Anfrage beginnt mit der Nachricht.");
+console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten, Anfrage beginnt mit der Nachricht, keine internen Codes.");

@@ -165,7 +165,6 @@ export default function ProjectDetail(){
       </div>
       <div className="inline-actions">
         <span className={`status-pill ${STATUS_CLASS[p.status]??""}`}>{PROJECT_STATUS[p.status]??p.status}</span>
-        <span className="status-pill">Version {p.version}</span>
       </div>
     </div>
 

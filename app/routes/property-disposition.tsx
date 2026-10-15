@@ -319,7 +319,7 @@ export default function PropertyDisposition(){
       <article className="metric-card"><span>Erbfall</span><strong>{inheritance?"Ja":"Nein"}</strong><small>{inheritance&&record?.succession_proof_issued_on?`Nachweis vom ${formatDate(record.succession_proof_issued_on)}`:inheritance?"Nachweis offen":"kein Erbfall erfasst"}</small></article>
     </section>
 
-    <section className="editor-card"><div className="card-head"><div><p className="eyebrow">Grundlage</p><h2>Eigentümerstellung, Erbfall und Ehegattenzustimmung</h2></div>{record?<span className="status-pill">Version {record.version}</span>:<span className="status-pill status-draft">Noch nicht erfasst</span>}</div>
+    <section className="editor-card"><div className="card-head"><div><p className="eyebrow">Grundlage</p><h2>Eigentümerstellung, Erbfall und Ehegattenzustimmung</h2></div>{record?<span className="status-pill">Erfasst</span>:<span className="status-pill status-draft">Noch nicht erfasst</span>}</div>
       <Form method="post">
         <input type="hidden" name="_intent" value="record_save"/>
         {record?<input type="hidden" name="record_id" value={record.id}/>:null}
@@ -374,15 +374,5 @@ export default function PropertyDisposition(){
       {d.canWrite?<PartyForm formKey="new-party" dispositionId={record.id} disabled={false}/>:null}
     </section>:null}
 
-    <section className="data-card"><div className="card-head"><div><p className="eyebrow">Vor produktiver Nutzung</p><h2>Anwaltlich abzunehmen</h2></div></div>
-      <ul className="subtle">
-        <li>Welcher Erbnachweis im Einzelfall genügt und wann eine Grundbuchberichtigung vor dem Verkauf zwingend ist.</li>
-        <li>Ob eine vorgelegte Vollmacht Form und Umfang für ein Grundstücksgeschäft erfüllt.</li>
-        <li>In welchen Fällen eine betreuungs- oder familiengerichtliche Genehmigung erforderlich ist und wer sie beantragt.</li>
-        <li>Ob und wann eine Ehegattenzustimmung erforderlich ist.</li>
-        <li>Welche Nachlass- und Betreuungsunterlagen aufbewahrt werden dürfen und wie lange.</li>
-        <li>Ob die Zustimmung aller Miterben vor Abschluss eines Maklerauftrags vorliegen muss.</li>
-      </ul>
-    </section>
   </main>;
 }

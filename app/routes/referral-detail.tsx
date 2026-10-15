@@ -119,7 +119,6 @@ export default function ReferralDetail(){
       </div>
       <div className="header-actions">
         <span className={`status-pill ${REFERRAL_STATUS_CLASS[row.status]??"status-draft"}`}>{row.archived_at?"Archiviert":REFERRAL_STATUS[row.status]??row.status}</span>
-        <span className="status-pill">Version {row.version}</span>
       </div>
     </header>
 

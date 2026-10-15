@@ -212,7 +212,7 @@ export default function OrganizationPartner(){
     <p className="form-warning">Erfassung und Kennzeichnung, keine rechtliche Bewertung. Das System entscheidet nicht, ob eine Zuwendung im Einzelfall zulässig ist. Es verhindert nur, dass eine regulierte Berufsgruppe ohne Weiteres in ein Vergütungsmodell gerät.</p>
 
     <section className="data-card" id="profil">
-      <div className="card-head"><div><p className="eyebrow">Dienstleister</p><h2>Partnerprofil</h2></div>{partner?<span className="status-pill">Version {partner.version}</span>:null}</div>
+      <div className="card-head"><div><p className="eyebrow">Dienstleister</p><h2>Partnerprofil</h2></div></div>
       <Form method="post" className="form-grid">
         <input type="hidden" name="_intent" value="profile_save"/>
         <input type="hidden" name="profile_id" value={partner?.id??""}/>
@@ -297,14 +297,5 @@ export default function OrganizationPartner(){
         })}</div>}
     </section>
 
-    <section className="data-card">
-      <div className="card-head"><div><p className="eyebrow">Vor produktiver Nutzung</p><h2>Anwaltlich abzunehmen</h2></div></div>
-      <ul className="subtle">
-        <li>Ob und in welcher Form eine Empfehlungsvergütung an einen bestimmten Partner zulässig ist.</li>
-        <li>Welche Berufsgruppen über die hier gelisteten hinaus als reguliert zu behandeln sind.</li>
-        <li>Ob und wann eine Vergütung gegenüber dem Kunden offenzulegen ist.</li>
-        <li>Wie eine bestehende Zusage zu behandeln ist, wenn sich der Compliance-Stand eines Partners nachträglich ändert.</li>
-      </ul>
-    </section>
   </div>;
 }

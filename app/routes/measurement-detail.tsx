@@ -5,8 +5,7 @@ import { crmIsoToLocalDateTime as isoNachLokal, crmLocalDateTimeToIso as lokalNa
 import { euroGenau as money, flaeche, tag as formatDate, zeitpunkt } from "~/lib/format";
 import {
   AUFGABENSTATUS, AUFMASSPAKET as PAKET, AUFMASSSTATUS as STATUS, AUFTRAGSQUELLE as QUELLE,
-  DOKUMENTKATEGORIE, FLAECHENSTANDARD, beschrifte,
-} from "~/lib/labels";
+  DOKUMENTKATEGORIE, FLAECHENSTANDARD, beschrifte, AUDITAKTION } from "~/lib/labels";
 import { IMMOBILIENARTEN } from "~/lib/public-intake";
 import { KontaktAuswahl } from "~/components/kontakt-auswahl";
 import { LeerOderFehler } from "~/components/leer-oder-fehler";
@@ -317,7 +316,7 @@ export default function MeasurementDetail(){
       <Link className="back-link" to="/measurements">← Aufmaß-Aufträge</Link>
       <p className="eyebrow">{row.order_number} · {QUELLE[row.source]??row.source}</p>
       <div className="property-title-row"><h1 className="editor-title">{PAKET[row.service_package]??row.service_package}</h1><span className={`status-pill ${STATUS_CLASS[row.status]??"status-draft"}`}>{locked?"Archiviert":STATUS[row.status]??row.status}</span></div>
-      <p className="editor-meta">{property?<>{property.property_number} · {property.internal_title}</>:[ [row.object_street,row.object_house_number].filter(Boolean).join(" "),[row.object_postal_code,row.object_city].filter(Boolean).join(" ")].filter(Boolean).join(", ")||"Objekt noch offen"}{contact?` · ${contact.first_name} ${contact.last_name}`:""} · Version {row.version}</p>
+      <p className="editor-meta">{property?<>{property.property_number} · {property.internal_title}</>:[ [row.object_street,row.object_house_number].filter(Boolean).join(" "),[row.object_postal_code,row.object_city].filter(Boolean).join(" ")].filter(Boolean).join(", ")||"Objekt noch offen"}{contact?` · ${contact.first_name} ${contact.last_name}`:""}</p>
     </div><div className="header-user"><span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div></header>
 
     {result?.error?<div className="form-error">{result.error}</div>:null}
@@ -452,7 +451,7 @@ export default function MeasurementDetail(){
 
     {audit.length?<section className="data-card"><div className="card-head"><div><p className="eyebrow">Historie</p><h2>Änderungen an diesem Auftrag</h2></div></div><div className="data-list">
       {audit.map((event:any)=><div className="data-row" key={event.id}>
-        <div><strong>{event.action}</strong><small>{event.actor_display_name_snapshot??"System"}</small></div>
+        <div><strong>{beschrifte(AUDITAKTION,event.action)}</strong><small>{event.actor_display_name_snapshot??"System"}</small></div>
         <div className="row-meta"><small>{zeitpunkt(event.occurred_at)}</small></div>
       </div>)}
     </div></section>:null}
