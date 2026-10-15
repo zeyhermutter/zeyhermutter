@@ -1,4 +1,5 @@
-import { data, Form, Link, redirect, useActionData } from "react-router";
+import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
+import { KontaktAuswahl } from "~/components/kontakt-auswahl";
 import type { Route } from "./+types/property-new";
 import { requirePermission } from "~/lib/auth.server";
 import { geocodePropertyAddress } from "~/lib/geocoding.server";
@@ -12,13 +13,19 @@ const TYPES = [
 function text(fd: FormData, key: string) { return String(fd.get(key) ?? "").trim(); }
 function numeric(value: string) { return value === "" ? null : Number(value.replace(",", ".")); }
 
+const KENNUNG = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { responseHeaders } = await requirePermission(request, context.cloudflare.env, "property.write");
-  return data({}, { headers: responseHeaders() });
+  // "?eigentuemer=<Kontakt>" belegt den Eigentuemer vor, etwa aus der Kontaktakte.
+  // "newOwner" setzt die Kontaktanlage, wenn man von hier aus einen Kontakt anlegt.
+  const suche = new URL(request.url).searchParams;
+  const vorbelegt = suche.get("eigentuemer") ?? suche.get("newOwner") ?? "";
+  return data({ eigentuemer: KENNUNG.test(vorbelegt) ? vorbelegt : null }, { headers: responseHeaders() });
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
-  const { supabase, responseHeaders } = await requirePermission(request, context.cloudflare.env, "property.write");
+  const { supabase, responseHeaders, userId } = await requirePermission(request, context.cloudflare.env, "property.write");
   const fd = await request.formData();
   const fields = Object.fromEntries(Array.from(fd.entries()).map(([key,value]) => [key, String(value)]));
   const internalTitle = text(fd,"internal_title");
@@ -70,16 +77,33 @@ export async function action({ request, context }: Route.ActionArgs) {
     }
   }
 
+  // Eigentuemer gleich beim Anlegen (P1, 15.10.2026). Vorher musste man nach
+  // dem Anlegen in den Reiter Eigentuemer wechseln und dort noch einmal suchen.
+  // Weitere Eigentuemer, Anteile und Gueltigkeit bleiben im Reiter.
+  const eigentuemer = text(fd, "owner_contact_id");
+  if (KENNUNG.test(eigentuemer)) {
+    const { error: ownerError } = await supabase.from("property_owners").insert({
+      property_id: propertyId, contact_id: eigentuemer, primary_contact: true, created_by: userId, updated_by: userId,
+    });
+    if (ownerError) return redirect(`/properties/${propertyId}/eigentuemer?eigentuemer=fehlt#eigentuemer`, { headers: responseHeaders() });
+  }
+
   return redirect(`/properties/${propertyId}`, { headers: responseHeaders() });
 }
 
 export default function PropertyNew() {
   const result=useActionData<typeof action>();
+  const { eigentuemer } = useLoaderData<typeof loader>();
   const f=result?.fields ?? {};
   return <main className="editor-shell">
     <header className="editor-header"><div><Link className="back-link" to="/properties">← Immobilien</Link><h1 className="editor-title">Immobilie anlegen</h1><div className="creation-status-note"><span className="status-pill status-draft">Entwurf</span><small>Neue Immobilien starten immer als Entwurf. Fehlende Angaben können anschließend in der Objektakte ergänzt werden.</small></div></div><span className="badge">{__APP_ENV_LABEL__}</span></header>
     <Form method="post" className="editor-card">
       {result?.error ? <div className="form-error">{result.error}</div> : null}
+      <p className="eyebrow">Eigentümer · optional im Entwurf</p>
+      <div className="form-grid">
+        <KontaktAuswahl name="owner_contact_id" beschriftung="Eigentümer" vorbelegtId={f.owner_contact_id || eigentuemer} hinweis={<>Wird als Hauptkontakt zugeordnet. Weitere Eigentümer und Anteile im Reiter Eigentümer. Noch nicht als Kontakt erfasst? <Link to={`/crm/contacts/new?returnTo=${encodeURIComponent("/properties/new")}`}>Kontakt anlegen</Link> (vor dem Ausfüllen, die Eingaben hier werden dabei nicht gespeichert)</>} />
+      </div>
+      <div className="section-separator"><p className="eyebrow">Objekt</p></div>
       <div className="form-grid">
         <label className="form-field"><span>Interner Objekttitel *</span><input name="internal_title" defaultValue={f.internal_title} placeholder="z. B. ETW Familie Müller – Feldkirchen" required /></label>
         <label className="form-field"><span>Immobilientyp *</span><select name="property_type" defaultValue={f.property_type ?? "APARTMENT"}>{TYPES.map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></label>

@@ -112,8 +112,12 @@ for (const [rahmen, seite] of [["maklerauftrag-arbeitsplatz", "mandate-detail"],
   pruefe(!s.includes('className="editor-header"') && s.includes("<h2>Archiv</h2>"), `${seite}.tsx: eigener Seitenkopf statt Archiv-Karte`);
 }
 
+// 11. Eigentuemer: mit Link zum Kontakt, gleich beim Anlegen (P1, 15.10.2026)
+pruefe((await lies("app/routes/property-detail.tsx")).includes('to={`/crm/contacts/${owner.contact_id}`}'), "property-detail.tsx: Eigentümername ohne Link zum Kontakt");
+pruefe((await lies("app/routes/property-new.tsx")).includes('name="owner_contact_id"'), "property-new.tsx: Eigentümer kann beim Anlegen nicht gewählt werden");
+
 if (fehler.length) {
   console.error("P1:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten, Anfrage beginnt mit der Nachricht, keine internen Codes, ein Kopf je Akte bei Auftrag und Provision.");
+console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten, Anfrage beginnt mit der Nachricht, keine internen Codes, ein Kopf je Akte bei Auftrag und Provision, Eigentümer verlinkt und beim Anlegen wählbar.");
