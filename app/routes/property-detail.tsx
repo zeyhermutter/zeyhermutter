@@ -1,3 +1,4 @@
+import { verlaufWert } from "~/lib/verlauf-wert";
 import { KontaktAuswahl } from "~/components/kontakt-auswahl";
 import { data, Form, Link, redirect, useActionData, useLoaderData, useLocation } from "react-router";
 import type { Route } from "./+types/property-detail";
@@ -35,7 +36,7 @@ function findFeatureMatch(value:string,options:FeatureChoice[]){const normalized
 
 const STATUS_LABELS = IMMOBILIENSTATUS;
 function labelStatus(value:string){return STATUS_LABELS[value]??value.replaceAll("_"," ");}
-function auditValueLabel(value:unknown){if(value===null||value===undefined||value==="")return"—";const raw=typeof value==="object"?"Datensatz":String(value);return raw.length>140?`${raw.slice(0,137)}…`:raw;}
+function auditValueLabel(value:unknown){return verlaufWert(value);}
 
 const GWG_RISK: Record<string,string> = {LOW:"gering",MEDIUM:"mittel",HIGH:"hoch"};
 const DISPOSITION_STRUCTURE: Record<string,string> = {SOLE:"Alleineigentum",FRACTIONAL:"Miteigentum nach Bruchteilen",COMMUNITY_OF_HEIRS:"Erbengemeinschaft",MARITAL_COMMUNITY:"Gütergemeinschaft",OTHER:"Andere Form",UNKNOWN:"noch nicht geklärt"};

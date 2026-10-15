@@ -293,6 +293,15 @@ export const AUFTRAGSQUELLE: Beschriftungen = {
  * Beschriftung nachschlagen. Ohne Treffer bleibt der gespeicherte Wert stehen:
  * ein unbekannter Zustand soll sichtbar sein, nicht verschwinden.
  */
+// Objektart (properties.property_type, search_profiles.property_types,
+// leads.property_type) -- dieselben 14 Werte in allen drei Tabellen.
+export const OBJEKTART: Beschriftungen = {
+  DETACHED_HOUSE: "Einfamilienhaus", SEMI_DETACHED_HOUSE: "Doppelhaushälfte", TERRACED_HOUSE: "Reihenhaus",
+  APARTMENT_BUILDING: "Mehrfamilienhaus", APARTMENT: "Wohnung", PENTHOUSE: "Penthouse", MAISONETTE: "Maisonette",
+  LAND: "Grundstück", COMMERCIAL: "Gewerbe", OFFICE: "Büro", RETAIL: "Einzelhandel", GARAGE: "Garage",
+  PARKING_SPACE: "Stellplatz", OTHER: "Sonstiges",
+};
+
 // Art eines Protokolleintrags (audit_events.action), gesetzt von den
 // Triggern. Vorher stand der Code roh im Verlauf ("Sebastian · CREATE").
 export const AUDITAKTION: Beschriftungen = {
