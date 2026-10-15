@@ -122,6 +122,9 @@ const AUSNAHMEN = {
   "app/routes/after-sales.tsx": ["STEP_KEY"],
   // Vorgangsart und Bereich einer Protokollzeile: von den Triggern gesetzt.
   "app/routes/audit-history.tsx": ["FIELD_LABELS", "ACTION_LABELS", "ACTION_CLASS"],
+  // Objekthistorie: Bereichsname (metadata.change_type) und Vorgang
+  // (metadata.operation) setzt der Audit-Trigger, ohne CHECK-Bedingung.
+  "app/lib/objekt-verlauf.ts": ["BEREICH", "VORGANG"],
   // Schluessel der Abschlussmeilensteine, aus der Seed-Funktion.
   "app/routes/closing-milestones.tsx": ["MILESTONE_HINT"],
   // Grund einer Dublettenwarnung, in der Route selbst berechnet.

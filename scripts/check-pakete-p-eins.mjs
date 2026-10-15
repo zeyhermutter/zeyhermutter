@@ -101,6 +101,8 @@ pruefe((await lies("app/routes/api-aufgaben.ts")).includes('"doppelt"'), "api-au
     pruefe(!/>Append-only<|BETA-Backend aktiv|Snapshot ver|den Snapshot/.test(inhalt), `${datei}: Entwicklerbegriff in der Oberflaeche`);
   }
   pruefe(!(await lies("app/routes/reports.tsx")).includes("<code>"), "reports.tsx: Feldnamen in den Definitionen statt Worten");
+  const objekt = await lies("app/routes/property-detail.tsx");
+  pruefe(objekt.includes("objektVerlaufZeilen(") && !/metadata\?\.change_type/.test(objekt), "property-detail.tsx: Objekthistorie zeigt Bereichscodes (CHECKLIST) und Spaltennamen statt objektVerlaufZeilen");
 }
 
 if (fehler.length) {
