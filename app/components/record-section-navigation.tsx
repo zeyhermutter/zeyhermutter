@@ -29,8 +29,12 @@ export function RecordSectionNavigation() {
       const nextItems = sections.map((section, index) => {
         const eyebrow = section.querySelector<HTMLElement>(".eyebrow")?.textContent ?? "";
         const heading = section.querySelector<HTMLElement>("h2")?.textContent ?? "";
-        const label = cleanLabel(eyebrow, cleanLabel(heading, `Abschnitt ${index + 1}`));
-        const id = `record-section-${index + 1}`;
+        // Eine Karte kann ihren Namen in der Abschnittsleiste selbst angeben
+        // (data-nav-label), und eine vorhandene Kennung bleibt stehen -- sonst
+        // fuehrten Anker wie "#aufgaben" nach dem Speichern ins Leere
+        // (15.10.2026).
+        const label = cleanLabel(section.dataset.navLabel ?? "", cleanLabel(eyebrow, cleanLabel(heading, `Abschnitt ${index + 1}`)));
+        const id = section.id || `record-section-${index + 1}`;
         section.id = id;
         section.classList.add("record-section-target");
         return { id, label };

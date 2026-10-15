@@ -113,7 +113,7 @@ export function AufgabenBaustein({
   };
 
   return (
-    <section className="data-card aufgaben-baustein" id="aufgaben">
+    <section className="data-card aufgaben-baustein" id="aufgaben" data-nav-label="Aufgaben">
       <div className="card-head">
         <div>
           <p className="eyebrow">Zu erledigen</p>
