@@ -1,4 +1,5 @@
 import { CHECKLISTENKATEGORIE, IMMOBILIENSTATUS, OBJEKTART, type Beschriftungen } from "~/lib/labels";
+import { euroRund } from "~/lib/format";
 import { verlaufWert } from "~/lib/verlauf-wert";
 
 // Objekthistorie lesbar (15.10.2026).
@@ -33,6 +34,9 @@ const WERTE: Record<string, Beschriftungen> = {
   status: IMMOBILIENSTATUS, status_before_archive: IMMOBILIENSTATUS, property_type: OBJEKTART,
   transaction_type: { SALE: "Verkauf", RENT: "Vermietung" }, tenancy_status: VERMIETUNG,
 };
+
+/** Betraege: "469.000 €" statt "469000". */
+const EURO = new Set(["purchase_price", "rent_cold", "additional_costs", "hoa_fee"]);
 
 const BEREICH: Record<string, string> = {
   CHECKLIST: "Checkliste", DOCUMENT_REQUIREMENT: "Unterlage", FEATURE: "Ausstattung",
@@ -99,9 +103,10 @@ export function objektVerlaufZeilen(
       continue;
     }
     const tabelle = WERTE[schluessel];
+    const wert = (v: unknown) => EURO.has(schluessel) && v !== null && v !== "" && Number.isFinite(Number(v)) ? euroRund(Number(v)) : verlaufWert(v, tabelle);
     zeilen.push({
       feld: FELD[schluessel] ?? "Weitere Angabe",
-      text: `${verlaufWert(a?.old, tabelle)} → ${verlaufWert(a?.new, tabelle)}`,
+      text: `${wert(a?.old)} → ${wert(a?.new)}`,
     });
   }
   return zeilen;
