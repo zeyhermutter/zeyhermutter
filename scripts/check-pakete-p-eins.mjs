@@ -136,8 +136,15 @@ pruefe((await lies("app/routes/property-new.tsx")).includes('name="owner_contact
 // 13. Veroeffentlichung: Statusbedingung vor dem Klick sichtbar
 pruefe((await lies("app/routes/property-publication.tsx")).includes('id:"public-status"'), "property-publication.tsx: Objektstatus fehlt in der Prüfliste -- man erfuhr erst nach dem Klick, dass der Status nicht passt");
 
+// 14. Unterlagenliste: Hochladen in der Zeile, ueber dieselbe Ablage wie die Dokumente
+{
+  const liste = await lies("app/routes/property-document-requirements.tsx");
+  pruefe(liste.includes('value="upload"') && liste.includes("dateiInAblage("), "property-document-requirements.tsx: kein Hochladen in der Zeile");
+  pruefe(!(await lies("app/routes/property-documents.tsx")).includes("function sha256Hex"), "property-documents.tsx: eigene Upload-Regeln statt app/lib/dokument-ablage.server.ts");
+}
+
 if (fehler.length) {
   console.error("P1:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten, Anfrage beginnt mit der Nachricht, keine internen Codes, ein Kopf je Akte bei Auftrag und Provision, Eigentümer verlinkt und beim Anlegen wählbar, Objektreiter nur mit Recht, Website-Seiten ohne Fachjargon und mit sichtbarer Statusbedingung.");
+console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten, Anfrage beginnt mit der Nachricht, keine internen Codes, ein Kopf je Akte bei Auftrag und Provision, Eigentümer verlinkt und beim Anlegen wählbar, Objektreiter nur mit Recht, Website-Seiten ohne Fachjargon und mit sichtbarer Statusbedingung, Hochladen in der Unterlagenzeile.");

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ALLOWED_MIME_TYPES, MAX_UPLOAD_BYTES, SPEICHER, safeFilename, sha256Hex } from "~/lib/dokument-ablage.server";
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/property-documents";
 import { AssetPreviewModal, type AssetPreviewKind } from "~/components/asset-preview-modal";
@@ -20,20 +21,6 @@ type DocumentVersionRow = {
   change_reason: string | null;
   uploaded_at: string;
 };
-
-const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
-const ALLOWED_MIME_TYPES = new Set([
-  "application/pdf",
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/heic",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "text/plain",
-]);
 
 const CATEGORIES = [
   ["LAND_REGISTER", "Grundbuch"],
@@ -78,16 +65,6 @@ function categoryLabel(value: string) {
 
 function classificationLabel(value: string) {
   return CLASSIFICATIONS.find(([key]) => key === value)?.[1] ?? value;
-}
-
-function safeFilename(name: string) {
-  const cleaned = name.normalize("NFKD").replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/-+/g, "-");
-  return cleaned.slice(-140) || "datei";
-}
-
-async function sha256Hex(file: File) {
-  const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
-  return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 function formatSize(bytes: number) {
@@ -188,7 +165,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 
   const storagePath = `properties/${propertyId}/documents/${crypto.randomUUID()}-${safeFilename(file.name)}`;
   const hash = await sha256Hex(file);
-  const { error: uploadError } = await supabase.storage.from("zm-private-documents").upload(storagePath, file, { contentType: file.type, upsert: false });
+  const { error: uploadError } = await supabase.storage.from(SPEICHER).upload(storagePath, file, { contentType: file.type, upsert: false });
   if (uploadError) return data<ActionResult>({ error: "Datei konnte nicht in den privaten Storage geladen werden." }, { status: 400, headers: responseHeaders() });
 
   let registrationError: unknown = null;
@@ -197,7 +174,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     const category = text(fd, "category");
     const classification = text(fd, "classification") || "INTERNAL";
     if (!title || !category) {
-      await supabase.storage.from("zm-private-documents").remove([storagePath]);
+      await supabase.storage.from(SPEICHER).remove([storagePath]);
       return data<ActionResult>({ error: "Titel und Kategorie sind erforderlich." }, { status: 400, headers: responseHeaders() });
     }
     const result = await supabase.rpc("create_property_document_version", {
@@ -230,7 +207,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if (registrationError) {
-    await supabase.storage.from("zm-private-documents").remove([storagePath]);
+    await supabase.storage.from(SPEICHER).remove([storagePath]);
     return data<ActionResult>({ error: "Datei wurde nicht registriert. Der hochgeladene Zwischenstand wurde wieder entfernt." }, { status: 400, headers: responseHeaders() });
   }
 
@@ -308,7 +285,7 @@ export default function PropertyDocuments() {
         { label: "Dateityp", value: activeVersion?.mime_type || "—" },
         { label: "Dateigröße", value: activeVersion ? formatSize(activeVersion.file_size_bytes) : "—" },
         { label: "Hochgeladen", value: activeVersion ? formatDate(activeVersion.uploaded_at) : "—" },
-        { label: "SHA-256", value: activeVersion?.sha256 || "—" },
+        { label: "Prüfsumme", value: activeVersion?.sha256 ? `${activeVersion.sha256.slice(0, 12)}…` : "—" },
         { label: "Angelegt", value: formatDate(activeDocument.created_at) },
       ]}
       metadataEditor={<Form method="post" className="auth-form">

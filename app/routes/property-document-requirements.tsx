@@ -1,12 +1,13 @@
 import { KontaktAuswahl } from "~/components/kontakt-auswahl";
-import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
+import { data, Form, Link, redirect, useActionData, useLoaderData, useSearchParams } from "react-router";
+import { dateiInAblage } from "~/lib/dokument-ablage.server";
 import type { Route } from "./+types/property-document-requirements";
 import { requirePermission } from "~/lib/auth.server";
 import { tag as formatDate } from "~/lib/format";
 import { DOKUMENTKATEGORIE, beschrifte } from "~/lib/labels";
-import { crmDateAtTimeToIso } from "~/lib/local-time";
+import { crmDateAtTimeToIso, crmToday } from "~/lib/local-time";
 
-type ActionResult={error?:string;hinweis?:string};
+type ActionResult={error?:string;hinweis?:string;zeile?:string};
 
 // Die Staende einer Unterlage. "Fehlt" heisst: steht auf der Arbeitsliste
 // dieses Buros und ist noch nicht da. Es ist keine Aussage darueber, ob die
@@ -124,6 +125,32 @@ export async function action({request,context,params}:Route.ActionArgs){
     return redirect(ziel,{headers:responseHeaders()});
   }
 
+  // Datei direkt in der Zeile hochladen (P1, 15.10.2026). Vorher: in die
+  // Dokumentenablage wechseln, dort Titel und Kategorie eintippen, zurueck,
+  // Zeile aufklappen, Dokument in der Auswahl suchen, speichern. Jetzt legt
+  // das Hochladen das Dokument mit Titel und Kategorie der Zeile an (oder
+  // eine neue Fassung des verknuepften), verknuepft es und setzt eine offene
+  // Zeile auf "Vorhanden" mit Eingang heute. Geprueft wird weiter von Hand.
+  if(intent==="upload"){
+    const id=text(fd,"requirement_id");
+    const {data:zeile}=await supabase.from("property_document_requirements").select("id,title,status,document_category,document_id,received_on").eq("id",id).eq("property_id",propertyId).maybeSingle();
+    if(!zeile)return data<ActionResult>({error:"Die Zeile gibt es nicht mehr. Bitte Seite neu laden."},{status:404,headers:responseHeaders()});
+    const ergebnis=await dateiInAblage(supabase,propertyId,fd.get("file") as File,{
+      zuDokument:zeile.document_id,titel:zeile.title,kategorie:zeile.document_category||"OTHER",
+      grund:zeile.document_id?"Neue Fassung aus der Unterlagenliste":"Aus der Unterlagenliste",
+    });
+    if("fehler" in ergebnis)return data<ActionResult>({error:ergebnis.fehler,zeile:id},{status:400,headers:responseHeaders()});
+    const offen=zeile.status==="MISSING"||zeile.status==="REQUESTED";
+    const {error}=await supabase.from("property_document_requirements").update({
+      document_id:ergebnis.dokumentId,
+      ...(offen?{status:"PRESENT",received_on:zeile.received_on??crmToday()}:{}),
+      updated_by:userId,
+    }).eq("id",id).eq("property_id",propertyId);
+    // Die Datei liegt dann schon in der Ablage; nur die Verknuepfung fehlt.
+    if(error)return data<ActionResult>({error:`Die Datei liegt in der Dokumentenablage, die Zeile konnte aber nicht aktualisiert werden: ${errorMessage(error)}`,zeile:id},{status:400,headers:responseHeaders()});
+    return redirect(`${ziel}?hochgeladen=${id}#unterlage-${id}`,{headers:responseHeaders()});
+  }
+
   if(intent==="remove"){
     const {error}=await supabase.from("property_document_requirements").delete().eq("id",text(fd,"requirement_id")).eq("property_id",propertyId);
     if(error)return data<ActionResult>({error:"Die Zeile konnte nicht entfernt werden."},{status:400,headers:responseHeaders()});
@@ -149,6 +176,8 @@ export async function action({request,context,params}:Route.ActionArgs){
 export default function PropertyDocumentRequirements(){
   const d=useLoaderData<typeof loader>();
   const result=useActionData<typeof action>();
+  const [suche]=useSearchParams();
+  const hochgeladen=suche.get("hochgeladen");
   const p=d.property as any;
   const heute=new Date().toISOString().slice(0,10);
 
@@ -166,7 +195,7 @@ export default function PropertyDocumentRequirements(){
       <div className="header-actions"><Link className="subtle-link" to={`/properties/${p.id}/documents`}>Dokumentenablage →</Link></div>
     </header>
 
-    {result?.error?<div className="form-error">{result.error}</div>:null}
+    {result?.error&&!result?.zeile?<div className="form-error">{result.error}</div>:null}
     {result?.hinweis?<div className="form-success">{result.hinweis}</div>:null}
 
     <section className="data-card">
@@ -211,7 +240,8 @@ export default function PropertyDocumentRequirements(){
           const dokument=one(r.documents);
           const zustaendig=one(r.contacts);
           const veraltet=r.status!=="NOT_APPLICABLE"&&r.valid_until&&r.valid_until<heute;
-          return <details className="owner-card" key={r.id}>
+          const offenHalten=r.id===hochgeladen||r.id===result?.zeile;
+          return <details className="owner-card" key={r.id} id={`unterlage-${r.id}`} open={offenHalten||undefined}>
             <summary>
               <div>
                 <strong>{r.title}</strong>
@@ -234,6 +264,16 @@ export default function PropertyDocumentRequirements(){
               <div><dt>Dokument</dt><dd>{dokument?<Link className="subtle-link" to={`/properties/${p.id}/documents?document=${dokument.id}`}>{dokument.title}</Link>:"nicht verknüpft"}</dd></div>
             </dl>
             {r.note?<p className="form-help">{r.note}</p>:null}
+            {r.id===hochgeladen?<p className="form-success">Datei hochgeladen und verknüpft.{r.status==="PRESENT"?" Stand: Vorhanden, Eingang heute. Prüfen bleibt bei dir.":""}</p>:null}
+            {r.id===result?.zeile&&result?.error?<p className="form-error">{result.error}</p>:null}
+
+            {d.canWrite?<Form method="post" encType="multipart/form-data" className="inline-form unterlage-hochladen">
+              <input type="hidden" name="_intent" value="upload"/>
+              <input type="hidden" name="requirement_id" value={r.id}/>
+              <label className="form-field compact"><span>{dokument?"Neue Fassung hochladen":"Datei hochladen"}</span><input type="file" name="file" required/></label>
+              <button className="secondary-button compact" type="submit">Hochladen</button>
+              <small className="subtle">{dokument?`Wird als neue Fassung von „${dokument.title}“ gespeichert.`:`Landet als „${r.title}“ in der Dokumentenablage und wird hier verknüpft.${r.status==="MISSING"||r.status==="REQUESTED"?" Stand wird „Vorhanden“.":""}`} Max. 25 MB.</small>
+            </Form>:null}
 
             {d.canWrite?<>
               <Form method="post" className="auth-form owner-edit-form">

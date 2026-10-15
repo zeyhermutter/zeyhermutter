@@ -67,6 +67,8 @@
 .feature-chip { border: 1px solid #3a4748; border-radius: var(--crm-pill-radius); padding: var(--crm-pill-padding); background: #111718; color: #dce3e4; cursor: pointer; }
 .feature-chip:hover { border-color: #677576; }
 .inline-form { display: grid; grid-template-columns: minmax(180px, 1fr) auto; gap: 10px; align-items: end; }
+.unterlage-hochladen { margin: 4px 0 12px; }
+.unterlage-hochladen > small { grid-column: 1 / -1; }
 .compact-form { margin-top: 20px; padding-top: 18px; border-top: 1px solid #283334; }
 
 .document-list { display: grid; gap: 14px; }
