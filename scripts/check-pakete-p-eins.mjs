@@ -105,8 +105,15 @@ pruefe((await lies("app/routes/api-aufgaben.ts")).includes('"doppelt"'), "api-au
   pruefe(objekt.includes("objektVerlaufZeilen(") && !/metadata\?\.change_type/.test(objekt), "property-detail.tsx: Objekthistorie zeigt Bereichscodes (CHECKLIST) und Spaltennamen statt objektVerlaufZeilen");
 }
 
+// 10. Ein Kopf je Akte bei Maklerauftrag und Provision (P1, 15.10.2026)
+for (const [rahmen, seite] of [["maklerauftrag-arbeitsplatz", "mandate-detail"], ["provision-arbeitsplatz", "commission-detail"]]) {
+  pruefe((await lies(`app/routes/${rahmen}.tsx`)).includes('seitenkopf="ausblenden"'), `${rahmen}.tsx: zeigt den Seitenkopf der Unterseite zusaetzlich zum Kopf der Akte`);
+  const s = await lies(`app/routes/${seite}.tsx`);
+  pruefe(!s.includes('className="editor-header"') && s.includes("<h2>Archiv</h2>"), `${seite}.tsx: eigener Seitenkopf statt Archiv-Karte`);
+}
+
 if (fehler.length) {
   console.error("P1:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten, Anfrage beginnt mit der Nachricht, keine internen Codes.");
+console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten, Anfrage beginnt mit der Nachricht, keine internen Codes, ein Kopf je Akte bei Auftrag und Provision.");

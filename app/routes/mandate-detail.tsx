@@ -296,20 +296,6 @@ export default function MandateDetail(){
   const editable=canWrite&&!locked;
 
   return <main className="editor-shell">
-    <header className="editor-header">
-      <div>
-        <Link className="back-link" to="/mandates">← Makleraufträge</Link>
-        <p className="eyebrow">{row.mandate_number} · {TYPE[row.mandate_type]??row.mandate_type}</p>
-        <div className="property-title-row"><h1 className="editor-title">{property?.property_number??"Maklerauftrag"}</h1><span className={`status-pill ${STATUS_CLASS[row.status]??"status-draft"}`}>{locked?"Archiviert":STATUS[row.status]??row.status}</span></div>
-        <p className="editor-meta">{property?.internal_title??"—"} · {CLIENT_SIDE[row.client_side]??row.client_side}</p>
-      </div>
-      <div className="header-actions">
-        <Link className="secondary-button link-button" to={`/properties/${row.property_id}`}>Immobilie öffnen</Link>
-        {lead?<Link className="secondary-button link-button" to={`/leads/${lead.id}`}>Lead öffnen</Link>:null}
-        {canArchive?<Form method="post"><input type="hidden" name="_intent" value={locked?"restore":"archive"}/><input type="hidden" name="version" value={row.version}/><button className="secondary-button" type="submit">{locked?"Wiederherstellen":"Archivieren"}</button></Form>:null}
-        <span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small>
-      </div>
-    </header>
 
     {result?.error?<div className="form-error">{result.error}</div>:null}
     {notes.length?<div className="form-warning"><strong>Offene Punkte in der Auftragsdokumentation</strong><ul>{notes.map((note)=><li key={note}>{note}</li>)}</ul></div>:null}
@@ -440,6 +426,7 @@ export default function MandateDetail(){
       </div>
     </section>
 
+    {canArchive?<section className="data-card"><div className="card-head"><div><p className="eyebrow">Verwaltung</p><h2>Archiv</h2></div></div><p className="subtle">{locked?"Dieser Auftrag ist archiviert und nur noch lesbar.":"Archivierte Aufträge bleiben lesbar, erscheinen aber nicht mehr in der Arbeitsliste."}</p><Form method="post"><input type="hidden" name="_intent" value={locked?"restore":"archive"}/><input type="hidden" name="version" value={row.version}/><button className="secondary-button" type="submit">{locked?"Wiederherstellen":"Archivieren"}</button></Form></section>:null}
     <section className="data-card">
       <div className="card-head"><div><p className="eyebrow">Historie</p><h2>Änderungsverlauf</h2></div><span className="subtle">{audit.length} Einträge</span></div>
       <div className="data-list">

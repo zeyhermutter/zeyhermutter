@@ -1,4 +1,4 @@
-import { data, Outlet, useLoaderData, useParams } from "react-router";
+import { data, Link, Outlet, useLoaderData, useParams } from "react-router";
 import type { Route } from "./+types/maklerauftrag-arbeitsplatz";
 import { requirePermission } from "~/lib/auth.server";
 import { tag } from "~/lib/format";
@@ -9,8 +9,10 @@ import { standKlasse } from "~/lib/stand-ton";
 
 // Der Arbeitsplatz der Makleraufträge: links die Aufträge, rechts einer.
 // Derselbe Aufbau wie Kontakte und Objekte (12.10.2026). Eine Seite je
-// Auftrag, keine Reiter. Der Seitenkopf bleibt: er traegt die Knoepfe
-// "Immobilie öffnen", "Lead öffnen" und "Archivieren".
+// Auftrag, keine Reiter. Der Seitenkopf der Unterseite wiederholte Nummer,
+// Objekt und Status ein zweites Mal (P1, 15.10.2026) -- er ist weg. "Immobilie
+// öffnen" und "Lead öffnen" stehen jetzt im Kopf hier, "Archivieren" unten in
+// der Akte wie beim Abschluss.
 
 const HOECHSTENS = 300;
 
@@ -21,6 +23,8 @@ type Roh = {
   status: string;
   term_end: string | null;
   archived_at: string | null;
+  property_id: string | null;
+  lead_id: string | null;
   properties: { property_number: string; internal_title: string } | { property_number: string; internal_title: string }[] | null;
 };
 
@@ -28,7 +32,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   const { supabase, responseHeaders } = await requirePermission(request, context.cloudflare.env, "mandate.read");
   const { liste, listeFehlt, abgeschnitten, akte } = await ladeArbeitsplatz<Roh>(supabase, {
     tabelle: "brokerage_mandates",
-    spalten: "id,mandate_number,mandate_type,status,term_end,archived_at,properties(property_number,internal_title)",
+    spalten: "id,mandate_number,mandate_type,status,term_end,archived_at,property_id,lead_id,properties(property_number,internal_title)",
     sortierung: "updated_at",
     id: params.mandateId,
     hoechstens: HOECHSTENS,
@@ -42,6 +46,8 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
       stand: r.archived_at ? "Archiviert" : beschrifte(MAKLERAUFTRAGSTATUS, r.status),
       art: beschrifte(MAKLERAUFTRAGART, r.mandate_type),
       bis: r.term_end,
+      objektId: r.property_id,
+      leadId: r.lead_id,
     };
   };
   return data({ zeilen: liste.map(alsZeile), listeFehlt, abgeschnitten, akte: akte ? alsZeile(akte) : null }, { headers: responseHeaders() });
@@ -75,8 +81,13 @@ export default function MaklerauftragArbeitsplatz() {
       volleListe="/mandates?ansicht=tabelle"
       listeFehlt={listeFehlt}
       abgeschnitten={abgeschnitten ? `die zuletzt bearbeiteten ${HOECHSTENS}` : null}
+      seitenkopf="ausblenden"
       kopf={akte ? <ArbeitsplatzKopf nummer={akte.nummer} status={<span className={`status-pill ${standKlasse(akte.stand)}`}>{akte.stand}</span>} titel={akte.titel}
-        kontext={[akte.art, akte.bis ? `Laufzeit bis ${tag(akte.bis)}` : null].filter(Boolean).join(" · ")} /> : null}
+        kontext={[akte.art, akte.bis ? `Laufzeit bis ${tag(akte.bis)}` : null].filter(Boolean).join(" · ")}
+        aktionen={<>
+          {akte.objektId ? <Link className="secondary-button link-button arbeitsplatz-kopf-knopf" to={`/properties/${akte.objektId}`}>Immobilie öffnen</Link> : null}
+          {akte.leadId ? <Link className="secondary-button link-button arbeitsplatz-kopf-knopf" to={`/leads/${akte.leadId}`}>Lead öffnen</Link> : null}
+        </>} /> : null}
       reiter={null}
     >
       <Outlet />
