@@ -148,7 +148,8 @@ export async function action({request,context,params}:Route.ActionArgs){
     }).eq("id",id).eq("property_id",propertyId);
     // Die Datei liegt dann schon in der Ablage; nur die Verknuepfung fehlt.
     if(error)return data<ActionResult>({error:`Die Datei liegt in der Dokumentenablage, die Zeile konnte aber nicht aktualisiert werden: ${errorMessage(error)}`,zeile:id},{status:400,headers:responseHeaders()});
-    return redirect(`${ziel}?hochgeladen=${id}#unterlage-${id}`,{headers:responseHeaders()});
+    const art=zeile.document_id?"fassung":offen?"vorhanden":"neu";
+    return redirect(`${ziel}?hochgeladen=${id}&art=${art}#unterlage-${id}`,{headers:responseHeaders()});
   }
 
   if(intent==="remove"){
@@ -178,6 +179,9 @@ export default function PropertyDocumentRequirements(){
   const result=useActionData<typeof action>();
   const [suche]=useSearchParams();
   const hochgeladen=suche.get("hochgeladen");
+  // Nach einem Fehler beim naechsten Hochladen bleibt die alte Erfolgsmeldung
+  // nicht stehen (Live-Test 15.10.2026: beide Meldungen untereinander).
+  const meldung=result?.error?null:({vorhanden:"Datei hochgeladen und verknüpft. Stand: Vorhanden, Eingang heute. Prüfen bleibt bei dir.",fassung:"Neue Fassung gespeichert.",neu:"Datei hochgeladen und verknüpft."} as Record<string,string>)[suche.get("art")??""]??null;
   const p=d.property as any;
   const heute=new Date().toISOString().slice(0,10);
 
@@ -264,7 +268,7 @@ export default function PropertyDocumentRequirements(){
               <div><dt>Dokument</dt><dd>{dokument?<Link className="subtle-link" to={`/properties/${p.id}/documents?document=${dokument.id}`}>{dokument.title}</Link>:"nicht verknüpft"}</dd></div>
             </dl>
             {r.note?<p className="form-help">{r.note}</p>:null}
-            {r.id===hochgeladen?<p className="form-success">Datei hochgeladen und verknüpft.{r.status==="PRESENT"?" Stand: Vorhanden, Eingang heute. Prüfen bleibt bei dir.":""}</p>:null}
+            {r.id===hochgeladen&&meldung?<p className="form-success">{meldung}</p>:null}
             {r.id===result?.zeile&&result?.error?<p className="form-error">{result.error}</p>:null}
 
             {d.canWrite?<Form method="post" encType="multipart/form-data" className="inline-form unterlage-hochladen">
