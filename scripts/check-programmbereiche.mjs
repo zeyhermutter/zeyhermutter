@@ -50,6 +50,7 @@ const AUSNAHMEN = {
   "/api/geocode-address": "Schnittstelle fuer die Adresssuche, liefert Daten, keine Seite.",
   "/api/kontakte": "Schnittstelle fuer die Kontaktsuche in Auswahlfeldern, liefert Daten, keine Seite.",
   "/api/aufgaben": "Speichert Aufgaben aus dem Aufgaben-Baustein und fuehrt zurueck in die Akte, keine Seite.",
+  "/api/objekt-rechte": "Liefert den Reitern der Objektakte die Rechte des Benutzers, keine Seite.",
   "/logout": "Abmelden steht als Knopf in der Titelleiste.",
 };
 

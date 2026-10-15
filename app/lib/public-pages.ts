@@ -70,6 +70,7 @@ export const NICHT_IN_DIE_SITEMAP: Record<string, string> = {
   "/api/viewings/:viewingId/history": "Schnittstelle, keine Seite",
   "/api/kontakte": "Schnittstelle, keine Seite",
   "/api/aufgaben": "Schnittstelle, keine Seite",
+  "/api/objekt-rechte": "Schnittstelle, keine Seite",
 };
 
 /**

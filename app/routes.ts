@@ -166,5 +166,6 @@ export default [
   route("api/viewings/:viewingId/history", "routes/api-viewing-history.ts"),
   route("api/kontakte", "routes/api-kontakte.ts"),
   route("api/aufgaben", "routes/api-aufgaben.ts"),
+  route("api/objekt-rechte", "routes/api-objekt-rechte.ts"),
   route("logout", "routes/logout.tsx"),
 ] satisfies RouteConfig;

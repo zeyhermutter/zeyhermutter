@@ -126,7 +126,9 @@ pruefe((await lies("app/routes/property-new.tsx")).includes('name="owner_contact
     const recht = /requirePermission\([^)]*"([a-z_]+\.read)"\)/.exec(quelle)?.[1];
     if (recht && recht !== "property.read") pruefe(nav.includes(`"${m[1]}": "${recht}"`) || nav.includes(`${m[1]}: "${recht}"`), `objektakte-navigation.ts: Seite ${m[1]} verlangt ${recht}, steht aber nicht in RECHT_JE_SEITE -- der Reiter fuehrte sonst auf 403`);
   }
-  pruefe((await lies("app/routes/immobilien-arbeitsplatz.tsx")).includes("<ObjektakteReiter rechte={rechte} />"), "immobilien-arbeitsplatz.tsx: Reiter ohne Rechtepruefung");
+  pruefe((await lies("app/components/objektakte-reiter.tsx")).includes('"/api/objekt-rechte"'), "objektakte-reiter.tsx: Reiter ohne Rechtepruefung");
+  // Nicht im Ladeteil des Arbeitsplatzes: dort teilen sich alle Ladeteile die Unteranfragen einer Anfrage.
+  pruefe(!(await lies("app/routes/immobilien-arbeitsplatz.tsx")).includes("current_user_has_permission"), "immobilien-arbeitsplatz.tsx: Rechtepruefung im Ladeteil -- kostet Unteranfragen der Objektakte (Verlauf fiel am 15.10. deshalb aus)");
 }
 
 if (fehler.length) {

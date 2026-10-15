@@ -5,7 +5,6 @@ import { euroRund } from "~/lib/format";
 import { IMMOBILIENSTATUS, beschrifte } from "~/lib/labels";
 import { IMMOBILIENARTEN } from "~/lib/public-intake";
 import { ObjektakteReiter } from "~/components/objektakte-reiter";
-import { REITER_RECHTE } from "~/lib/objektakte-navigation";
 import { Arbeitsplatz, ArbeitsplatzKopf, type ArbeitsplatzZeile } from "~/components/arbeitsplatz";
 import "~/immobilien-arbeitsplatz.css";
 
@@ -50,14 +49,6 @@ function ortAus(adresse: unknown): string | null {
 export async function loader({ request, context, params }: Route.LoaderArgs) {
   const { supabase, responseHeaders } = await requirePermission(request, context.cloudflare.env, "property.read");
 
-  // Welche Reiter darf der Benutzer oeffnen? (P1, 15.10.2026) Neun kurze
-  // Abfragen, gleichzeitig mit der Liste; beim blossen Wechsel der Reiter
-  // laedt dieser Rahmen nicht neu.
-  const rechteRes = Promise.all(REITER_RECHTE.map(async (recht) => {
-    const { data: ja, error } = await supabase.rpc("current_user_has_permission", { p_permission: recht });
-    // Kann ein Recht nicht geprueft werden, bleibt der Reiter sichtbar; die Seite prueft selbst.
-    return error || ja === true ? recht : null;
-  }));
   const [listeRes, akteRes] = await Promise.all([
     supabase
       .from("properties")
@@ -86,9 +77,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   }));
 
   const akte = akteRes.data as any;
-  const rechte = (await rechteRes).filter((r): r is string => r !== null);
   return data({
-    rechte,
     zeilen,
     listeFehlt: Boolean(listeRes.error),
     abgeschnitten: zeilen.length >= LISTE_HOECHSTENS,
@@ -111,7 +100,7 @@ function statusKlasse(status: string) {
 }
 
 export default function ImmobilienArbeitsplatz() {
-  const { zeilen, listeFehlt, abgeschnitten, akte, rechte } = useLoaderData<typeof loader>();
+  const { zeilen, listeFehlt, abgeschnitten, akte } = useLoaderData<typeof loader>();
   const { propertyId } = useParams();
 
   const alsZeile = (z: { id: string; nummer: string; titel: string; status: string; ort: string | null; preis?: string | null }): ArbeitsplatzZeile => ({
@@ -148,7 +137,7 @@ export default function ImmobilienArbeitsplatz() {
           kontext={[akte.art, akte.ort].filter(Boolean).join(" · ")}
         />
       ) : null}
-      reiter={<ObjektakteReiter rechte={rechte} />}
+      reiter={<ObjektakteReiter />}
     >
       <Outlet />
     </Arbeitsplatz>

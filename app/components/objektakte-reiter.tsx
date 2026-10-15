@@ -9,13 +9,26 @@
 // zwei gerahmte Zeilen, 14 Abschnitte nach Phase gefaltet, darunter die
 // Vorgaenge.
 
-import { useParams } from "react-router";
+import { useEffect } from "react";
+import { useFetcher, useParams } from "react-router";
 import { ArbeitsplatzReiter, type ArbeitsplatzReiterEintrag } from "~/components/arbeitsplatz";
 import { RECHT_JE_SEITE, RECHT_JE_VORGANG, REITER, VORGAENGE, abschnittsPfad, vorgangsPfad } from "~/lib/objektakte-navigation";
 
-/** rechte: die Rechte aus REITER_RECHTE, die der Benutzer hat. Ohne Angabe wird nichts ausgeblendet. */
-export function ObjektakteReiter({ rechte }: { rechte?: string[] }) {
+/**
+ * Eintraege, fuer die der Benutzer kein Recht hat, fallen weg (P1,
+ * 15.10.2026). Die Rechte kommen in einer eigenen Anfrage
+ * (/api/objekt-rechte, Begruendung dort); bis sie da sind, steht alles da wie
+ * bisher.
+ */
+export function ObjektakteReiter() {
   const { propertyId } = useParams();
+  const holer = useFetcher<{ rechte: string[] }>();
+  useEffect(() => {
+    if (holer.state === "idle" && !holer.data) holer.load("/api/objekt-rechte");
+    // Einmal je Arbeitsplatz: die Rechte haengen am Benutzer, nicht am Objekt.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const rechte = holer.data?.rechte;
   if (!propertyId) return null;
   const darf = (recht: string | undefined) => !recht || !rechte || rechte.includes(recht);
 
