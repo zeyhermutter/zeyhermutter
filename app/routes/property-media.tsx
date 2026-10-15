@@ -183,7 +183,7 @@ export default function PropertyMedia(){
         <div className="card-head"><div><p className="eyebrow">Neu · je Datei max. 75 MB</p><h2>Medien hochladen</h2></div></div>
         <Form method="post" encType="multipart/form-data" className="auth-form"><input type="hidden" name="_intent" value="upload"/>
           <label><span>Dateien *</span><input name="file" type="file" multiple required accept="image/jpeg,image/png,image/webp,image/heic,video/mp4,application/pdf" onChange={(e)=>{const f=[...(e.currentTarget.files??[])];setAuswahl({anzahl:f.length,bytes:f.reduce((s,x)=>s+x.size,0)});}}/>
-            <small className="subtle">{auswahl.anzahl?`${auswahl.anzahl} ${auswahl.anzahl===1?"Datei":"Dateien"} · ${(auswahl.bytes/1024/1024).toFixed(1).replace(".",",")} MB`:`Mehrere auf einmal möglich, bis ${HOECHSTENS_DATEIEN} Dateien und 90 MB zusammen.`}</small>
+            <small className="subtle">{auswahl.anzahl?`${auswahl.anzahl} ${auswahl.anzahl===1?"Datei":"Dateien"} · ${auswahl.bytes<100*1024?`${Math.max(1,Math.round(auswahl.bytes/1024))} KB`:`${(auswahl.bytes/1024/1024).toFixed(1).replace(".",",")} MB`}`:`Mehrere auf einmal möglich, bis ${HOECHSTENS_DATEIEN} Dateien und 90 MB zusammen.`}</small>
             {zuViele?<small className="form-error">Höchstens {HOECHSTENS_DATEIEN} Dateien auf einmal.</small>:zuGross?<small className="form-error">Zusammen höchstens 90 MB auf einmal.</small>:null}
           </label>
           <label><span>Typ</span><select name="media_type" defaultValue="IMAGE"><option value="IMAGE">Foto</option><option value="FLOOR_PLAN">Grundriss</option><option value="VIDEO">Video</option><option value="OTHER">Sonstige</option></select></label>
