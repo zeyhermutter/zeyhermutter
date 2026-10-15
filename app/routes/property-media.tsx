@@ -1,12 +1,17 @@
 import { useState } from "react";
-import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
+import { data, Form, Link, redirect, useActionData, useLoaderData, useSearchParams } from "react-router";
 import type { Route } from "./+types/property-media";
 import { AssetPreviewModal, type AssetPreviewKind } from "~/components/asset-preview-modal";
 import { requirePermission } from "~/lib/auth.server";
 import { zeitpunkt as formatDate } from "~/lib/format";
 
-type ActionResult = { error?: string };
+type ActionResult = { error?: string; hochgeladen?: number; fehler?: string[] };
 const MAX_UPLOAD_BYTES = 75 * 1024 * 1024;
+// Mehrere Dateien auf einmal (P1, 15.10.2026). Grenzen, weil alles in einer
+// Worker-Anfrage laeuft: je Datei zwei Unteranfragen (Speicher, Datenbank),
+// und der Anfragekoerper ist begrenzt.
+const HOECHSTENS_DATEIEN = 20;
+const HOECHSTENS_GESAMT = 90 * 1024 * 1024;
 const IMAGE_MIME_TYPES = new Set(["image/jpeg","image/png","image/webp","image/heic"]);
 const ALLOWED = new Set([...IMAGE_MIME_TYPES,"video/mp4","application/pdf"]);
 const MEDIA_TYPES = new Set(["IMAGE","FLOOR_PLAN","VIDEO","OTHER"]);
@@ -49,13 +54,21 @@ export async function loader({request,context,params}:Route.LoaderArgs){
   if(mediaError)throw new Response("Medien konnten nicht geladen werden.",{status:500,headers:responseHeaders()});
   const signedUrls:Record<string,string>={};
   const downloadUrls:Record<string,string>={};
-  await Promise.all((media??[]).map(async(item)=>{
-    const [previewResult,downloadResult]=await Promise.all([
-      supabase.storage.from(item.storage_bucket).createSignedUrl(item.storage_path,600),
-      supabase.storage.from(item.storage_bucket).createSignedUrl(item.storage_path,600,{download:displayFilename(item.storage_path)}),
-    ]);
-    if(previewResult.data?.signedUrl)signedUrls[item.id]=previewResult.data.signedUrl;
-    if(downloadResult.data?.signedUrl)downloadUrls[item.id]=downloadResult.data.signedUrl;
+  // Eine Signatur-Anfrage je Speicher statt zwei je Medium (15.10.2026):
+  // bei 30 Medien waeren das 60 Unteranfragen gewesen, mehr als eine
+  // Worker-Anfrage stellen darf. Der Download-Name haengt die Bibliothek
+  // ohnehin nur an die fertige Adresse an ("&download=...").
+  const jeSpeicher=new Map<string,any[]>();
+  for(const item of media??[])jeSpeicher.set(item.storage_bucket,[...(jeSpeicher.get(item.storage_bucket)??[]),item]);
+  await Promise.all([...jeSpeicher].map(async([bucket,items])=>{
+    const {data:signiert}=await supabase.storage.from(bucket).createSignedUrls(items.map((i)=>i.storage_path),600);
+    const nachPfad=new Map(((signiert??[]) as any[]).filter((x)=>x.signedUrl).map((x)=>[x.path,x.signedUrl as string]));
+    for(const item of items){
+      const url=nachPfad.get(item.storage_path);
+      if(!url)continue;
+      signedUrls[item.id]=url;
+      downloadUrls[item.id]=`${url}&download=${encodeURIComponent(displayFilename(item.storage_path))}`;
+    }
   }));
   return data({property,media:media??[],signedUrls,downloadUrls,profile},{headers:responseHeaders()});
 }
@@ -94,27 +107,51 @@ export async function action({request,context,params}:Route.ActionArgs){
   }
 
   if(intent!=="upload")return data<ActionResult>({error:"Unbekannte Aktion."},{status:400,headers:responseHeaders()});
-  const file=fd.get("file");
-  if(!(file instanceof File)||file.size===0)return data<ActionResult>({error:"Bitte eine Datei auswählen."},{status:400,headers:responseHeaders()});
-  if(file.size>MAX_UPLOAD_BYTES)return data<ActionResult>({error:"Datei ist zu groß. Maximal 75 MB."},{status:400,headers:responseHeaders()});
-  if(!ALLOWED.has(file.type))return data<ActionResult>({error:`Dateityp ${file.type||"unbekannt"} ist nicht freigegeben.`},{status:400,headers:responseHeaders()});
+  const dateien=fd.getAll("file").filter((f):f is File=>f instanceof File&&f.size>0);
+  if(dateien.length===0)return data<ActionResult>({error:"Bitte mindestens eine Datei auswählen."},{status:400,headers:responseHeaders()});
+  if(dateien.length>HOECHSTENS_DATEIEN)return data<ActionResult>({error:`Höchstens ${HOECHSTENS_DATEIEN} Dateien auf einmal. Bitte in mehreren Durchgängen hochladen.`},{status:400,headers:responseHeaders()});
+  if(dateien.reduce((s,f)=>s+f.size,0)>HOECHSTENS_GESAMT)return data<ActionResult>({error:"Zusammen höchstens 90 MB auf einmal. Bitte in mehreren Durchgängen hochladen."},{status:400,headers:responseHeaders()});
   const mediaType=text(fd,"media_type")||"IMAGE";
   if(!MEDIA_TYPES.has(mediaType))return data<ActionResult>({error:"Ungültiger Medientyp."},{status:400,headers:responseHeaders()});
-  if(!mimeAllowedForType(mediaType,file.type))return data<ActionResult>({error:"Dateityp und gewählter Medientyp passen nicht zusammen."},{status:400,headers:responseHeaders()});
-  const sortOrder=Number(text(fd,"sort_order")||"0");
-  if(!Number.isInteger(sortOrder))return data<ActionResult>({error:"Die Sortierung muss eine ganze Zahl sein."},{status:400,headers:responseHeaders()});
-  const storagePath=`properties/${propertyId}/media/${crypto.randomUUID()}-${safeFilename(file.name)}`;
-  const {error:uploadError}=await supabase.storage.from("zm-property-media").upload(storagePath,file,{contentType:file.type,upsert:false});
-  if(uploadError)return data<ActionResult>({error:"Medium konnte nicht in den privaten Storage geladen werden."},{status:400,headers:responseHeaders()});
-  const {error:insertError}=await supabase.from("property_media").insert({property_id:propertyId,media_type:mediaType,storage_bucket:"zm-property-media",storage_path:storagePath,title:text(fd,"title")||file.name,alt_text:text(fd,"alt_text")||null,sort_order:sortOrder,public_approved:fd.get("public_approved")==="on",created_by:userId,updated_by:userId});
-  if(insertError){await supabase.storage.from("zm-property-media").remove([storagePath]);return data<ActionResult>({error:"Medium konnte nicht registriert werden. Upload wurde wieder entfernt."},{status:400,headers:responseHeaders()});}
-  return redirect(`/properties/${propertyId}/media`,{headers:responseHeaders()});
+  // Ohne Angabe ans Ende der Bibliothek, in der gewaehlten Reihenfolge.
+  let sortOrder:number;
+  if(text(fd,"sort_order")===""){
+    const {data:letzte}=await supabase.from("property_media").select("sort_order").eq("property_id",propertyId).is("archived_at",null).order("sort_order",{ascending:false}).limit(1).maybeSingle();
+    sortOrder=letzte?Number(letzte.sort_order)+1:0;
+  }else{
+    sortOrder=Number(text(fd,"sort_order"));
+    if(!Number.isInteger(sortOrder))return data<ActionResult>({error:"Die Sortierung muss eine ganze Zahl sein."},{status:400,headers:responseHeaders()});
+  }
+  const einzeln=dateien.length===1;
+  const fehler:string[]=[];
+  let hochgeladen=0;
+  for(const file of dateien){
+    if(file.size>MAX_UPLOAD_BYTES){fehler.push(`${file.name}: größer als 75 MB`);continue;}
+    if(!ALLOWED.has(file.type)){fehler.push(`${file.name}: Dateityp ${file.type||"unbekannt"} ist nicht freigegeben`);continue;}
+    if(!mimeAllowedForType(mediaType,file.type)){fehler.push(`${file.name}: passt nicht zum Typ „${mediaTypeLabel(mediaType)}“`);continue;}
+    const storagePath=`properties/${propertyId}/media/${crypto.randomUUID()}-${safeFilename(file.name)}`;
+    const {error:uploadError}=await supabase.storage.from("zm-property-media").upload(storagePath,file,{contentType:file.type,upsert:false});
+    if(uploadError){fehler.push(`${file.name}: konnte nicht gespeichert werden`);continue;}
+    // Bei mehreren Dateien: Titel aus dem Dateinamen, Beschreibung leer --
+    // ein gemeinsamer Alt-Text fuer zehn Fotos waere fuer jedes falsch.
+    const titel=einzeln&&text(fd,"title")?text(fd,"title"):file.name.replace(/\.[^.]+$/,"");
+    const {error:insertError}=await supabase.from("property_media").insert({property_id:propertyId,media_type:mediaType,storage_bucket:"zm-property-media",storage_path:storagePath,title:titel,alt_text:einzeln?(text(fd,"alt_text")||null):null,sort_order:sortOrder,public_approved:fd.get("public_approved")==="on",created_by:userId,updated_by:userId});
+    if(insertError){await supabase.storage.from("zm-property-media").remove([storagePath]);fehler.push(`${file.name}: konnte nicht übernommen werden`);continue;}
+    hochgeladen++;sortOrder++;
+  }
+  if(fehler.length)return data<ActionResult>({hochgeladen,fehler,error:hochgeladen?undefined:"Keine Datei wurde übernommen."},{status:hochgeladen?200:400,headers:responseHeaders()});
+  return redirect(`/properties/${propertyId}/media?hochgeladen=${hochgeladen}`,{headers:responseHeaders()});
 }
 
 export default function PropertyMedia(){
   const {property,media,signedUrls,downloadUrls,profile}=useLoaderData<typeof loader>();
   const result=useActionData<typeof action>();
   const [openIndex,setOpenIndex]=useState<number|null>(null);
+  const [auswahl,setAuswahl]=useState<{anzahl:number;bytes:number}>({anzahl:0,bytes:0});
+  const [suche]=useSearchParams();
+  const fertig=Number(suche.get("hochgeladen")??0);
+  const zuViele=auswahl.anzahl>HOECHSTENS_DATEIEN;
+  const zuGross=auswahl.bytes>HOECHSTENS_GESAMT;
   const activeItem=openIndex===null?null:media[openIndex];
   const activeUrl=activeItem?signedUrls[activeItem.id]:undefined;
   const activeDownloadUrl=activeItem?downloadUrls[activeItem.id]:undefined;
@@ -122,6 +159,8 @@ export default function PropertyMedia(){
   return <main className="editor-shell">
     <header className="editor-header"><div><Link className="back-link" to={`/properties/${property.id}`}>← {property.property_number}</Link><h1 className="editor-title">Medienbibliothek</h1><p className="editor-meta">{property.internal_title} · private Ablage</p></div><div className="header-user"><span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div></header>
     {result?.error?<div className="form-error">{result.error}</div>:null}
+    {!result&&fertig>0?<div className="form-success">{fertig===1?"Ein Medium hochgeladen.":`${fertig} Medien hochgeladen.`}</div>:null}
+    {result?.fehler?.length?<div className="form-warning">{result.hochgeladen?<strong>{result.hochgeladen===1?"Ein Medium hochgeladen.":`${result.hochgeladen} Medien hochgeladen.`} </strong>:null}Nicht übernommen:<ul>{result.fehler.map((f)=><li key={f}>{f}</li>)}</ul></div>:null}
 
     <div className="dashboard-grid">
       <section className="data-card">
@@ -141,8 +180,17 @@ export default function PropertyMedia(){
       </section>
 
       <section className="data-card">
-        <div className="card-head"><div><p className="eyebrow">Neu · max. 75 MB</p><h2>Medium hochladen</h2></div></div>
-        <Form method="post" encType="multipart/form-data" className="auth-form"><input type="hidden" name="_intent" value="upload"/><label><span>Typ</span><select name="media_type" defaultValue="IMAGE"><option value="IMAGE">Foto</option><option value="FLOOR_PLAN">Grundriss</option><option value="VIDEO">Video</option><option value="OTHER">Sonstige</option></select></label><label><span>Titel</span><input name="title"/></label><label><span>Alt-Text / Beschreibung</span><input name="alt_text"/></label><label><span>Sortierung</span><input name="sort_order" type="number" defaultValue="0"/></label><label><span>Datei *</span><input name="file" type="file" required/></label><label className="checkbox-row"><input name="public_approved" type="checkbox"/><span>Für spätere Veröffentlichung freigeben</span></label><button className="primary-button" type="submit">Sicher hochladen</button></Form>
+        <div className="card-head"><div><p className="eyebrow">Neu · je Datei max. 75 MB</p><h2>Medien hochladen</h2></div></div>
+        <Form method="post" encType="multipart/form-data" className="auth-form"><input type="hidden" name="_intent" value="upload"/>
+          <label><span>Dateien *</span><input name="file" type="file" multiple required accept="image/jpeg,image/png,image/webp,image/heic,video/mp4,application/pdf" onChange={(e)=>{const f=[...(e.currentTarget.files??[])];setAuswahl({anzahl:f.length,bytes:f.reduce((s,x)=>s+x.size,0)});}}/>
+            <small className="subtle">{auswahl.anzahl?`${auswahl.anzahl} ${auswahl.anzahl===1?"Datei":"Dateien"} · ${(auswahl.bytes/1024/1024).toFixed(1).replace(".",",")} MB`:`Mehrere auf einmal möglich, bis ${HOECHSTENS_DATEIEN} Dateien und 90 MB zusammen.`}</small>
+            {zuViele?<small className="form-error">Höchstens {HOECHSTENS_DATEIEN} Dateien auf einmal.</small>:zuGross?<small className="form-error">Zusammen höchstens 90 MB auf einmal.</small>:null}
+          </label>
+          <label><span>Typ</span><select name="media_type" defaultValue="IMAGE"><option value="IMAGE">Foto</option><option value="FLOOR_PLAN">Grundriss</option><option value="VIDEO">Video</option><option value="OTHER">Sonstige</option></select></label>
+          {auswahl.anzahl<=1?<><label><span>Titel</span><input name="title" placeholder="leer: Dateiname"/></label><label><span>Alt-Text / Beschreibung</span><input name="alt_text"/></label></>:<p className="form-help">Bei mehreren Dateien wird der Dateiname zum Titel; Beschreibungen danach je Medium ergänzen.</p>}
+          <label><span>Sortierung ab</span><input name="sort_order" type="number" placeholder="leer: ans Ende"/></label>
+          <label className="checkbox-row"><input name="public_approved" type="checkbox"/><span>Für spätere Veröffentlichung freigeben</span></label>
+          <button className="primary-button" type="submit" disabled={zuViele||zuGross}>{auswahl.anzahl>1?`${auswahl.anzahl} Dateien hochladen`:"Sicher hochladen"}</button></Form>
       </section>
     </div>
 

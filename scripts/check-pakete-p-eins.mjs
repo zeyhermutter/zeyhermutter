@@ -143,8 +143,15 @@ pruefe((await lies("app/routes/property-publication.tsx")).includes('id:"public-
   pruefe(!(await lies("app/routes/property-documents.tsx")).includes("function sha256Hex"), "property-documents.tsx: eigene Upload-Regeln statt app/lib/dokument-ablage.server.ts");
 }
 
+// 15. Medien: mehrere Dateien auf einmal; Signaturen gesammelt statt je Medium
+{
+  const m = await lies("app/routes/property-media.tsx");
+  pruefe(/name="file" type="file" multiple/.test(m) && m.includes('fd.getAll("file")'), "property-media.tsx: nur eine Datei je Hochladen");
+  pruefe(m.includes("createSignedUrls(") && !m.includes(".createSignedUrl("), "property-media.tsx: Signatur je Medium -- bei vielen Medien mehr Unteranfragen, als eine Worker-Anfrage darf");
+}
+
 if (fehler.length) {
   console.error("P1:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten, Anfrage beginnt mit der Nachricht, keine internen Codes, ein Kopf je Akte bei Auftrag und Provision, Eigentümer verlinkt und beim Anlegen wählbar, Objektreiter nur mit Recht, Website-Seiten ohne Fachjargon und mit sichtbarer Statusbedingung, Hochladen in der Unterlagenzeile.");
+console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten, Anfrage beginnt mit der Nachricht, keine internen Codes, ein Kopf je Akte bei Auftrag und Provision, Eigentümer verlinkt und beim Anlegen wählbar, Objektreiter nur mit Recht, Website-Seiten ohne Fachjargon und mit sichtbarer Statusbedingung, Hochladen in der Unterlagenzeile, mehrere Medien auf einmal.");
