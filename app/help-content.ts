@@ -706,7 +706,10 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         + "hinterlegt — für einen Rückruf kürzer als für eine Portalanfrage. In der "
         + "„Volle Liste“ zeigt der Abschnitt Reaktionszeit, wo die Zielzeit "
         + "überschritten ist, und „Überfällige eskalieren“ legt je überfälliger "
-        + "Anfrage genau eine Wiedervorlage an, einmalig und nur auf Knopfdruck." },
+        + "Anfrage genau eine Wiedervorlage an, einmalig und nur auf Knopfdruck. "
+        + "Wer eine Anfrage öffnet, liest zuerst die **Nachricht** des Interessenten; "
+        + "daneben stehen **Anrufen** und **Antworten** — die Antwort-E-Mail wird am "
+        + "Kontakt festgehalten." },
       { art: "absatz", text:
         "Das Kontaktformular der Website legt eine Anfrage an. Oben in der Nachricht "
         + "steht das gewählte Anliegen. Bittet jemand um Rückruf, steht dort auch das "

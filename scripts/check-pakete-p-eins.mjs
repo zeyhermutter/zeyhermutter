@@ -80,8 +80,15 @@ for (const datei of ["contact-overview", "contact-relations", "lead-detail", "in
 
 pruefe((await lies("app/routes/api-aufgaben.ts")).includes('"doppelt"'), "api-aufgaben.ts: legt eine gleiche offene Aufgabe am selben Vorgang ohne Rueckfrage ein zweites Mal an");
 
+// 8. Anfrage: die Nachricht zuerst
+{
+  const anfrage = await lies("app/routes/inquiry-detail.tsx");
+  const nachricht = anfrage.indexOf('id="nachricht"');
+  pruefe(nachricht > 0 && nachricht < anfrage.indexOf('<p className="eyebrow">Interessent</p>'), "inquiry-detail.tsx: Die Nachricht steht nicht mehr als erste Karte");
+}
+
 if (fehler.length) {
   console.error("P1:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten.");
+console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten, Anfrage beginnt mit der Nachricht.");
