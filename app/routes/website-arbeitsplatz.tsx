@@ -21,7 +21,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     titel: p.label as string,
     stand: stateLabel(p),
     klasse: String(p.status).toLowerCase(),
-    kontext: `Live-Version ${p.published_version ?? "—"} · Kandidat ${p.candidate_version ?? "—"}`,
+    kontext: [p.published_version ? `auf der Website: Version ${p.published_version}` : "noch nicht veröffentlicht", p.candidate_version ? `Vorschau: Version ${p.candidate_version}` : null].filter(Boolean).join(" · "),
   }));
   return data({ zeilen, listeFehlt: Boolean(error) }, { headers: responseHeaders() });
 }

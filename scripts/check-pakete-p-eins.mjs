@@ -99,6 +99,8 @@ pruefe((await lies("app/routes/api-aufgaben.ts")).includes('"doppelt"'), "api-au
     pruefe(!/\{(a|e|event)\.action\}/.test(inhalt), `${datei}: zeigt den rohen Aktionscode im Verlauf (CREATE/UPDATE)`);
     pruefe(!/anwaltlich abzunehmen/i.test(inhalt) || datei.includes("public-page-sections") || datei.endsWith("anwaltspruefung.tsx"), `${datei}: Anwaltsprüfungs-Karte auf einer Arbeitsseite -- gehoert nach Verwaltung > Anwaltspruefung (app/lib/anwaltspruefung.ts)`);
     pruefe(!/>Append-only<|BETA-Backend aktiv|Snapshot ver|den Snapshot/.test(inhalt), `${datei}: Entwicklerbegriff in der Oberflaeche`);
+    // Website-Seiten (P1, 15.10.2026): Fachbegriffe aus Webentwicklung und Datenmodell.
+    pruefe(!/>[^<>{}]*(SEO-|Meta-Beschreibung|URL-Kürzel|Snapshot|Publikationsversion|Veröffentlichungsakte|Freigabeversion|Kandidat|Website-CMS)[^<>{}]*</.test(inhalt) && !/"[^"]*· (LIVE|KANDIDAT)"/.test(inhalt), `${datei}: Fachbegriff auf einer Website-Seite (SEO, Snapshot, Kandidat, LIVE …)`);
   }
   pruefe(!(await lies("app/routes/reports.tsx")).includes("<code>"), "reports.tsx: Feldnamen in den Definitionen statt Worten");
   const objekt = await lies("app/routes/property-detail.tsx");
@@ -131,8 +133,11 @@ pruefe((await lies("app/routes/property-new.tsx")).includes('name="owner_contact
   pruefe(!(await lies("app/routes/immobilien-arbeitsplatz.tsx")).includes("current_user_has_permission"), "immobilien-arbeitsplatz.tsx: Rechtepruefung im Ladeteil -- kostet Unteranfragen der Objektakte (Verlauf fiel am 15.10. deshalb aus)");
 }
 
+// 13. Veroeffentlichung: Statusbedingung vor dem Klick sichtbar
+pruefe((await lies("app/routes/property-publication.tsx")).includes('id:"public-status"'), "property-publication.tsx: Objektstatus fehlt in der Prüfliste -- man erfuhr erst nach dem Klick, dass der Status nicht passt");
+
 if (fehler.length) {
   console.error("P1:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten, Anfrage beginnt mit der Nachricht, keine internen Codes, ein Kopf je Akte bei Auftrag und Provision, Eigentümer verlinkt und beim Anlegen wählbar, Objektreiter nur mit Recht.");
+console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten, Anfrage beginnt mit der Nachricht, keine internen Codes, ein Kopf je Akte bei Auftrag und Provision, Eigentümer verlinkt und beim Anlegen wählbar, Objektreiter nur mit Recht, Website-Seiten ohne Fachjargon und mit sichtbarer Statusbedingung.");

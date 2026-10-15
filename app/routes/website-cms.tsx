@@ -28,13 +28,13 @@ export default function WebsiteCms() {
   return <main className="editor-shell programm-liste">
     <div className="programm-liste-werkzeuge">
       <Aufklapper knopf="Wie die Veröffentlichung funktioniert">
-        <p className="programm-erklaerung">Nur freigegebene Stände gehen live. Bearbeitungen ändern zunächst nur den internen Entwurf. Erst eine vorbereitete Version kann mit der Berechtigung <code>website.publish</code> veröffentlicht werden. Bereits veröffentlichte Versionen bleiben unverändert erhalten.</p>
+        <p className="programm-erklaerung">Nur freigegebene Stände gehen live. Bearbeitungen ändern zunächst nur den internen Entwurf. Erst eine vorbereitete Version kann veröffentlicht werden, und nur mit dem Recht zum Veröffentlichen. Bereits veröffentlichte Versionen bleiben unverändert erhalten.</p>
       </Aufklapper>
       <span className="programm-liste-zaehler">{pages.length} Seiten · {offen} mit offenem Stand</span>
     </div>
     <div className="programm-tabelle-rahmen">
       {pages.length === 0 ? <p className="programm-liste-leer">Keine Seiten angelegt.</p> : <table className="programm-tabelle">
-        <thead><tr><th>Pfad</th><th>Seite</th><th>Stand</th><th className="rechts">Live-Version</th><th className="rechts">Kandidat</th><th className="rechts">Zuletzt geändert</th><th className="rechts">Website</th></tr></thead>
+        <thead><tr><th>Pfad</th><th>Seite</th><th>Stand</th><th className="rechts">Auf der Website</th><th className="rechts">Vorschau</th><th className="rechts">Zuletzt geändert</th><th className="rechts">Website</th></tr></thead>
         <tbody>{pages.map((page: any) => {
           const pfad = `/crm/website/${page.page_key.toLowerCase()}`;
           return <tr key={page.id}>
