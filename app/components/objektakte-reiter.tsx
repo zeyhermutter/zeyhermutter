@@ -11,23 +11,28 @@
 
 import { useParams } from "react-router";
 import { ArbeitsplatzReiter, type ArbeitsplatzReiterEintrag } from "~/components/arbeitsplatz";
-import { REITER, VORGAENGE, abschnittsPfad, vorgangsPfad } from "~/lib/objektakte-navigation";
+import { RECHT_JE_SEITE, RECHT_JE_VORGANG, REITER, VORGAENGE, abschnittsPfad, vorgangsPfad } from "~/lib/objektakte-navigation";
 
-export function ObjektakteReiter() {
+/** rechte: die Rechte aus REITER_RECHTE, die der Benutzer hat. Ohne Angabe wird nichts ausgeblendet. */
+export function ObjektakteReiter({ rechte }: { rechte?: string[] }) {
   const { propertyId } = useParams();
   if (!propertyId) return null;
+  const darf = (recht: string | undefined) => !recht || !rechte || rechte.includes(recht);
 
-  const eintraege: ArbeitsplatzReiterEintrag[] = REITER.map((reiter) => {
-    const unter = reiter.seiten.map((seite) => ({
+  const eintraege = REITER.map((reiter): ArbeitsplatzReiterEintrag | null => {
+    const unter = reiter.seiten.filter((seite) => darf(RECHT_JE_SEITE[seite.schluessel])).map((seite) => ({
       beschriftung: seite.beschriftung,
       pfad: abschnittsPfad(propertyId, seite.schluessel),
       genau: seite.schluessel === "record",
     }));
     const hinaus = reiter.vorgaenge
-      ? VORGAENGE.map((v) => ({ beschriftung: v.beschriftung, pfad: vorgangsPfad(propertyId, v.liste), hinaus: true }))
+      ? VORGAENGE.map((v) => !darf(RECHT_JE_VORGANG[v.liste]) ? null : ({ beschriftung: v.beschriftung, pfad: vorgangsPfad(propertyId, v.liste), hinaus: true }))
       : [];
-    return { beschriftung: reiter.beschriftung, pfad: unter[0].pfad, unter: [...unter, ...hinaus] };
-  });
+    const alle = [...unter, ...hinaus.filter((h) => h !== null)];
+    // Ein Reiter ohne erlaubte Seite faellt ganz weg (etwa die Unterlagen ohne Dokumentenrecht).
+    if (alle.length === 0) return null;
+    return { beschriftung: reiter.beschriftung, pfad: alle[0].pfad, unter: alle };
+  }).filter((e): e is ArbeitsplatzReiterEintrag => e !== null);
 
   return <ArbeitsplatzReiter beschriftung="Reiter der Objektakte" eintraege={eintraege} />;
 }

@@ -116,8 +116,21 @@ for (const [rahmen, seite] of [["maklerauftrag-arbeitsplatz", "mandate-detail"],
 pruefe((await lies("app/routes/property-detail.tsx")).includes('to={`/crm/contacts/${owner.contact_id}`}'), "property-detail.tsx: Eigentümername ohne Link zum Kontakt");
 pruefe((await lies("app/routes/property-new.tsx")).includes('name="owner_contact_id"'), "property-new.tsx: Eigentümer kann beim Anlegen nicht gewählt werden");
 
+// 12. Objektakte: keine Reiter ins Leere (P1, 15.10.2026)
+{
+  const nav = await lies("app/lib/objektakte-navigation.ts");
+  const routen = await lies("app/routes.ts");
+  // Jede Seite mit eigenem Recht muss in RECHT_JE_SEITE stehen.
+  for (const m of routen.matchAll(/route\("properties\/:propertyId\/([a-z-]+)", "(routes\/[a-z-]+\.tsx)"/g)) {
+    const quelle = await lies(`app/${m[2]}`);
+    const recht = /requirePermission\([^)]*"([a-z_]+\.read)"\)/.exec(quelle)?.[1];
+    if (recht && recht !== "property.read") pruefe(nav.includes(`"${m[1]}": "${recht}"`) || nav.includes(`${m[1]}: "${recht}"`), `objektakte-navigation.ts: Seite ${m[1]} verlangt ${recht}, steht aber nicht in RECHT_JE_SEITE -- der Reiter fuehrte sonst auf 403`);
+  }
+  pruefe((await lies("app/routes/immobilien-arbeitsplatz.tsx")).includes("<ObjektakteReiter rechte={rechte} />"), "immobilien-arbeitsplatz.tsx: Reiter ohne Rechtepruefung");
+}
+
 if (fehler.length) {
   console.error("P1:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten, Anfrage beginnt mit der Nachricht, keine internen Codes, ein Kopf je Akte bei Auftrag und Provision, Eigentümer verlinkt und beim Anlegen wählbar.");
+console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten, Anfrage beginnt mit der Nachricht, keine internen Codes, ein Kopf je Akte bei Auftrag und Provision, Eigentümer verlinkt und beim Anlegen wählbar, Objektreiter nur mit Recht.");

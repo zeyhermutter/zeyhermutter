@@ -123,6 +123,29 @@ export const VORGAENGE: { beschriftung: string; liste: string }[] = [
   { beschriftung: "Provisionen", liste: "/commissions" },
 ];
 
+/**
+ * Seiten und Vorgaenge, die mehr als "property.read" verlangen (P1,
+ * 15.10.2026). Wer das Recht nicht hat, sieht den Eintrag nicht -- vorher
+ * stand er da und fuehrte auf "Keine Berechtigung" (403). Der Arbeitsplatz
+ * prueft genau diese Rechte; die Ladeteile der Seiten pruefen weiter selbst.
+ */
+export const RECHT_JE_SEITE: Record<string, string> = {
+  disposition: "disposition.read",
+  "document-requirements": "document.read",
+  documents: "document.read",
+  compliance: "gwg.read",
+};
+export const RECHT_JE_VORGANG: Record<string, string> = {
+  "/mandates": "mandate.read",
+  "/measurements": "measurement.read",
+  "/purchase-offers": "offer.read",
+  "/reservations": "reservation.read",
+  "/closings": "closing.read",
+  "/commissions": "commission.read",
+};
+/** Alle Rechte, die der Arbeitsplatz fuer die Reiter pruefen muss. */
+export const REITER_RECHTE = [...new Set([...Object.values(RECHT_JE_SEITE), ...Object.values(RECHT_JE_VORGANG)])];
+
 /** Alle Seitenschluessel ausser "record" -- die Unterpfade der Akte. */
 export const UNTERPFADE = REITER.flatMap((r) => r.seiten.map((x) => x.schluessel)).filter((x) => x !== "record");
 
