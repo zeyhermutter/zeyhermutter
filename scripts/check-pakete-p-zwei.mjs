@@ -88,8 +88,19 @@ pruefe(!/openai|anthropic|gpt|llm|ai\./i.test(assistent.replace(/\/\/.*$/gm, "")
 pruefe((assistent.match(/find_contact_duplicates/g) ?? []).length >= 2 && assistent.includes('text(fd, "trotzdem_neu") !== "1"'), "inquiry-assistent.tsx: neuer Kontakt ohne Dublettenpruefung unmittelbar vor dem Speichern");
 pruefe(/if \(absicht === "auswerten"\) \{[\s\S]*?return data<Ergebnis>\(\{ schritt: "vorschlag"/.test(assistent) && !/absicht === "auswerten"[\s\S]{0,600}\.insert\(/.test(assistent), "inquiry-assistent.tsx: Auswerten darf nichts speichern");
 
+// 7. P2-6: Datenauskunft -- jede Tabelle mit Kontaktspalte (Schema BETA, 16.10.2026) ist Quelle
+const auskunft = await lies("app/lib/auskunft.server.ts");
+const KONTAKT_TABELLEN = ["activity_events", "brokerage_mandate_clients", "commissions", "contact_addresses", "contact_organization_relationships",
+  "contact_relationships", "contact_role_assignments", "documents", "energy_certificate_presentations", "gwg_identifications", "inquiries",
+  "lead_acquisitions", "leads", "measurement_orders", "property_disclosures", "property_disposition_parties", "property_dispositions",
+  "property_document_requirements", "property_encumbrances", "property_hoa_data", "property_legal_data", "property_owners",
+  "property_reservations", "property_tenancies", "purchase_offers", "referrals", "sale_case_studies", "sale_closings", "sale_projects",
+  "search_profiles", "tasks", "viewings"];
+for (const t of KONTAKT_TABELLEN) pruefe(auskunft.includes(`tabelle: "${t}"`), `auskunft.server.ts: Tabelle ${t} fehlt in der Datenauskunft`);
+pruefe(auskunft.includes("nichtGelesen"), "auskunft.server.ts: nicht gelesene Bereiche muessen in der Auskunft stehen");
+
 if (fehler.length) {
   console.error("P2:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung.");
+console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung, Datenauskunft aus allen Kontakt-Tabellen.");

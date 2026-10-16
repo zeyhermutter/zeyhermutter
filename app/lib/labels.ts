@@ -326,6 +326,7 @@ export const AKTIVITAETSART: Beschriftungen = {
   NOTE: "Notiz", PHONE_CALL: "Telefonat", EMAIL: "E-Mail", MEETING: "Termin/Gespräch",
   WEBSITE_INQUIRY: "Anfrage über die Website", WEBSITE_SEARCH_PROFILE: "Suchauftrag über die Website",
   WEBSITE_MEASUREMENT: "Aufmaß-Anfrage über die Website",
+  DATA_EXPORT: "Datenauskunft erstellt",
 };
 
 export function beschrifte(tabelle: Beschriftungen, wert: string | null | undefined): string {

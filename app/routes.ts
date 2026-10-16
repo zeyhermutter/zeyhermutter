@@ -49,6 +49,8 @@ export default [
     route("crm/hilfe", "routes/help.tsx"),
     route("crm/contacts", "routes/contacts.tsx"),
     route("crm/contacts/new", "routes/contact-new.tsx"),
+    route("crm/contacts/:contactId/auskunft", "routes/contact-auskunft.tsx"),
+    route("crm/contacts/:contactId/auskunft/datei", "routes/contact-auskunft-datei.ts"),
     // Der Arbeitsplatz: Kontaktliste links, Kontaktakte rechts. Ohne eigenen
     // Pfad -- keine Adresse aendert sich.
     layout("routes/kontakt-arbeitsplatz.tsx", [

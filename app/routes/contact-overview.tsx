@@ -260,6 +260,14 @@ export default function ContactOverview() {
                   </div>
                 ))}</div>}
           </section>
+
+          <section className="data-card" id="datenschutz">
+            <div className="card-head">
+              <div><p className="eyebrow">Datenschutz</p><h2>Auskunft</h2></div>
+              <Link className="subtle-link" to={`${basis}/auskunft`}>Datenauskunft →</Link>
+            </div>
+            <p className="form-help">Alles, was das CRM zu dieser Person speichert, mit Einwilligungen aus Formularen – zum Drucken oder als Datei.</p>
+          </section>
         </div>
       </div>
     </div>
