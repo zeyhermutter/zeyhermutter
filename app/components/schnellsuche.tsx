@@ -28,6 +28,7 @@ const SPRUENGE: Eintrag[] = [
   { key: "neu-immobilie", art: "Anlegen", titel: "Neue Immobilie", pfad: "/properties/new" },
   { key: "neu-lead", art: "Anlegen", titel: "Neuer Lead", pfad: "/leads/new" },
   { key: "neu-anfrage", art: "Anlegen", titel: "Neue Anfrage", pfad: "/inquiries/new" },
+  { key: "anfrage-einfuegen", art: "Anlegen", titel: "Anfrage einfügen (Text aus Portal oder E-Mail)", pfad: "/inquiries/assistent" },
   { key: "neu-besichtigung", art: "Anlegen", titel: "Neue Besichtigung", pfad: "/viewings/new" },
   { key: "mein-tag", art: "Öffnen", titel: "Mein Tag", pfad: "/crm" },
   { key: "aufgaben", art: "Öffnen", titel: "Aufgaben", pfad: "/crm/tasks" },

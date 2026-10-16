@@ -124,6 +124,7 @@ export default [
     ]),
     route("inquiries", "routes/inquiries.tsx"),
     route("inquiries/new", "routes/inquiry-new.tsx"),
+    route("inquiries/assistent", "routes/inquiry-assistent.tsx"),
     layout("routes/anfrage-arbeitsplatz.tsx", [
       route("inquiries/:inquiryId", "routes/inquiry-detail.tsx"),
     ]),

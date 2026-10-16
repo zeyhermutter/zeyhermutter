@@ -82,8 +82,14 @@ pruefe(compose.includes('.eq("status", "RELEASED")'), "email-compose.tsx: Expos�
 pruefe(!/(Widerruf|Provision|Belehrung)/.test((await lies("app/lib/email-vorlage.ts")).replace(/\/\/.*$/gm, "")), "email-vorlage.ts: das CRM liefert keine Rechts- oder Provisionstexte");
 pruefe((await lies("supabase/migrations/20261016175556_email_templates.sql")).includes("has_permission('settings.manage')"), "email_templates: Pflege nicht auf die Verwaltung beschraenkt");
 
+// 6. P2-5: Anfragen-Assistent -- ohne KI, Dublettenpruefung vor dem Anlegen, nichts ohne Klick gespeichert
+const assistent = await lies("app/routes/inquiry-assistent.tsx");
+pruefe(!/openai|anthropic|gpt|llm|ai\./i.test(assistent.replace(/\/\/.*$/gm, "")) && !/openai|anthropic|gpt/i.test(await lies("app/lib/anfrage-parser.ts")), "Anfragen-Assistent: keine KI ohne Freigabe");
+pruefe((assistent.match(/find_contact_duplicates/g) ?? []).length >= 2 && assistent.includes('text(fd, "trotzdem_neu") !== "1"'), "inquiry-assistent.tsx: neuer Kontakt ohne Dublettenpruefung unmittelbar vor dem Speichern");
+pruefe(/if \(absicht === "auswerten"\) \{[\s\S]*?return data<Ergebnis>\(\{ schritt: "vorschlag"/.test(assistent) && !/absicht === "auswerten"[\s\S]{0,600}\.insert\(/.test(assistent), "inquiry-assistent.tsx: Auswerten darf nichts speichern");
+
 if (fehler.length) {
   console.error("P2:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt).");
+console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung.");

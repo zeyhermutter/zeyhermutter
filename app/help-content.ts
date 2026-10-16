@@ -721,6 +721,18 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         + "daneben stehen **Anrufen** und **Antworten** — die Antwort-E-Mail wird am "
         + "Kontakt festgehalten." },
       { art: "absatz", text:
+        "**Anfrage einfügen** (Knopf in der Anfrageliste, auch über Strg+K): Den Text "
+        + "einer Portal- oder E-Mail-Anfrage einfügen und „Auswerten“ drücken. Der "
+        + "Assistent liest beschriftete Zeilen wie „Vorname:“, „E-Mail:“, „Telefon:“ "
+        + "und „Nachricht:“, dazu E-Mail-Adressen, Telefonnummern, Objektnummern und "
+        + "Postleitzahlen — ohne KI, nichts verlässt das CRM. Er schlägt einen "
+        + "vorhandenen Kontakt vor (gleiche E-Mail, Mobilnummer oder Name) und ein "
+        + "passendes Objekt. Jedes Feld ist markiert: „aus beschrifteter Zeile“, „bitte "
+        + "prüfen“ oder „nicht erkannt“. Gespeichert wird erst mit **Anfrage anlegen**: "
+        + "bei Bedarf der neue Kontakt, die Anfrage, auf Wunsch eine Wiedervorlage in "
+        + "drei Tagen; danach geht es direkt zu „E-Mail schreiben“. Einen Namen aus "
+        + "freiem Text rät der Assistent nicht." },
+      { art: "absatz", text:
         "Das Kontaktformular der Website legt eine Anfrage an. Oben in der Nachricht "
         + "steht das gewählte Anliegen. Bittet jemand um Rückruf, steht dort auch das "
         + "gewünschte Zeitfenster — vormittags, nachmittags oder abends — mit der "

@@ -137,6 +137,8 @@ const AUSNAHMEN = {
   "app/routes/closing-milestones.tsx": ["MILESTONE_HINT"],
   // Grund einer Dublettenwarnung, in der Route selbst berechnet.
   "app/routes/contact-new.tsx": ["reasonLabel"],
+  // Dieselben Gruende der Dublettenpruefung im Anfragen-Assistenten (P2-5).
+  "app/routes/inquiry-assistent.tsx": ["GRUND"],
   // Trefferart der globalen Suche, in der Route selbst gebildet.
   "app/routes/crm-search.tsx": ["LABELS"],
   // Antwortstand einer Anfrage: aus Fristen berechnet, nicht gespeichert.
