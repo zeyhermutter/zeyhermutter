@@ -1,4 +1,5 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
+import { kontaktName } from "~/lib/kontakt-name";
 import type { Route } from "./+types/measurement-detail";
 import { requirePermission } from "~/lib/auth.server";
 import { crmIsoToLocalDateTime as isoNachLokal, crmLocalDateTimeToIso as lokalNachIso } from "~/lib/local-time";
@@ -346,7 +347,7 @@ export default function MeasurementDetail(){
             <label className="form-field"><span>Leistungspaket</span><select name="service_package" defaultValue={row.service_package}>{Object.entries(PAKET).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
             <label className="form-field"><span>Quelle</span><select name="source" defaultValue={row.source}>{Object.entries(QUELLE).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
             <label className="form-field"><span>Immobilie aus dem Bestand</span><select name="property_id" defaultValue={row.property_id??""}><option value="">Nicht im eigenen Bestand</option>{properties.map((item:any)=><option key={item.id} value={item.id}>{item.property_number} · {item.internal_title}{item.zusatz?` (${item.zusatz})`:""}</option>)}</select></label>
-            <KontaktAuswahl name="contact_id" beschriftung="Kunde" vorbelegt={contact?{id:contact.id,name:`${contact.last_name}, ${contact.first_name}`,nummer:contact.contact_number}:null} vorbelegtId={row.contact_id||null} disabled={!editable}/>
+            <KontaktAuswahl name="contact_id" beschriftung="Kunde" vorbelegt={contact?{id:contact.id,name:kontaktName(contact),nummer:contact.contact_number}:null} vorbelegtId={row.contact_id||null} disabled={!editable}/>
             <label className="form-field"><span>Immobilienart</span><select name="property_type" defaultValue={row.property_type??""}><option value="">Noch offen</option>{IMMOBILIENARTEN.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
             <label className="form-field"><span>Verantwortlich</span><select name="primary_responsible_user" defaultValue={row.primary_responsible_user}>{profiles.map((item:any)=><option key={item.user_id} value={item.user_id}>{item.display_name}</option>)}</select></label>
             <label className="form-field"><span>Straße</span><input name="object_street" defaultValue={row.object_street??""}/></label>

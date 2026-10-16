@@ -170,8 +170,14 @@ pruefe((await lies("app/routes/organization-detail.tsx")).includes('id="ansprech
 pruefe(!(await lies("app/components/commission-fields.tsx")).includes("properties[0]?.id"), "commission-fields.tsx: erste Immobilie still vorgewählt");
 pruefe((await lies("app/routes/viewings.tsx")).includes('.gte("starts_at",jetzt).order("starts_at",{ascending:true})'), "viewings.tsx: Einstieg nicht bei der nächsten anstehenden Besichtigung");
 
+// 20. Kontaktsuche: eine Schreibweise ("Vorname Nachname") fuer vorbelegte Kontakte
+for (const datei of ["app/routes/api-kontakte.ts", "app/routes/referral-detail.tsx", "app/routes/measurement-detail.tsx", "app/routes/project-detail.tsx", "app/routes/property-document-requirements.tsx", "app/routes/property-detail.tsx"]) {
+  const s = await lies(datei);
+  pruefe(!/vorbelegt=\{[^}]*name:`\$\{[^}]*last_name\}, /.test(s) && !/name: `\$\{k\.last_name\}, /.test(s), `${datei}: vorbelegter Kontakt als "Nachname, Vorname" -- die Suche schreibt "Vorname Nachname" (kontaktName)`);
+}
+
 if (fehler.length) {
   console.error("P1:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten, Anfrage beginnt mit der Nachricht, keine internen Codes, ein Kopf je Akte bei Auftrag und Provision, Eigentümer verlinkt und beim Anlegen wählbar, Objektreiter nur mit Recht, Website-Seiten ohne Fachjargon und mit sichtbarer Statusbedingung, Hochladen in der Unterlagenzeile, mehrere Medien auf einmal, Telefonat schnell erfassen, Ansprechpartner an der Organisation, Suchprofil-Typen bleiben, Leads ruhiger, Provision ohne Vorauswahl, Besichtigungen ab der nächsten.");
+console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten, Anfrage beginnt mit der Nachricht, keine internen Codes, ein Kopf je Akte bei Auftrag und Provision, Eigentümer verlinkt und beim Anlegen wählbar, Objektreiter nur mit Recht, Website-Seiten ohne Fachjargon und mit sichtbarer Statusbedingung, Hochladen in der Unterlagenzeile, mehrere Medien auf einmal, Telefonat schnell erfassen, Ansprechpartner an der Organisation, Suchprofil-Typen bleiben, Leads ruhiger, Provision ohne Vorauswahl, Besichtigungen ab der nächsten, ein Namensformat in der Kontaktsuche.");

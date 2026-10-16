@@ -1,4 +1,5 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
+import { kontaktName } from "~/lib/kontakt-name";
 import type { Route } from "./+types/project-detail";
 import { requirePermission } from "~/lib/auth.server";
 import { KontaktAuswahl } from "~/components/kontakt-auswahl";
@@ -212,7 +213,7 @@ export default function ProjectDetail(){
         <Form method="post" className="form-grid">
           <input type="hidden" name="_intent" value="core_save"/>
           <input type="hidden" name="version" value={p.version}/>
-          <KontaktAuswahl name="contact_id" beschriftung="Eigentümer" pflicht vorbelegt={p.contacts?{id:p.contacts.id,name:`${p.contacts.last_name}, ${p.contacts.first_name}`,nummer:p.contacts.contact_number}:null} vorbelegtId={p.contact_id||null} disabled={disabled}/>
+          <KontaktAuswahl name="contact_id" beschriftung="Eigentümer" pflicht vorbelegt={p.contacts?{id:p.contacts.id,name:kontaktName(p.contacts),nummer:p.contacts.contact_number}:null} vorbelegtId={p.contact_id||null} disabled={disabled}/>
           <label className="form-field"><span>Immobilie</span><select name="property_id" defaultValue={p.property_id??""} disabled={disabled}><option value="">— noch keine</option>{(d.properties as any[]).map((x:any)=><option key={x.id} value={x.id}>{x.property_number} · {x.internal_title}</option>)}</select></label>
           <label className="form-field"><span>Phase</span><select name="phase" defaultValue={p.phase} disabled={disabled}>{Object.entries(PHASE).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label>
           <label className="form-field"><span>Status</span><select name="status" defaultValue={p.status} disabled={disabled}>{Object.entries(PROJECT_STATUS).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label>

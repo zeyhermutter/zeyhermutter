@@ -1,4 +1,5 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
+import { kontaktName } from "~/lib/kontakt-name";
 import type { Route } from "./+types/referral-detail";
 import { requirePermission } from "~/lib/auth.server";
 import { KontaktAuswahl } from "~/components/kontakt-auswahl";
@@ -148,7 +149,7 @@ export default function ReferralDetail(){
             </select>
           </label>
           <label className="form-field full-width"><span>Anlass</span><input name="occasion" defaultValue={row.occasion??""} disabled={disabled}/></label>
-          <KontaktAuswahl name="referred_contact_id" beschriftung="Empfohlener Kontakt" vorbelegt={one(row.referred_contact)?{id:one(row.referred_contact).id,name:`${one(row.referred_contact).last_name}, ${one(row.referred_contact).first_name}`,nummer:one(row.referred_contact).contact_number}:null} vorbelegtId={row.referred_contact_id||null} disabled={disabled} hinweis="Leer lassen, wenn die Person noch nicht angelegt ist."/>
+          <KontaktAuswahl name="referred_contact_id" beschriftung="Empfohlener Kontakt" vorbelegt={one(row.referred_contact)?{id:one(row.referred_contact).id,name:kontaktName(one(row.referred_contact)),nummer:one(row.referred_contact).contact_number}:null} vorbelegtId={row.referred_contact_id||null} disabled={disabled} hinweis="Leer lassen, wenn die Person noch nicht angelegt ist."/>
           <label className="form-field"><span>oder Name</span><input name="referred_name" defaultValue={row.referred_name??""} disabled={disabled}/></label>
           <label className="form-field full-width"><span>Notiz zum Empfohlenen</span><textarea name="referred_note" rows={2} defaultValue={row.referred_note??""} disabled={disabled}/></label>
           <label className="form-field"><span>Zuständig</span>

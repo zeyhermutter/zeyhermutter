@@ -1,4 +1,5 @@
 import { KontaktAuswahl } from "~/components/kontakt-auswahl";
+import { kontaktName } from "~/lib/kontakt-name";
 import { data, Form, Link, redirect, useActionData, useLoaderData, useSearchParams } from "react-router";
 import { dateiInAblage } from "~/lib/dokument-ablage.server";
 import type { Route } from "./+types/property-document-requirements";
@@ -292,7 +293,7 @@ export default function PropertyDocumentRequirements(){
                 <label className="form-field"><span>Eingegangen am</span><input type="date" name="received_on" defaultValue={r.received_on??""} max={heute}/></label>
                 <label className="form-field"><span>Geprüft am</span><input type="date" name="checked_on" defaultValue={r.checked_on??""} max={heute}/></label>
                 <label className="form-field"><span>Gültig bis</span><input type="date" name="valid_until" defaultValue={r.valid_until??""}/></label>
-                <KontaktAuswahl name="responsible_contact_id" beschriftung="Angefordert bei" vorbelegt={zustaendig?{id:zustaendig.id,name:contactLabel(zustaendig)!,nummer:zustaendig.contact_number}:null} hinweis="Leer lassen, solange noch offen ist, bei wem."/>
+                <KontaktAuswahl name="responsible_contact_id" beschriftung="Angefordert bei" vorbelegt={zustaendig?{id:zustaendig.id,name:kontaktName(zustaendig),nummer:zustaendig.contact_number}:null} hinweis="Leer lassen, solange noch offen ist, bei wem."/>
                 <label className="form-field"><span>Dokument aus der Ablage</span>
                   <select name="document_id" defaultValue={r.document_id??""}>
                     <option value="">Nicht verknüpft</option>

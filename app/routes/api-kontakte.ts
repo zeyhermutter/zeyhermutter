@@ -1,4 +1,5 @@
 import { data } from "react-router";
+import { kontaktName } from "~/lib/kontakt-name";
 import { requirePermission } from "~/lib/auth.server";
 
 // Kontakte fuer ein Auswahlfeld suchen (14.10.2026).
@@ -26,7 +27,7 @@ export async function loader({ request, context }: any) {
     if (!/^[0-9a-f-]{36}$/i.test(id)) return data({ treffer: [] }, { status: 400, headers: kopf });
     const { data: k, error } = await supabase.from("contacts").select("id,contact_number,first_name,last_name").eq("id", id).maybeSingle();
     if (error) return data({ treffer: [], fehler: "Kontakt nicht lesbar." }, { status: 500, headers: kopf });
-    const treffer = k ? [{ id: k.id as string, name: `${k.last_name}, ${k.first_name}`, nummer: k.contact_number as string, zusatz: null }] : [];
+    const treffer = k ? [{ id: k.id as string, name: kontaktName(k), nummer: k.contact_number as string, zusatz: null }] : [];
     return data({ treffer }, { headers: kopf });
   }
 
