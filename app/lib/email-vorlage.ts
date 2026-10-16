@@ -60,7 +60,9 @@ export function anredeVon(k: { salutation?: string | null; title?: string | null
  */
 export function mailtoAdresse(empfaenger: string, betreff: string, text: string): string {
   const teile = [betreff ? `subject=${encodeURIComponent(betreff)}` : null, text ? `body=${encodeURIComponent(text.replace(/\r?\n/g, "\r\n"))}` : null].filter(Boolean);
-  return `mailto:${encodeURIComponent(empfaenger)}${teile.length ? `?${teile.join("&")}` : ""}`;
+  // Das @ bleibt lesbar: "%40" in der Adresse verstehen nicht alle Mailprogramme
+  // (live auf BETA, 16.10.2026: mailto:eva.demo%40example.invalid).
+  return `mailto:${encodeURIComponent(empfaenger).replace(/%40/g, "@")}${teile.length ? `?${teile.join("&")}` : ""}`;
 }
 
 export const MAILTO_SICHER = 1900;

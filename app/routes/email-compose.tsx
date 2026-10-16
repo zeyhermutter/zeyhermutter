@@ -2,7 +2,7 @@ import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-
 import type { Route } from "./+types/email-compose";
 import { Aufklapper } from "~/components/aufklapper";
 import { EmailSchreiben, type SchreibDaten } from "~/components/email-schreiben";
-import { anredeVon } from "~/lib/email-vorlage";
+import { anredeVon, mailtoAdresse } from "~/lib/email-vorlage";
 import { requireActiveUser } from "~/lib/auth.server";
 import { zeitpunkt as formatDate } from "~/lib/format";
 import { crmLocalDateTimeToIso as berlinLocalToIso, crmNowLocalDateTime as berlinInputNow } from "~/lib/local-time";
@@ -457,7 +457,7 @@ export default function EmailCompose() {
               <div><span>E-Mail</span><strong>{context.email ?? "Nicht hinterlegt"}</strong></div>
             </div>
             {!canWrite ? <div className="communication-actions">
-              {context.email ? <a className="primary-button link-button" href={`mailto:${encodeURIComponent(context.email)}`}>E-Mail im Mailprogramm öffnen</a> : <span className="subtle">Keine E-Mail-Adresse vorhanden.</span>}
+              {context.email ? <a className="primary-button link-button" href={mailtoAdresse(context.email, "", "")}>E-Mail im Mailprogramm öffnen</a> : <span className="subtle">Keine E-Mail-Adresse vorhanden.</span>}
             </div> : null}
           </section>
 
