@@ -254,7 +254,7 @@ export default function MeinTag() {
             {stillstand.data && !stillstand.data.vollstaendig ? <p className="form-warning mein-tag-hinweis">Nicht alle Quellen vollständig geladen; die Liste kann unvollständig sein.</p> : null}
             {stillstandListe.map((e) => (
               <Zeile key={e.key} e={{ key: e.key, art: e.art, titel: e.titel, kontext: `${e.kontext} · ${seitText(e)}`, wann: e.seit, ganztags: true, pfad: e.pfad }}
-                wann={`${e.tage} T.`} warnung />
+                wann={`${e.mindestens ? "≥ " : ""}${e.tage} T.`} warnung />
             ))}
           </Feld>
           <Feld ton="frist" titel={`Fristen (${d.fristTage} Tage)`} anzahl={d.fristen.length}
