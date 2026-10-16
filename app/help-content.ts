@@ -100,15 +100,18 @@ export const HELP_CHAPTERS: HelpChapter[] = [
       { art: "liste", punkte: [
         "Formulare zum Anlegen innerhalb einer Akte sind eingeklappt und beginnen mit „+“, etwa „+ Gebiet anlegen“ oder „+ Maßnahme erfassen“. Ein Klick klappt sie auf.",
         "Der Stand eines Datensatzes steht als farbiges Schildchen da: blau für alles, was gerade läuft (etwa Vermarktung, Reserviert, Notar), gelb für Vorbereitung und Wartendes, grün für Verkauft und Erledigtes, rot für Verloren, Abgelehntes und Überfälliges, grau für Entwürfe und Archiviertes. Die Farbe ist nie das einzige Merkmal — das Wort steht immer dabei.",
+        "Die **Ampel** neben dem Status in den Listen von Kontakten, Leads, Objekten, Anfragen und Verkaufsprojekten zeigt den nächsten Schritt: rot mit „!“ überfällig, grün mit „●“ heute fällig, grau mit „○“ geplant (mit Datum), gelb mit „–“ kein nächster Schritt bei einem laufenden Vorgang. Als Schritt zählen offene Aufgaben, geplante Besichtigungen, die Wiedervorlage eines Leads und der nächste Schritt eines Verkaufsprojekts.",
+        "**Stillstand** in Mein Tag: ein laufender Vorgang ohne echte Aktivität seit einer bestimmten Zahl von Tagen und ohne geplanten Schritt — neuer Lead 2 Tage, Lead in Bearbeitung 7, Lead bei Bewertung oder Angebot 14, Anfrage in Bearbeitung 3, Objekt in Vermarktung 14, Verkaufsprojekt 14. Echte Aktivität ist eine Notiz, ein Telefonat, eine E-Mail oder ein Termin im Verlauf (am Vorgang oder an seinem Kontakt) oder eine erledigte Aufgabe. Ein geändertes Feld oder ein automatischer Eintrag zählt nicht.",
         "Navy ist die Farbe der Handlung: „+ Neu“, „Speichern“ und andere Hauptknöpfe sind immer dunkelblau, egal in welchem Bereich.",
         "Jede Nummer im System ist eindeutig und sprechend: ZM-K für Kontakte, ZM-2026- für Immobilien, ZM-L für Verkäufer-Leads, ZM-A für Anfragen, ZM-T für Aufgaben, ZM-VP für Verkaufsprojekte, ZM-KA für Kaufangebote, ZM-VK für Abschlüsse, ZM-AM für Aufmaß-Aufträge.",
       ]},
       { art: "absatz", text:
         "**Mein Tag** ist die Startseite nach der Anmeldung (Mein Tag › Heute). Sie "
-        + "beantwortet die Frage, was heute zu tun ist, in vier Feldern: **Termine "
+        + "beantwortet die Frage, was heute zu tun ist, in fünf Feldern: **Termine "
         + "heute** und in den nächsten Tagen, **Liegen geblieben** (überfällige "
-        + "Aufgaben), **Fristen** der nächsten 14 Tage und **Neu eingegangen** "
-        + "(neue Anfragen und Verkäufer-Leads). Oben wird "
+        + "Aufgaben), **Stillstand**, **Fristen** der nächsten 14 Tage und **Neu eingegangen** "
+        + "(neue Anfragen und Verkäufer-Leads). Lange Felder sind nach Datum gegliedert, "
+        + "etwa „Morgen“, „Letzte 7 Tage“ oder „Überfällig“. Oben wird "
         + "umgeschaltet, wessen Tag gezeigt wird: **Meins**, der eines Kollegen oder "
         + "**Alle**. Darunter steht die Karte mit den Objektstandorten." },
       { art: "liste", punkte: [

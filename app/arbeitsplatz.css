@@ -98,6 +98,14 @@
   box-shadow: inset 3px 0 0 #062037;
 }
 
+.arbeitsplatz-zeile-oben {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
 .arbeitsplatz-zeile-nummer {
   color: #3d4a56;
   font-size: 12px;

@@ -72,6 +72,8 @@ export const NICHT_IN_DIE_SITEMAP: Record<string, string> = {
   "/api/aufgaben": "Schnittstelle, keine Seite",
   "/api/objekt-rechte": "Schnittstelle, keine Seite",
   "/api/telefonat": "Schnittstelle, keine Seite",
+  "/api/naechster-schritt": "Schnittstelle, keine Seite",
+  "/api/stillstand": "Schnittstelle, keine Seite",
 };
 
 /**

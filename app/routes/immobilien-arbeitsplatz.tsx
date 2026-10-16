@@ -118,6 +118,7 @@ export default function ImmobilienArbeitsplatz() {
 
   return (
     <Arbeitsplatz
+      ampel="property"
       listenName="Objektliste"
       einzahl="Objekt"
       mehrzahl="Objekte"

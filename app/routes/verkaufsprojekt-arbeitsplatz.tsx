@@ -67,6 +67,7 @@ export default function VerkaufsprojektArbeitsplatz() {
   });
   return (
     <Arbeitsplatz
+      ampel="project"
       listenName="Projektliste"
       einzahl="Projekt"
       mehrzahl="Projekte"

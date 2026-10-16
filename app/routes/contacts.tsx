@@ -3,6 +3,7 @@ import type { Route } from "./+types/contacts";
 import { requireActiveUser } from "~/lib/auth.server";
 import { tag } from "~/lib/format";
 import { KONTAKTSTATUS, beschrifte } from "~/lib/labels";
+import { Ampel, useNaechsteSchritte } from "~/components/ampel";
 import "~/programm-liste.css";
 
 // Die Kontaktliste.
@@ -112,6 +113,7 @@ function seitenLink(filter: { q: string; status: string; rolle: string }, seite:
 }
 
 export default function Kontaktliste() {
+  const schritte = useNaechsteSchritte("contact");
   const { kontakte, gesamt, seite, seiten, filter, rollen } = useLoaderData<typeof loader>();
   const navigation = useNavigation();
   const laedt = navigation.state === "loading" && navigation.location?.pathname === "/crm/contacts";
@@ -167,7 +169,7 @@ export default function Kontaktliste() {
                 <td>{k.rollen.length ? k.rollen.join(" · ") : <span className="leise">—</span>}</td>
                 <td>{k.email ? <a href={`mailto:${k.email}`}>{k.email}</a> : <span className="leise">—</span>}</td>
                 <td className="zahl">{k.telefon ? <a href={`tel:${k.telefon.replace(/\s+/g, "")}`}>{k.telefon}</a> : <span className="leise">—</span>}</td>
-                <td>{k.archiviert ? "Archiviert" : beschrifte(KONTAKTSTATUS, k.status)}</td>
+                <td><span className="ampel-neben">{k.archiviert ? "Archiviert" : beschrifte(KONTAKTSTATUS, k.status)}<Ampel s={schritte[k.id]} /></span></td>
                 <td className="zahl rechts">{tag(k.geaendert)}</td>
               </tr>
             ))}

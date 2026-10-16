@@ -3,6 +3,7 @@ import type { Route } from "./+types/properties";
 import { requirePermission } from "~/lib/auth.server";
 import { euroRund as money } from "~/lib/format";
 import { IMMOBILIENSTATUS } from "~/lib/labels";
+import { Ampel, useNaechsteSchritte } from "~/components/ampel";
 import "~/properties-workflow.css";
 
 const PAGE_SIZE = 50;
@@ -80,6 +81,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export default function Properties() {
+  const schritte = useNaechsteSchritte("property");
   const { properties, addressMap, total, page, pageCount, filters, profile } = useLoaderData<typeof loader>();
   const pageHref=(nextPage:number)=>{const p=new URLSearchParams({ansicht:"tabelle"});if(filters.q)p.set("q",filters.q);p.set("status",filters.status);if(filters.transaction)p.set("transaction",filters.transaction);if(filters.propertyType)p.set("type",filters.propertyType);p.set("page",String(nextPage));return `?${p.toString()}`;};
 
@@ -109,7 +111,7 @@ export default function Properties() {
             const address = addressMap[property.id];
             return <div className="data-row" key={property.id}>
               <div><Link className="data-title-link" to={`/properties/${property.id}`}><strong>{property.internal_title}</strong></Link><small>{property.property_number} · {TYPE_LABELS[property.property_type] ?? property.property_type} · {property.transaction_type === "SALE" ? "Verkauf" : "Vermietung"}</small><div className="row-links"><Link className="subtle-link" to={`/properties/${property.id}`}>Objektakte</Link><Link className="subtle-link" to={`/properties/${property.id}/documents`}>Dokumente</Link><Link className="subtle-link" to={`/properties/${property.id}/media`}>Medien</Link></div></div>
-              <div className="row-meta"><span>{property.transaction_type === "SALE" ? money(property.purchase_price) : `${money(property.rent_cold)} kalt`}</span><small>{address ? `${address.postal_code} ${address.city}${address.district ? ` · ${address.district}` : ""}` : "Adresse offen"} · {STATUS_LABELS[property.status] ?? property.status}</small></div>
+              <div className="row-meta"><span>{property.transaction_type === "SALE" ? money(property.purchase_price) : `${money(property.rent_cold)} kalt`}</span><small>{address ? `${address.postal_code} ${address.city}${address.district ? ` · ${address.district}` : ""}` : "Adresse offen"} · {STATUS_LABELS[property.status] ?? property.status}</small><Ampel s={schritte[property.id]} /></div>
             </div>;
           })}
           {properties.length === 0 ? <p className="empty-state">Keine Immobilien in dieser Ansicht.</p> : null}

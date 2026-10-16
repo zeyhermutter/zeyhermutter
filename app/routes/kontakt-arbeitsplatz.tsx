@@ -103,6 +103,7 @@ export default function KontaktArbeitsplatz() {
 
   return (
     <Arbeitsplatz
+      ampel="contact"
       listenName="Kontaktliste"
       einzahl="Kontakt"
       mehrzahl="Kontakte"

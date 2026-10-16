@@ -1,5 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router";
+import { Ampel, useNaechsteSchritte } from "~/components/ampel";
+import type { AmpelArt } from "~/lib/naechster-schritt";
 import "~/arbeitsplatz.css";
 
 // Der Arbeitsplatz -- Liste links, geoeffneter Datensatz rechts.
@@ -115,6 +117,7 @@ export function Arbeitsplatz({
   kopf,
   reiter,
   seitenkopf = "zeigen",
+  ampel,
   children,
 }: {
   /** "Objektliste", "Kontaktliste" -- fuer Screenreader. */
@@ -143,6 +146,8 @@ export function Arbeitsplatz({
    * Bei den Immobilien nicht: dort tragen die Koepfe Knoepfe und Zustaende.
    */
   seitenkopf?: "zeigen" | "ausblenden";
+  /** Mit welchem Bereich die Zeilen ihre Ampel holen (P2-1). Ohne: keine Ampel. */
+  ampel?: AmpelArt;
   children: ReactNode;
 }) {
   const [suche, setSuche] = useState("");
@@ -155,11 +160,16 @@ export function Arbeitsplatz({
 
   const geoeffnetFehlt = geoeffnet && !zeilen.some((z) => z.id === geoeffnet.id);
 
+  const staende = useNaechsteSchritte(ampel);
+
   const zeile = (z: ArbeitsplatzZeile, zusatz?: string) => {
     const aktiv = z.id === aktiveId;
     return (
       <Link key={z.id} className={`arbeitsplatz-zeile${aktiv ? " aktiv" : ""}`} to={z.pfad} aria-current={aktiv ? "page" : undefined}>
-        <span className="arbeitsplatz-zeile-nummer">{z.nummer}{zusatz ? ` · ${zusatz}` : ""}</span>
+        <span className="arbeitsplatz-zeile-oben">
+          <span className="arbeitsplatz-zeile-nummer">{z.nummer}{zusatz ? ` · ${zusatz}` : ""}</span>
+          {ampel ? <Ampel s={staende[z.id]} kurz /> : null}
+        </span>
         <strong>{z.titel}</strong>
         <small>{z.unterzeile}</small>
       </Link>

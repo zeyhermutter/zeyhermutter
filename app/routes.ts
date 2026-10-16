@@ -168,5 +168,7 @@ export default [
   route("api/aufgaben", "routes/api-aufgaben.ts"),
   route("api/objekt-rechte", "routes/api-objekt-rechte.ts"),
   route("api/telefonat", "routes/api-telefonat.ts"),
+  route("api/naechster-schritt", "routes/api-naechster-schritt.ts"),
+  route("api/stillstand", "routes/api-stillstand.ts"),
   route("logout", "routes/logout.tsx"),
 ] satisfies RouteConfig;

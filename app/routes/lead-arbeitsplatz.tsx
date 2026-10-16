@@ -84,6 +84,7 @@ export default function LeadArbeitsplatz() {
   const basis = `/leads/${leadId}`;
   return (
     <Arbeitsplatz
+      ampel="lead"
       listenName="Leadliste"
       einzahl="Lead"
       mehrzahl="Leads"

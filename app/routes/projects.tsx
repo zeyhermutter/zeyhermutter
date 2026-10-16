@@ -5,6 +5,7 @@ import { KontaktAuswahl } from "~/components/kontakt-auswahl";
 import type { Route } from "./+types/projects";
 import { requirePermission } from "~/lib/auth.server";
 import { tag } from "~/lib/format";
+import { Ampel, useNaechsteSchritte } from "~/components/ampel";
 import "~/programm-liste.css";
 
 type ActionResult={error?:string};
@@ -113,6 +114,7 @@ export async function action({request,context}:Route.ActionArgs){
 }
 
 export default function Projects(){
+  const schritte=useNaechsteSchritte("project");
   const d=useLoaderData<typeof loader>();
   const actionData=useActionData<ActionResult>();
   const disabled=!d.canWrite;
@@ -176,7 +178,7 @@ export default function Projects(){
                 :action.kind==="BLOCKER"?<span className="leise">{BLOCKER_AREA[(action as any).area]??"Offener Punkt"} · {rows.length}</span>
                 :<span className="leise">nichts offen</span>}</td>
               <td>{p.profiles?.display_name??<span className="leise">—</span>}</td>
-              <td><span className={`status-pill ${STATUS_CLASS[p.status]??""}`}>{PROJECT_STATUS[p.status]??p.status}</span></td>
+              <td><span className="ampel-neben"><span className={`status-pill ${STATUS_CLASS[p.status]??""}`}>{PROJECT_STATUS[p.status]??p.status}</span><Ampel s={schritte[p.id]}/></span></td>
             </tr>;
           })}</tbody>
         </table>}

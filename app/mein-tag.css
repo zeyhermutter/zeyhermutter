@@ -164,3 +164,21 @@
 .mein-tag-feld.ton-neu    { --ton: #2a7130; }
 .mein-tag-feld-kopf { box-shadow: inset 3px 0 0 var(--ton, #cdd3d9); }
 .mein-tag-feld.hat-eintraege .mein-tag-zahl { background: var(--ton); color: #ffffff; }
+
+/* Datumsgruppen (P2-1): Zwischentitel in einem Feld. */
+.mein-tag-gruppe {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 12px 4px;
+  border-bottom: 1px solid #eef1f4;
+  background: #f7f9fb;
+  color: #3d4a56;
+  font-size: 12px;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+}
+.mein-tag-gruppe span { color: #5b6773; font-weight: 400; font-variant-numeric: tabular-nums; }
+.mein-tag-erklaerung { margin: 0; padding: 0 12px 8px; color: #4a5763; font-size: 12px; }

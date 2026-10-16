@@ -49,6 +49,7 @@ export default function AnfrageArbeitsplatz() {
   });
   return (
     <Arbeitsplatz
+      ampel="inquiry"
       listenName="Anfrageliste"
       einzahl="Anfrage"
       mehrzahl="Anfragen"

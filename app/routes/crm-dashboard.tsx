@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, type ReactNode } from "react";
 import { data, Link, useFetcher, useLoaderData } from "react-router";
 import type { Route } from "./+types/crm-dashboard";
 import { PropertyOverviewMap, type PropertyMapPoint } from "~/components/property-overview-map";
@@ -6,6 +6,9 @@ import { requireActiveUser, requirePermission } from "~/lib/auth.server";
 import { geocodePropertyAddress } from "~/lib/geocoding.server";
 import { plural, tagKurz, tagLang, uhrzeit, wochentagKurz } from "~/lib/format";
 import { crmToday } from "~/lib/local-time";
+import { fristAbschnitt, gruppiere, kommenderTag, vergangenerAbschnitt } from "~/lib/datumsgruppen";
+import { STILLSTAND_TAGE } from "~/lib/stillstand";
+import type { StillstandEintrag } from "~/lib/vorgang-stand.server";
 import { FRIST_TAGE, VORSCHAU_TAGE, ladeMeinTag, type Eintrag } from "~/lib/mein-tag.server";
 import { kategorie } from "~/lib/terminkategorien";
 import type { CalendarEvent } from "~/lib/termine";
@@ -123,14 +126,38 @@ function Zeile({ e, wann, warnung }: { e: Eintrag; wann: string; warnung?: boole
   );
 }
 
+/** Zwischentitel in einem Feld (Datumsgruppen, P2-1). */
+function Gruppen<T>({ liste, titel, zeile }: { liste: T[]; titel: (e: T) => string; zeile: (e: T) => ReactNode }) {
+  return (
+    <>
+      {gruppiere(liste, titel).map((g) => (
+        <Fragment key={g.titel}>
+          <h3 className="mein-tag-gruppe">{g.titel}<span>{g.eintraege.length}</span></h3>
+          {g.eintraege.map(zeile)}
+        </Fragment>
+      ))}
+    </>
+  );
+}
+
+function seitText(e: StillstandEintrag): string {
+  const tage = e.tage === 1 ? "1 Tag" : `${e.tage} Tagen`;
+  if (e.mindestens) return `seit über ${tage} ohne Aktivität`;
+  return e.mitAktivitaet ? `seit ${tage} ohne Aktivität` : `seit Anlage (${tage}) ohne Aktivität`;
+}
+
 /** Die Farbe eines Feldes: Termine blau, Liegengebliebenes rot, Fristen
  * bernstein, Neues gruen -- so findet das Auge das drueckende Feld zuerst. */
 type Ton = "termin" | "druck" | "frist" | "neu";
 
-function Feld({ titel, anzahl, mehr, leer, ton, children }: {
+function Feld({ titel, anzahl, mehr, leer, ton, laedt, erklaerung, children }: {
   titel: string;
   ton: Ton;
   anzahl: number;
+  /** Kommt der Inhalt erst nach dem Laden der Seite (Stillstand)? Dann nicht "leer" behaupten. */
+  laedt?: boolean;
+  /** Ein Satz unter dem Titel: was hier steht. */
+  erklaerung?: string;
   mehr?: { pfad: string; beschriftung: string };
   leer: string;
   children: ReactNode;
@@ -142,7 +169,8 @@ function Feld({ titel, anzahl, mehr, leer, ton, children }: {
         <span className="mein-tag-zahl">{anzahl}</span>
         {mehr ? <Link className="mein-tag-mehr" to={mehr.pfad}>{mehr.beschriftung}</Link> : null}
       </header>
-      {anzahl === 0 ? <p className="mein-tag-leer">{leer}</p> : <div className="mein-tag-liste">{children}</div>}
+      {erklaerung ? <p className="mein-tag-erklaerung">{erklaerung}</p> : null}
+      {laedt ? <p className="mein-tag-leer">Wird geladen …</p> : anzahl === 0 ? <p className="mein-tag-leer">{leer}</p> : <div className="mein-tag-liste">{children}</div>}
     </section>
   );
 }
@@ -158,11 +186,22 @@ export default function MeinTag() {
     geocodeFetcher.submit(formData, { method: "post" });
   }, [d.missingCoordinateCount, geocodeFetcher]);
 
+  // Stillstand kommt in eigener Anfrage (siehe app/routes/api-stillstand.ts), fuer denselben Umfang wie die Seite.
+  const stillstand = useFetcher<{ eintraege: StillstandEintrag[]; vollstaendig: boolean }>();
+  const stillstandAdresse = d.ansicht === "alle" ? "/api/stillstand?scope=all" : d.ansicht === "meins" ? "/api/stillstand" : `/api/stillstand?von=${encodeURIComponent(d.ansicht)}`;
+  useEffect(() => {
+    stillstand.load(stillstandAdresse);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stillstandAdresse]);
+  const stillstandListe = stillstand.data?.eintraege ?? [];
+  const stillstandLaedt = !stillstand.data;
+
   const ueberfaelligeFristen = d.fristen.filter((f) => f.ueberfaellig).length;
   const fremd = d.kollegen.find((k) => k.id === d.ansicht) ?? null;
   const zusammenfassung = [
     plural(d.termineHeute.length, "Termin heute", "Termine heute"),
     `${d.liegengeblieben.length} liegen geblieben`,
+    ...(stillstandLaedt ? [] : [`${stillstandListe.length} im Stillstand`]),
     `${d.neu.length} neu`,
     plural(d.fristen.length, "Frist", "Fristen") + (ueberfaelligeFristen ? `, ${ueberfaelligeFristen} überfällig` : ""),
   ].join(" · ");
@@ -200,18 +239,27 @@ export default function MeinTag() {
           </Feld>
           <Feld ton="termin" titel={`Nächste ${d.vorschauTage - 1} Tage`} anzahl={d.termineDanach.length}
             leer="In den nächsten Tagen steht kein Termin an.">
-            {d.termineDanach.map((e) => <Termin key={e.key} e={e} mitTag />)}
+            <Gruppen liste={d.termineDanach} titel={(e) => kommenderTag(e.startsAt, d.heute)} zeile={(e) => <Termin key={e.key} e={e} />} />
           </Feld>
         </div>
 
         <div className="mein-tag-spalte">
           <Feld ton="druck" titel="Liegen geblieben" anzahl={d.liegengeblieben.length} mehr={{ pfad: "/crm/tasks", beschriftung: "Aufgaben" }}
             leer="Nichts ist überfällig.">
-            {d.liegengeblieben.map((e) => <Zeile key={e.key} e={e} wann={tagKurz(e.wann)} warnung />)}
+            <Gruppen liste={d.liegengeblieben} titel={(e) => vergangenerAbschnitt(e.wann, d.heute)} zeile={(e) => <Zeile key={e.key} e={e} wann={tagKurz(e.wann)} warnung />} />
+          </Feld>
+          <Feld ton="druck" titel="Stillstand" anzahl={stillstandListe.length} laedt={stillstandLaedt}
+            erklaerung={`Laufende Vorgänge ohne echte Aktivität seit ihrer Schwelle und ohne geplanten Schritt. Schwellen: neuer Lead ${STILLSTAND_TAGE.lead.NEW} Tage, Anfrage in Bearbeitung ${STILLSTAND_TAGE.inquiry.CONTACTED}, Lead in Bearbeitung ${STILLSTAND_TAGE.lead.CONTACTED}, Objekt in Vermarktung und Verkaufsprojekt ${STILLSTAND_TAGE.property.MARKETING}.`}
+            leer={stillstand.data && !stillstand.data.vollstaendig ? "Nicht vollständig geladen – es kann Stillstand geben, der hier fehlt." : "Kein laufender Vorgang steht still."}>
+            {stillstand.data && !stillstand.data.vollstaendig ? <p className="form-warning mein-tag-hinweis">Nicht alle Quellen vollständig geladen; die Liste kann unvollständig sein.</p> : null}
+            {stillstandListe.map((e) => (
+              <Zeile key={e.key} e={{ key: e.key, art: e.art, titel: e.titel, kontext: `${e.kontext} · ${seitText(e)}`, wann: e.seit, ganztags: true, pfad: e.pfad }}
+                wann={`${e.tage} T.`} warnung />
+            ))}
           </Feld>
           <Feld ton="frist" titel={`Fristen (${d.fristTage} Tage)`} anzahl={d.fristen.length}
             leer={`Keine Frist in den nächsten ${d.fristTage} Tagen.`}>
-            {d.fristen.map((e) => <Zeile key={e.key} e={e} wann={tagKurz(e.wann)} warnung={e.ueberfaellig} />)}
+            <Gruppen liste={d.fristen} titel={(e) => fristAbschnitt(e.wann, d.heute)} zeile={(e) => <Zeile key={e.key} e={e} wann={tagKurz(e.wann)} warnung={e.ueberfaellig} />} />
           </Feld>
         </div>
 

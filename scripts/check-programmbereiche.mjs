@@ -52,6 +52,8 @@ const AUSNAHMEN = {
   "/api/aufgaben": "Speichert Aufgaben aus dem Aufgaben-Baustein und fuehrt zurueck in die Akte, keine Seite.",
   "/api/objekt-rechte": "Liefert den Reitern der Objektakte die Rechte des Benutzers, keine Seite.",
   "/api/telefonat": "Speichert ein schnell erfasstes Telefonat und fuehrt zurueck in die Akte, keine Seite.",
+  "/api/naechster-schritt": "Liefert die Ampel einer Liste als Daten, keine Seite.",
+  "/api/stillstand": "Liefert den Stillstand fuer Mein Tag als Daten, keine Seite.",
   "/logout": "Abmelden steht als Knopf in der Titelleiste.",
 };
 
