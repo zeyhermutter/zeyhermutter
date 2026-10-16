@@ -166,8 +166,12 @@ pruefe((await lies("app/routes/organization-detail.tsx")).includes('id="ansprech
   pruefe(!leads.includes('<p className="eyebrow">Was ist ein Lead?</p>') && (leads.match(/to="\/leads\/new"/g) ?? []).length === 1, "leads.tsx: Erklärkarte dauerhaft offen oder zwei Knöpfe zum Anlegen");
 }
 
+// 19. Provision ohne stille Vorauswahl; Besichtigungen beginnen mit der naechsten
+pruefe(!(await lies("app/components/commission-fields.tsx")).includes("properties[0]?.id"), "commission-fields.tsx: erste Immobilie still vorgewählt");
+pruefe((await lies("app/routes/viewings.tsx")).includes('.gte("starts_at",jetzt).order("starts_at",{ascending:true})'), "viewings.tsx: Einstieg nicht bei der nächsten anstehenden Besichtigung");
+
 if (fehler.length) {
   console.error("P1:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten, Anfrage beginnt mit der Nachricht, keine internen Codes, ein Kopf je Akte bei Auftrag und Provision, Eigentümer verlinkt und beim Anlegen wählbar, Objektreiter nur mit Recht, Website-Seiten ohne Fachjargon und mit sichtbarer Statusbedingung, Hochladen in der Unterlagenzeile, mehrere Medien auf einmal, Telefonat schnell erfassen, Ansprechpartner an der Organisation, Suchprofil-Typen bleiben, Leads ruhiger.");
+console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten, Anfrage beginnt mit der Nachricht, keine internen Codes, ein Kopf je Akte bei Auftrag und Provision, Eigentümer verlinkt und beim Anlegen wählbar, Objektreiter nur mit Recht, Website-Seiten ohne Fachjargon und mit sichtbarer Statusbedingung, Hochladen in der Unterlagenzeile, mehrere Medien auf einmal, Telefonat schnell erfassen, Ansprechpartner an der Organisation, Suchprofil-Typen bleiben, Leads ruhiger, Provision ohne Vorauswahl, Besichtigungen ab der nächsten.");

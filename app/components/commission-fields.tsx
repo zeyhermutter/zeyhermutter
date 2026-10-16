@@ -62,7 +62,11 @@ type Props = {
 };
 
 export function CommissionFields({ properties, partyOptions, offers, mandates = [], profiles, initial, defaultResponsibleUser, disabled = false, showPaymentFields = true }: Props) {
-  const [propertyId, setPropertyId] = useState(initial?.property_id ?? properties[0]?.id ?? "");
+  // Keine stille Vorauswahl (P1, 16.10.2026): Vorher stand die erste
+  // Immobilie der Liste schon drin -- wer nicht hinsah, legte die Provision
+  // am falschen Objekt an. Aus einer Objektakte kommt die Immobilie ueber
+  // initial.property_id.
+  const [propertyId, setPropertyId] = useState(initial?.property_id ?? "");
   const [side, setSide] = useState(initial?.side === "BUYER" ? "BUYER" : "SELLER");
   const [method, setMethod] = useState(initial?.calculation_method === "FIXED" ? "FIXED" : "PERCENT");
   const [partyId, setPartyId] = useState(initial?.party_contact_id ?? "");
