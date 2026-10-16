@@ -125,6 +125,8 @@ const AUSNAHMEN = {
   // Objekthistorie: Bereichsname (metadata.change_type) und Vorgang
   // (metadata.operation) setzt der Audit-Trigger, ohne CHECK-Bedingung.
   "app/lib/objekt-verlauf.ts": ["BEREICH", "VORGANG"],
+  // Ergebnis eines Telefonats: steht in activity_events.metadata, ohne CHECK-Bedingung.
+  "app/lib/telefonat.ts": ["TELEFONAT_ERGEBNIS"],
   // Schluessel der Abschlussmeilensteine, aus der Seed-Funktion.
   "app/routes/closing-milestones.tsx": ["MILESTONE_HINT"],
   // Grund einer Dublettenwarnung, in der Route selbst berechnet.

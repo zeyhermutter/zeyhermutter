@@ -2,6 +2,7 @@ import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-
 import type { Route } from "./+types/contact-collaboration";
 import { requireActiveUser } from "~/lib/auth.server";
 import { zeitpunkt as formatDate } from "~/lib/format";
+import { TelefonatErfassen, TelefonatMeldung } from "~/components/telefonat-erfassen";
 
 type ActionResult = { error?: string };
 
@@ -34,6 +35,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     supabase.from("comments").select("id, body, author_user_id, created_at, updated_at, archived_at").eq("entity_type", "CONTACT").eq("entity_id", contactId).is("archived_at", null).order("created_at", { ascending: false }).limit(100),
     supabase.from("profiles").select("user_id, display_name, status").eq("status", "ACTIVE").order("display_name"),
   ]);
+  const { data: darfAufgaben } = await supabase.rpc("current_user_has_permission", { p_permission: "task.write" });
 
   if (contactError || activityError || commentError || profileError) {
     throw new Response("Aktivitäten konnten nicht geladen werden.", { status: 500 });
@@ -58,7 +60,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   }, {});
 
   return data(
-    { contact, activities: activities ?? [], comments: comments ?? [], profiles: profiles ?? [], profileMap, mentionsByComment, profile },
+    { contact, activities: activities ?? [], comments: comments ?? [], profiles: profiles ?? [], profileMap, mentionsByComment, profile, darfAufgaben: darfAufgaben === true },
     { headers: responseHeaders() },
   );
 }
@@ -108,7 +110,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 }
 
 export default function ContactCollaboration() {
-  const { contact, activities, comments, profiles, profileMap, mentionsByComment, profile } = useLoaderData<typeof loader>();
+  const { contact, activities, comments, profiles, profileMap, mentionsByComment, profile, darfAufgaben } = useLoaderData<typeof loader>();
   const result = useActionData<typeof action>();
   const mentionableUsers = profiles.filter((item) => item.user_id !== profile.user_id);
 
@@ -126,8 +128,10 @@ export default function ContactCollaboration() {
       {result?.error ? <div className="form-error">{result.error}</div> : null}
 
       <div className="dashboard-grid">
-        <section className="data-card">
+        <section className="data-card" id="letzter-kontakt">
           <div className="card-head"><div><p className="eyebrow">Verlauf</p><h2>Aktivitäten</h2></div></div>
+          <TelefonatMeldung />
+          <TelefonatErfassen kontaktId={contact.id} darfAufgaben={darfAufgaben} />
           <Form method="post" className="auth-form">
             <input type="hidden" name="_intent" value="add_activity" />
             <label><span>Typ</span><select name="activity_type" defaultValue="NOTE">{activityTypes.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>

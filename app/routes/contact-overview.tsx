@@ -7,6 +7,7 @@ import {
   ANFRAGESTATUS, BESICHTIGUNGSSTATUS, IMMOBILIENSTATUS, KAUFANGEBOTSTATUS, LEADSTATUS, beschrifte, AKTIVITAETSART,
 } from "~/lib/labels";
 import { AufgabenBaustein } from "~/components/aufgaben-baustein";
+import { TelefonatErfassen, TelefonatMeldung } from "~/components/telefonat-erfassen";
 import { aufgabenRahmen, AUFGABEN_SPALTEN } from "~/lib/aufgaben.server";
 import "~/programm-liste.css";
 import "~/akte-blick.css";
@@ -198,7 +199,9 @@ export default function ContactOverview() {
             </p>
           </div>
           <div className="akte-blick-aktionen">
-            {telefon ? <a className="secondary-button link-button compact" href={`tel:${telefon.replace(/[^+\d]/g, "")}`}>Anrufen</a> : null}
+            {/* Nach dem Anruf steht das Formular "Telefonat" schon offen da. */}
+            {telefon ? <a className="secondary-button link-button compact" href={`tel:${telefon.replace(/[^+\d]/g, "")}`} onClick={() => { window.location.hash = "telefonat-neu"; }}>Anrufen</a> : null}
+            <a className="secondary-button link-button compact" href="#telefonat-neu">+ Telefonat</a>
             {d.darfAufgaben ? <a className="secondary-button link-button compact" href="#aufgabe-neu">+ Aufgabe</a> : null}
             <Link className="secondary-button link-button compact" to={`${basis}/collaboration`}>+ Notiz</Link>
           </div>
@@ -242,11 +245,13 @@ export default function ContactOverview() {
         <div className="kontakt-uebersicht-spalte">
           <AufgabenBaustein aufgaben={d.aufgaben as any} art="contact" id={k.id} nutzer={d.nutzer} ich={d.ich} darfSchreiben={d.darfAufgaben} kontextName={`Kontakt ${k.contact_number}`} />
 
-          <section className="data-card">
+          <section className="data-card" id="letzter-kontakt">
             <div className="card-head">
               <div><p className="eyebrow">Letzter Kontakt</p><h2>{letzter ? tag(letzter.occurred_at) : "Noch keiner erfasst"}</h2></div>
               <Link className="subtle-link" to={`${basis}/collaboration`}>Verlauf →</Link>
             </div>
+            <TelefonatMeldung />
+            <TelefonatErfassen kontaktId={k.id} darfAufgaben={d.darfAufgaben} />
             {d.verlauf.length === 0
               ? <p className="empty-state">Telefonate, E-Mails und Notizen erscheinen hier, sobald sie im Verlauf erfasst sind.</p>
               : <div className="data-list">{d.verlauf.map((v) => (

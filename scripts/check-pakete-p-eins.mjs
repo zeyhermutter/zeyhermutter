@@ -150,8 +150,13 @@ pruefe((await lies("app/routes/property-publication.tsx")).includes('id:"public-
   pruefe(m.includes("createSignedUrls(") && !m.includes(".createSignedUrl("), "property-media.tsx: Signatur je Medium -- bei vielen Medien mehr Unteranfragen, als eine Worker-Anfrage darf");
 }
 
+// 16. Telefonat schnell erfassen, in Uebersicht und Verlauf der Kontaktakte
+for (const datei of ["app/routes/contact-overview.tsx", "app/routes/contact-collaboration.tsx"]) {
+  pruefe((await lies(datei)).includes("<TelefonatErfassen "), `${datei}: kein schnelles Erfassen eines Telefonats`);
+}
+
 if (fehler.length) {
   console.error("P1:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten, Anfrage beginnt mit der Nachricht, keine internen Codes, ein Kopf je Akte bei Auftrag und Provision, Eigentümer verlinkt und beim Anlegen wählbar, Objektreiter nur mit Recht, Website-Seiten ohne Fachjargon und mit sichtbarer Statusbedingung, Hochladen in der Unterlagenzeile, mehrere Medien auf einmal.");
+console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten, Anfrage beginnt mit der Nachricht, keine internen Codes, ein Kopf je Akte bei Auftrag und Provision, Eigentümer verlinkt und beim Anlegen wählbar, Objektreiter nur mit Recht, Website-Seiten ohne Fachjargon und mit sichtbarer Statusbedingung, Hochladen in der Unterlagenzeile, mehrere Medien auf einmal, Telefonat schnell erfassen.");
