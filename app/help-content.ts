@@ -164,8 +164,15 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         + "schnellsten geht es über den Knopf **E-Mail** oben rechts in der Akte eines "
         + "Kontakts, Leads oder einer Anfrage: dann ist der Bezug schon vorbelegt. "
         + "Ohne Bezug zeigt der Unterpunkt das Journal aller erfassten E-Mails. Versendet wird im "
-        + "eigenen E-Mail-Programm; unter „E-Mail erfassen“ wird die Nachricht danach "
-        + "als Aktivität am Vorgang dokumentiert." },
+        + "eigenen E-Mail-Programm." },
+      { art: "liste", punkte: [
+        "**E-Mail schreiben**: Eine Vorlage des Büros füllt Betreff und Text vor; Platzhalter wie {{anrede}} oder {{objekt_titel}} werden aus der Akte gesetzt. Bleibt ein Platzhalter ohne Wert, weist die Seite darauf hin. Ohne Vorlage bleibt der Text leer — das CRM schreibt keine Sätze an Kunden.",
+        "Bei einer Anfrage zu einem Objekt mit einem **zur Verwendung freigegebenen Exposé** lässt es sich als PDF herunterladen (zum Anhängen) oder als Download-Link einfügen. Der Link ist 14 Tage gültig; wer ihn hat, kann das PDF öffnen. Er wird erst auf Klick erzeugt.",
+        "**Im Mailprogramm öffnen** übergibt Empfänger, Betreff und Text. Sehr lange Texte kürzen manche Mailprogramme — dafür gibt es „Text kopieren“.",
+        "**Gesendet – festhalten** dokumentiert die E-Mail im Verlauf. War ein Exposé dabei, wird zugleich der **Objektnachweis** gespeichert (Weg „Exposé per E-Mail“, mit Exposé-Nummer). Bei einer neuen Anfrage setzt ein Haken sie auf „Kontaktiert“. Was nicht gespeichert werden konnte, meldet die Seite einzeln.",
+        "**E-Mail nachträglich erfassen** bleibt für empfangene E-Mails und alles, was anders entstanden ist.",
+        "**Verwaltung › E-Mail-Vorlagen**: Vorlagen anlegen, ändern und abschalten (wer die Verwaltung pflegen darf). Das CRM liefert und prüft keine Texte; Aussagen zu Provision, Widerruf oder anderen Rechtsfolgen gehören nur nach eigener bzw. anwaltlicher Freigabe hinein.",
+      ]},
       { art: "absatz", text:
         "**Mein Tag › In Bewegung** zieht zusammen, was kurz vor dem Abschluss steht: "
         + "ablaufende Kaufangebote, endende Reservierungen, anstehende Notartermine "

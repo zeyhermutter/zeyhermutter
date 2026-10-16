@@ -1,0 +1,13 @@
+/* Verwaltung > E-Mail-Vorlagen (P2-3). */
+.email-vorlagen-hinweis { max-width: var(--crm-content-max); margin: 0 auto 12px; }
+.email-vorlage-formular { display: grid; gap: 12px; }
+.email-vorlage-reihe { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) 120px; gap: 12px; }
+.email-vorlage-formular textarea { font-family: inherit; }
+.email-vorlage-gespeichert { background: #e2f3e4; }
+.email-vorlage-platzhalter { display: grid; gap: 6px; margin: 0; }
+.email-vorlage-platzhalter div { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 12px; }
+.email-vorlage-platzhalter dt, .email-vorlage-platzhalter dd { margin: 0; font-size: 13px; }
+.email-vorlage-platzhalter code { font-size: 12px; }
+@media (max-width: 720px) {
+  .email-vorlage-reihe, .email-vorlage-platzhalter div { grid-template-columns: 1fr; }
+}

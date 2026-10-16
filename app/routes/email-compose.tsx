@@ -1,6 +1,8 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/email-compose";
 import { Aufklapper } from "~/components/aufklapper";
+import { EmailSchreiben, type SchreibDaten } from "~/components/email-schreiben";
+import { anredeVon } from "~/lib/email-vorlage";
 import { requireActiveUser } from "~/lib/auth.server";
 import { zeitpunkt as formatDate } from "~/lib/format";
 import { crmLocalDateTimeToIso as berlinLocalToIso, crmNowLocalDateTime as berlinInputNow } from "~/lib/local-time";
@@ -184,17 +186,85 @@ async function ladeJournal(supabase: any): Promise<JournalZeile[] | null> {
   });
 }
 
+// --- E-Mail schreiben mit Vorlage und Exposé (P2-3, 16.10.2026) ----------
+//
+// Vorher: "E-Mail im Mailprogramm öffnen" öffnete eine leere Mail, danach
+// wurden Richtung, Zeitpunkt und Betreff von Hand abgeschrieben, und ein
+// Objektnachweis war ein dritter, getrennter Weg. Jetzt füllt eine Vorlage des
+// Büros Betreff und Text vor, das Exposé kommt als PDF oder Link dazu, und
+// "Gesendet – festhalten" dokumentiert E-Mail und Objektnachweis in einem
+// Schritt. Das CRM verschickt nichts selbst.
+
+const LINK_GUELTIG_TAGE = 14;
+
+async function freigegebenesExpose(supabase: any, inquiryId: string, exposeId?: string) {
+  const { data: anfrage } = await supabase.from("inquiries").select("property_id").eq("id", inquiryId).maybeSingle();
+  if (!anfrage?.property_id) return null;
+  let abfrage = supabase.from("property_exposes")
+    .select("id,expose_number,publication_version_id,storage_bucket,storage_path,original_filename,released_at")
+    .eq("property_id", anfrage.property_id).eq("status", "RELEASED").is("archived_at", null);
+  if (exposeId) abfrage = abfrage.eq("id", exposeId);
+  const { data: expose } = await abfrage.order("released_at", { ascending: false }).limit(1).maybeSingle();
+  return expose ? { ...expose, property_id: anfrage.property_id as string } : null;
+}
+
+async function ladeSchreibDaten(supabase: any, ctx: EmailContext, meinName: string | null): Promise<SchreibDaten> {
+  const anfrageId = ctx.type === "INQUIRY" ? ctx.id : null;
+  const [kontaktR, vorlagenR, anfrageR] = await Promise.all([
+    supabase.from("contacts").select("salutation,title,first_name,last_name").eq("id", ctx.contactId).maybeSingle(),
+    supabase.from("email_templates").select("id,purpose,name,subject,body").eq("active", true).order("purpose").order("sort_order").order("name"),
+    anfrageId ? supabase.from("inquiries").select("id,status,version,property_id,properties(property_number,internal_title,property_addresses(postal_code,city))").eq("id", anfrageId).maybeSingle() : Promise.resolve({ data: null }),
+  ]);
+  const k = kontaktR.data ?? {};
+  const anfrage = anfrageR.data as any;
+  const objekt = anfrage ? one(anfrage.properties) as any : null;
+  const adresse = objekt ? one(objekt.property_addresses) as any : null;
+  const [expose, besichtigung] = await Promise.all([
+    anfrage?.property_id ? freigegebenesExpose(supabase, anfrage.id) : Promise.resolve(null),
+    supabase.from("viewings").select("starts_at").eq("contact_id", ctx.contactId).in("status", ["PLANNED", "CONFIRMED"])
+      .gte("starts_at", new Date().toISOString()).is("archived_at", null).order("starts_at", { ascending: true }).limit(1).maybeSingle(),
+  ]);
+  return {
+    vorlagen: vorlagenR.error ? [] : (vorlagenR.data ?? []),
+    vorlagenFehlen: Boolean(vorlagenR.error),
+    werte: {
+      anrede: anredeVon(k),
+      vorname: k.first_name ?? null,
+      nachname: k.last_name ?? null,
+      objekt_nummer: objekt?.property_number ?? null,
+      objekt_titel: objekt?.internal_title ?? null,
+      objekt_ort: adresse ? [adresse.postal_code, adresse.city].filter(Boolean).join(" ") : null,
+      anfrage_nummer: ctx.type === "INQUIRY" ? ctx.number : null,
+      besichtigung_termin: besichtigung.data?.starts_at ? formatDate(besichtigung.data.starts_at) : null,
+      mein_name: meinName,
+    },
+    expose: expose ? { id: expose.id, nummer: expose.expose_number, datei: expose.original_filename } : null,
+    linkTage: LINK_GUELTIG_TAGE,
+    anfrage: anfrage ? { status: anfrage.status, version: Number(anfrage.version) } : null,
+  };
+}
+
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { supabase, responseHeaders, profile } = await requireActiveUser(request, context.cloudflare.env);
   const url = new URL(request.url);
   const ref = resolveContext(url);
+  // Exposé-PDF zum Anhängen (P2-3): kurz gültige Download-Adresse, nur für das
+  // zur Verwendung freigegebene Exposé des Objekts dieser Anfrage.
+  const pdf = url.searchParams.get("expose_pdf");
+  if (pdf && ref?.type === "INQUIRY") {
+    const expose = await freigegebenesExpose(supabase, ref.id, pdf);
+    if (!expose) throw new Response("Kein zur Verwendung freigegebenes Exposé zu dieser Anfrage.", { status: 404, headers: responseHeaders() });
+    const { data: signiert } = await supabase.storage.from(expose.storage_bucket).createSignedUrl(expose.storage_path, 120, { download: expose.original_filename });
+    if (!signiert?.signedUrl) throw new Response("Das Exposé konnte nicht bereitgestellt werden.", { status: 500, headers: responseHeaders() });
+    throw redirect(signiert.signedUrl, { headers: responseHeaders() });
+  }
   if (!ref) {
     // Ohne CRM-Bezug: das E-Mail-Journal -- alle dokumentierten E-Mails des
     // Bueros, neueste zuerst (13.10.2026). Vorher stand hier nur ein Text,
     // der erklaerte, wo man E-Mails findet.
     const journal = await ladeJournal(supabase);
     if (!journal) throw new Response("E-Mail-Journal konnte nicht geladen werden.", { status: 500, headers: responseHeaders() });
-    return data({ context: null, activities: [], journal, profileMap: {}, canWrite: false, profile, nowLocal: berlinInputNow() }, { headers: responseHeaders() });
+    return data({ context: null, activities: [], journal, profileMap: {}, canWrite: false, profile, nowLocal: berlinInputNow(), schreiben: null as SchreibDaten | null, meldung: { festgehalten: null, nachweis: null, status: null } as { festgehalten: string | null; nachweis: string | null; status: string | null } }, { headers: responseHeaders() });
   }
 
   const emailContext = await loadContext(supabase, ref);
@@ -222,13 +292,19 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   }
 
   const profileMap = Object.fromEntries((profiles ?? []).map((item: any) => [item.user_id, item.display_name]));
-  return data({ context: emailContext, activities: activities ?? [], journal: [] as JournalZeile[], profileMap, canWrite: canWrite === true, profile, nowLocal: berlinInputNow() }, { headers: responseHeaders() });
+  const schreiben = await ladeSchreibDaten(supabase, emailContext, profile.display_name);
+  const url2 = new URL(request.url);
+  const meldung = { festgehalten: url2.searchParams.get("festgehalten"), nachweis: url2.searchParams.get("nachweis"), status: url2.searchParams.get("status") };
+  return data({ context: emailContext, activities: activities ?? [], journal: [] as JournalZeile[], profileMap, canWrite: canWrite === true, profile, nowLocal: berlinInputNow(), schreiben, meldung }, { headers: responseHeaders() });
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
   const { supabase, responseHeaders, userId } = await requireActiveUser(request, context.cloudflare.env);
   const formData = await request.formData();
-  if (text(formData, "_intent") !== "log_email") {
+  const absicht = text(formData, "_intent");
+  if (absicht === "expose_link") return exposeLink(supabase, formData, responseHeaders);
+  if (absicht === "gesendet") return gesendetFesthalten(supabase, formData, userId, responseHeaders);
+  if (absicht !== "log_email") {
     return data<ActionResult>({ error: "Unbekannte Aktion." }, { status: 400, headers: responseHeaders() });
   }
 
@@ -267,9 +343,86 @@ export async function action({ request, context }: Route.ActionArgs) {
   return redirect(`/crm/email${contextQuery(emailContext)}`, { headers: responseHeaders() });
 }
 
+/** Download-Link zum freigegebenen Exposé, nur auf ausdrücklichen Klick erzeugt. */
+async function exposeLink(supabase: any, formData: FormData, responseHeaders: () => Headers) {
+  const anfrageId = text(formData, "context_id");
+  if (text(formData, "context_type") !== "INQUIRY" || !UUID_RE.test(anfrageId)) return data({ error: "Ein Exposé-Link geht nur aus einer Anfrage." }, { status: 400, headers: responseHeaders() });
+  const { data: darf } = await supabase.rpc("current_user_has_permission", { p_permission: "expose.read" });
+  if (darf !== true) return data({ error: "Keine Berechtigung, Exposés zu lesen." }, { status: 403, headers: responseHeaders() });
+  const expose = await freigegebenesExpose(supabase, anfrageId, text(formData, "expose_id"));
+  if (!expose) return data({ error: "Kein zur Verwendung freigegebenes Exposé zu dieser Anfrage." }, { status: 404, headers: responseHeaders() });
+  const { data: signiert } = await supabase.storage.from(expose.storage_bucket).createSignedUrl(expose.storage_path, LINK_GUELTIG_TAGE * 86400, { download: expose.original_filename });
+  if (!signiert?.signedUrl) return data({ error: "Der Link konnte nicht erzeugt werden." }, { status: 500, headers: responseHeaders() });
+  return data({ link: signiert.signedUrl as string }, { headers: responseHeaders() });
+}
+
+/**
+ * "Gesendet – festhalten": die E-Mail als Aktivität, beim Exposé der
+ * Objektnachweis, auf Wunsch die Anfrage auf "Kontaktiert". Jeder Teil meldet
+ * sich einzeln zurück -- ein fehlender Nachweis verschwindet nicht hinter
+ * einer gespeicherten E-Mail.
+ */
+async function gesendetFesthalten(supabase: any, formData: FormData, userId: string, responseHeaders: () => Headers) {
+  const ref = resolveFormContext(formData);
+  if (!ref) return data<ActionResult>({ error: "Ungültiger CRM-Bezug." }, { status: 400, headers: responseHeaders() });
+  const ctx = await loadContext(supabase, ref);
+  if (!ctx) return data<ActionResult>({ error: "CRM-Bezug nicht gefunden." }, { status: 404, headers: responseHeaders() });
+  const { data: darf } = await supabase.rpc("current_user_has_permission", { p_permission: permissionFor(ref.type) });
+  if (darf !== true) return data<ActionResult>({ error: "Keine Berechtigung, E-Mail-Aktivitäten für diesen Datensatz zu dokumentieren." }, { status: 403, headers: responseHeaders() });
+
+  const betreff = text(formData, "subject").slice(0, 300);
+  if (!betreff) return data<ActionResult>({ error: "Bitte einen Betreff angeben – er steht danach im Verlauf." }, { status: 400, headers: responseHeaders() });
+  const inhalt = String(formData.get("body") ?? "").trim().slice(0, 20000);
+  const vorlageId = text(formData, "template_id");
+  const exposeId = text(formData, "expose_id");
+  const exposeWeg = text(formData, "expose_weg");
+  const mitExpose = ref.type === "INQUIRY" && UUID_RE.test(exposeId) && (exposeWeg === "PDF" || exposeWeg === "LINK");
+  const expose = mitExpose ? await freigegebenesExpose(supabase, ref.id, exposeId) : null;
+
+  const metadata: Record<string, unknown> = { channel: "EMAIL", direction: "SENT", capture: vorlageId ? "TEMPLATE" : "COMPOSE" };
+  if (UUID_RE.test(vorlageId)) metadata.template_id = vorlageId;
+  if (expose) { metadata.expose_id = expose.id; metadata.expose_weg = exposeWeg; }
+  const insert: Record<string, unknown> = {
+    activity_type: "EMAIL", title: betreff, description: inhalt || null, actor_user_id: userId,
+    contact_id: ctx.contactId, occurred_at: new Date().toISOString(), metadata,
+  };
+  if (ref.type === "LEAD") insert.lead_id = ref.id;
+  if (ref.type === "INQUIRY") { insert.inquiry_id = ref.id; if (expose) insert.property_id = expose.property_id; }
+  const { error } = await supabase.from("activity_events").insert(insert);
+  if (error) return data<ActionResult>({ error: "Die E-Mail konnte nicht festgehalten werden. Es wurde nichts gespeichert." }, { status: 400, headers: responseHeaders() });
+
+  let nachweis = "";
+  if (mitExpose && !expose) nachweis = "fehlt";
+  if (expose) {
+    const { data: darfNachweis } = await supabase.rpc("current_user_has_permission", { p_permission: "disclosure.write" });
+    if (darfNachweis !== true) nachweis = "keinrecht";
+    else {
+      const { error: nachweisFehler } = await supabase.from("property_disclosures").insert({
+        property_id: expose.property_id, contact_id: ctx.contactId, inquiry_id: ref.id,
+        expose_id: expose.id, publication_version_id: expose.publication_version_id,
+        channel: "EXPOSE_EMAIL", channel_reference: `E-Mail: ${betreff}`.slice(0, 300),
+        notes: exposeWeg === "LINK" ? `Exposé als Download-Link (${LINK_GUELTIG_TAGE} Tage gültig)` : "Exposé als PDF-Anhang",
+      });
+      nachweis = nachweisFehler ? "fehler" : "ok";
+    }
+  }
+
+  let status = "";
+  if (ref.type === "INQUIRY" && text(formData, "kontaktiert") === "1") {
+    const { data: geaendert, error: statusFehler } = await supabase.from("inquiries").update({ status: "CONTACTED" })
+      .eq("id", ref.id).eq("status", "NEW").eq("version", Number(text(formData, "inquiry_version"))).select("id").maybeSingle();
+    status = statusFehler || !geaendert ? "fehler" : "ok";
+  }
+
+  const p = new URLSearchParams({ festgehalten: "1" });
+  if (nachweis) p.set("nachweis", nachweis);
+  if (status) p.set("status", status);
+  return redirect(`/crm/email${contextQuery(ctx)}&${p.toString()}`, { headers: responseHeaders() });
+}
+
 export default function EmailCompose() {
-  const { context, activities, journal, profileMap, canWrite, profile, nowLocal } = useLoaderData<typeof loader>();
-  const result = useActionData<typeof action>();
+  const { context, activities, journal, profileMap, canWrite, profile, nowLocal, schreiben, meldung } = useLoaderData<typeof loader>();
+  const result = useActionData<typeof action>() as ActionResult | undefined;
 
   if (!context) return <EmailJournal journal={journal} />;
 
@@ -303,10 +456,13 @@ export default function EmailCompose() {
               <div><span>Kontakt</span><strong>{context.contactName}</strong></div>
               <div><span>E-Mail</span><strong>{context.email ?? "Nicht hinterlegt"}</strong></div>
             </div>
-            <div className="communication-actions">
+            {!canWrite ? <div className="communication-actions">
               {context.email ? <a className="primary-button link-button" href={`mailto:${encodeURIComponent(context.email)}`}>E-Mail im Mailprogramm öffnen</a> : <span className="subtle">Keine E-Mail-Adresse vorhanden.</span>}
-            </div>
+            </div> : null}
           </section>
+
+          {meldung.festgehalten ? <Rueckmeldung nachweis={meldung.nachweis} status={meldung.status} /> : null}
+          {canWrite && schreiben ? <EmailSchreiben kontext={{ type: context.type, id: context.id, email: context.email }} daten={schreiben} /> : null}
 
           <section className="data-card">
             <div className="card-head"><div><p className="eyebrow">Kommunikationshistorie</p><h2>E-Mail-Aktivitäten</h2></div><span className="subtle">letzte 100</span></div>
@@ -324,7 +480,8 @@ export default function EmailCompose() {
 
       <aside className="communication-stack">
         {context && canWrite ? <section className="data-card">
-          <div className="card-head"><div><p className="eyebrow">Aktivität festhalten</p><h2>E-Mail erfassen</h2></div></div>
+          <div className="card-head"><div><p className="eyebrow">Aktivität festhalten</p><h2>E-Mail nachträglich erfassen</h2></div></div>
+          <p className="communication-note">Für empfangene E-Mails oder solche, die nicht über „E-Mail schreiben“ entstanden sind.</p>
           <Form method="post" className="auth-form">
             <input type="hidden" name="_intent" value="log_email" />
             <input type="hidden" name="context_type" value={context.type} />
@@ -345,6 +502,25 @@ export default function EmailCompose() {
       </aside>
     </div>
   </main>;
+}
+
+/** Was "Gesendet – festhalten" gespeichert hat, Teil für Teil. */
+function Rueckmeldung({ nachweis, status }: { nachweis: string | null; status: string | null }) {
+  const nachweisText: Record<string, [string, string]> = {
+    ok: ["form-success", "Objektnachweis festgehalten (Weg: Exposé per E-Mail)."],
+    keinrecht: ["form-warning", "Objektnachweis NICHT festgehalten: Ihnen fehlt das Recht dazu. Bitte jemanden mit Berechtigung bitten, ihn unter Objekt › Interessenten nachzutragen."],
+    fehler: ["form-error", "Objektnachweis konnte NICHT gespeichert werden. Bitte unter Objekt › Interessenten nachtragen."],
+    fehlt: ["form-error", "Objektnachweis NICHT festgehalten: Das gewählte Exposé ist nicht mehr zur Verwendung freigegeben."],
+  };
+  const statusText: Record<string, [string, string]> = {
+    ok: ["form-success", "Anfrage steht jetzt auf „Kontaktiert“."],
+    fehler: ["form-warning", "Der Status der Anfrage wurde nicht geändert (inzwischen anders bearbeitet). Bitte in der Anfrage prüfen."],
+  };
+  return <div className="email-rueckmeldung" role="status">
+    <p className="form-success">E-Mail im Verlauf festgehalten.</p>
+    {nachweis && nachweisText[nachweis] ? <p className={nachweisText[nachweis][0]}>{nachweisText[nachweis][1]}</p> : null}
+    {status && statusText[status] ? <p className={statusText[status][0]}>{statusText[status][1]}</p> : null}
+  </div>;
 }
 
 /** Der Reiter "E-Mail" ohne CRM-Bezug: Programmliste wie die Aufgaben. */

@@ -33,6 +33,10 @@
 // Nachgetragen am 08.10.2026 aus 20261008014300_measurement_order_module.sql:
 // die Pakete und die Zustaende des Aufmass-Auftrags. Die uebrigen Werte dieses
 // Moduls (WOFLV, DIN_277, NONE, BOTH, WEBSITE, PHONE, ...) gab es schon.
+//
+// Nachgetragen am 16.10.2026 aus 20261016175556_email_templates.sql: der
+// Anlass einer E-Mail-Vorlage (INQUIRY_REPLY, VIEWING_CONFIRMATION, DECLINE;
+// EXPOSE und OTHER gab es schon).
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, sep } from "node:path";
@@ -41,7 +45,8 @@ import { join, sep } from "node:path";
 // from pg_constraint, lateral regexp_split_to_table(
 //   (regexp_match(pg_get_constraintdef(oid),'= ANY \(ARRAY\[(.*?)\]\)'))[1], ',\s*') as x
 // where contype='c' and connamespace='public'::regnamespace;
-const ERLAUBT = new Set(`A A+ ACCEPTED ACCESS ACQUISITION ACTIVE AFTER AGREED ANNUAL ANNUITY_CHARGE
+const ERLAUBT = new Set(`INQUIRY_REPLY VIEWING_CONFIRMATION DECLINE
+A A+ ACCEPTED ACCESS ACQUISITION ACTIVE AFTER AGREED ANNUAL ANNUITY_CHARGE
 ANONYMIZED_ONLY APARTMENT APARTMENT_BUILDING API APPOINTMENT
 APPOINTMENT_SCHEDULED APPROVED ARCHIVED AS_IS AS_IS_SALE ASSET ATTIC
 ATTORNEY_IN_FACT AUDITOR AUTOMATIC AUTOMATION B BANK_GUARANTEE BASEMENT BEFORE

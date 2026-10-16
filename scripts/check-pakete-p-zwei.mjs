@@ -72,8 +72,18 @@ pruefe(!aufgaben.includes(".limit(200)") && aufgaben.includes('{ count: "exact" 
 pruefe(aufgaben.includes("task_number.ilike.") && aufgaben.includes('name="q"'), "tasks.tsx: Aufgaben ohne Textsuche");
 pruefe((await lies("app/components/arbeitsplatz.tsx")).includes("In allen suchen →"), "arbeitsplatz.tsx: gekappte Liste ohne Weg in die Suche ueber alles");
 
+// 5. P2-3: Vorlagen und Exposé-Versand mit Nachweis -- das CRM verschickt nichts und schreibt keine Kundentexte
+const schreiben = await lies("app/components/email-schreiben.tsx");
+pruefe(schreiben.includes('name="_intent" value="gesendet"') && schreiben.includes("mailtoAdresse("), "email-schreiben.tsx: kein Weg ueber das Mailprogramm mit anschliessendem Festhalten");
+pruefe(!/fetch\(|sendMail|resend|smtp/i.test(schreiben), "email-schreiben.tsx: darf nichts selbst verschicken");
+const compose = await lies("app/routes/email-compose.tsx");
+pruefe(compose.includes('from("property_disclosures").insert') && compose.includes('channel: "EXPOSE_EMAIL"'), "email-compose.tsx: Exposé-Versand ohne Objektnachweis");
+pruefe(compose.includes('.eq("status", "RELEASED")'), "email-compose.tsx: Exposé nicht nur in der zur Verwendung freigegebenen Fassung");
+pruefe(!/(Widerruf|Provision|Belehrung)/.test((await lies("app/lib/email-vorlage.ts")).replace(/\/\/.*$/gm, "")), "email-vorlage.ts: das CRM liefert keine Rechts- oder Provisionstexte");
+pruefe((await lies("supabase/migrations/20261016175556_email_templates.sql")).includes("has_permission('settings.manage')"), "email_templates: Pflege nicht auf die Verwaltung beschraenkt");
+
 if (fehler.length) {
   console.error("P2:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten.");
+console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt).");

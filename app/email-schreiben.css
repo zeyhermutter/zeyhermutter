@@ -1,0 +1,15 @@
+/* "E-Mail schreiben" in der Akte (P2-3). */
+.email-schreiben-felder { display: grid; gap: 12px; }
+.email-schreiben-felder textarea { font-family: inherit; }
+.email-schreiben-expose { display: grid; gap: 6px; margin: 14px 0 0; padding: 0; border: 0; }
+.email-schreiben-expose legend { margin-bottom: 4px; font-weight: 600; font-size: 13px; }
+.email-schreiben-expose legend small { font-weight: 400; color: #4a5763; }
+.email-schreiben-expose label { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.email-schreiben-link { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.email-schreiben-link small { color: #4a5763; }
+.email-schreiben-aktionen { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.email-schreiben-festhalten { display: grid; gap: 8px; margin-top: 16px; padding-top: 14px; border-top: 1px solid #e3e8ee; }
+.email-schreiben-festhalten.bereit { border-top-color: #0b5cad; }
+.email-schreiben-festhalten button { justify-self: start; }
+.email-rueckmeldung { display: grid; gap: 6px; }
+.email-rueckmeldung p { margin: 0; }
