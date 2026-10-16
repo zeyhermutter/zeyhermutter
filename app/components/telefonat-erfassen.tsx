@@ -24,8 +24,13 @@ export function TelefonatMeldung() {
 
 export function TelefonatErfassen({ kontaktId, darfAufgaben }: { kontaktId: string; darfAufgaben: boolean }) {
   const ort = useLocation();
+  const [suche] = useSearchParams();
   const [offen, setOffen] = useState(false);
   const [ergebnis, setErgebnis] = useState("");
+  // Nach dem Speichern zu (Live-Test 16.10.2026: das Formular blieb offen
+  // stehen und sah aus, als waere noch nichts gespeichert).
+  const gespeichert = ["gespeichert", "mit_rueckruf", "ohne_rueckruf"].includes(suche.get("telefonat") ?? "");
+  useEffect(() => { if (gespeichert) { setOffen(false); setErgebnis(""); } }, [gespeichert, ort.key]);
   useEffect(() => {
     const pruefe = () => { if (window.location.hash === "#telefonat-neu") setOffen(true); };
     pruefe();
