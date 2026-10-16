@@ -36,6 +36,11 @@ export type CalendarEvent = {
   sourceLabel: string;
   exportUrl: string;
   statusLabel: string | null;
+  /**
+   * Erledigt, abgebrochen, abgesagt oder durchgefuehrt: steht im Kalender
+   * (mit Status), ist aber keine Arbeit mehr. Mein Tag laesst es weg.
+   */
+  beendet?: boolean;
 };
 
 export function one<T>(value: T | T[] | null | undefined): T | null {
@@ -271,6 +276,7 @@ export async function ladeTermine(
       sourceLabel: kategorie("TASK").beschriftung,
       exportUrl: exportUrl("task", task.id),
       statusLabel: beschrifte(AUFGABENSTATUS, task.status),
+      beendet: task.status === "DONE" || task.status === "CANCELLED",
     });
   }
 
@@ -326,6 +332,7 @@ export async function ladeTermine(
       sourceLabel: kategorie("VIEWING").beschriftung,
       exportUrl: exportUrl("viewing", row.id),
       statusLabel: beschrifte(BESICHTIGUNGSSTATUS, row.status),
+      beendet: ["COMPLETED", "CANCELLED", "NO_SHOW"].includes(row.status),
     });
   }
 

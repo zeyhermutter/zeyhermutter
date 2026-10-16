@@ -53,6 +53,9 @@ const erwartet = [
 for (const e of erwartet) pruefe(hilfe.includes(e), `help-content.ts: Schwelle "${e}" fehlt -- Hilfe und app/lib/stillstand.ts stimmen nicht ueberein`);
 pruefe(stand.includes('.in("activity_type", AKTIVITAET_ECHT)'), "vorgang-stand.server.ts: Stillstand liest nicht nur echte Aktivitaet");
 
+// 2b. Mein Tag zeigt nur offene Termine
+pruefe((await lies("app/lib/mein-tag.server.ts")).includes("termine.events.filter((e) => !e.beendet)"), "mein-tag.server.ts: abgebrochene/abgesagte Termine in Mein Tag");
+
 // 3. Datumsgruppen
 pruefe(tag.includes("kommenderTag(") && tag.includes("vergangenerAbschnitt(") && tag.includes("fristAbschnitt("), "crm-dashboard.tsx: Mein Tag ohne Datumsgruppen");
 

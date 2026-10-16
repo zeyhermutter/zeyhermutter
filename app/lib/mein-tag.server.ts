@@ -284,8 +284,12 @@ export async function ladeMeinTag(
     })),
   ].sort((a, b) => a.wann.localeCompare(b.wann));
 
-  const termineHeute = termine.events.filter((e) => dateKey(e.startsAt) === heute);
-  const termineDanach = termine.events.filter((e) => dateKey(e.startsAt) !== heute);
+  // Abgebrochene, erledigte und abgesagte Termine stehen im Kalender, sind
+  // aber keine Arbeit mehr (16.10.2026: eine abgebrochene Aufgabe stand
+  // unter "Nächste 7 Tage").
+  const offen = termine.events.filter((e) => !e.beendet);
+  const termineHeute = offen.filter((e) => dateKey(e.startsAt) === heute);
+  const termineDanach = offen.filter((e) => dateKey(e.startsAt) !== heute);
 
   return {
     heute,
