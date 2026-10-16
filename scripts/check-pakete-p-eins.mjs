@@ -158,8 +158,16 @@ for (const datei of ["app/routes/contact-overview.tsx", "app/routes/contact-coll
 // 17. Organisation zeigt ihre Ansprechpartner
 pruefe((await lies("app/routes/organization-detail.tsx")).includes('id="ansprechpartner"'), "organization-detail.tsx: Ansprechpartner der Organisation nicht sichtbar");
 
+// 18. Suchprofil anlegen behaelt die Typen; Leads ohne Dauer-Erklaerkarte und ohne zweiten Anlegen-Knopf
+{
+  const neu = await lies("app/routes/search-profile-new.tsx");
+  pruefe(neu.includes('fields.property_types=fd.getAll("property_types")') && neu.includes('defaultChecked={(f.property_types'), "search-profile-new.tsx: gewählte Immobilientypen gehen bei einem Fehler verloren");
+  const leads = await lies("app/routes/leads.tsx");
+  pruefe(!leads.includes('<p className="eyebrow">Was ist ein Lead?</p>') && (leads.match(/to="\/leads\/new"/g) ?? []).length === 1, "leads.tsx: Erklärkarte dauerhaft offen oder zwei Knöpfe zum Anlegen");
+}
+
 if (fehler.length) {
   console.error("P1:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten, Anfrage beginnt mit der Nachricht, keine internen Codes, ein Kopf je Akte bei Auftrag und Provision, Eigentümer verlinkt und beim Anlegen wählbar, Objektreiter nur mit Recht, Website-Seiten ohne Fachjargon und mit sichtbarer Statusbedingung, Hochladen in der Unterlagenzeile, mehrere Medien auf einmal, Telefonat schnell erfassen, Ansprechpartner an der Organisation.");
+console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten, Anfrage beginnt mit der Nachricht, keine internen Codes, ein Kopf je Akte bei Auftrag und Provision, Eigentümer verlinkt und beim Anlegen wählbar, Objektreiter nur mit Recht, Website-Seiten ohne Fachjargon und mit sichtbarer Statusbedingung, Hochladen in der Unterlagenzeile, mehrere Medien auf einmal, Telefonat schnell erfassen, Ansprechpartner an der Organisation, Suchprofil-Typen bleiben, Leads ruhiger.");
