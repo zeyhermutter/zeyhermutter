@@ -54,6 +54,7 @@ const AUSNAHMEN = {
   "/api/telefonat": "Speichert ein schnell erfasstes Telefonat und fuehrt zurueck in die Akte, keine Seite.",
   "/api/naechster-schritt": "Liefert die Ampel einer Liste als Daten, keine Seite.",
   "/api/stillstand": "Liefert den Stillstand fuer Mein Tag als Daten, keine Seite.",
+  "/api/suche": "Liefert die Treffer der Schnellsuche (Strg+K) als Daten, keine Seite.",
   "/logout": "Abmelden steht als Knopf in der Titelleiste.",
 };
 

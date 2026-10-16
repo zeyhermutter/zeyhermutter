@@ -70,9 +70,11 @@ for (const datei of quelldateien) {
     + "  Die Zuordnung von entity_type auf einen Weg steht in\n"
     + "  app/lib/benachrichtigungsziele.ts. Eine zweite Kopie veraltet still --\n"
     + "  genau so ist MEASUREMENT_ORDER am 08.10.2026 durchgefallen.");
-  // crm-search.tsx bildet Suchergebnisse ab, nicht Benachrichtigungen. Die
-  // Ausnahme steht hier mit Namen, damit sie nicht aus Versehen entsteht.
-  if (datei === "app/routes/crm-search.tsx") continue;
+  // Die Suche bildet Suchergebnisse ab, nicht Benachrichtigungen. Seit P2-2
+  // (16.10.2026) steht sie in globale-suche.server.ts, die Trefferseite
+  // crm-search.tsx nutzt sie. Die Ausnahmen stehen hier mit Namen, damit sie
+  // nicht aus Versehen entstehen.
+  if (datei === "app/routes/crm-search.tsx" || datei === "app/lib/globale-suche.server.ts") continue;
   pruefe(!/entity_type\s*===\s*"(CONTACT|LEAD|INQUIRY|SEARCH_PROFILE|VIEWING|PROPERTY|MEASUREMENT_ORDER)"/.test(inhalt),
     `${datei} vergleicht entity_type selbst mit Datensatzarten.\n`
     + "  Fuer das Ziel einer Benachrichtigung ist benachrichtigungsZiel()\n"

@@ -6,12 +6,14 @@ import type { Route } from "./+types/projects";
 import { requirePermission } from "~/lib/auth.server";
 import { tag } from "~/lib/format";
 import { Ampel, useNaechsteSchritte } from "~/components/ampel";
+import { VERKAUFSPROJEKTSTATUS } from "~/lib/labels";
 import "~/programm-liste.css";
 
 type ActionResult={error?:string};
 
 export const PHASE:Record<string,string>={LEAD:"Lead",OWNER_TALK:"Eigentümergespräch",READINESS_CHECK:"Verkaufsstrategie-Check",CONSULTATION:"Beratung",MANDATE:"Maklerauftrag",PREPARATION:"Vorbereitung",MARKETING:"Vermarktung",NOTARY:"Notar",COMPLETED:"Abgeschlossen"};
-export const PROJECT_STATUS:Record<string,string>={ACTIVE:"Aktiv",ON_HOLD:"Ruht",WON:"Gewonnen",LOST:"Verloren"};
+// Die Beschriftungen stehen einmal in labels.ts (P2-2: auch die Suche braucht sie).
+export const PROJECT_STATUS:Record<string,string>=VERKAUFSPROJEKTSTATUS;
 export const STATUS_CLASS:Record<string,string>={ACTIVE:"status-sold",ON_HOLD:"status-draft",WON:"status-sold",LOST:"status-lost"};
 export const BLOCKER_AREA:Record<string,string>={PROPERTY:"Immobilie",CHECK:"Verkaufsstrategie-Check",MEASURE:"Maßnahmen",CHECKLIST:"Vermarktungsreife",DISCLOSURE:"Pflichtangaben",DISPOSITION:"Verfügungsberechtigung",MANDATE:"Maklerauftrag"};
 

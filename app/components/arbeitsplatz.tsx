@@ -192,6 +192,11 @@ export function Arbeitsplatz({
           {geoeffnetFehlt && geoeffnet ? zeile(geoeffnet, "nicht in der Liste") : null}
           {sichtbar.map((z) => zeile(z))}
           {sichtbar.length === 0 && !listeFehlt && suche ? <p className="arbeitsplatz-hinweis">Nichts passt zu „{suche}“.</p> : null}
+          {/* Die Liste ist gekappt: das Suchfeld filtert nur, was geladen ist. Kein stilles
+              "nichts gefunden" -- der Weg in die Suche ueber alles steht da (P2-2). */}
+          {abgeschnitten && suche.trim().length >= 2 ? (
+            <p className="arbeitsplatz-hinweis">Durchsucht: {abgeschnitten}. <Link to={`/crm/search?q=${encodeURIComponent(suche.trim())}`}>In allen suchen →</Link></p>
+          ) : null}
         </div>
 
         <div className="arbeitsplatz-liste-fuss">

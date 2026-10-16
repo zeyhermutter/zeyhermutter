@@ -10,6 +10,12 @@ import "~/programm-liste.css";
 import { crmDateAtTimeToIso } from "~/lib/local-time";
 
 type ActionResult = { error?: string };
+
+// Seiten statt Kappung (P2-2, 16.10.2026). Vorher lud die Liste die ersten
+// 200 Aufgaben nach Faelligkeit; was dahinter lag, fehlte ohne Hinweis.
+// Jetzt 50 je Seite, die Gesamtzahl steht oben, und eine Textsuche
+// (Nummer, Titel, Beschreibung) laeuft in der Datenbank, nicht im Browser.
+const SEITE = 50;
 const STATUS: Record<string, string> = { OPEN: "Offen", IN_PROGRESS: "In Bearbeitung", DONE: "Erledigt", CANCELLED: "Abgebrochen" };
 
 function text(fd: FormData, k: string) { return String(fd.get(k) ?? "").trim(); }
@@ -20,7 +26,14 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   // Wessen Aufgaben: wie auf "Mein Tag" -- Meins, je Kollege ein Knopf, Alle.
   // Eine unbekannte Kennung faellt auf Meins zurueck.
   const von = url.searchParams.get("von") ?? "meins";
-  let query = supabase.from("tasks").select("id,task_number,title,description,status,priority,due_at,contact_id,property_id,lead_id,inquiry_id,search_profile_id,viewing_id,responsible_user,created_by,version").is("archived_at", null).order("due_at", { ascending: true }).limit(200);
+  const q = (url.searchParams.get("q") ?? "").trim();
+  const seite = Math.max(1, Number(url.searchParams.get("seite") ?? "1") || 1);
+  let query = supabase.from("tasks").select("id,task_number,title,description,status,priority,due_at,contact_id,property_id,lead_id,inquiry_id,search_profile_id,viewing_id,responsible_user,created_by,version", { count: "exact" }).is("archived_at", null).order("due_at", { ascending: true, nullsFirst: false }).order("task_number", { ascending: true }).range((seite - 1) * SEITE, seite * SEITE - 1);
+  if (q) {
+    // Komma und Klammern trennen in der Filtersprache Bedingungen -- sie fallen weg.
+    const sicher = q.replace(/[,%()]/g, " ").trim();
+    if (sicher) query = query.or(`task_number.ilike.%${sicher}%,title.ilike.%${sicher}%,description.ilike.%${sicher}%`);
+  }
   if (status === "OPEN") query = query.in("status", ["OPEN", "IN_PROGRESS"]);
   else if (status !== "ALL") query = query.eq("status", status);
   const { data: aktive } = await supabase.from("profiles").select("user_id,display_name").eq("status", "ACTIVE").order("display_name");
@@ -30,7 +43,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const ansicht = von === "alle" ? "alle" : kollegen.some((k) => k.id === von) ? von : "meins";
   if (ansicht !== "alle") query = query.eq("responsible_user", ansicht === "meins" ? userId : ansicht);
 
-  const [{ data: tasks, error: taskError }, { data: profiles, error: profileError }, { data: properties, error: propertyError }, { data: leads, error: leadError }, { data: inquiries, error: inquiryError }, { data: searchProfiles, error: searchProfileError }, { data: viewings, error: viewingError }, { data: canWrite }] = await Promise.all([
+  const [{ data: tasks, error: taskError, count: gesamt }, { data: profiles, error: profileError }, { data: properties, error: propertyError }, { data: leads, error: leadError }, { data: inquiries, error: inquiryError }, { data: searchProfiles, error: searchProfileError }, { data: viewings, error: viewingError }, { data: canWrite }] = await Promise.all([
     query,
     supabase.from("profiles").select("user_id,display_name,status").eq("status", "ACTIVE").order("display_name"),
     supabase.from("properties").select("id,property_number,internal_title,status").neq("status", "ARCHIVED").order("updated_at", { ascending: false }).limit(500),
@@ -57,7 +70,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   const map = (arr: any[], key: string) => Object.fromEntries(arr.map((x) => [x[key], x]));
   const group = (arr: any[], key: string) => arr.reduce((acc: Record<string, any[]>, item: any) => { (acc[item[key]] ??= []).push(item); return acc; }, {});
-  return data({ tasks: tasks ?? [], profiles: profiles ?? [], properties: properties ?? [], leads: leads ?? [], inquiries: inquiries ?? [], searchProfiles: searchProfiles ?? [], viewings: viewings ?? [], contactMap: map(contacts ?? [], "id"), profileMap: Object.fromEntries((profiles ?? []).map((x: any) => [x.user_id, x.display_name])), propertyMap: map(properties ?? [], "id"), leadMap: map(leads ?? [], "id"), inquiryMap: map(inquiries ?? [], "id"), searchProfileMap: map(searchProfiles ?? [], "id"), viewingMap: map(viewings ?? [], "id"), watchersByTask: group(watchers ?? [], "task_id"), commentsByTask: group(comments ?? [], "entity_id"), profile, status, ansicht, kollegen, canWrite: canWrite === true }, { headers: responseHeaders() });
+  return data({ tasks: tasks ?? [], profiles: profiles ?? [], properties: properties ?? [], leads: leads ?? [], inquiries: inquiries ?? [], searchProfiles: searchProfiles ?? [], viewings: viewings ?? [], contactMap: map(contacts ?? [], "id"), profileMap: Object.fromEntries((profiles ?? []).map((x: any) => [x.user_id, x.display_name])), propertyMap: map(properties ?? [], "id"), leadMap: map(leads ?? [], "id"), inquiryMap: map(inquiries ?? [], "id"), searchProfileMap: map(searchProfiles ?? [], "id"), viewingMap: map(viewings ?? [], "id"), watchersByTask: group(watchers ?? [], "task_id"), commentsByTask: group(comments ?? [], "entity_id"), profile, status, ansicht, kollegen, canWrite: canWrite === true, q, seite, gesamt: gesamt ?? 0, seiten: Math.max(1, Math.ceil((gesamt ?? 0) / SEITE)) }, { headers: responseHeaders() });
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
@@ -156,7 +169,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 }
 
 export default function Tasks() {
-  const { tasks, profiles, properties, leads, inquiries, searchProfiles, viewings, contactMap, profileMap, propertyMap, leadMap, inquiryMap, searchProfileMap, viewingMap, watchersByTask, commentsByTask, profile, status, ansicht, kollegen, canWrite } = useLoaderData<typeof loader>();
+  const { tasks, profiles, properties, leads, inquiries, searchProfiles, viewings, contactMap, profileMap, propertyMap, leadMap, inquiryMap, searchProfileMap, viewingMap, watchersByTask, commentsByTask, profile, status, ansicht, kollegen, canWrite, q, seite, gesamt, seiten } = useLoaderData<typeof loader>();
   const result = useActionData<typeof action>();
   const leadOptions = leads.map((x: any) => ({ id: x.id, label: x.lead_number }));
   const propertyOptions = properties.map((x: any) => ({ id: x.id, label: `${x.property_number} · ${x.internal_title}` }));
@@ -169,13 +182,16 @@ export default function Tasks() {
     ...kollegen.map((k: { id: string; name: string }) => ({ schluessel: k.id, name: k.name })),
     { schluessel: "alle", name: "Alle" },
   ];
-  const mitUmfang = (schluessel: string) => {
+  const adresse = (schluessel: string, zuSeite = 1) => {
     const p = new URLSearchParams();
     if (status !== "OPEN") p.set("status", status);
     if (schluessel !== "meins") p.set("von", schluessel);
-    const q = p.toString();
-    return q ? `/crm/tasks?${q}` : "/crm/tasks";
+    if (q) p.set("q", q);
+    if (zuSeite > 1) p.set("seite", String(zuSeite));
+    const abfrage = p.toString();
+    return abfrage ? `/crm/tasks?${abfrage}` : "/crm/tasks";
   };
+  const mitUmfang = (schluessel: string) => adresse(schluessel);
 
   // Eine Programmliste wie die Kontaktliste (12.10.2026): oben die
   // Werkzeugleiste, darunter eine Zeile je Aufgabe. Vorher eine Karte mit
@@ -187,15 +203,16 @@ export default function Tasks() {
       <nav className="programm-umfang" aria-label="Wessen Aufgaben">
         {umfang.map((u) => <Link key={u.schluessel} className={ansicht === u.schluessel ? "aktiv" : ""} aria-current={ansicht === u.schluessel ? "page" : undefined} to={mitUmfang(u.schluessel)}>{u.name}</Link>)}
       </nav>
-      <Form method="get">
+      <Form method="get" role="search" className="aufgaben-filter">
         {ansicht !== "meins" ? <input type="hidden" name="von" value={ansicht}/> : null}
+        <label className="programm-liste-suche"><span className="sr-only">Aufgaben durchsuchen</span><input type="search" name="q" defaultValue={q} placeholder="Nummer, Titel, Beschreibung …" autoComplete="off"/></label>
         <label><span className="sr-only">Status</span><select name="status" defaultValue={status} onChange={(e) => e.currentTarget.form?.requestSubmit()}><option value="OPEN">Offen</option><option value="ALL">Alle</option><option value="DONE">Erledigt</option><option value="CANCELLED">Abgebrochen</option></select></label>
       </Form>
-      <span className="programm-liste-zaehler">{tasks.length} {tasks.length === 1 ? "Aufgabe" : "Aufgaben"}</span>
+      <span className="programm-liste-zaehler" aria-live="polite">{gesamt} {gesamt === 1 ? "Aufgabe" : "Aufgaben"}{seiten > 1 ? ` · Seite ${seite} von ${seiten}` : ""}</span>
       {canWrite?<TaskCreateModal profiles={profiles} currentUserId={profile.user_id} leads={leadOptions} properties={propertyOptions} searchProfiles={searchProfileOptions} inquiries={inquiryOptions} viewings={viewingOptions}/>:null}
     </div>
     <div className="programm-tabelle-rahmen">
-      {tasks.length === 0 ? <p className="programm-liste-leer">Keine Aufgaben in dieser Ansicht.</p> : <table className="programm-tabelle aufgaben-tabelle">
+      {tasks.length === 0 ? <p className="programm-liste-leer">{q ? `Keine Aufgabe passt zu „${q}“.` : "Keine Aufgaben in dieser Ansicht."}</p> : <table className="programm-tabelle aufgaben-tabelle">
         <thead><tr><th>Fällig</th><th>Aufgabe</th><th>Bezug</th><th>Verantwortlich</th><th>Priorität</th><th>Status</th><th><span className="sr-only">Öffnen</span></th></tr></thead>
         <tbody>
         {tasks.map((task: any) => {
@@ -218,5 +235,12 @@ export default function Tasks() {
         </tbody>
       </table>}
     </div>
+    {seiten > 1 ? (
+      <nav className="programm-liste-seiten" aria-label="Seiten">
+        {seite > 1 ? <Link to={adresse(ansicht, seite - 1)}>← Zurück</Link> : <span />}
+        <span>Seite {seite} von {seiten}</span>
+        {seite < seiten ? <Link to={adresse(ansicht, seite + 1)}>Weiter →</Link> : <span />}
+      </nav>
+    ) : null}
   </main>;
 }

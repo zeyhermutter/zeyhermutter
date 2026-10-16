@@ -113,7 +113,8 @@ const AUSNAHMEN = {
   // Organisationsrollen: feste Auswahl in der Maske, freier Text in der Spalte.
   // Art eines Verlaufseintrags: freier Text in activity_events.activity_type.
   // Protokollaktion: von den Audit-Triggern gesetzt, ohne CHECK-Bedingung.
-  "app/lib/labels.ts": ["ORGANISATIONSROLLE", "CHECKLISTENKATEGORIE", "AKTIVITAETSART", "AUDITAKTION"],
+  // Art eines Suchtreffers: von crm_global_search und der Suche im Code gesetzt (P2-2).
+  "app/lib/labels.ts": ["ORGANISATIONSROLLE", "CHECKLISTENKATEGORIE", "AKTIVITAETSART", "AUDITAKTION", "SUCHTREFFERART"],
   "app/routes/contact-associations.tsx": ["ORG_ROLE"],
   // Kategorien der Vermarktungscheckliste: gesetzt beim Anlegen der Akte,
   // ohne CHECK-Bedingung.

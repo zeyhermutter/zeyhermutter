@@ -59,8 +59,21 @@ pruefe((await lies("app/lib/mein-tag.server.ts")).includes("termine.events.filte
 // 3. Datumsgruppen
 pruefe(tag.includes("kommenderTag(") && tag.includes("vergangenerAbschnitt(") && tag.includes("fristAbschnitt("), "crm-dashboard.tsx: Mein Tag ohne Datumsgruppen");
 
+// 4. P2-2: Strg+K, Suche in der Datenbank, Seiten statt Kappung
+const schnell = await lies("app/components/schnellsuche.tsx");
+pruefe(schnell.includes('e.key.toLowerCase() === "k"') && schnell.includes("/api/suche?q="), "schnellsuche.tsx: kein Strg+K oder keine Treffer beim Tippen");
+pruefe(schnell.includes('action="/crm/search"'), "schnellsuche.tsx: ohne JavaScript muss das Feld weiter auf /crm/search fuehren");
+pruefe((await lies("app/components/programmrahmen.tsx")).includes("<Schnellsuche />"), "programmrahmen.tsx: Titelleiste ohne Schnellsuche");
+const suche = await lies("app/routes/crm-search.tsx");
+pruefe(!suche.includes(".limit(300)") && !suche.includes(".slice(0,100)") && suche.includes("sucheUeberall("), "crm-search.tsx: Suche wieder im Browser oder still gekappt -- gehoert in globale-suche.server.ts");
+pruefe(suche.includes("{mehr?"), "crm-search.tsx: kein Hinweis, wenn es mehr Treffer gibt");
+const aufgaben = await lies("app/routes/tasks.tsx");
+pruefe(!aufgaben.includes(".limit(200)") && aufgaben.includes('{ count: "exact" }') && aufgaben.includes(".range("), "tasks.tsx: Aufgabenliste wieder gekappt statt in Seiten");
+pruefe(aufgaben.includes("task_number.ilike.") && aufgaben.includes('name="q"'), "tasks.tsx: Aufgaben ohne Textsuche");
+pruefe((await lies("app/components/arbeitsplatz.tsx")).includes("In allen suchen →"), "arbeitsplatz.tsx: gekappte Liste ohne Weg in die Suche ueber alles");
+
 if (fehler.length) {
   console.error("P2:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen.");
+console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten.");

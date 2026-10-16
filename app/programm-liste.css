@@ -397,3 +397,6 @@
 .prioritaet-urgent { color: #b42318; font-weight: 700; }
 .prioritaet-high::before { content: "▲ "; }
 .prioritaet-urgent::before { content: "▲▲ "; }
+
+/* Hinweis in der Trefferliste: mehr Treffer als angezeigt, Teil nicht geladen (P2-2). */
+.programm-liste-hinweis { margin: 8px 12px; }

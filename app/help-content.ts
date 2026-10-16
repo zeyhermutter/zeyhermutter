@@ -115,7 +115,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         + "umgeschaltet, wessen Tag gezeigt wird: **Meins**, der eines Kollegen oder "
         + "**Alle**. Darunter steht die Karte mit den Objektstandorten." },
       { art: "liste", punkte: [
-        "Die **Suche** in der Titelleiste findet Kontakte, Immobilien, Leads und Vorgänge über Namen, Adressen und Nummern. Enter öffnet die Trefferliste (Mein Tag › Suche).",
+        "Die **Suche** in der Titelleiste findet Kontakte, Immobilien, Leads, Anfragen, Aufgaben, Kaufangebote, Abschlüsse, Verkaufsprojekte und Besichtigungen über Namen, Adressen und Nummern. **Strg+K** (Mac: ⌘K) springt von überall hinein. Schon beim Tippen stehen die ersten Treffer darunter; Pfeiltasten wählen, Enter öffnet. Enter ohne Auswahl öffnet die volle Trefferliste (Mein Tag › Suche). Gibt es mehr Treffer, als angezeigt werden, steht das dabei.",
         "Die **Glocke** zeigt die Zahl ungelesener Benachrichtigungen. Ein Klick öffnet die Liste, ein Klick auf einen Eintrag springt zum betroffenen Vorgang und markiert ihn als gelesen. Alle Benachrichtigungen stehen unter Mein Tag › Benachrichtigungen.",
         "Steht in der Titelleiste **BETA**, ist es das Testsystem — dort darf gefahrlos geübt werden.",
       ]},
@@ -142,7 +142,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         + "nach der Übergabe. Diese Aufgaben tauchen nicht aus dem Nichts auf — sie "
         + "hängen immer an einem Vorgang und verlinken dorthin." },
       { art: "liste", punkte: [
-        "**Mein Tag › Aufgaben** zeigt offene und laufende Aufgaben als Programmliste, sortiert nach Fälligkeit. Überfällige sind hervorgehoben, die Priorität steht als Schildchen in der Zeile.",
+        "**Mein Tag › Aufgaben** zeigt offene und laufende Aufgaben als Programmliste, sortiert nach Fälligkeit. Überfällige sind hervorgehoben, die Priorität steht als Schildchen in der Zeile. Das Suchfeld findet Aufgaben über Nummer, Titel und Beschreibung. Es stehen 50 Aufgaben je Seite da; oben steht, wie viele es insgesamt sind, unten blättert man weiter.",
         "Oben wird wie auf „Heute“ umgeschaltet: **Meins**, ein Kollege oder **Alle**. Status und Umschalter bleiben stehen, wenn eine Aufgabe erledigt wird.",
         "**In jeder Akte dieselbe Aufgabenliste** — Kontakt, Objekt, Lead, Anfrage, Besichtigung und Suchprofil: oben **+ Aufgabe** (Titel und Fälligkeit genügen, Verantwortlich ist vorbelegt), jede offene Aufgabe mit einem Kreis zum **Abhaken in der Zeile**, Details und weitere Status über „Aufgabe öffnen“. Erledigte stehen zugeklappt darunter. Eine Aufgabe an der Besichtigung erscheint auch beim Kontakt, beim Objekt und bei der Anfrage. Gibt es am selben Vorgang schon eine offene Aufgabe mit gleichem Titel, fragt das Formular einmal nach — sollen zwei Personen dieselbe Aufgabe sehen, genügt eine Aufgabe mit einem Beobachter.",
         "Jede Aufgabe hat genau einen Verantwortlichen. Beobachter können zusätzlich eingetragen werden — sie bekommen Benachrichtigungen, sind aber nicht zuständig.",

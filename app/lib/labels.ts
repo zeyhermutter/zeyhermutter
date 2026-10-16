@@ -63,6 +63,17 @@ export const LEADSTATUS: Beschriftungen = {
   NURTURE: "Später nachfassen", LOST: "Verloren",
 };
 
+/** Art eines Suchtreffers (Trefferseite und Strg+K, P2-2). */
+export const SUCHTREFFERART: Beschriftungen = {
+  CONTACT: "Kontakt", ORGANIZATION: "Organisation", TASK: "Aufgabe", PROPERTY: "Immobilie",
+  LEAD: "Lead", SEARCH_PROFILE: "Suchprofil", INQUIRY: "Anfrage", OFFER: "Kaufangebot",
+  CLOSING: "Abschluss & Notar", PROJECT: "Verkaufsprojekt", VIEWING: "Besichtigung",
+};
+
+export const VERKAUFSPROJEKTSTATUS: Beschriftungen = {
+  ACTIVE: "Aktiv", ON_HOLD: "Ruht", WON: "Gewonnen", LOST: "Verloren",
+};
+
 export const ANFRAGESTATUS: Beschriftungen = {
   NEW: "Neu", CONTACTED: "Kontaktiert", QUALIFIED: "Qualifiziert",
   VIEWING_PLANNED: "Besichtigung geplant", CLOSED: "Erledigt", LOST: "Kein weiteres Interesse",

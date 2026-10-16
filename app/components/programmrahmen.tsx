@@ -1,6 +1,7 @@
 import { Form, Link, useLocation } from "react-router";
 import type { ReactNode } from "react";
 import { NotificationBell, type HeaderNotification } from "~/components/notification-bell";
+import { Schnellsuche } from "~/components/schnellsuche";
 import { BEREICHE, bereichAusPfad, emailZiel, type Bereichsschluessel } from "~/lib/programmbereiche";
 import "~/programmrahmen.css";
 import "~/programmansicht.css";
@@ -79,13 +80,8 @@ export function Programmrahmen({ children, notifications, unreadCount, benutzer,
           <span>ZeyherMutterOS</span>
         </Link>
 
-        <form className="titelleiste-suche" method="get" action="/crm/search" role="search">
-          <label>
-            <span className="sr-only">Überall suchen</span>
-            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
-            <input type="search" name="q" placeholder="Objekt, Adresse, Nummer suchen …" autoComplete="off" />
-          </label>
-        </form>
+        {/* Schnellsuche mit Strg+K (P2-2); ohne JavaScript ein Formular auf /crm/search. */}
+        <Schnellsuche />
 
         <div className="titelleiste-rechts">
           {hilfe}
