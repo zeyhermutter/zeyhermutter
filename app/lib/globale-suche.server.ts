@@ -138,13 +138,24 @@ export async function sucheUeberall(
     for (const t of treffer) if (t.entity_type === "TASK" && ziel[t.entity_id]) t.pfad = ziel[t.entity_id];
   }
 
+  // Reihenfolge (live auf BETA, 16.10.2026: "muster" brachte acht Treffer,
+  // aber nicht den Kontakt Markus Muster -- der Name beginnt mit "Markus",
+  // und die Akte war laenger nicht geaendert):
+  //   1. genaue Nummer
+  //   2. ein Wort im Titel beginnt mit dem Begriff ("Muster" in "Markus Muster")
+  //   3. der Rest
+  // Innerhalb einer Stufe zuerst die Akten, die man meistens sucht (Kontakt,
+  // Immobilie, Lead ...), Aufgaben zuletzt; dann zuletzt geaendert.
   const klein = begriff.toLocaleLowerCase("de-DE");
+  const wortAnfang = new RegExp(`(^|[\\s,.·/-])${klein.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "u");
   const rang = (t: Treffer) => {
     if ((t.reference ?? "").toLocaleLowerCase("de-DE") === klein) return 0;
-    if ((t.title ?? "").toLocaleLowerCase("de-DE").startsWith(klein)) return 1;
+    if (wortAnfang.test((t.title ?? "").toLocaleLowerCase("de-DE"))) return 1;
     return 2;
   };
-  treffer.sort((a, b) => rang(a) - rang(b) || new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+  const ARTEN = ["CONTACT", "PROPERTY", "LEAD", "INQUIRY", "PROJECT", "ORGANIZATION", "OFFER", "CLOSING", "VIEWING", "SEARCH_PROFILE", "TASK"];
+  const art = (t: Treffer) => { const i = ARTEN.indexOf(t.entity_type); return i < 0 ? ARTEN.length : i; };
+  treffer.sort((a, b) => rang(a) - rang(b) || art(a) - art(b) || new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
 
   const quelleVoll = grund.length >= RPC_GRENZE || [angebote, abschluesse, projekte, besichtigungen].some((r) => zeilen(r).length >= JE_QUELLE);
   const quelleFehlt = [angebote, abschluesse, projekte, besichtigungen].some((r) => (r as any).error);
