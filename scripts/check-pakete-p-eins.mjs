@@ -155,8 +155,11 @@ for (const datei of ["app/routes/contact-overview.tsx", "app/routes/contact-coll
   pruefe((await lies(datei)).includes("<TelefonatErfassen "), `${datei}: kein schnelles Erfassen eines Telefonats`);
 }
 
+// 17. Organisation zeigt ihre Ansprechpartner
+pruefe((await lies("app/routes/organization-detail.tsx")).includes('id="ansprechpartner"'), "organization-detail.tsx: Ansprechpartner der Organisation nicht sichtbar");
+
 if (fehler.length) {
   console.error("P1:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten, Anfrage beginnt mit der Nachricht, keine internen Codes, ein Kopf je Akte bei Auftrag und Provision, Eigentümer verlinkt und beim Anlegen wählbar, Objektreiter nur mit Recht, Website-Seiten ohne Fachjargon und mit sichtbarer Statusbedingung, Hochladen in der Unterlagenzeile, mehrere Medien auf einmal, Telefonat schnell erfassen.");
+console.log("P1: Beteiligte je Objekt, Exposé nur mit freigegebenen Bildern, Finanzierung als Auswahl, Kontaktakte mit Übersicht, Objektakte beginnt mit der Lage, Kontaktwahl überall per Suche, Aufgaben-Baustein in 7 Akten, Anfrage beginnt mit der Nachricht, keine internen Codes, ein Kopf je Akte bei Auftrag und Provision, Eigentümer verlinkt und beim Anlegen wählbar, Objektreiter nur mit Recht, Website-Seiten ohne Fachjargon und mit sichtbarer Statusbedingung, Hochladen in der Unterlagenzeile, mehrere Medien auf einmal, Telefonat schnell erfassen, Ansprechpartner an der Organisation.");

@@ -1,7 +1,9 @@
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/organization-detail";
 import { requireActiveUser } from "~/lib/auth.server";
-import { zeitpunkt as formatDate } from "~/lib/format";
+import { tag, zeitpunkt as formatDate } from "~/lib/format";
+import { KontaktAuswahl } from "~/components/kontakt-auswahl";
+import { ORGANISATIONSROLLE, beschrifte } from "~/lib/labels";
 
 type ActionResult = { error?: string; conflict?: boolean };
 type FieldChange = { old?: unknown; new?: unknown };
@@ -37,7 +39,10 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   const organizationId = params.organizationId;
   if (!organizationId) throw new Response("Organisation fehlt.", { status: 404 });
 
-  const [{ data: organization, error }, { data: history, error: historyError }] = await Promise.all([
+  // Ansprechpartner (P1, 16.10.2026): Wer bei dieser Firma zu wem gehoert,
+  // stand bisher nur in den Kontaktakten (Reiter "Adressen & Firmen"). Von
+  // der Organisation aus war niemand zu sehen.
+  const [{ data: organization, error }, { data: history, error: historyError }, { data: personen, error: personenFehler }] = await Promise.all([
     supabase
       .from("organizations")
       .select("id, organization_number, name, legal_form, website, email, phone, street, house_number, postal_code, city, country, notes, status, updated_at, version")
@@ -50,21 +55,53 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
       .eq("entity_id", organizationId)
       .order("occurred_at", { ascending: false })
       .limit(50),
+    supabase
+      .from("contact_organization_relationships")
+      .select("id, role, position, valid_until, contacts(id, contact_number, first_name, last_name, email, phone, mobile, archived_at)")
+      .eq("organization_id", organizationId)
+      .order("created_at", { ascending: true }),
   ]);
 
   if (error || historyError) throw new Response("Organisation konnte nicht geladen werden.", { status: 500 });
   if (!organization) throw new Response("Organisation nicht gefunden.", { status: 404 });
 
   const url = new URL(request.url);
-  return data({ organization, history: history ?? [], profile, saved: url.searchParams.get("saved") === "1" }, { headers: responseHeaders() });
+  const ansprechpartner = ((personen ?? []) as any[])
+    .map((p) => ({ ...p, kontakt: Array.isArray(p.contacts) ? p.contacts[0] : p.contacts }))
+    .filter((p) => p.kontakt && !p.kontakt.archived_at);
+  return data({
+    organization, history: history ?? [], profile, saved: url.searchParams.get("saved") === "1",
+    ansprechpartner, ansprechpartnerFehlt: Boolean(personenFehler), zugeordnet: url.searchParams.get("ansprechpartner"),
+  }, { headers: responseHeaders() });
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
-  const { supabase, responseHeaders } = await requireActiveUser(request, context.cloudflare.env);
+  const { supabase, responseHeaders, userId } = await requireActiveUser(request, context.cloudflare.env);
   const organizationId = params.organizationId;
   if (!organizationId) throw new Response("Organisation fehlt.", { status: 404 });
 
   const formData = await request.formData();
+  const intent = text(formData, "_intent");
+
+  // Dieselbe Verknuepfung wie im Reiter "Adressen & Firmen" der Kontaktakte,
+  // nur von der anderen Seite.
+  if (intent === "ansprechpartner_neu") {
+    const contactId = text(formData, "contact_id");
+    const role = text(formData, "role") || "ANSPRECHPARTNER";
+    if (!contactId) return data<ActionResult>({ error: "Bitte einen Kontakt auswählen." }, { status: 400, headers: responseHeaders() });
+    if (!(role in ORGANISATIONSROLLE)) return data<ActionResult>({ error: "Ungültige Rolle." }, { status: 400, headers: responseHeaders() });
+    const { error } = await supabase.from("contact_organization_relationships").insert({
+      contact_id: contactId, organization_id: organizationId, role, position: text(formData, "position") || null, created_by: userId,
+    });
+    if (error) return data<ActionResult>({ error: error.code === "23505" ? "Dieser Kontakt ist hier schon mit dieser Rolle eingetragen." : "Der Ansprechpartner konnte nicht zugeordnet werden." }, { status: 400, headers: responseHeaders() });
+    return redirect(`/crm/organizations/${organizationId}?ansprechpartner=neu#ansprechpartner`, { headers: responseHeaders() });
+  }
+  if (intent === "ansprechpartner_entfernen") {
+    const { error } = await supabase.from("contact_organization_relationships").delete().eq("id", text(formData, "link_id")).eq("organization_id", organizationId);
+    if (error) return data<ActionResult>({ error: "Die Zuordnung konnte nicht entfernt werden." }, { status: 400, headers: responseHeaders() });
+    return redirect(`/crm/organizations/${organizationId}?ansprechpartner=entfernt#ansprechpartner`, { headers: responseHeaders() });
+  }
+
   const version = Number(text(formData, "version"));
   const name = text(formData, "name");
 
@@ -98,7 +135,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 }
 
 export default function OrganizationDetail() {
-  const { organization, history, profile, saved } = useLoaderData<typeof loader>();
+  const { organization, history, profile, saved, ansprechpartner, ansprechpartnerFehlt, zugeordnet } = useLoaderData<typeof loader>();
   const result = useActionData<typeof action>();
 
   return (
@@ -107,6 +144,33 @@ export default function OrganizationDetail() {
         <div><Link className="back-link" to="/crm/organizations">← Organisationen</Link><p className="eyebrow">{organization.organization_number}</p><h1 className="editor-title">{organization.name}</h1><p className="editor-meta">zuletzt geändert {formatDate(organization.updated_at)}</p></div>
         <div className="header-user"><Link className="subtle-link" to={`/crm/organizations/${organization.id}/partner`}>Partner & Compliance →</Link><span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div>
       </header>
+
+      <section className="data-card" id="ansprechpartner">
+        <div className="card-head">
+          <div><p className="eyebrow">Personen</p><h2>Ansprechpartner{ansprechpartner.length ? ` · ${ansprechpartner.length}` : ""}</h2></div>
+        </div>
+        {zugeordnet === "neu" ? <p className="form-success">Ansprechpartner zugeordnet.</p> : zugeordnet === "entfernt" ? <p className="form-success">Zuordnung entfernt. Der Kontakt selbst bleibt erhalten.</p> : null}
+        {ansprechpartnerFehlt ? <p className="form-warning">Die Ansprechpartner konnten gerade nicht geladen werden.</p>
+          : ansprechpartner.length === 0 ? <p className="empty-state">Noch niemand zugeordnet.</p>
+          : <div className="data-list">{ansprechpartner.map((p: any) => {
+              const k = p.kontakt; const tel = k.mobile ?? k.phone;
+              return <div className="data-row" key={p.id}>
+                <div><strong><Link to={`/crm/contacts/${k.id}`}>{`${k.first_name ?? ""} ${k.last_name ?? ""}`.trim() || k.contact_number}</Link></strong><small>{beschrifte(ORGANISATIONSROLLE, p.role)}{p.position ? ` · ${p.position}` : ""}{p.valid_until ? ` · bis ${tag(p.valid_until)}` : ""}</small></div>
+                <div className="row-meta">
+                  {tel ? <a href={`tel:${tel.replace(/[^+\d]/g, "")}`}>{tel}</a> : null}
+                  {k.email ? <a href={`mailto:${k.email}`}>{k.email}</a> : null}
+                  <Form method="post"><input type="hidden" name="_intent" value="ansprechpartner_entfernen" /><input type="hidden" name="link_id" value={p.id} /><button className="text-button" type="submit" title="Nur die Zuordnung, nicht den Kontakt">Zuordnung entfernen</button></Form>
+                </div>
+              </div>;
+            })}</div>}
+        <Form method="post" className="form-grid ansprechpartner-neu">
+          <input type="hidden" name="_intent" value="ansprechpartner_neu" />
+          <KontaktAuswahl name="contact_id" beschriftung="Kontakt" pflicht ausschliessen={ansprechpartner.map((p: any) => p.kontakt.id)} />
+          <label className="form-field"><span>Rolle</span><select name="role" defaultValue="ANSPRECHPARTNER">{Object.entries(ORGANISATIONSROLLE).map(([w, l]) => <option key={w} value={w}>{l}</option>)}</select></label>
+          <label className="form-field"><span>Funktion</span><input name="position" placeholder="z. B. Hausverwaltung, Vorstand" /></label>
+          <div className="form-actions"><button className="secondary-button" type="submit">Ansprechpartner zuordnen</button></div>
+        </Form>
+      </section>
 
       <div className="contact-layout">
         <Form method="post" className="editor-card">
