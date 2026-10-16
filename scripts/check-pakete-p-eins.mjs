@@ -168,7 +168,7 @@ pruefe((await lies("app/routes/organization-detail.tsx")).includes('id="ansprech
 
 // 19. Provision ohne stille Vorauswahl; Besichtigungen beginnen mit der naechsten
 pruefe(!(await lies("app/components/commission-fields.tsx")).includes("properties[0]?.id"), "commission-fields.tsx: erste Immobilie still vorgewählt");
-pruefe((await lies("app/routes/viewings.tsx")).includes('.gte("starts_at",jetzt).order("starts_at",{ascending:true})'), "viewings.tsx: Einstieg nicht bei der nächsten anstehenden Besichtigung");
+pruefe((await lies("app/routes/viewings.tsx")).includes('basis().in("status",offen).gte("starts_at",jetzt).order("starts_at",{ascending:true})'), "viewings.tsx: Einstieg nicht bei der nächsten anstehenden Besichtigung");
 
 // 20. Kontaktsuche: eine Schreibweise ("Vorname Nachname") fuer vorbelegte Kontakte
 for (const datei of ["app/routes/api-kontakte.ts", "app/routes/referral-detail.tsx", "app/routes/measurement-detail.tsx", "app/routes/project-detail.tsx", "app/routes/property-document-requirements.tsx", "app/routes/property-detail.tsx"]) {
