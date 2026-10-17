@@ -106,6 +106,9 @@ pruefe(datenschutz.includes("bestaetigung.toUpperCase() !== String(k.contact_num
 pruefe(datenschutz.includes("darfAnonymisieren && !anonymisiert"), "contact-auskunft.tsx: Anonymisieren auch ohne das Recht contact.anonymize sichtbar");
 const pruefungSql = await lies("supabase/migrations/20261017100744_kontakt_anonymisieren_pruefung.sql");
 pruefe(["legal_hold", "retention_until", "gwg_identifications", "converted_property_id"].every((w) => pruefungSql.includes(w)), "contact_anonymization_check: Sperre bei Frist, Sperrvermerk, Geldwaesche oder umgewandeltem Lead fehlt");
+const anonymSql = await lies("supabase/migrations/20261017112525_kontakt_anonymisieren.sql");
+pruefe(anonymSql.includes("has_permission('contact.anonymize')") && anonymSql.includes("ANONYMIZE_REASON_REQUIRED") && anonymSql.includes("contact_anonymization_check(p_contact_id)"), "anonymize_contact: ohne Recht, Grund oder Pruefung der Datenbank");
+pruefe(anonymSql.includes("converted_property_id is null") && anonymSql.includes("'ANONYMIZE'") && anonymSql.includes("revoke all on function public.anonymize_contact(uuid, text) from public, anon"), "anonymize_contact: umgewandelte Leads, Protokoll oder Sperre fuer anon fehlt");
 pruefe(compose.includes("schreiben?.werbewiderspruch") && !/werbewiderspruch[^\n]*(disabled|return null)/i.test(compose), "email-compose.tsx: Werbewiderspruch muss als Hinweis erscheinen, nicht als Sperre");
 
 if (fehler.length) {
