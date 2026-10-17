@@ -13,7 +13,7 @@ import { fahrplan } from "~/lib/objektakte-fahrplan";
 import { ObjektakteFahrplan } from "~/components/objektakte-fahrplan";
 import { AufgabenBaustein } from "~/components/aufgaben-baustein";
 import { AUFGABEN_SPALTEN } from "~/lib/aufgaben.server";
-import { ObjektAufEinenBlick, ObjektInteressentenLage } from "~/components/objekt-auf-einen-blick";
+import { ObjektAufEinenBlick, ObjektInteressentenLage, OFFEN_ANFRAGE, KOMMEND } from "~/components/objekt-auf-einen-blick";
 import { ankerPfad, teilAusPfad, type Teil } from "~/lib/objektakte-navigation";
 
 type FeatureChoice = { key:string; label:string };
@@ -37,6 +37,8 @@ function findFeatureMatch(value:string,options:FeatureChoice[]){const normalized
 
 const STATUS_LABELS = IMMOBILIENSTATUS;
 function labelStatus(value:string){return STATUS_LABELS[value]??value.replaceAll("_"," ");}
+
+const INTERESSENTEN_GRENZE=5000;
 
 const GWG_RISK: Record<string,string> = {LOW:"gering",MEDIUM:"mittel",HIGH:"hoch"};
 const DISPOSITION_STRUCTURE: Record<string,string> = {SOLE:"Alleineigentum",FRACTIONAL:"Miteigentum nach Bruchteilen",COMMUNITY_OF_HEIRS:"Erbengemeinschaft",MARITAL_COMMUNITY:"Gütergemeinschaft",OTHER:"Andere Form",UNKNOWN:"noch nicht geklärt"};
@@ -75,7 +77,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   // Leeres Ergebnis in der Form der echten Abfrage, damit die Typen der Anzeige bleiben.
   const nur=<T,>(teile:readonly Teil[],abfrage:()=>T):Promise<Awaited<T>>=>
     teile.includes(teil)?Promise.resolve(abfrage()) as Promise<Awaited<T>>:Promise.resolve(leer as unknown as Awaited<T>);
-  const [addressRes,ownersRes,contactsRes,featuresRes,customFeaturesRes,energyRes,checklistRes,transitionsRes,usersRes,auditPermissionRes,gwgPermissionRes,legalRes,encumbranceRes,dispositionPermissionRes,priceStagesRes,valuationsRes,dispositionRes,dispositionPartyRes,gwgCaseRes,mandatesRes,hoaRes,leviesRes,tenanciesRes,disclosureGapsRes,dispositionGapsRes,saleProjectRes,measurementsRes,offersRes,reservationsRes,closingsRes,commissionsRes,tasksRes,blickAnfragen,blickBesichtigungen,blickAktivitaeten,blickDokumente,taskRechtRes,auditRes] = await Promise.all([
+  const [addressRes,ownersRes,contactsRes,featuresRes,customFeaturesRes,energyRes,checklistRes,transitionsRes,usersRes,auditPermissionRes,gwgPermissionRes,legalRes,encumbranceRes,dispositionPermissionRes,priceStagesRes,valuationsRes,dispositionRes,dispositionPartyRes,gwgCaseRes,mandatesRes,hoaRes,leviesRes,tenanciesRes,disclosureGapsRes,dispositionGapsRes,saleProjectRes,measurementsRes,offersRes,reservationsRes,closingsRes,commissionsRes,tasksRes,blickAnfragen,blickBesichtigungen,blickAktivitaeten,blickDokumente,taskRechtRes,auditRes,blickAnfrageKontakte,blickBesichtigungKontakte] = await Promise.all([
     nur(["objektdaten"],()=>supabase.from("property_addresses").select("*").eq("property_id",propertyId).maybeSingle()),
     // Namen der Eigentuemer direkt mitladen (14.10.2026). Vorher kamen sie aus
     // einer Liste der ersten 1000 Kontakte -- wer dahinter lag, erschien nur
@@ -119,14 +121,22 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     nur(["record"],()=>supabase.from("tasks").select(AUFGABEN_SPALTEN).eq("property_id",propertyId).in("status",["OPEN","IN_PROGRESS"]).is("archived_at",null).order("due_at",{ascending:true,nullsFirst:false}).limit(30)),
     // Nur fuer die Uebersicht: Anfragen, Besichtigungen, Aktivitaeten und die
     // Zahl der Dokumente (P1, 14.10.2026).
-    nur(["record"],()=>supabase.from("inquiries").select("id,inquiry_number,status,received_at,answered_at,contact_id,contacts(id,first_name,last_name)").eq("property_id",propertyId).is("archived_at",null).order("received_at",{ascending:false}).limit(50)),
-    nur(["record"],()=>supabase.from("viewings").select("id,viewing_number,status,starts_at,contact_id,contacts(id,first_name,last_name)").eq("property_id",propertyId).is("archived_at",null).order("starts_at",{ascending:false}).limit(100)),
+    // Offene Anfragen und anstehende Besichtigungen mit genauer Zahl (Lasttest
+    // P2-7): vorher kamen die 50 neuesten Anfragen und 100 Besichtigungen und
+    // wurden im Browser gezaehlt -- bei 300 offenen Anfragen stand "50 offene
+    // Anfragen" da, und die aelteste unbeantwortete fehlte im "Als Naechstes".
+    nur(["record"],()=>supabase.from("inquiries").select("id,inquiry_number,status,received_at,answered_at,contact_id,contacts(id,first_name,last_name)",{count:"exact"}).eq("property_id",propertyId).is("archived_at",null).in("status",OFFEN_ANFRAGE).order("received_at",{ascending:true}).limit(50)),
+    nur(["record"],()=>supabase.from("viewings").select("id,viewing_number,status,starts_at,contact_id,contacts(id,first_name,last_name)",{count:"exact"}).eq("property_id",propertyId).is("archived_at",null).in("status",KOMMEND).gte("starts_at",new Date().toISOString()).order("starts_at",{ascending:true}).limit(20)),
     nur(["record"],()=>supabase.from("activity_events").select("id,activity_type,title,occurred_at").eq("property_id",propertyId).order("occurred_at",{ascending:false}).limit(5)),
     nur(["record"],()=>supabase.from("documents").select("id",{count:"exact",head:true}).eq("property_id",propertyId).is("archived_at",null)),
     nur(["record"],()=>supabase.rpc("current_user_has_permission",{p_permission:"task.write"})),
     // Protokoll nur im Verlauf. Die Datenbank liefert es ohnehin nur mit
     // audit.read (RLS); die Rechtepruefung laeuft parallel statt davor.
     nur(["verlauf"],()=>supabase.from("audit_events").select("id,occurred_at,actor_display_name_snapshot,action,field_changes,metadata").eq("entity_type","PROPERTY").eq("entity_id",propertyId).order("occurred_at",{ascending:false}).limit(60)),
+    // Interessenten: jede Person mit Anfrage oder Besichtigung -- nur die
+    // Kennungen, damit die Zahl auch bei vielen Vorgaengen stimmt.
+    nur(["record"],()=>supabase.from("inquiries").select("contact_id").eq("property_id",propertyId).is("archived_at",null).limit(INTERESSENTEN_GRENZE)),
+    nur(["record"],()=>supabase.from("viewings").select("contact_id").eq("property_id",propertyId).is("archived_at",null).limit(INTERESSENTEN_GRENZE)),
   ]);
   const firstError=[addressRes,ownersRes,contactsRes,featuresRes,customFeaturesRes,energyRes,checklistRes,transitionsRes,usersRes].find((r)=>r.error)?.error;
   if(firstError) throw new Response("Objektdaten konnten nicht vollständig geladen werden.",{status:500,headers:responseHeaders()});
@@ -148,11 +158,18 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     eigentuemer:((ownersRes.data??[]) as any[]).filter((o)=>o.contacts&&(!o.valid_until||o.valid_until>=new Date().toISOString().slice(0,10))).map((o)=>({id:o.id as string,contact_id:o.contact_id as string,name:`${o.contacts.first_name} ${o.contacts.last_name}`,telefon:(o.contacts.mobile??o.contacts.phone??null) as string|null,email:(o.contacts.email??null) as string|null,anteil:o.ownership_percentage===null?null:Number(o.ownership_percentage),haupt:Boolean(o.primary_contact)})),
     anfragen:(blickAnfragen.data??[]) as any[],
     besichtigungen:(blickBesichtigungen.data??[]) as any[],
+    offeneAnfragenZahl:blickAnfragen.error?null:(blickAnfragen.count??(blickAnfragen.data??[]).length),
+    kommendZahl:blickBesichtigungen.error?null:(blickBesichtigungen.count??(blickBesichtigungen.data??[]).length),
+    interessentenZahl:blickAnfrageKontakte.error||blickBesichtigungKontakte.error?null:new Set([
+      ...((blickAnfrageKontakte.data??[]) as any[]).map((r)=>r.contact_id),...((blickBesichtigungKontakte.data??[]) as any[]).map((r)=>r.contact_id),
+      ...((offersRes.data??[]) as any[]).filter((o)=>o.status!=="REPLACED").map((o)=>o.contact_id),
+    ].filter(Boolean)).size,
+    interessentenGekappt:((blickAnfrageKontakte.data??[]) as any[]).length>=INTERESSENTEN_GRENZE||((blickBesichtigungKontakte.data??[]) as any[]).length>=INTERESSENTEN_GRENZE,
     angebotKontakte:((offersRes.data??[]) as any[]).filter((o)=>o.status!=="REPLACED").map((o)=>o.contact_id as string),
     aktiveAngebote:((offersRes.data??[]) as any[]).filter((o)=>["SUBMITTED","COUNTERED","ACCEPTED"].includes(o.status)).length,
     aktivitaeten:(blickAktivitaeten.data??[]) as any[],
     dokumente:blickDokumente.error?null:(blickDokumente.count??0),
-    fehlt:Boolean(blickAnfragen.error||blickBesichtigungen.error||blickAktivitaeten.error||offersRes.error),
+    fehlt:Boolean(blickAnfragen.error||blickBesichtigungen.error||blickAktivitaeten.error||offersRes.error||blickAnfrageKontakte.error||blickBesichtigungKontakte.error),
   };
   const contactMap=Object.fromEntries(((ownersRes.data??[]) as any[]).map((o)=>o.contacts).filter(Boolean).map((c:any)=>[c.id,c]));
   const neuerEigentuemer=((contactsRes.data??[]) as any[])[0]??null;

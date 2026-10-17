@@ -28,10 +28,15 @@ export type ObjektBlick = {
   aktivitaeten: { id: string; activity_type: string; title: string | null; occurred_at: string }[];
   dokumente: number | null;
   fehlt: boolean;
+  /** Genaue Zahlen aus der Datenbank (Lasttest P2-7). Die Listen oben sind gekappt. */
+  offeneAnfragenZahl?: number | null;
+  kommendZahl?: number | null;
+  interessentenZahl?: number | null;
+  interessentenGekappt?: boolean;
 };
 
-const OFFEN_ANFRAGE = ["NEW", "CONTACTED", "QUALIFIED", "VIEWING_PLANNED"];
-const KOMMEND = ["PLANNED", "CONFIRMED"];
+export const OFFEN_ANFRAGE = ["NEW", "CONTACTED", "QUALIFIED", "VIEWING_PLANNED"];
+export const KOMMEND = ["PLANNED", "CONFIRMED"];
 const eins = <T,>(x: T | T[] | null | undefined): T | null => (Array.isArray(x) ? x[0] ?? null : x ?? null);
 const person = (k: Kontakt | Kontakt[]) => { const c = eins(k); return c ? `${c.first_name} ${c.last_name}` : "Kontakt"; };
 const zahl = (n: unknown, einheit: string) => (n === null || n === undefined || n === "" ? null : `${Number(n).toLocaleString("de-DE", { maximumFractionDigits: 1 })} ${einheit}`);
@@ -65,9 +70,13 @@ export function ObjektAufEinenBlick({ id, p, blick, aufgaben, uebergaenge, jetzt
     .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
   // Interessenten: jede Person mit Anfrage, Besichtigung oder Kaufangebot zu
   // diesem Objekt -- einmal gezaehlt.
-  const interessenten = new Set([
+  const interessenten = blick.interessentenZahl ?? new Set([
     ...blick.anfragen.map((a) => a.contact_id), ...blick.besichtigungen.map((b) => b.contact_id), ...blick.angebotKontakte,
   ].filter(Boolean)).size;
+  const offeneAnfragenZahl = blick.offeneAnfragenZahl ?? offeneAnfragen.length;
+  const kommendZahl = blick.kommendZahl ?? kommend.length;
+  // Sind die Listen gekappt, waere "danach 49 weitere" falsch -- dann ohne Zahl.
+  const gekappt = offeneAnfragenZahl > offeneAnfragen.length || kommendZahl > kommend.length;
   const offeneAufgaben = aufgaben ?? [];
   const ueberfaellig = offeneAufgaben.filter((a) => a.due_at && a.due_at.slice(0, 10) < heute).length;
 
@@ -126,9 +135,9 @@ export function ObjektAufEinenBlick({ id, p, blick, aufgaben, uebergaenge, jetzt
       </div>
 
       <p className="programm-kennzahlen akte-blick-zahlen">
-        <Link to={`${basis}/interests`}><strong>{interessenten}</strong> Interessenten</Link>
-        <a href="#interessenten-lage"><strong>{offeneAnfragen.length}</strong> offene Anfragen</a>
-        <a href="#interessenten-lage"><strong>{kommend.length}</strong> anstehende Besichtigungen</a>
+        <Link to={`${basis}/interests`}><strong>{interessenten}{blick.interessentenGekappt ? "+" : ""}</strong> Interessenten</Link>
+        <a href="#interessenten-lage"><strong>{offeneAnfragenZahl}</strong> offene Anfragen</a>
+        <a href="#interessenten-lage"><strong>{kommendZahl}</strong> anstehende Besichtigungen</a>
         <a href="#fahrplan"><strong>{blick.aktiveAngebote}</strong> Kaufangebote im Lauf</a>
         <a href="#aufgaben" className={ueberfaellig ? "warnung" : undefined}><strong>{aufgaben ? offeneAufgaben.length : "—"}</strong> offene Aufgaben{ueberfaellig ? `, ${ueberfaellig} überfällig` : ""}</a>
         {blick.dokumente !== null ? <Link to={`${basis}/documents`}><strong>{blick.dokumente}</strong> Dokumente</Link> : null}
@@ -138,7 +147,7 @@ export function ObjektAufEinenBlick({ id, p, blick, aufgaben, uebergaenge, jetzt
         <span>Als Nächstes fällig</span>
         {naechster ? <>
           {naechster.pfad.startsWith("#") ? <a href={naechster.pfad}><strong>{naechster.was}</strong></a> : <Link to={naechster.pfad}><strong>{naechster.was}</strong></Link>}
-          <small>{naechster.wo} · {zuSpaet ? "überfällig seit " : ""}{zeitpunkt(naechster.wann)}{schritte.length > 1 ? ` · danach ${schritte.length - 1} weitere` : ""}</small>
+          <small>{naechster.wo} · {zuSpaet ? "überfällig seit " : ""}{zeitpunkt(naechster.wann)}{gekappt ? " · danach weitere" : schritte.length > 1 ? ` · danach ${schritte.length - 1} weitere` : ""}</small>
         </> : <>
           <strong>Nichts mit Datum geplant</strong>
           <small>Keine Aufgabe mit Fälligkeit, keine anstehende Besichtigung, keine unbeantwortete Anfrage. Der Fahrplan darunter zeigt den nächsten Vorgang.</small>
@@ -166,6 +175,10 @@ export function ObjektInteressentenLage({ p, blick, jetzt }: { p: any; blick: Ob
           <div><p className="eyebrow">Wer interessiert sich</p><h2>Anfragen & Besichtigungen</h2></div>
           <Link className="subtle-link" to={`${basis}/interests`}>Interessenten →</Link>
         </div>
+        {(blick.offeneAnfragenZahl ?? offen.length) > 5 || (blick.kommendZahl ?? kommend.length) > 5
+          ? <p className="form-help">Es stehen je bis zu 5 hier: die nächsten Besichtigungen und die ältesten offenen Anfragen
+              (insgesamt {blick.kommendZahl ?? kommend.length} anstehend, {blick.offeneAnfragenZahl ?? offen.length} offen). Alle unter <Link to={`${basis}/interests`}>Interessenten</Link>.</p>
+          : null}
         {zeilen.length === 0
           ? <p className="empty-state">Keine offene Anfrage und keine anstehende Besichtigung.</p>
           : <div className="data-list">{zeilen.map((z) => (

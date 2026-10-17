@@ -118,6 +118,7 @@ const nurFuer = (tabelle, teile) => new RegExp(`nur\\(\\[${teile.map((t) => `"${
 for (const [tabelle, teile] of [["audit_events", ["verlauf"]], ["inquiries", ["record"]], ["viewings", ["record"]], ["property_features", ["objektdaten"]],
   ["property_addresses", ["objektdaten"]], ["property_legal_data", ["record"]], ["brokerage_mandates", ["record"]], ["tasks", ["record"]]])
   pruefe(nurFuer(tabelle, teile), `property-detail.tsx: ${tabelle} nicht nur fuer ${teile.join("/")} geladen`);
+pruefe(/from\("inquiries"\)\.select\("id,inquiry_number[^"]*",\{count:"exact"\}\)[^\n]*\.in\("status",OFFEN_ANFRAGE\)/.test(ladeteil) && ladeteil.includes("interessentenZahl:"), "property-detail.tsx: offene Anfragen/Interessenten wieder aus einer gekappten Liste gezaehlt");
 pruefe((ladeteil.match(/await Promise\.all\(/g) ?? []).length === 1 && !/\]\);[\s\S]*await supabase/.test(ladeteil), "property-detail.tsx: Abfragen der Akte wieder nacheinander statt in einem Block");
 
 if (fehler.length) {
