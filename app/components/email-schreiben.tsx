@@ -22,6 +22,8 @@ export type SchreibDaten = {
   expose: { id: string; nummer: string; datei: string } | null;
   linkTage: number;
   anfrage: { status: string; version: number } | null;
+  /** Werbewiderspruch des Kontakts (P2-6 Teil 2): Hinweis, keine Sperre. */
+  werbewiderspruch: string | null;
 };
 
 type Kontext = { type: string; id: string; email: string | null };

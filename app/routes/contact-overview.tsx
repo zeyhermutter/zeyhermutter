@@ -4,7 +4,7 @@ import { requireActiveUser } from "~/lib/auth.server";
 import { tag, zeitpunkt } from "~/lib/format";
 import { standKlasse } from "~/lib/stand-ton";
 import {
-  ANFRAGESTATUS, BESICHTIGUNGSSTATUS, IMMOBILIENSTATUS, KAUFANGEBOTSTATUS, LEADSTATUS, beschrifte, AKTIVITAETSART,
+  ANFRAGESTATUS, BESICHTIGUNGSSTATUS, IMMOBILIENSTATUS, KAUFANGEBOTSTATUS, LEADSTATUS, RECHTSGRUNDLAGE, beschrifte, AKTIVITAETSART,
 } from "~/lib/labels";
 import { AufgabenBaustein } from "~/components/aufgaben-baustein";
 import { TelefonatErfassen, TelefonatMeldung } from "~/components/telefonat-erfassen";
@@ -52,7 +52,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   if (!id) throw new Response("Kontakt fehlt.", { status: 404 });
 
   const [kontaktRes, eigentumRes, suchRes, leadRes, anfrageRes, besichtigungRes, angebotRes, aufgabeRes, verlaufRes, nutzerRes] = await Promise.all([
-    supabase.from("contacts").select("id,contact_number,first_name,last_name,email,phone,mobile,preferred_channel,status,archived_at").eq("id", id).maybeSingle(),
+    supabase.from("contacts").select("id,contact_number,first_name,last_name,email,phone,mobile,preferred_channel,status,archived_at,legal_basis,marketing_objection_at,anonymized_at").eq("id", id).maybeSingle(),
     supabase.from("property_owners").select("id,ownership_percentage,valid_until,properties(id,property_number,internal_title,status,archived_at)").eq("contact_id", id),
     supabase.from("search_profiles").select("id,search_profile_number,title,status,transaction_type,property_types,max_price,search_profile_locations(city,postal_code,radius_km)").eq("contact_id", id).is("archived_at", null).order("created_at", { ascending: false }),
     supabase.from("leads").select("id,lead_number,status,follow_up_at,property_type,property_city").eq("contact_id", id).is("archived_at", null).order("created_at", { ascending: false }).limit(10),
@@ -263,10 +263,12 @@ export default function ContactOverview() {
 
           <section className="data-card" id="datenschutz">
             <div className="card-head">
-              <div><p className="eyebrow">Datenschutz</p><h2>Auskunft</h2></div>
-              <Link className="subtle-link" to={`${basis}/auskunft`}>Datenauskunft →</Link>
+              <div><p className="eyebrow">Datenschutz</p><h2>{k.anonymized_at ? "Anonymisiert" : k.legal_basis ? beschrifte(RECHTSGRUNDLAGE, k.legal_basis) : "Rechtsgrundlage nicht erfasst"}</h2></div>
+              <Link className="subtle-link" to={`${basis}/auskunft#datenschutz-angaben`}>Auskunft und Angaben →</Link>
             </div>
-            <p className="form-help">Alles, was das CRM zu dieser Person speichert, mit Einwilligungen aus Formularen – zum Drucken oder als Datei.</p>
+            {k.anonymized_at ? <p className="form-warning">Auf Antrag anonymisiert am {tag(k.anonymized_at)}.</p> : null}
+            {k.marketing_objection_at ? <p className="form-warning">Werbewiderspruch seit {tag(k.marketing_objection_at)}.</p> : null}
+            <p className="form-help">Datenauskunft zum Drucken oder als Datei, Rechtsgrundlage, Werbewiderspruch und Anonymisieren auf Antrag.</p>
           </section>
         </div>
       </div>

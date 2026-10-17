@@ -318,6 +318,7 @@ export const OBJEKTART: Beschriftungen = {
 export const AUDITAKTION: Beschriftungen = {
   CREATE: "angelegt", UPDATE: "geändert", STATUS_CHANGE: "Status geändert", DELETE: "gelöscht",
   ARCHIVE: "archiviert", RESTORE: "wiederhergestellt", ROLE_ASSIGNED: "Rolle zugewiesen",
+  ANONYMIZE: "auf Antrag anonymisiert",
 };
 
 // Art eines Verlaufseintrags (activity_events.activity_type). Freier Text in
@@ -327,6 +328,15 @@ export const AKTIVITAETSART: Beschriftungen = {
   WEBSITE_INQUIRY: "Anfrage über die Website", WEBSITE_SEARCH_PROFILE: "Suchauftrag über die Website",
   WEBSITE_MEASUREMENT: "Aufmaß-Anfrage über die Website",
   DATA_EXPORT: "Datenauskunft erstellt",
+};
+
+// Rechtsgrundlage der Verarbeitung je Kontakt (contacts.legal_basis, P2-6,
+// 17.10.2026). Das Buero waehlt; das CRM prueft die Wahl nicht.
+export const RECHTSGRUNDLAGE: Beschriftungen = {
+  CONTRACT: "Vertrag oder Vertragsanbahnung",
+  CONSENT: "Einwilligung",
+  LEGITIMATE_INTEREST: "Berechtigtes Interesse",
+  OTHER: "Sonstige (siehe Notiz)",
 };
 
 export function beschrifte(tabelle: Beschriftungen, wert: string | null | undefined): string {

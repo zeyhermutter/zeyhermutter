@@ -8,6 +8,16 @@
 .auskunft-felder dd { margin: 0; font-size: 13px; overflow-wrap: anywhere; }
 .auskunft-tabelle { width: 100%; border-collapse: collapse; font-size: 13px; }
 .auskunft-tabelle th, .auskunft-tabelle td { text-align: left; padding: 4px 8px; border-bottom: 1px solid #e3e8ee; }
+/* Datenschutz-Angaben (P2-6 Teil 2): Rechtsgrundlage, Werbewiderspruch, Anonymisieren. */
+.datenschutz-raster { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.datenschutz-karte { display: grid; gap: 8px; align-content: start; padding: var(--crm-card-padding-sm); border: 1px solid #e3e8ee; border-radius: var(--crm-card-radius-sm); background: #fff; }
+.datenschutz-karte h3 { margin: 0; font-size: 14px; }
+.datenschutz-karte p { margin: 0; font-size: 13px; }
+.datenschutz-karte button { justify-self: start; }
+.datenschutz-anonymisieren { margin-top: 12px; }
+.datenschutz-anonymisieren summary { cursor: pointer; font-size: 13px; color: #8a1f1f; font-weight: 600; }
+.datenschutz-anonymisieren[open] summary { margin-bottom: 8px; }
+.datenschutz-anonymisieren ul { margin: 4px 0 0; padding-left: 18px; }
 @media print {
   .titelleiste, .modulleiste, .bereichsleiste, .statusleiste, .auskunft-nicht-drucken { display: none !important; }
   .auskunft-felder { break-inside: avoid; }

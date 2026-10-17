@@ -45,7 +45,7 @@ import { join, sep } from "node:path";
 // from pg_constraint, lateral regexp_split_to_table(
 //   (regexp_match(pg_get_constraintdef(oid),'= ANY \(ARRAY\[(.*?)\]\)'))[1], ',\s*') as x
 // where contype='c' and connamespace='public'::regnamespace;
-const ERLAUBT = new Set(`INQUIRY_REPLY VIEWING_CONFIRMATION DECLINE
+const ERLAUBT = new Set(`INQUIRY_REPLY VIEWING_CONFIRMATION DECLINE CONSENT LEGITIMATE_INTEREST CONTRACT
 A A+ ACCEPTED ACCESS ACQUISITION ACTIVE AFTER AGREED ANNUAL ANNUITY_CHARGE
 ANONYMIZED_ONLY APARTMENT APARTMENT_BUILDING API APPOINTMENT
 APPOINTMENT_SCHEDULED APPROVED ARCHIVED AS_IS AS_IS_SALE ASSET ATTIC

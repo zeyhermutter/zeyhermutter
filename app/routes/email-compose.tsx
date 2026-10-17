@@ -211,7 +211,7 @@ async function freigegebenesExpose(supabase: any, inquiryId: string, exposeId?: 
 async function ladeSchreibDaten(supabase: any, ctx: EmailContext, meinName: string | null): Promise<SchreibDaten> {
   const anfrageId = ctx.type === "INQUIRY" ? ctx.id : null;
   const [kontaktR, vorlagenR, anfrageR] = await Promise.all([
-    supabase.from("contacts").select("salutation,title,first_name,last_name").eq("id", ctx.contactId).maybeSingle(),
+    supabase.from("contacts").select("salutation,title,first_name,last_name,marketing_objection_at").eq("id", ctx.contactId).maybeSingle(),
     supabase.from("email_templates").select("id,purpose,name,subject,body").eq("active", true).order("purpose").order("sort_order").order("name"),
     anfrageId ? supabase.from("inquiries").select("id,status,version,property_id,properties(property_number,internal_title,property_addresses(postal_code,city))").eq("id", anfrageId).maybeSingle() : Promise.resolve({ data: null }),
   ]);
@@ -241,6 +241,7 @@ async function ladeSchreibDaten(supabase: any, ctx: EmailContext, meinName: stri
     expose: expose ? { id: expose.id, nummer: expose.expose_number, datei: expose.original_filename } : null,
     linkTage: LINK_GUELTIG_TAGE,
     anfrage: anfrage ? { status: anfrage.status, version: Number(anfrage.version) } : null,
+    werbewiderspruch: k.marketing_objection_at ?? null,
   };
 }
 
@@ -456,6 +457,11 @@ export default function EmailCompose() {
               <div><span>Kontakt</span><strong>{context.contactName}</strong></div>
               <div><span>E-Mail</span><strong>{context.email ?? "Nicht hinterlegt"}</strong></div>
             </div>
+            {schreiben?.werbewiderspruch ? (
+              <p className="form-warning" role="note">
+                Werbewiderspruch seit {formatDate(schreiben.werbewiderspruch)}: Diese Person möchte keine Werbung erhalten. Ob diese Nachricht Werbung ist, entscheiden Sie.
+              </p>
+            ) : null}
             {!canWrite ? <div className="communication-actions">
               {context.email ? <a className="primary-button link-button" href={mailtoAdresse(context.email, "", "")}>E-Mail im Mailprogramm öffnen</a> : <span className="subtle">Keine E-Mail-Adresse vorhanden.</span>}
             </div> : null}

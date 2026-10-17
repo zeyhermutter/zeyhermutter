@@ -99,8 +99,17 @@ const KONTAKT_TABELLEN = ["activity_events", "brokerage_mandate_clients", "commi
 for (const t of KONTAKT_TABELLEN) pruefe(auskunft.includes(`tabelle: "${t}"`), `auskunft.server.ts: Tabelle ${t} fehlt in der Datenauskunft`);
 pruefe(auskunft.includes("nichtGelesen"), "auskunft.server.ts: nicht gelesene Bereiche muessen in der Auskunft stehen");
 
+// 8. P2-6 Teil 2: Rechtsgrundlage, Werbewiderspruch, Anonymisieren -- das CRM bewertet nicht, sperrt nur, was die Datenbank einwendet
+const datenschutz = await lies("app/routes/contact-auskunft.tsx");
+pruefe(datenschutz.includes('rpc("anonymize_contact"') && datenschutz.includes('rpc("contact_anonymization_check"'), "contact-auskunft.tsx: Anonymisieren nicht ueber die Pruefung und Funktion der Datenbank");
+pruefe(datenschutz.includes("bestaetigung.toUpperCase() !== String(k.contact_number).toUpperCase()") && datenschutz.includes("if (!grund)"), "contact-auskunft.tsx: Anonymisieren ohne Grund oder ohne eingetippte Kontaktnummer");
+pruefe(datenschutz.includes("darfAnonymisieren && !anonymisiert"), "contact-auskunft.tsx: Anonymisieren auch ohne das Recht contact.anonymize sichtbar");
+const pruefungSql = await lies("supabase/migrations/20261017100744_kontakt_anonymisieren_pruefung.sql");
+pruefe(["legal_hold", "retention_until", "gwg_identifications", "converted_property_id"].every((w) => pruefungSql.includes(w)), "contact_anonymization_check: Sperre bei Frist, Sperrvermerk, Geldwaesche oder umgewandeltem Lead fehlt");
+pruefe(compose.includes("schreiben?.werbewiderspruch") && !/werbewiderspruch[^\n]*(disabled|return null)/i.test(compose), "email-compose.tsx: Werbewiderspruch muss als Hinweis erscheinen, nicht als Sperre");
+
 if (fehler.length) {
   console.error("P2:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung, Datenauskunft aus allen Kontakt-Tabellen.");
+console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung, Datenauskunft aus allen Kontakt-Tabellen, Rechtsgrundlage und Werbewiderspruch (Hinweis, keine Sperre), Anonymisieren nur mit Recht, Grund, Bestätigung und ohne Einwand der Datenbank.");
