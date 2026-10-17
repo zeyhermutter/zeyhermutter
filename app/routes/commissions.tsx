@@ -4,6 +4,7 @@ import type { Route } from "./+types/commissions";
 import { requirePermission } from "~/lib/auth.server";
 import { euroGenau as money, tag as formatDate } from "~/lib/format";
 import { RECHNUNGSSTATUS, ZAHLUNGSSTATUS, beschrifte } from "~/lib/labels";
+import "~/programm-liste.css";
 
 const STATUS: Record<string,string> = {DRAFT:"Entwurf",EXPECTED:"Erwartet",DUE:"Fällig",INVOICED:"Abgerechnet",PARTIALLY_PAID:"Teilweise bezahlt",PAID:"Bezahlt",CANCELLED:"Storniert"};
 const SIDE: Record<string,string> = {SELLER:"Innenprovision",BUYER:"Außenprovision"};
@@ -47,34 +48,51 @@ export async function loader({request,context}:Route.LoaderArgs){
     if(!needle)return true;
     return [row.commission_number,property?.property_number,property?.internal_title,party?.first_name,party?.last_name].filter(Boolean).join(" ").toLocaleLowerCase("de-DE").includes(needle);
   });
-  return data({profile,rows:filtered,summary,canWrite:canWrite===true,properties:properties??[],filters},{headers:responseHeaders()});
+  return data({profile,rows:filtered,gekappt:all.length>=500,summary,canWrite:canWrite===true,properties:properties??[],filters},{headers:responseHeaders()});
 }
 
+// Eine Programmliste wie Kontakte und Makleraufträge (P2-8, 17.10.2026):
+// Werkzeugleiste, eine Zeile Kennzahlen mit den Summen, Tabelle. Vorher
+// Seitenkopf, sechs Kacheln, Filterkasten und Kartenzeilen.
 export default function Commissions(){
-  const {profile,rows,summary,canWrite,properties,filters}=useLoaderData<typeof loader>();
-  return <main className="editor-shell programm-seite">
-    <header className="editor-header"><div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">Verkauf</p><h1 className="editor-title">Provisionen</h1><p className="editor-meta">Erwartete, fällige, abgerechnete und bezahlte Provisionen je Verkaufsimmobilie.</p></div><div className="header-actions">{canWrite?<Link className="primary-button link-button" to={filters.propertyId?`/commissions/new?property_id=${encodeURIComponent(filters.propertyId)}`:"/commissions/new"}>+ Provision</Link>:null}<span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div></header>
-
-    <section className="metric-grid">
-      <article className="metric-card"><span>Erwartet</span><strong>{summary.expected}</strong><small>aktive erwartete Provisionen</small></article>
-      <article className="metric-card"><span>Fällig</span><strong>{summary.due}</strong><small>noch nicht abgerechnet</small></article>
-      <article className="metric-card"><span>Offene Rechnungen</span><strong>{summary.invoiced}</strong><small>abgerechnet / teilbezahlt</small></article>
-      <article className="metric-card"><span>Bezahlt</span><strong>{summary.paid}</strong><small>vollständig bezahlt</small></article>
-      <article className="metric-card"><span>Summe erwartet</span><strong>{money(summary.expectedSum)}</strong><small>ohne stornierte Vorgänge</small></article>
-      <article className="metric-card"><span>Summe offen</span><strong>{money(summary.openSum)}</strong><small>abzüglich dokumentierter Zahlungen</small></article>
-    </section>
-
-    <section className="data-card"><Form method="get" className="filter-grid"><input type="hidden" name="ansicht" value="tabelle"/>
-      <label><span>Suche</span><input name="q" defaultValue={filters.q} placeholder="Provision, Objekt oder Partei"/></label>
-      <label><span>Ansicht</span><select name="status" defaultValue={filters.status}><option value="OPEN">Offene Vorgänge</option><option value="ALL">Alle</option>{Object.entries(STATUS).map(([value,label])=><option value={value} key={value}>{label}</option>)}<option value="ARCHIVED">Archiviert</option></select></label>
-      <label><span>Seite</span><select name="side" defaultValue={filters.side}><option value="">Alle</option><option value="SELLER">Innenprovision</option><option value="BUYER">Außenprovision</option></select></label>
-      <label><span>Immobilie</span><select name="property_id" defaultValue={filters.propertyId}><option value="">Alle Immobilien</option>{properties.map((property:any)=><option key={property.id} value={property.id}>{property.property_number} · {property.internal_title}</option>)}</select></label>
+  const {rows,summary,canWrite,properties,filters,gekappt}=useLoaderData<typeof loader>();
+  const neu=filters.propertyId?`/commissions/new?property_id=${encodeURIComponent(filters.propertyId)}`:"/commissions/new";
+  const gefiltert=Boolean(filters.q||filters.side||filters.propertyId||filters.status!=="OPEN");
+  const heute=new Date().toISOString().slice(0,10);
+  return <main className="editor-shell programm-liste">
+    <Form method="get" className="programm-liste-werkzeuge" role="search">
+      <input type="hidden" name="ansicht" value="tabelle"/>
+      <label className="programm-liste-suche"><span className="sr-only">Suche</span><input type="search" name="q" defaultValue={filters.q} placeholder="Provision, Objekt oder Partei …" autoComplete="off"/></label>
+      <label><span className="sr-only">Ansicht</span><select name="status" defaultValue={filters.status}><option value="OPEN">Offene Provisionen</option><option value="ALL">Alle</option>{Object.entries(STATUS).map(([value,label])=><option value={value} key={value}>{label}</option>)}<option value="ARCHIVED">Archiviert</option></select></label>
+      <label><span className="sr-only">Seite</span><select name="side" defaultValue={filters.side}><option value="">Innen- und Außenprovision</option><option value="SELLER">Innenprovision</option><option value="BUYER">Außenprovision</option></select></label>
+      <label><span className="sr-only">Immobilie</span><select name="property_id" defaultValue={filters.propertyId}><option value="">Alle Immobilien</option>{properties.map((property:any)=><option key={property.id} value={property.id}>{property.property_number} · {property.internal_title}</option>)}</select></label>
       <button className="secondary-button" type="submit">Filtern</button>
-    </Form></section>
-
-    <section className="data-card"><div className="card-head"><div><p className="eyebrow">Provisionsverzeichnis</p><h2>{rows.length} Vorgänge</h2></div></div><div className="data-list">
-      {rows.map((row:any)=>{const property=one(row.properties),party=one(row.party),offer=one(row.purchase_offers);return <Link className="data-row data-row-link" to={`/commissions/${row.id}`} key={row.id}><div><strong>{row.commission_number} · {SIDE[row.side]??row.side}</strong><small>{property?.property_number??"—"} · {property?.internal_title??"Immobilie"}{party?` · ${party.first_name} ${party.last_name}`:" · Partei noch offen"}</small></div><div className="row-meta"><span className={`status-pill ${STATUS_CLASS[row.status]??"status-draft"}`}>{row.archived_at?"Archiviert":STATUS[row.status]??row.status}</span><small>{money(row.actual_amount??row.expected_amount)}{offer?.offer_number?` · ${offer.offer_number}`:""}</small></div><div className="row-meta"><span>{row.due_date?`Fällig ${formatDate(row.due_date)}`:"Fälligkeit offen"}</span><small>{beschrifte(RECHNUNGSSTATUS,row.invoice_status)} · {beschrifte(ZAHLUNGSSTATUS,row.payment_status)}</small></div><span className="subtle-link">Öffnen →</span></Link>})}
-      {rows.length===0?<p className="empty-state">Keine Provisionen in dieser Ansicht.</p>:null}
-    </div></section>
+      <span className="programm-liste-zaehler">{rows.length} {rows.length===1?"Provision":"Provisionen"}</span>
+      {canWrite?<Link className="programm-liste-neu" to={neu}>+ Neue Provision</Link>:null}
+    </Form>
+    <p className="programm-kennzahlen">
+      <span><strong>{summary.expected}</strong> erwartet</span>
+      <span className={summary.due?"warnung":undefined}><strong>{summary.due}</strong> fällig, nicht abgerechnet</span>
+      <span><strong>{summary.invoiced}</strong> abgerechnet/teilbezahlt</span>
+      <span><strong>{summary.paid}</strong> bezahlt</span>
+      <span title="ohne stornierte Vorgänge"><strong>{money(summary.expectedSum)}</strong> erwartet gesamt</span>
+      <span title="abzüglich dokumentierter Zahlungen"><strong>{money(summary.openSum)}</strong> offen</span>
+    </p>
+    <div className="programm-tabelle-rahmen">
+      {rows.length===0?<p className="programm-liste-leer">{gefiltert?"Keine Provision passt zu diesem Filter.":"Keine offene Provision."}{canWrite?<> <Link to={neu}>Provision erfassen</Link></>:null}</p>:<table className="programm-tabelle">
+        <thead><tr><th scope="col">Nummer</th><th scope="col">Objekt</th><th scope="col">Partei</th><th scope="col">Art</th><th scope="col" className="rechts">Betrag</th><th scope="col">Status</th><th scope="col">Rechnung · Zahlung</th><th scope="col">Fällig</th></tr></thead>
+        <tbody>{rows.map((row:any)=>{const property=one(row.properties),party=one(row.party),offer=one(row.purchase_offers);const ueberfaellig=row.due_date&&row.due_date<heute&&!["PAID","CANCELLED"].includes(row.status)&&!row.archived_at;return <tr key={row.id} className={ueberfaellig?"frist-vorbei":undefined}>
+          <td className="zahl"><Link to={`/commissions/${row.id}`}>{row.commission_number}</Link></td>
+          <td><Link to={`/commissions/${row.id}`}>{property?.property_number??"—"} · {property?.internal_title??"Immobilie"}</Link>{offer?.offer_number?<div className="leise">{offer.offer_number}</div>:null}</td>
+          <td>{party?<Link to={`/crm/contacts/${party.id}`}>{party.first_name} {party.last_name}</Link>:<span className="leise">noch offen</span>}</td>
+          <td>{SIDE[row.side]??row.side}</td>
+          <td className="zahl rechts">{money(row.actual_amount??row.expected_amount)}{row.actual_amount==null?<div className="leise">erwartet</div>:null}</td>
+          <td><span className={`status-pill ${STATUS_CLASS[row.status]??"status-draft"}`}>{row.archived_at?"Archiviert":STATUS[row.status]??row.status}</span></td>
+          <td>{beschrifte(RECHNUNGSSTATUS,row.invoice_status)}<div className="leise">{beschrifte(ZAHLUNGSSTATUS,row.payment_status)}</div></td>
+          <td className="zahl">{row.due_date?formatDate(row.due_date):<span className="leise">offen</span>}</td>
+        </tr>;})}</tbody>
+      </table>}
+      {gekappt?<p className="programm-liste-leer">Durchsucht werden die 500 zuletzt geänderten Provisionen; die Summen beziehen sich auf sie.</p>:null}
+    </div>
   </main>;
 }

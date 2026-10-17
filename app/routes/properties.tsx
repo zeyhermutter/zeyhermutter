@@ -1,10 +1,10 @@
 import { data, Form, Link, redirect, useLoaderData } from "react-router";
 import type { Route } from "./+types/properties";
 import { requirePermission } from "~/lib/auth.server";
-import { euroRund as money } from "~/lib/format";
+import { euroRund as money, tag } from "~/lib/format";
 import { IMMOBILIENSTATUS } from "~/lib/labels";
 import { Ampel, useNaechsteSchritte } from "~/components/ampel";
-import "~/properties-workflow.css";
+import "~/programm-liste.css";
 
 const PAGE_SIZE = 50;
 
@@ -82,42 +82,52 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 export default function Properties() {
   const schritte = useNaechsteSchritte("property");
-  const { properties, addressMap, total, page, pageCount, filters, profile } = useLoaderData<typeof loader>();
+  const { properties, addressMap, total, page, pageCount, filters } = useLoaderData<typeof loader>();
   const pageHref=(nextPage:number)=>{const p=new URLSearchParams({ansicht:"tabelle"});if(filters.q)p.set("q",filters.q);p.set("status",filters.status);if(filters.transaction)p.set("transaction",filters.transaction);if(filters.propertyType)p.set("type",filters.propertyType);p.set("page",String(nextPage));return `?${p.toString()}`;};
+  const gefiltert = Boolean(filters.q || filters.transaction || filters.propertyType || filters.status !== "ACTIVE");
 
+  // Eine Programmliste wie Kontakte und Makleraufträge (P2-8, 17.10.2026):
+  // Werkzeugleiste und Tabelle. Vorher Seitenkopf, Filterkasten und
+  // Kartenzeilen mit drei Links je Objekt.
   return (
-    <main className="editor-shell programm-seite">
-      <header className="editor-header">
-        <div><Link className="back-link" to="/crm">← ZeyherMutterOS</Link><h1 className="editor-title">Immobilien</h1></div>
-        <div className="header-actions"><span className="badge">{total} Objekte</span><Link className="primary-button link-button" to="/properties/new">+ Immobilie</Link><small>{profile.display_name}</small></div>
-      </header>
+    <main className="editor-shell programm-liste">
+      <Form method="get" className="programm-liste-werkzeuge" role="search">
+        {/* Haelt die Tabelle fest, auch wenn alle Filter leer sind -- sonst oeffnete "/properties" die erste Akte. */}
+        <input type="hidden" name="ansicht" value="tabelle"/>
+        <label className="programm-liste-suche"><span className="sr-only">Suche</span><input type="search" name="q" defaultValue={filters.q} placeholder="Objektnummer oder Titel …" autoComplete="off"/></label>
+        <label><span className="sr-only">Bestand</span><select name="status" defaultValue={filters.status}><option value="ACTIVE">Aktive Objekte</option><option value="ALL">Alle</option><option value="ARCHIVED">Archiv</option></select></label>
+        <label><span className="sr-only">Vermarktungsart</span><select name="transaction" defaultValue={filters.transaction}><option value="">Verkauf und Vermietung</option><option value="SALE">Verkauf</option><option value="RENT">Vermietung</option></select></label>
+        <label><span className="sr-only">Objektart</span><select name="type" defaultValue={filters.propertyType}><option value="">Alle Objektarten</option>{Object.entries(TYPE_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
+        <button className="secondary-button" type="submit">Filtern</button>
+        <span className="programm-liste-zaehler">{total} {total === 1 ? "Objekt" : "Objekte"}</span>
+        <Link className="programm-liste-neu" to="/properties/new">+ Neue Immobilie</Link>
+      </Form>
 
-      <section className="data-card property-section">
-        <Form method="get" className="filter-grid property-filter-grid">
-          {/* Haelt die Tabelle fest, auch wenn alle Filter leer sind -- sonst oeffnete "/properties" die erste Akte. */}
-          <input type="hidden" name="ansicht" value="tabelle"/>
-          <label><span>Suche</span><input name="q" defaultValue={filters.q} placeholder="Objektnummer oder Titel"/></label>
-          <label><span>Status</span><select name="status" defaultValue={filters.status}><option value="ACTIVE">Aktive</option><option value="ALL">Alle</option><option value="ARCHIVED">Archiv</option></select></label>
-          <label><span>Transaktion</span><select name="transaction" defaultValue={filters.transaction}><option value="">Alle</option><option value="SALE">Verkauf</option><option value="RENT">Vermietung</option></select></label>
-          <label><span>Typ</span><select name="type" defaultValue={filters.propertyType}><option value="">Alle</option>{Object.entries(TYPE_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
-          <button className="secondary-button" type="submit">Filtern</button>
-        </Form>
-      </section>
-
-      <section className="data-card property-section">
-        <div className="card-head"><div><p className="eyebrow">Objektbestand</p><h2>Verzeichnis</h2></div><span className="subtle">Seite {page} / {pageCount}</span></div>
-        <div className="data-list">
-          {properties.map((property) => {
+      <div className="programm-tabelle-rahmen">
+        {properties.length === 0 ? <p className="programm-liste-leer">{gefiltert ? "Keine Immobilie passt zu diesem Filter." : "Noch keine Immobilie erfasst."} <Link to="/properties/new">Immobilie anlegen</Link></p> : <table className="programm-tabelle">
+          <thead><tr><th scope="col">Nummer</th><th scope="col">Objekt</th><th scope="col">Art</th><th scope="col">Ort</th><th scope="col" className="rechts">Preis</th><th scope="col">Status</th><th scope="col" className="rechts">Geändert</th></tr></thead>
+          <tbody>{properties.map((property) => {
             const address = addressMap[property.id];
-            return <div className="data-row" key={property.id}>
-              <div><Link className="data-title-link" to={`/properties/${property.id}`}><strong>{property.internal_title}</strong></Link><small>{property.property_number} · {TYPE_LABELS[property.property_type] ?? property.property_type} · {property.transaction_type === "SALE" ? "Verkauf" : "Vermietung"}</small><div className="row-links"><Link className="subtle-link" to={`/properties/${property.id}`}>Objektakte</Link><Link className="subtle-link" to={`/properties/${property.id}/documents`}>Dokumente</Link><Link className="subtle-link" to={`/properties/${property.id}/media`}>Medien</Link></div></div>
-              <div className="row-meta"><span>{property.transaction_type === "SALE" ? money(property.purchase_price) : `${money(property.rent_cold)} kalt`}</span><small>{address ? `${address.postal_code} ${address.city}${address.district ? ` · ${address.district}` : ""}` : "Adresse offen"} · {STATUS_LABELS[property.status] ?? property.status}</small><Ampel s={schritte[property.id]} /></div>
-            </div>;
-          })}
-          {properties.length === 0 ? <p className="empty-state">Keine Immobilien in dieser Ansicht.</p> : null}
-        </div>
-        {pageCount > 1 ? <div className="pagination">{page > 1 ? <Link className="secondary-button link-button" to={pageHref(page - 1)}>← Zurück</Link> : <span />}{page < pageCount ? <Link className="secondary-button link-button" to={pageHref(page + 1)}>Weiter →</Link> : null}</div> : null}
-      </section>
+            return <tr key={property.id}>
+              <td className="zahl"><Link to={`/properties/${property.id}`}>{property.property_number}</Link></td>
+              <td><Link to={`/properties/${property.id}`}>{property.internal_title}</Link><div className="leise"><Link to={`/properties/${property.id}/documents`}>Dokumente</Link> · <Link to={`/properties/${property.id}/media`}>Medien</Link></div></td>
+              <td>{TYPE_LABELS[property.property_type] ?? property.property_type}<div className="leise">{property.transaction_type === "SALE" ? "Verkauf" : "Vermietung"}</div></td>
+              <td>{address ? <>{`${address.postal_code} ${address.city}`}{address.district ? <div className="leise">{address.district}</div> : null}</> : <span className="leise">Adresse offen</span>}</td>
+              <td className="zahl rechts">{property.transaction_type === "SALE" ? money(property.purchase_price) : `${money(property.rent_cold)} kalt`}</td>
+              <td><span className="ampel-neben">{STATUS_LABELS[property.status] ?? property.status}<Ampel s={schritte[property.id]} /></span></td>
+              <td className="zahl rechts leise">{tag(property.updated_at)}</td>
+            </tr>;
+          })}</tbody>
+        </table>}
+      </div>
+
+      {pageCount > 1 ? (
+        <nav className="programm-liste-seiten" aria-label="Seiten">
+          {page > 1 ? <Link to={pageHref(page - 1)}>← Zurück</Link> : <span />}
+          <span>Seite {page} von {pageCount}</span>
+          {page < pageCount ? <Link to={pageHref(page + 1)}>Weiter →</Link> : <span />}
+        </nav>
+      ) : null}
     </main>
   );
 }

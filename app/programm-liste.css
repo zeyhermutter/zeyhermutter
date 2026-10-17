@@ -233,6 +233,12 @@
 .programm-tabelle td > .leise,
 .programm-tabelle td .leise { font-size: 12px; }
 .programm-liste-leer a { color: #0b5cad; }
+/* Kennzahlen, die filtern (Lead-Stufen, P2-8): Link in der Farbe der Zeile, gewaehlte Stufe hervorgehoben. */
+.programm-kennzahlen a { color: inherit; text-decoration: none; border-bottom: 2px solid transparent; }
+.programm-kennzahlen a:hover { color: #1b2733; border-bottom-color: #c3cad1; }
+.programm-kennzahlen a.aktiv { color: #1b2733; border-bottom-color: #062037; font-weight: 600; }
+.programm-kennzahlen .leise { color: #6b7782; }
+.programm-kennzahlen form { margin: 0; }
 
 /* Zwischenzeile einer gruppierten Tabelle ("Ueberfaellig · 2"). Sie steht
  * nicht klebend oben wie der Tabellenkopf. */

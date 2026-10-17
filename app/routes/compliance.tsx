@@ -3,6 +3,7 @@ import type { Route } from "./+types/compliance";
 import { requirePermission } from "~/lib/auth.server";
 import { tag as formatDate } from "~/lib/format";
 import { GELDWAESCHERISIKO as RISK } from "~/lib/labels";
+import "~/programm-liste.css";
 
 const RISK_CLASS:Record<string,string>={LOW:"status-sold",MEDIUM:"status-marketing",HIGH:"status-lost"};
 const RETENTION_CATEGORY:Record<string,string>={
@@ -96,35 +97,40 @@ export default function Compliance(){
   const {profile,rows,summary,filters,retentionDocuments}=d;
   const o=d.overview as any;
   const overdue=retentionDocuments.filter((row:any)=>row.retention_until<today());
-  return <main className="editor-shell programm-seite">
-    <header className="editor-header"><div><Link className="back-link" to="/crm">← CRM</Link><p className="eyebrow">Verwaltung</p><h1 className="editor-title">Geldwäsche & Aufbewahrung</h1><p className="editor-meta">Risikoeinstufung, Identifizierung der Beteiligten und Ablauf der Aufbewahrungsfristen über alle Verkaufsfälle.</p></div><div className="header-actions"><span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div></header>
+  // Das Aktenverzeichnis als Programmliste (P2-8, 17.10.2026): Werkzeugleiste,
+  // Kennzahlen, Tabelle. Die Abschnitte zur Aufbewahrung bleiben darunter.
+  return <main className="editor-shell programm-liste">
+    <Form method="get" className="programm-liste-werkzeuge" role="search">
+      <label className="programm-liste-suche"><span className="sr-only">Suche</span><input type="search" name="q" defaultValue={filters.q} placeholder="Akte oder Immobilie …" autoComplete="off"/></label>
+      <label><span className="sr-only">Ansicht</span><select name="view" defaultValue={filters.view}><option value="OPEN">Mit offenen Punkten</option><option value="ACTIVE">Alle aktiven Akten</option><option value="HIGH">Hohes Risiko</option><option value="RETENTION">Aufbewahrung läuft ab</option><option value="ARCHIVED">Archiviert</option></select></label>
+      <button className="secondary-button" type="submit">Filtern</button>
+      <span className="programm-liste-zaehler">{rows.length} {rows.length===1?"Akte":"Akten"}</span>
+    </Form>
+
+    <p className="programm-kennzahlen">
+      <span><strong>{summary.total}</strong> aktive Akten</span>
+      <span className={summary.withoutRisk?"warnung":undefined}><strong>{summary.withoutRisk}</strong> ohne Risikoeinstufung</span>
+      <span className={summary.highRisk?"warnung":undefined}><strong>{summary.highRisk}</strong> hohes Risiko</span>
+      <span><strong>{summary.open}</strong> mit offenen Punkten</span>
+      <span className={summary.retention?"warnung":undefined}><strong>{summary.retention}</strong> Aufbewahrung &lt; 90 Tage</span>
+      <span><strong>{summary.hold}</strong> Löschsperren</span>
+    </p>
 
     <div className="form-warning"><strong>Dokumentation, keine Bewertung.</strong> Diese Übersicht zeigt nur, was erfasst wurde. Sie stellt nicht fest, ob eine geldwäscherechtliche Pflicht besteht oder erfüllt ist, und löst keine Meldung aus.</div>
 
-    <section className="metric-grid">
-      <article className="metric-card"><span>Aktive Akten</span><strong>{summary.total}</strong><small>je Verkaufsimmobilie eine</small></article>
-      <article className="metric-card"><span>Ohne Risikoeinstufung</span><strong>{summary.withoutRisk}</strong><small>Einstufung nachholen</small></article>
-      <article className="metric-card"><span>Hohes Risiko</span><strong>{summary.highRisk}</strong><small>verstärkte Sorgfalt prüfen</small></article>
-      <article className="metric-card"><span>Mit offenen Punkten</span><strong>{summary.open}</strong><small>Erfassung unvollständig</small></article>
-      <article className="metric-card"><span>Aufbewahrung &lt; 90 Tage</span><strong>{summary.retention}</strong><small>Frist läuft ab</small></article>
-      <article className="metric-card"><span>Löschsperren</span><strong>{summary.hold}</strong><small>bewusst zurückgehalten</small></article>
-    </section>
-
-    <section className="data-card"><Form method="get" className="filter-grid">
-      <label><span>Suche</span><input name="q" defaultValue={filters.q} placeholder="Akte oder Immobilie"/></label>
-      <label><span>Ansicht</span><select name="view" defaultValue={filters.view}><option value="OPEN">Mit offenen Punkten</option><option value="ACTIVE">Alle aktiven Akten</option><option value="HIGH">Hohes Risiko</option><option value="RETENTION">Aufbewahrung läuft ab</option><option value="ARCHIVED">Archiviert</option></select></label>
-      <button className="secondary-button" type="submit">Filtern</button>
-    </Form></section>
-
-    <section className="data-card"><div className="card-head"><div><p className="eyebrow">Aktenverzeichnis</p><h2>{rows.length} Akten</h2></div></div><div className="data-list">
-      {rows.map((row:any)=>{const property=one(row.properties);return <Link className="data-row data-row-link" to={`/properties/${property.id}/compliance`} key={row.id}>
-        <div><strong>{row.case_number} · {property.property_number}</strong><small>{property.internal_title}</small></div>
-        <div className="row-meta"><span className={`status-pill ${row.archived_at?"status-archived":RISK_CLASS[row.risk_level]??"status-draft"}`}>{row.archived_at?"Archiviert":row.risk_level?`Risiko ${RISK[row.risk_level]}`:"Ohne Einstufung"}</span><small>{row.identifiedCount} von {row.totalCount} identifiziert</small></div>
-        <div className="row-meta"><span>{row.openPoints.length?row.openPoints.join(" · "):"Erfassung vollständig"}</span><small>Aufbewahrung bis {formatDate(row.retention_until)}{row.legal_hold?" · Löschsperre":""}</small></div>
-        <span className="subtle-link">Öffnen →</span>
-      </Link>;})}
-      {rows.length===0?<p className="empty-state">Keine Akten in dieser Ansicht.</p>:null}
-    </div></section>
+    <div className="programm-tabelle-rahmen">
+      {rows.length===0?<p className="programm-liste-leer">Keine Akten in dieser Ansicht.</p>:<table className="programm-tabelle">
+        <thead><tr><th scope="col">Akte</th><th scope="col">Immobilie</th><th scope="col">Risiko</th><th scope="col">Identifiziert</th><th scope="col">Offene Punkte</th><th scope="col">Aufbewahrung bis</th></tr></thead>
+        <tbody>{rows.map((row:any)=>{const property=one(row.properties);return <tr key={row.id}>
+          <td className="zahl"><Link to={`/properties/${property.id}/compliance`}>{row.case_number}</Link></td>
+          <td><Link to={`/properties/${property.id}/compliance`}>{property.property_number} · {property.internal_title}</Link></td>
+          <td><span className={`status-pill ${row.archived_at?"status-archived":RISK_CLASS[row.risk_level]??"status-draft"}`}>{row.archived_at?"Archiviert":row.risk_level?`Risiko ${RISK[row.risk_level]}`:"Ohne Einstufung"}</span></td>
+          <td className="zahl">{row.identifiedCount} von {row.totalCount}</td>
+          <td>{row.openPoints.length?row.openPoints.join(" · "):<span className="leise">Erfassung vollständig</span>}</td>
+          <td className="zahl">{formatDate(row.retention_until)}{row.legal_hold?<div className="leise">Löschsperre</div>:null}</td>
+        </tr>;})}</tbody>
+      </table>}
+    </div>
 
     <section className="data-card" id="aufbewahrung"><div className="card-head"><div><p className="eyebrow">Besonders schutzwürdige Unterlagen</p><h2>Aufbewahrung läuft ab</h2></div><span className="status-pill">{overdue.length} überfällig</span></div>
       <p className="subtle">Dokumente mit hinterlegter Aufbewahrungsfrist, die innerhalb der nächsten 180 Tage abläuft oder bereits abgelaufen ist. Das System löscht nichts von selbst; über die Löschung entscheidet die Geschäftsführung.</p>

@@ -2,6 +2,7 @@ import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-
 import { istEinstieg } from "~/lib/einstieg";
 import type { Route } from "./+types/referrals";
 import { Aufklapper } from "~/components/aufklapper";
+import "~/programm-liste.css";
 import { KontaktAuswahl } from "~/components/kontakt-auswahl";
 import { requirePermission } from "~/lib/auth.server";
 import { tag } from "~/lib/format";
@@ -111,49 +112,31 @@ export async function action({request,context}:Route.ActionArgs){
 export default function Referrals(){
   const d=useLoaderData<typeof loader>();
   const actionData=useActionData<typeof action>();
-  return <main className="editor-shell programm-seite">
-    <header className="editor-header">
-      <div>
-        <Link className="back-link" to="/crm">← CRM</Link>
-        <p className="eyebrow">Nach dem Verkauf</p>
-        <h1 className="editor-title">Empfehlungen</h1>
-        <p className="editor-meta">Wer hat wen empfohlen, und was ist daraus geworden.</p>
-      </div>
-      <div className="header-user"><span className="badge">{__APP_ENV_LABEL__}</span><small>{d.profile.display_name}</small></div>
-    </header>
+  // Eine Programmliste wie Kontakte und Makleraufträge (P2-8, 17.10.2026):
+  // Werkzeugleiste, Kennzahlen, Tabelle. "Herkunft prüfen" bleibt als eigene
+  // Tabelle darunter, das Formular im Aufklapper.
+  return <main className="editor-shell programm-liste">
+    <Form method="get" className="programm-liste-werkzeuge">
+      <input type="hidden" name="ansicht" value="tabelle"/>
+      <label><span className="sr-only">Ansicht</span><select name="status" defaultValue={d.filter}>
+        <option value="OPEN">In Arbeit</option>
+        <option value="ALL">Alle</option>
+        {Object.entries(REFERRAL_STATUS).map(([k,v])=><option key={k} value={k}>{v}</option>)}
+        <option value="ARCHIVED">Archiviert</option>
+      </select></label>
+      <button className="secondary-button" type="submit">Filtern</button>
+      <span className="programm-liste-zaehler">{d.rows.length} {d.rows.length===1?"Empfehlung":"Empfehlungen"}</span>
+    </Form>
+    <p className="programm-kennzahlen">
+      <span><strong>{d.total}</strong> erfasst</span>
+      <span><strong>{d.open}</strong> in Arbeit</span>
+      <span><strong>{d.won}</strong> gewonnen</span>
+      <span className={d.unthanked?"warnung":undefined}><strong>{d.unthanked}</strong> ohne Dank</span>
+    </p>
 
     {actionData?.error?<p className="form-error">{actionData.error}</p>:null}
 
-    <div className="metric-grid">
-      <article className="metric"><span>Erfasst</span><strong>{d.total}</strong><small>{d.total===1?"nicht archivierte Empfehlung":"nicht archivierte Empfehlungen"}</small></article>
-      <article className="metric"><span>In Arbeit</span><strong>{d.open}</strong><small>{d.open===1?"Empfehlung ohne Ergebnis":"Empfehlungen ohne Ergebnis"}</small></article>
-      <article className="metric"><span>Gewonnen</span><strong>{d.won}</strong><small>{d.won===1?"Auftrag aus einer Empfehlung":"Aufträge aus Empfehlungen"}</small></article>
-      <article className="metric"><span>Ohne Dank</span><strong>{d.unthanked}</strong><small>{d.unthanked===1?"bearbeitete Empfehlung ohne Rückmeldung":"bearbeitete Empfehlungen ohne Rückmeldung"}</small></article>
-    </div>
-
-    {(d.gaps as any[]).length>0?<section className="data-card">
-      <div className="card-head"><div><p className="eyebrow">Auseinanderlaufende Zuordnung</p><h2>Herkunft prüfen</h2></div></div>
-      <div className="data-list">{(d.gaps as any[]).map((gap:any)=>
-        <div className="data-row" key={gap.referral_id}>
-          <div><strong>{gap.referral_number} → {gap.lead_number}</strong><small>{gap.reason}</small></div>
-          <div className="row-meta"><span>Empfehlung: {gap.referral_referrer??"—"}</span><small>Herkunft: {gap.acquisition_referrer??"nicht erfasst"}</small></div>
-          <Link className="subtle-link" to={`/leads/${gap.lead_id}#herkunft`}>Herkunft öffnen →</Link>
-        </div>)}</div>
-      <p className="subtle">Für die Kampagnen- und Partnerauswertung zählt die Herkunft des Leads. Diese Liste benennt den Unterschied; sie ändert nichts von selbst.</p>
-    </section>:null}
-
-    <section className="data-card">
-      <Form method="get" className="filter-grid"><input type="hidden" name="ansicht" value="tabelle"/>
-        <label><span>Ansicht</span><select name="status" defaultValue={d.filter}>
-          <option value="OPEN">In Arbeit</option>
-          <option value="ALL">Alle</option>
-          {Object.entries(REFERRAL_STATUS).map(([k,v])=><option key={k} value={k}>{v}</option>)}
-          <option value="ARCHIVED">Archiviert</option>
-        </select></label>
-        <button className="secondary-button" type="submit">Filtern</button>
-      </Form>
-    </section>
-    {d.canWrite?<Aufklapper id="anlegen" knopf="+ Empfehlung erfassen"><section className="data-card">
+    {d.canWrite?<Aufklapper id="anlegen" knopf="+ Empfehlung erfassen" offen={Boolean(actionData?.error)}><section className="data-card">
       <div className="card-head"><div><p className="eyebrow">Neu</p><h2>Empfehlung erfassen</h2></div></div>
       <Form method="post" className="form-grid">
         <label className="form-field"><span>Empfehlung kommt von</span>
@@ -191,30 +174,39 @@ export default function Referrals(){
       </Form>
     </section></Aufklapper>:null}
 
-    <section className="data-card">
-      <div className="card-head"><div><p className="eyebrow">Wer empfiehlt wen</p><h2>Empfehlungen</h2></div></div>
+    <div className="programm-tabelle-rahmen">
       {d.rows.length===0
-        ?<p className="empty-state">In dieser Ansicht ist keine Empfehlung erfasst.</p>
-        :<div className="data-list">{d.rows.map((row:any)=>{
-          const lead=one(row.leads);
-          return <Link className="data-row data-row-link" to={`/referrals/${row.id}`} key={row.id}>
-            <div>
-              <strong>{row.referral_number} · {referrerLabel(row)}</strong>
-              <small>empfiehlt {referredLabel(row)}</small>
-              <small>{row.occasion??"ohne Anlass erfasst"}</small>
-            </div>
-            <div className="row-meta">
-              <span>{formatDay(row.received_on)}</span>
-              <small>{row.channel?REFERRAL_CHANNEL[row.channel]??row.channel:"Weg offen"}</small>
-            </div>
-            <div className="row-meta">
-              <span className={`status-pill ${REFERRAL_STATUS_CLASS[row.status]??"status-draft"}`}>{row.archived_at?"Archiviert":REFERRAL_STATUS[row.status]??row.status}</span>
-              <small>{lead?`${lead.lead_number}`:row.acknowledged_on?`bedankt ${formatDay(row.acknowledged_on)}`:"kein Lead"}</small>
-            </div>
-            <span className="subtle-link">Öffnen →</span>
-          </Link>;
-        })}</div>}
-    </section>
+        ?<p className="programm-liste-leer">In dieser Ansicht ist keine Empfehlung erfasst.</p>
+        :<table className="programm-tabelle">
+          <thead><tr><th scope="col">Nummer</th><th scope="col">Empfohlen von</th><th scope="col">Empfohlen</th><th scope="col">Anlass</th><th scope="col">Weg</th><th scope="col">Status</th><th scope="col">Ergebnis</th><th scope="col" className="rechts">Eingegangen</th></tr></thead>
+          <tbody>{d.rows.map((row:any)=>{
+            const lead=one(row.leads);
+            return <tr key={row.id}>
+              <td className="zahl"><Link to={`/referrals/${row.id}`}>{row.referral_number}</Link></td>
+              <td><Link to={`/referrals/${row.id}`}>{referrerLabel(row)}</Link></td>
+              <td>{referredLabel(row)}</td>
+              <td>{row.occasion??<span className="leise">—</span>}</td>
+              <td>{row.channel?REFERRAL_CHANNEL[row.channel]??row.channel:<span className="leise">offen</span>}</td>
+              <td><span className={`status-pill ${REFERRAL_STATUS_CLASS[row.status]??"status-draft"}`}>{row.archived_at?"Archiviert":REFERRAL_STATUS[row.status]??row.status}</span></td>
+              <td>{lead?lead.lead_number:<span className="leise">kein Lead</span>}{row.acknowledged_on?<div className="leise">bedankt {formatDay(row.acknowledged_on)}</div>:null}</td>
+              <td className="zahl rechts leise">{formatDay(row.received_on)}</td>
+            </tr>;
+          })}</tbody>
+        </table>}
+    </div>
 
+    {(d.gaps as any[]).length>0?<section className="programm-tabelle-rahmen" aria-label="Herkunft prüfen">
+      <p className="programm-liste-leer"><strong>Herkunft prüfen:</strong> Für die Kampagnen- und Partnerauswertung zählt die Herkunft des Leads. Diese Liste benennt den Unterschied; sie ändert nichts von selbst.</p>
+      <table className="programm-tabelle">
+        <thead><tr><th scope="col">Empfehlung → Lead</th><th scope="col">Grund</th><th scope="col">Laut Empfehlung</th><th scope="col">Laut Herkunft</th><th scope="col"><span className="sr-only">Aktion</span></th></tr></thead>
+        <tbody>{(d.gaps as any[]).map((gap:any)=><tr key={gap.referral_id}>
+          <td className="zahl">{gap.referral_number} → {gap.lead_number}</td>
+          <td>{gap.reason}</td>
+          <td>{gap.referral_referrer??<span className="leise">—</span>}</td>
+          <td>{gap.acquisition_referrer??<span className="leise">nicht erfasst</span>}</td>
+          <td className="rechts"><Link to={`/leads/${gap.lead_id}#herkunft`}>Herkunft öffnen →</Link></td>
+        </tr>)}</tbody>
+      </table>
+    </section>:null}
   </main>;
 }

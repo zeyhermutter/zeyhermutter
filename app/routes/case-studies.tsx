@@ -2,6 +2,7 @@ import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-
 import { istEinstieg } from "~/lib/einstieg";
 import type { Route } from "./+types/case-studies";
 import { Aufklapper } from "~/components/aufklapper";
+import "~/programm-liste.css";
 import { requirePermission } from "~/lib/auth.server";
 import { euroRund, tag } from "~/lib/format";
 
@@ -89,37 +90,29 @@ export async function action({request,context}:Route.ActionArgs){
 export default function CaseStudies(){
   const d=useLoaderData<typeof loader>();
   const actionData=useActionData<typeof action>();
-  return <main className="editor-shell programm-seite">
-    <header className="editor-header">
-      <div>
-        <Link className="back-link" to="/crm">← CRM</Link>
-        <p className="eyebrow">Nach dem Verkauf</p>
-        <h1 className="editor-title">Case Studies</h1>
-        <p className="editor-meta">Der abgeschlossene Fall, aufbereitet aus den Daten, die ohnehin erfasst sind.</p>
-      </div>
-      <div className="header-user"><span className="badge">{__APP_ENV_LABEL__}</span><small>{d.profile.display_name}</small></div>
-    </header>
+  // Eine Programmliste wie Kontakte und Makleraufträge (P2-8, 17.10.2026):
+  // Werkzeugleiste mit "+ Case Study anlegen", Kennzahlen, Tabelle.
+  return <main className="editor-shell programm-liste">
+    <Form method="get" className="programm-liste-werkzeuge">
+      <input type="hidden" name="ansicht" value="tabelle"/>
+      <label><span className="sr-only">Ansicht</span><select name="status" defaultValue={d.filter}>
+        <option value="ACTIVE">Aktive Case Studies</option>
+        <option value="ALL">Alle</option>
+        {Object.entries(CASE_STATUS).map(([k,v])=><option key={k} value={k}>{v}</option>)}
+        <option value="ARCHIVED">Archiviert</option>
+      </select></label>
+      <button className="secondary-button" type="submit">Filtern</button>
+      <span className="programm-liste-zaehler">{d.rows.length} von {plural(d.total,"Case Study","Case Studies")}</span>
+    </Form>
+    <p className="programm-kennzahlen">
+      <span><strong>{d.publishable}</strong> öffentlich verwendbar (Freigabe erteilt)</span>
+      <span className={d.waiting?"warnung":undefined}><strong>{d.waiting}</strong> Freigabe offen</span>
+      <span className="leise">Kennzahlen kommen aus dem Vorgang; Texte schreibt der Benutzer.</span>
+    </p>
 
     {actionData?.error?<p className="form-error">{actionData.error}</p>:null}
 
-    <div className="metric-grid">
-      <article className="metric"><span>Angezeigt</span><strong>{d.rows.length}</strong><small>von {plural(d.total,"erfassten Case Study","erfassten Case Studies")}</small></article>
-      <article className="metric"><span>Öffentlich verwendbar</span><strong>{d.publishable}</strong><small>{d.publishable===1?"Fall mit erteilter Freigabe":"Fälle mit erteilter Freigabe"}</small></article>
-      <article className="metric"><span>Freigabe offen</span><strong>{d.waiting}</strong><small>{d.waiting===1?"Anfrage wartet auf Entscheidung":"Anfragen warten auf Entscheidung"}</small></article>
-    </div>
-
-    <section className="data-card">
-      <Form method="get" className="filter-grid"><input type="hidden" name="ansicht" value="tabelle"/>
-        <label><span>Ansicht</span><select name="status" defaultValue={d.filter}>
-          <option value="ACTIVE">Aktive</option>
-          <option value="ALL">Alle</option>
-          {Object.entries(CASE_STATUS).map(([k,v])=><option key={k} value={k}>{v}</option>)}
-          <option value="ARCHIVED">Archiviert</option>
-        </select></label>
-        <button className="secondary-button" type="submit">Filtern</button>
-      </Form>
-    </section>
-    {d.canWrite?<Aufklapper id="anlegen" knopf="+ Case Study anlegen"><section className="data-card">
+    {d.canWrite?<Aufklapper id="anlegen" knopf="+ Case Study anlegen" offen={Boolean(actionData?.error)}><section className="data-card">
       <div className="card-head"><div><p className="eyebrow">Neu</p><h2>Case Study anlegen</h2></div></div>
       {d.openClosings.length===0
         ?<p className="empty-state">{d.notarizedCount===0
@@ -138,30 +131,25 @@ export default function CaseStudies(){
         </Form>}
     </section></Aufklapper>:null}
 
-    <section className="data-card">
-      <div className="card-head"><div><p className="eyebrow">Referenzen</p><h2>Fälle</h2></div></div>
+    <div className="programm-tabelle-rahmen">
       {d.rows.length===0
-        ?<p className="empty-state">In dieser Ansicht ist keine Case Study erfasst.</p>
-        :<div className="data-list">{d.rows.map((row:any)=>{
-          const closing=one(row.sale_closings);const property=one(closing?.properties);
-          return <Link className="data-row data-row-link" to={`/case-studies/${row.id}`} key={row.id}>
-            <div>
-              <strong>{row.case_study_number} · {row.title}</strong>
-              <small>{property?.property_number} · {property?.internal_title}</small>
-              <small>{row.anonymized?`Anonymisiert${row.display_location?` · ${row.display_location}`:""}`:"Nicht anonymisiert"}</small>
-            </div>
-            <div className="row-meta">
-              <span>{money(closing?.notarial_purchase_price??closing?.agreed_purchase_price)}</span>
-              <small>beurkundet {formatDay(closing?.notarized_date)}</small>
-            </div>
-            <div className="row-meta">
-              <span className={`status-pill ${CASE_STATUS_CLASS[row.status]??"status-draft"}`}>{row.archived_at?"Archiviert":CASE_STATUS[row.status]??row.status}</span>
-              <small>Freigabe: {RELEASE_STATUS[row.release_status]??row.release_status}</small>
-            </div>
-            <span className="subtle-link">Öffnen →</span>
-          </Link>;
-        })}</div>}
-    </section>
-
+        ?<p className="programm-liste-leer">In dieser Ansicht ist keine Case Study erfasst.</p>
+        :<table className="programm-tabelle">
+          <thead><tr><th scope="col">Nummer</th><th scope="col">Titel</th><th scope="col">Objekt</th><th scope="col" className="rechts">Kaufpreis</th><th scope="col">Beurkundet</th><th scope="col">Anonymisierung</th><th scope="col">Status</th><th scope="col">Freigabe</th></tr></thead>
+          <tbody>{d.rows.map((row:any)=>{
+            const closing=one(row.sale_closings);const property=one(closing?.properties);
+            return <tr key={row.id}>
+              <td className="zahl"><Link to={`/case-studies/${row.id}`}>{row.case_study_number}</Link></td>
+              <td><Link to={`/case-studies/${row.id}`}>{row.title}</Link></td>
+              <td>{property?<>{property.property_number}<div className="leise">{property.internal_title}</div></>:<span className="leise">—</span>}</td>
+              <td className="zahl rechts">{money(closing?.notarial_purchase_price??closing?.agreed_purchase_price)}</td>
+              <td className="zahl">{formatDay(closing?.notarized_date)}</td>
+              <td>{row.anonymized?<>Anonymisiert{row.display_location?<div className="leise">{row.display_location}</div>:null}</>:"Nicht anonymisiert"}</td>
+              <td><span className={`status-pill ${CASE_STATUS_CLASS[row.status]??"status-draft"}`}>{row.archived_at?"Archiviert":CASE_STATUS[row.status]??row.status}</span></td>
+              <td>{RELEASE_STATUS[row.release_status]??row.release_status}</td>
+            </tr>;
+          })}</tbody>
+        </table>}
+    </div>
   </main>;
 }

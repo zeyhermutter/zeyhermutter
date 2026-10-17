@@ -5,7 +5,8 @@ import { requirePermission } from "~/lib/auth.server";
 import { zeitpunktKurz as formatDate } from "~/lib/format";
 import { ANFRAGEKANAL as CHANNEL, ANFRAGESTATUS as STATUS } from "~/lib/labels";
 import { Ampel, useNaechsteSchritte } from "~/components/ampel";
-import "~/inquiry.css";
+import { Aufklapper } from "~/components/aufklapper";
+import "~/programm-liste.css";
 
 type ActionResult={error?:string;ok?:string};
 
@@ -47,7 +48,7 @@ export async function loader({request,context}:Route.LoaderArgs){
  const profileMap=Object.fromEntries((profiles??[]).map((p:any)=>[p.user_id,p.display_name]));
  const filtered=(rows??[]).filter((r:any)=>{if(archived?!r.archived_at:r.archived_at)return false;if(status==="OPEN"&&["CLOSED","LOST"].includes(r.status))return false;if(status!=="ALL"&&status!=="OPEN"&&r.status!==status)return false;if(channel!=="ALL"&&r.channel!==channel)return false;if(responsible!=="ALL"&&r.primary_responsible_user!==responsible)return false;if(q){const c=one(r.contacts),p=one(r.properties),sp=one(r.search_profiles);const hay=[r.inquiry_number,c?.first_name,c?.last_name,c?.email,c?.phone,c?.mobile,p?.property_number,sp?.search_profile_number,r.message].filter(Boolean).join(" ").toLowerCase();if(!hay.includes(q))return false;}return true;});
  const response=(responseRes.data??[]) as any[];
- return data({rows:filtered,profiles:profiles??[],profileMap,profile,
+ return data({rows:filtered,gekappt:(rows??[]).length>=500,profiles:profiles??[],profileMap,profile,
   responseByInquiry,targets:targetsRes.data??[],
   canEscalate:canEscalate===true,canManageTargets:canManageTargets===true,
   responseSummary:{
@@ -69,22 +70,67 @@ export async function action({request,context}:Route.ActionArgs){
  const created=Number(count)||0;
  return data<ActionResult>({ok:created===0?"Es gab keine Anfrage, die zu eskalieren war.":created===1?"Eine Wiedervorlage wurde angelegt.":`${created} Wiedervorlagen wurden angelegt.`},{headers:responseHeaders()});
 }
-export default function Inquiries(){const schritte=useNaechsteSchritte("inquiry");const d=useLoaderData<typeof loader>();const {rows,profiles,profileMap,profile,filters}=d;const actionData=useActionData<typeof action>();const summary=d.responseSummary as any;const responseByInquiry=d.responseByInquiry as Record<string,any>;return <main className="editor-shell programm-seite"><header className="editor-header"><div><Link className="back-link" to="/crm">← CRM</Link><h1 className="editor-title">Anfragen</h1><p className="editor-meta">Eingehende Käufer- und Mieteranfragen mit Kontakt-, Objekt- und Suchprofilbezug.</p></div><div className="header-user"><Link className="secondary-button link-button" to="/inquiries/assistent">Anfrage einfügen</Link><Link className="primary-button link-button" to="/inquiries/new">+ Anfrage</Link><span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div></header><div className="inquiry-page">
-{actionData?.error?<p className="form-error">{actionData.error}</p>:null}
-{actionData?.ok?<p className="form-success">{actionData.ok}</p>:null}
-<section className="data-card" id="reaktionszeit">
- <div className="card-head"><div><p className="eyebrow">Zeit bis zur ersten Antwort</p><h2>Reaktionszeit</h2></div>{d.canEscalate?<Form method="post"><input type="hidden" name="_intent" value="escalate"/><button className="secondary-button" type="submit">Überfällige eskalieren</button></Form>:null}</div>
- <div className="metric-grid">
-  <article className="metric"><span>Zielzeit überschritten</span><strong>{summary.overdue}</strong><small>{summary.overdue===1?"offene Anfrage über der Zielzeit":"offene Anfragen über der Zielzeit"}</small></article>
-  <article className="metric"><span>Eskalation fällig</span><strong>{summary.escalationDue}</strong><small>{summary.escalated>0?`${summary.escalated} bereits eskaliert`:"noch nichts eskaliert"}</small></article>
-  <article className="metric"><span>Verspätet beantwortet</span><strong>{summary.late}</strong><small>{summary.inTime} rechtzeitig</small></article>
- </div>
- <p className="subtle">Die Zielzeit wird je Kanal vorgegeben. Eskalieren legt je überfälliger Anfrage genau eine Wiedervorlage für den Verantwortlichen an — einmalig und nur auf Knopfdruck.</p>
- {d.canManageTargets?<div className="data-list" style={{marginTop:"0.75rem"}}>{(d.targets as any[]).map((t:any)=>
-  <div className="data-row" key={t.id}>
-   <div><strong>{t.channel?CHANNEL[t.channel]??t.channel:"Allgemeine Vorgabe"}</strong><small>{t.note??"ohne Notiz"}</small></div>
-   <div className="row-meta"><span>Ziel {t.target_hours} h</span><small>Eskalation ab {t.escalation_hours} h</small></div>
-   <div className="row-meta"><span className={t.active?"status-pill status-sold":"status-pill status-archived"}>{t.active?"Aktiv":"Inaktiv"}</span></div>
-  </div>)}</div>:null}
-</section>
-<section className="data-card"><Form method="get" className="inquiry-filter-grid"><input type="hidden" name="ansicht" value="tabelle"/><label><span>Suche</span><input name="q" defaultValue={filters.q} placeholder="Name, Anfrage-, Objekt- oder Profilnummer"/></label><label><span>Status</span><select name="status" defaultValue={filters.status}><option value="OPEN">Offen</option><option value="ALL">Alle</option>{Object.entries(STATUS).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label><label><span>Kanal</span><select name="channel" defaultValue={filters.channel}><option value="ALL">Alle</option>{Object.entries(CHANNEL).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label><label><span>Verantwortlich</span><select name="responsible" defaultValue={filters.responsible}><option value="ALL">Alle</option>{profiles.map((p:any)=><option key={p.user_id} value={p.user_id}>{p.display_name}</option>)}</select></label><button className="secondary-button" type="submit">Filtern</button><label className="checkbox-row"><input name="archived" type="checkbox" value="1" defaultChecked={filters.archived}/><span>Archiv anzeigen</span></label></Form></section><section className="data-card"><div className="card-head"><div><p className="eyebrow">Anfragen</p><h2>{rows.length} Treffer</h2></div><Link className="subtle-link" to="/search-profiles">Suchprofile öffnen</Link></div><div className="inquiry-list">{rows.map((r:any)=>{const c=one(r.contacts),p=one(r.properties),sp=one(r.search_profiles);return <Link className="inquiry-row" to={`/inquiries/${r.id}`} key={r.id}><div><strong>{c?`${c.first_name} ${c.last_name}`:r.inquiry_number}</strong><small>{r.inquiry_number} · {CHANNEL[r.channel]??r.channel}</small><small>{r.message?.slice(0,110)??"Keine Nachricht"}</small></div><div><span className={`inquiry-status ${String(r.status).toLowerCase()}`}>{STATUS[r.status]??r.status}</span><Ampel s={schritte[r.id]}/><small>{profileMap[r.primary_responsible_user]??"Nicht zugeordnet"}</small></div><div><strong>{p?.property_number??sp?.search_profile_number??"Ohne Zuordnung"}</strong><small>{p?.internal_title??sp?.title??"Kontaktanfrage"}</small><small>Eingang {formatDate(r.received_at)}</small></div>{(()=>{const rt=responseByInquiry[r.id];if(!rt)return <div><small>ohne Reaktionszeit</small></div>;return <div><span className={`status-pill ${RESPONSE_STATE_CLASS[rt.state]??"status-draft"}`}>{RESPONSE_STATE[rt.state]??rt.state}</span><small>{elapsedLabel(rt.elapsed_hours)}{rt.target_hours?` von ${rt.target_hours} h`:""}</small><small>{rt.escalated?"eskaliert":""}</small></div>;})()}<span className="subtle-link">Öffnen →</span></Link>})}{rows.length===0?<p className="empty-state">Keine Anfragen in dieser Ansicht.</p>:null}</div></section></div></main>}
+const GRENZE=500;
+
+// Eine Programmliste wie Kontakte und Makleraufträge (P2-8, 17.10.2026):
+// Werkzeugleiste, eine Zeile Kennzahlen zur Reaktionszeit, Tabelle. Vorher
+// Seitenkopf, drei Kacheln, Filterkasten und Kartenzeilen. Die Zielzeiten je
+// Kanal stehen jetzt im Aufklapper statt offen über der Liste.
+export default function Inquiries(){
+ const schritte=useNaechsteSchritte("inquiry");
+ const d=useLoaderData<typeof loader>();
+ const {rows,profiles,profileMap,filters}=d;
+ const actionData=useActionData<typeof action>();
+ const summary=d.responseSummary as any;
+ const responseByInquiry=d.responseByInquiry as Record<string,any>;
+ const gefiltert=Boolean(filters.q||filters.status!=="OPEN"||filters.channel!=="ALL"||filters.responsible!=="ALL"||filters.archived);
+ return <main className="editor-shell programm-liste">
+  <Form method="get" className="programm-liste-werkzeuge" role="search">
+   <input type="hidden" name="ansicht" value="tabelle"/>
+   <label className="programm-liste-suche"><span className="sr-only">Suche</span><input type="search" name="q" defaultValue={filters.q} placeholder="Name, Anfrage-, Objekt- oder Profilnummer …" autoComplete="off"/></label>
+   <label><span className="sr-only">Status</span><select name="status" defaultValue={filters.status}><option value="OPEN">Offene Anfragen</option><option value="ALL">Alle</option>{Object.entries(STATUS).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label>
+   <label><span className="sr-only">Kanal</span><select name="channel" defaultValue={filters.channel}><option value="ALL">Alle Kanäle</option>{Object.entries(CHANNEL).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label>
+   <label><span className="sr-only">Verantwortlich</span><select name="responsible" defaultValue={filters.responsible}><option value="ALL">Alle Verantwortlichen</option>{profiles.map((p:any)=><option key={p.user_id} value={p.user_id}>{p.display_name}</option>)}</select></label>
+   <label className="programm-liste-haken"><input name="archived" type="checkbox" value="1" defaultChecked={filters.archived}/>Archiv</label>
+   <button className="secondary-button" type="submit">Filtern</button>
+   <span className="programm-liste-zaehler">{rows.length} {rows.length===1?"Anfrage":"Anfragen"}</span>
+   <Link className="secondary-button link-button" to="/inquiries/assistent">Anfrage einfügen</Link>
+   <Link className="programm-liste-neu" to="/inquiries/new">+ Neue Anfrage</Link>
+  </Form>
+
+  {actionData?.error?<p className="form-error">{actionData.error}</p>:null}
+  {actionData?.ok?<p className="form-success">{actionData.ok}</p>:null}
+
+  <p className="programm-kennzahlen" id="reaktionszeit">
+   <span className={summary.overdue?"warnung":undefined}><strong>{summary.overdue}</strong> über der Zielzeit</span>
+   <span className={summary.escalationDue?"warnung":undefined}><strong>{summary.escalationDue}</strong> Eskalation fällig{summary.escalated>0?` (${summary.escalated} eskaliert)`:""}</span>
+   <span><strong>{summary.late}</strong> verspätet beantwortet</span>
+   <span><strong>{summary.inTime}</strong> rechtzeitig</span>
+   {d.canEscalate?<Form method="post" className="programm-liste-rechts"><input type="hidden" name="_intent" value="escalate"/><button className="secondary-button" type="submit" title="Legt je überfälliger Anfrage genau eine Wiedervorlage für den Verantwortlichen an — einmalig und nur auf Knopfdruck.">Überfällige eskalieren</button></Form>:null}
+  </p>
+
+  <div className="programm-tabelle-rahmen">
+   {rows.length===0?<p className="programm-liste-leer">{gefiltert?"Keine Anfrage passt zu diesem Filter.":"Keine offenen Anfragen."} <Link to="/inquiries/new">Anfrage erfassen</Link></p>:<table className="programm-tabelle">
+    <thead><tr><th scope="col">Nummer</th><th scope="col">Kontakt</th><th scope="col">Bezug</th><th scope="col">Kanal</th><th scope="col">Status</th><th scope="col">Verantwortlich</th><th scope="col">Reaktionszeit</th><th scope="col" className="rechts">Eingang</th></tr></thead>
+    <tbody>{rows.map((r:any)=>{const c=one(r.contacts),p=one(r.properties),sp=one(r.search_profiles),rt=responseByInquiry[r.id];return <tr key={r.id}>
+     <td className="zahl"><Link to={`/inquiries/${r.id}`}>{r.inquiry_number}</Link></td>
+     <td><Link to={`/inquiries/${r.id}`}>{c?`${c.first_name} ${c.last_name}`:"Kontakt"}</Link>{r.message?<div className="leise">{r.message.slice(0,80)}{r.message.length>80?" …":""}</div>:null}</td>
+     <td>{p?<><Link to={`/properties/${p.id}`}>{p.property_number}</Link><div className="leise">{p.internal_title}</div></>:sp?<><Link to={`/search-profiles/${sp.id}`}>{sp.search_profile_number}</Link><div className="leise">{sp.title}</div></>:<span className="leise">ohne Zuordnung</span>}</td>
+     <td>{CHANNEL[r.channel]??r.channel}{r.source_label?<div className="leise">{r.source_label}</div>:null}</td>
+     <td><span className="ampel-neben">{r.archived_at?"Archiviert":STATUS[r.status]??r.status}<Ampel s={schritte[r.id]}/></span></td>
+     <td>{profileMap[r.primary_responsible_user]??<span className="leise">nicht zugeordnet</span>}</td>
+     <td>{rt?<><span className={`status-pill ${RESPONSE_STATE_CLASS[rt.state]??"status-draft"}`}>{RESPONSE_STATE[rt.state]??rt.state}</span><div className="leise">{elapsedLabel(rt.elapsed_hours)}{rt.target_hours?` von ${rt.target_hours} h`:""}{rt.escalated?" · eskaliert":""}</div></>:<span className="leise">ohne Zielzeit</span>}</td>
+     <td className="zahl rechts leise">{formatDate(r.received_at)}</td>
+    </tr>;})}</tbody>
+   </table>}
+   {d.gekappt?<p className="programm-liste-leer">Durchsucht werden die {GRENZE} zuletzt eingegangenen Anfragen. Ältere findet die Suche über alles (Strg+K).</p>:null}
+  </div>
+
+  {d.canManageTargets?<Aufklapper id="zielzeiten" knopf={`Zielzeiten je Kanal (${(d.targets as any[]).length})`}>
+   <p className="programm-erklaerung">Die Zielzeit bis zur ersten Antwort wird je Kanal vorgegeben; ab der Eskalationszeit gilt eine Anfrage als zu eskalieren.</p>
+   <table className="programm-tabelle"><thead><tr><th scope="col">Kanal</th><th scope="col">Notiz</th><th scope="col" className="rechts">Ziel</th><th scope="col" className="rechts">Eskalation ab</th><th scope="col">Stand</th></tr></thead>
+    <tbody>{(d.targets as any[]).map((t:any)=><tr key={t.id}><td>{t.channel?CHANNEL[t.channel]??t.channel:"Allgemeine Vorgabe"}</td><td>{t.note??<span className="leise">—</span>}</td><td className="zahl rechts">{t.target_hours} h</td><td className="zahl rechts">{t.escalation_hours} h</td><td><span className={t.active?"status-pill status-sold":"status-pill status-archived"}>{t.active?"Aktiv":"Inaktiv"}</span></td></tr>)}</tbody>
+   </table>
+  </Aufklapper>:null}
+ </main>;
+}

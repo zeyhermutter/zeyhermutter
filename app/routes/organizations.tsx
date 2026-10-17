@@ -3,6 +3,8 @@ import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-
 import { istEinstieg } from "~/lib/einstieg";
 import type { Route } from "./+types/organizations";
 import { requireActiveUser } from "~/lib/auth.server";
+import { tag } from "~/lib/format";
+import "~/programm-liste.css";
 
 type ActionResult = { error?: string; fields?: Record<string, string> };
 
@@ -72,6 +74,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return data(
     {
       organizations: filtered,
+      gekappt: organizations.length >= 500,
       legalForms,
       cities,
       statuses,
@@ -139,7 +142,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 }
 
 export default function Organizations() {
-  const { organizations, legalForms, cities, statuses, filters, profile } = useLoaderData<typeof loader>();
+  const { organizations, legalForms, cities, statuses, filters, gekappt } = useLoaderData<typeof loader>();
   const result = useActionData<typeof action>();
   const fields = result?.fields ?? {};
   const [createOpen, setCreateOpen] = useState(Boolean(result?.error));
@@ -158,61 +161,42 @@ export default function Organizations() {
   }, [createOpen]);
 
   return (
-    <main className="editor-shell programm-seite">
-      <header className="editor-header">
-        <div><Link className="back-link" to="/crm">← CRM</Link><h1 className="editor-title">Organisationen</h1></div>
-        <div className="header-user">
-          <button className="primary-button" type="button" onClick={() => setCreateOpen(true)}>+ Neue Organisation</button>
-          <span className="badge">{__APP_ENV_LABEL__}</span>
-          <small>{profile.display_name}</small>
-        </div>
-      </header>
+    // Eine Programmliste wie Kontakte und Makleraufträge (P2-8, 17.10.2026).
+    // Vorher Seitenkopf, Filterkasten und Kartenzeilen. "+ Neue Organisation"
+    // oeffnet weiter das Formular als Dialog.
+    <main className="editor-shell programm-liste">
+      <Form method="get" className="programm-liste-werkzeuge" role="search">
+        <input type="hidden" name="ansicht" value="tabelle" />
+        <label className="programm-liste-suche"><span className="sr-only">Suche</span><input type="search" name="q" defaultValue={filters.q} placeholder="Name, Nummer, E-Mail, Telefon oder Ort …" autoComplete="off" /></label>
+        <label><span className="sr-only">Status</span><select name="status" defaultValue={filters.status}><option value="ALL">Alle Status</option>{statuses.map((value) => <option key={value} value={value}>{STATUS_LABELS[value] ?? value}</option>)}</select></label>
+        <label><span className="sr-only">Rechtsform</span><select name="legal_form" defaultValue={filters.legalForm}><option value="ALL">Alle Rechtsformen</option>{legalForms.map((value) => <option key={String(value)} value={String(value)}>{String(value)}</option>)}</select></label>
+        <label><span className="sr-only">Ort</span><select name="city" defaultValue={filters.city}><option value="ALL">Alle Orte</option>{cities.map((value) => <option key={String(value)} value={String(value)}>{String(value)}</option>)}</select></label>
+        <button className="secondary-button" type="submit">Filtern</button>
+        <span className="programm-liste-zaehler">{organizations.length} {organizations.length === 1 ? "Organisation" : "Organisationen"}</span>
+        <button className="programm-liste-neu" type="button" onClick={() => setCreateOpen(true)}>+ Neue Organisation</button>
+      </Form>
 
-      <div className="organization-page">
-        <section className="data-card">
-          <Form method="get" className="organization-filter-grid">
-            <input type="hidden" name="ansicht" value="tabelle" />
-            <label>
-              <span>Suche</span>
-              <input name="q" defaultValue={filters.q} placeholder="Name, Nummer, E-Mail, Telefon oder Ort" />
-            </label>
-            <label>
-              <span>Status</span>
-              <select name="status" defaultValue={filters.status}>
-                <option value="ALL">Alle</option>
-                {statuses.map((value) => <option key={value} value={value}>{STATUS_LABELS[value] ?? value}</option>)}
-              </select>
-            </label>
-            <label>
-              <span>Rechtsform</span>
-              <select name="legal_form" defaultValue={filters.legalForm}>
-                <option value="ALL">Alle</option>
-                {legalForms.map((value) => <option key={String(value)} value={String(value)}>{String(value)}</option>)}
-              </select>
-            </label>
-            <label>
-              <span>Ort</span>
-              <select name="city" defaultValue={filters.city}>
-                <option value="ALL">Alle</option>
-                {cities.map((value) => <option key={String(value)} value={String(value)}>{String(value)}</option>)}
-              </select>
-            </label>
-          </Form>
-        </section>
-
-        <section className="data-card">
-          <div className="card-head"><div><p className="eyebrow">Firmen & Partner</p><h2>Verzeichnis</h2></div><span className="subtle">{organizations.length}</span></div>
-          {organizations.length === 0 ? <p className="empty-state">Keine Organisationen für diese Filter gefunden.</p> : (
-            <div className="data-list">
+      <div className="programm-tabelle-rahmen">
+        {organizations.length === 0 ? <p className="programm-liste-leer">{filters.q || filters.status !== "ALL" || filters.legalForm !== "ALL" || filters.city !== "ALL" ? "Keine Organisation passt zu diesem Filter." : "Noch keine Organisation erfasst."}</p> : (
+          <table className="programm-tabelle">
+            <thead><tr><th scope="col">Nummer</th><th scope="col">Name</th><th scope="col">Rechtsform</th><th scope="col">Ort</th><th scope="col">E-Mail</th><th scope="col">Telefon</th><th scope="col">Status</th><th scope="col" className="rechts">Geändert</th></tr></thead>
+            <tbody>
               {organizations.map((organization) => (
-                <Link className="data-row data-row-link" to={`/crm/organizations/${organization.id}`} key={organization.id}>
-                  <div><strong>{organization.name}</strong><small>{organization.organization_number}{organization.legal_form ? ` · ${organization.legal_form}` : ""}</small></div>
-                  <div className="row-meta"><span>{organization.city ?? organization.email ?? "—"}</span><small>{STATUS_LABELS[organization.status] ?? organization.status}</small></div>
-                </Link>
+                <tr key={organization.id}>
+                  <td className="zahl"><Link to={`/crm/organizations/${organization.id}`}>{organization.organization_number}</Link></td>
+                  <td><Link to={`/crm/organizations/${organization.id}`}>{organization.name}</Link></td>
+                  <td>{organization.legal_form ?? <span className="leise">—</span>}</td>
+                  <td>{organization.city ?? <span className="leise">—</span>}</td>
+                  <td>{organization.email ? <a href={`mailto:${organization.email}`}>{organization.email}</a> : <span className="leise">—</span>}</td>
+                  <td className="zahl">{organization.phone ? <a href={`tel:${organization.phone.replace(/\s+/g, "")}`}>{organization.phone}</a> : <span className="leise">—</span>}</td>
+                  <td>{STATUS_LABELS[organization.status] ?? organization.status}</td>
+                  <td className="zahl rechts leise">{tag(organization.updated_at)}</td>
+                </tr>
               ))}
-            </div>
-          )}
-        </section>
+            </tbody>
+          </table>
+        )}
+        {gekappt ? <p className="programm-liste-leer">Durchsucht werden die 500 zuletzt geänderten Organisationen.</p> : null}
       </div>
 
       {createOpen ? (

@@ -121,8 +121,15 @@ for (const [tabelle, teile] of [["audit_events", ["verlauf"]], ["inquiries", ["r
 pruefe(/from\("inquiries"\)\.select\("id,inquiry_number[^"]*",\{count:"exact"\}\)[^\n]*\.in\("status",OFFEN_ANFRAGE\)/.test(ladeteil) && ladeteil.includes("interessentenZahl:"), "property-detail.tsx: offene Anfragen/Interessenten wieder aus einer gekappten Liste gezaehlt");
 pruefe((ladeteil.match(/await Promise\.all\(/g) ?? []).length === 1 && !/\]\);[\s\S]*await supabase/.test(ladeteil), "property-detail.tsx: Abfragen der Akte wieder nacheinander statt in einem Block");
 
+// 10. P2-8: Eine Listenform -- jede volle Liste ist eine Programmtabelle, keine Kartenzeilen
+for (const datei of ["properties", "inquiries", "leads", "viewings", "search-profiles", "purchase-offers", "closings", "commissions", "organizations", "case-studies", "referrals", "compliance", "contacts", "mandates", "measurements", "reservations"]) {
+  const quelle = await lies(`app/routes/${datei}.tsx`);
+  pruefe(quelle.includes('className="programm-tabelle"') && quelle.includes('className="editor-shell programm-liste"'), `${datei}.tsx: volle Liste ist keine Programmtabelle`);
+  pruefe(!/className="(data-row data-row-link|inquiry-row|search-profile-row|data-row lead-list-row[^"]*)"/.test(quelle), `${datei}.tsx: wieder Kartenzeilen in der Liste`);
+}
+
 if (fehler.length) {
   console.error("P2:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung, Datenauskunft aus allen Kontakt-Tabellen, Rechtsgrundlage und Werbewiderspruch (Hinweis, keine Sperre), Anonymisieren nur mit Recht, Grund, Bestätigung und ohne Einwand der Datenbank, Objektakte lädt je Teil nur, was er zeigt.");
+console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung, Datenauskunft aus allen Kontakt-Tabellen, Rechtsgrundlage und Werbewiderspruch (Hinweis, keine Sperre), Anonymisieren nur mit Recht, Grund, Bestätigung und ohne Einwand der Datenbank, Objektakte lädt je Teil nur, was er zeigt, 16 volle Listen als Programmtabelle.");
