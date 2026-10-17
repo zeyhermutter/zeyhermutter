@@ -14,7 +14,7 @@ import { ObjektakteFahrplan } from "~/components/objektakte-fahrplan";
 import { AufgabenBaustein } from "~/components/aufgaben-baustein";
 import { AUFGABEN_SPALTEN } from "~/lib/aufgaben.server";
 import { ObjektAufEinenBlick, ObjektInteressentenLage } from "~/components/objekt-auf-einen-blick";
-import { ankerPfad, teilAusPfad } from "~/lib/objektakte-navigation";
+import { ankerPfad, teilAusPfad, type Teil } from "~/lib/objektakte-navigation";
 
 type FeatureChoice = { key:string; label:string };
 type ActionResult = { error?: string; success?: string; featurePreview?: { entered:string; formatted:string; exact?:FeatureChoice; suggestion?:FeatureChoice } };
@@ -58,68 +58,79 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   const { data: property, error } = await supabase.from("properties").select("*").eq("id",propertyId).maybeSingle();
   if(error||!property) throw new Response("Immobilie nicht gefunden.",{status:404,headers:responseHeaders()});
 
-  const [addressRes,ownersRes,contactsRes,featuresRes,customFeaturesRes,energyRes,checklistRes,transitionsRes,usersRes,auditPermissionRes,gwgPermissionRes,legalRes,encumbranceRes,dispositionPermissionRes,priceStagesRes,valuationsRes,dispositionRes,dispositionPartyRes,gwgCaseRes,mandatesRes,hoaRes,leviesRes,tenanciesRes,disclosureGapsRes,dispositionGapsRes,saleProjectRes,measurementsRes,offersRes,reservationsRes,closingsRes,commissionsRes,tasksRes] = await Promise.all([
-    supabase.from("property_addresses").select("*").eq("property_id",propertyId).maybeSingle(),
+  // Je Teil der Akte nur die Abfragen, die er zeigt (P2-7, 17.10.2026).
+  //
+  // Vorher lud jeder der vier Teile alle 32 Abfragen der alten langen Seite,
+  // dazu vier fuer die Uebersicht und das Protokoll nacheinander -- rund 41
+  // Unteranfragen je Aufruf, zusammen mit Rahmen und Objektliste nahe an der
+  // Grenze von 50 je Worker-Anfrage. Ausfaelle erschienen dann still als
+  // "leer" (P1-8, 15.10.2026). Jetzt: Uebersicht ~32, Objektdaten 4,
+  // Eigentuemer 2, Verlauf 3 -- alle in einem Block parallel.
+  //
+  // Was ein Teil nicht braucht, steht als leeres Ergebnis da; die Anzeige
+  // bekommt dieselbe Datenform wie vorher. Welcher Teil was zeigt, haelt
+  // scripts/check-pakete-p-zwei.mjs fest (Regel 9).
+  const teil=teilAusPfad(new URL(request.url).pathname);
+  const leer={data:null as any,error:null,count:null as number|null};
+  // Leeres Ergebnis in der Form der echten Abfrage, damit die Typen der Anzeige bleiben.
+  const nur=<T,>(teile:readonly Teil[],abfrage:()=>T):Promise<Awaited<T>>=>
+    teile.includes(teil)?Promise.resolve(abfrage()) as Promise<Awaited<T>>:Promise.resolve(leer as unknown as Awaited<T>);
+  const [addressRes,ownersRes,contactsRes,featuresRes,customFeaturesRes,energyRes,checklistRes,transitionsRes,usersRes,auditPermissionRes,gwgPermissionRes,legalRes,encumbranceRes,dispositionPermissionRes,priceStagesRes,valuationsRes,dispositionRes,dispositionPartyRes,gwgCaseRes,mandatesRes,hoaRes,leviesRes,tenanciesRes,disclosureGapsRes,dispositionGapsRes,saleProjectRes,measurementsRes,offersRes,reservationsRes,closingsRes,commissionsRes,tasksRes,blickAnfragen,blickBesichtigungen,blickAktivitaeten,blickDokumente,taskRechtRes,auditRes] = await Promise.all([
+    nur(["objektdaten"],()=>supabase.from("property_addresses").select("*").eq("property_id",propertyId).maybeSingle()),
     // Namen der Eigentuemer direkt mitladen (14.10.2026). Vorher kamen sie aus
     // einer Liste der ersten 1000 Kontakte -- wer dahinter lag, erschien nur
     // als Kennung und war als Eigentuemer nicht waehlbar.
-    supabase.from("property_owners").select("*,contacts!property_owners_contact_id_fkey(id,contact_number,first_name,last_name,email,mobile,phone)").eq("property_id",propertyId).order("primary_contact",{ascending:false}),
-    /^[0-9a-f-]{36}$/i.test(newOwner)?supabase.from("contacts").select("id, contact_number, first_name, last_name, email").eq("id",newOwner).limit(1):Promise.resolve({data:[] as any[],error:null}),
-    supabase.from("property_features").select("*").eq("property_id",propertyId).order("label"),
-    supabase.from("property_features").select("feature_key,label").like("feature_key","CUSTOM_%").order("label").limit(1000),
-    supabase.from("property_energy_data").select("*").eq("property_id",propertyId).maybeSingle(),
-    supabase.from("property_marketing_checklist_items").select("*").eq("property_id",propertyId).order("category").order("title"),
-    supabase.from("property_status_transitions").select("to_status, description").eq("from_status",property.status).order("to_status"),
-    supabase.from("profiles").select("user_id, display_name").eq("status","ACTIVE").order("display_name"),
-    supabase.rpc("current_user_has_permission",{p_permission:"audit.read"}),
-    supabase.rpc("current_user_has_permission",{p_permission:"gwg.read"}),
-    supabase.from("property_legal_data").select("id,land_registry_court,land_register_sheet,extract_dated_on,living_area_basis,heritable_building_right,ground_lease_until,monument_protection,milieu_protection,redevelopment_area,contamination_suspicion,development_charges_open").eq("property_id",propertyId).maybeSingle(),
-    supabase.from("property_encumbrances").select("id,section,kind,rank_position,content,beneficiary_name,nominal_amount,remaining_amount,deletable,deletion_consent_available,sale_impact,deleted_on,archived_at").eq("property_id",propertyId).is("archived_at",null).is("deleted_on",null).order("section").order("rank_position",{nullsFirst:false}),
-    supabase.rpc("current_user_has_permission",{p_permission:"disposition.read"}),
-    supabase.from("property_price_stages").select("id,price,previous_price,effective_from,reason,is_initial").eq("property_id",propertyId).order("effective_from",{ascending:false}).limit(8),
-    supabase.from("property_valuations").select("id,valuation_number,method,valued_on,range_from,range_to,result_value").eq("property_id",propertyId).is("archived_at",null).order("valued_on",{ascending:false}).limit(3),
-    supabase.from("property_dispositions").select("*").eq("property_id",propertyId).maybeSingle(),
-    supabase.from("property_disposition_parties").select("id,disposition_id,contact_id,party_role,represents_contact_id,share_percentage,consent_status,consent_on,court_approval_required,court_approval_granted_on,power_of_attorney_revoked_on,power_of_attorney_valid_until,is_minor,archived_at,contacts!property_disposition_parties_contact_id_fkey(first_name,last_name),property_dispositions!inner(property_id)").eq("property_dispositions.property_id",propertyId),
-    supabase.from("gwg_cases").select("id,case_number,risk_level,risk_assessed_on,retention_until,legal_hold,archived_at,gwg_identifications(id,party_role,identified_on)").eq("property_id",propertyId).is("archived_at",null).limit(1),
-    supabase.from("brokerage_mandates").select("id,mandate_number,mandate_type,client_side,status,client_is_consumer,text_form_confirmed,term_start,term_end,withdrawal_instruction_given_on,withdrawal_deadline_on,early_start_requested_on").eq("property_id",propertyId).is("archived_at",null).order("updated_at",{ascending:false}).limit(20),
-    supabase.from("property_hoa_data").select("id,fee_operating,fee_reserve,fee_reference_month,maintenance_reserve_balance,maintenance_reserve_date,economic_plan_year,annual_statement_year,manager_contract_until").eq("property_id",propertyId).maybeSingle(),
-    supabase.from("property_hoa_special_levies").select("id,purpose,status,own_share_amount,due_on").eq("property_id",propertyId).in("status",["EXPECTED","RESOLVED"]).order("due_on",{nullsFirst:false}).limit(20),
-    supabase.from("property_tenancies").select("id,status,tenant_name,rent_cold,starts_on,ends_on,contract_type,tenant_pre_emption_relevant,conversion_blocking_until,arrears_amount,pending_rent_increase,archived_at").eq("property_id",propertyId).is("archived_at",null).order("status").order("starts_on",{ascending:false}).limit(20),
-    supabase.rpc("property_disclosure_gaps",{p_property_id:propertyId}),
-    supabase.rpc("property_disposition_gaps",{p_property_id:propertyId}),
-    supabase.from("sale_projects").select("id,project_number,phase,status").eq("property_id",propertyId).is("archived_at",null).maybeSingle(),
+    nur(["record","eigentuemer","verlauf"],()=>supabase.from("property_owners").select("*,contacts!property_owners_contact_id_fkey(id,contact_number,first_name,last_name,email,mobile,phone)").eq("property_id",propertyId).order("primary_contact",{ascending:false})),
+    nur(["eigentuemer"],()=>/^[0-9a-f-]{36}$/i.test(newOwner)?supabase.from("contacts").select("id, contact_number, first_name, last_name, email").eq("id",newOwner).limit(1):Promise.resolve({data:[] as any[],error:null})),
+    nur(["objektdaten"],()=>supabase.from("property_features").select("*").eq("property_id",propertyId).order("label")),
+    nur(["objektdaten"],()=>supabase.from("property_features").select("feature_key,label").like("feature_key","CUSTOM_%").order("label").limit(1000)),
+    nur(["record"],()=>supabase.from("property_energy_data").select("*").eq("property_id",propertyId).maybeSingle()),
+    nur(["record"],()=>supabase.from("property_marketing_checklist_items").select("*").eq("property_id",propertyId).order("category").order("title")),
+    nur(["record"],()=>supabase.from("property_status_transitions").select("to_status, description").eq("from_status",property.status).order("to_status")),
+    nur(["record","objektdaten"],()=>supabase.from("profiles").select("user_id, display_name").eq("status","ACTIVE").order("display_name")),
+    nur(["verlauf"],()=>supabase.rpc("current_user_has_permission",{p_permission:"audit.read"})),
+    nur(["record"],()=>supabase.rpc("current_user_has_permission",{p_permission:"gwg.read"})),
+    nur(["record"],()=>supabase.from("property_legal_data").select("id,land_registry_court,land_register_sheet,extract_dated_on,living_area_basis,heritable_building_right,ground_lease_until,monument_protection,milieu_protection,redevelopment_area,contamination_suspicion,development_charges_open").eq("property_id",propertyId).maybeSingle()),
+    nur(["record"],()=>supabase.from("property_encumbrances").select("id,section,kind,rank_position,content,beneficiary_name,nominal_amount,remaining_amount,deletable,deletion_consent_available,sale_impact,deleted_on,archived_at").eq("property_id",propertyId).is("archived_at",null).is("deleted_on",null).order("section").order("rank_position",{nullsFirst:false})),
+    nur(["record"],()=>supabase.rpc("current_user_has_permission",{p_permission:"disposition.read"})),
+    nur(["record"],()=>supabase.from("property_price_stages").select("id,price,previous_price,effective_from,reason,is_initial").eq("property_id",propertyId).order("effective_from",{ascending:false}).limit(8)),
+    nur(["record"],()=>supabase.from("property_valuations").select("id,valuation_number,method,valued_on,range_from,range_to,result_value").eq("property_id",propertyId).is("archived_at",null).order("valued_on",{ascending:false}).limit(3)),
+    nur(["record"],()=>supabase.from("property_dispositions").select("*").eq("property_id",propertyId).maybeSingle()),
+    nur(["record"],()=>supabase.from("property_disposition_parties").select("id,disposition_id,contact_id,party_role,represents_contact_id,share_percentage,consent_status,consent_on,court_approval_required,court_approval_granted_on,power_of_attorney_revoked_on,power_of_attorney_valid_until,is_minor,archived_at,contacts!property_disposition_parties_contact_id_fkey(first_name,last_name),property_dispositions!inner(property_id)").eq("property_dispositions.property_id",propertyId)),
+    nur(["record"],()=>supabase.from("gwg_cases").select("id,case_number,risk_level,risk_assessed_on,retention_until,legal_hold,archived_at,gwg_identifications(id,party_role,identified_on)").eq("property_id",propertyId).is("archived_at",null).limit(1)),
+    nur(["record"],()=>supabase.from("brokerage_mandates").select("id,mandate_number,mandate_type,client_side,status,client_is_consumer,text_form_confirmed,term_start,term_end,withdrawal_instruction_given_on,withdrawal_deadline_on,early_start_requested_on").eq("property_id",propertyId).is("archived_at",null).order("updated_at",{ascending:false}).limit(20)),
+    nur(["record"],()=>supabase.from("property_hoa_data").select("id,fee_operating,fee_reserve,fee_reference_month,maintenance_reserve_balance,maintenance_reserve_date,economic_plan_year,annual_statement_year,manager_contract_until").eq("property_id",propertyId).maybeSingle()),
+    nur(["record"],()=>supabase.from("property_hoa_special_levies").select("id,purpose,status,own_share_amount,due_on").eq("property_id",propertyId).in("status",["EXPECTED","RESOLVED"]).order("due_on",{nullsFirst:false}).limit(20)),
+    nur(["record"],()=>supabase.from("property_tenancies").select("id,status,tenant_name,rent_cold,starts_on,ends_on,contract_type,tenant_pre_emption_relevant,conversion_blocking_until,arrears_amount,pending_rent_increase,archived_at").eq("property_id",propertyId).is("archived_at",null).order("status").order("starts_on",{ascending:false}).limit(20)),
+    nur(["record"],()=>supabase.rpc("property_disclosure_gaps",{p_property_id:propertyId})),
+    nur(["record"],()=>supabase.rpc("property_disposition_gaps",{p_property_id:propertyId})),
+    nur(["record"],()=>supabase.from("sale_projects").select("id,project_number,phase,status").eq("property_id",propertyId).is("archived_at",null).maybeSingle()),
     // Die fuenf Vorgaenge fuer den Fahrplan. Sie waren bisher nur ueber die
     // Vorgangszeile als gefilterte Liste erreichbar; fuer die Frage "wo steht
     // dieses Haus" musste man sie einzeln oeffnen. Jede Abfrage holt nur,
     // was eine Fahrplanzeile anzeigt -- Nummer, Stand, Kennung.
-    supabase.from("measurement_orders").select("id,order_number,status").eq("property_id",propertyId).is("archived_at",null).order("updated_at",{ascending:false}).limit(20),
-    supabase.from("purchase_offers").select("id,offer_number,status,contact_id").eq("property_id",propertyId).is("archived_at",null).order("updated_at",{ascending:false}).limit(20),
-    supabase.from("property_reservations").select("id,reservation_number,status").eq("property_id",propertyId).is("archived_at",null).order("updated_at",{ascending:false}).limit(20),
-    supabase.from("sale_closings").select("id,closing_number,status").eq("property_id",propertyId).is("archived_at",null).order("updated_at",{ascending:false}).limit(20),
-    supabase.from("commissions").select("id,commission_number,status").eq("property_id",propertyId).is("archived_at",null).order("updated_at",{ascending:false}).limit(20),
+    nur(["record"],()=>supabase.from("measurement_orders").select("id,order_number,status").eq("property_id",propertyId).is("archived_at",null).order("updated_at",{ascending:false}).limit(20)),
+    nur(["record"],()=>supabase.from("purchase_offers").select("id,offer_number,status,contact_id").eq("property_id",propertyId).is("archived_at",null).order("updated_at",{ascending:false}).limit(20)),
+    nur(["record"],()=>supabase.from("property_reservations").select("id,reservation_number,status").eq("property_id",propertyId).is("archived_at",null).order("updated_at",{ascending:false}).limit(20)),
+    nur(["record"],()=>supabase.from("sale_closings").select("id,closing_number,status").eq("property_id",propertyId).is("archived_at",null).order("updated_at",{ascending:false}).limit(20)),
+    nur(["record"],()=>supabase.from("commissions").select("id,commission_number,status").eq("property_id",propertyId).is("archived_at",null).order("updated_at",{ascending:false}).limit(20)),
     // Offene Aufgaben zum Objekt (14.10.2026). Sie wurden an vielen Stellen
     // angelegt, waren in der Akte aber nirgends zu sehen.
-    supabase.from("tasks").select(AUFGABEN_SPALTEN).eq("property_id",propertyId).in("status",["OPEN","IN_PROGRESS"]).is("archived_at",null).order("due_at",{ascending:true,nullsFirst:false}).limit(30),
+    nur(["record"],()=>supabase.from("tasks").select(AUFGABEN_SPALTEN).eq("property_id",propertyId).in("status",["OPEN","IN_PROGRESS"]).is("archived_at",null).order("due_at",{ascending:true,nullsFirst:false}).limit(30)),
+    // Nur fuer die Uebersicht: Anfragen, Besichtigungen, Aktivitaeten und die
+    // Zahl der Dokumente (P1, 14.10.2026).
+    nur(["record"],()=>supabase.from("inquiries").select("id,inquiry_number,status,received_at,answered_at,contact_id,contacts(id,first_name,last_name)").eq("property_id",propertyId).is("archived_at",null).order("received_at",{ascending:false}).limit(50)),
+    nur(["record"],()=>supabase.from("viewings").select("id,viewing_number,status,starts_at,contact_id,contacts(id,first_name,last_name)").eq("property_id",propertyId).is("archived_at",null).order("starts_at",{ascending:false}).limit(100)),
+    nur(["record"],()=>supabase.from("activity_events").select("id,activity_type,title,occurred_at").eq("property_id",propertyId).order("occurred_at",{ascending:false}).limit(5)),
+    nur(["record"],()=>supabase.from("documents").select("id",{count:"exact",head:true}).eq("property_id",propertyId).is("archived_at",null)),
+    nur(["record"],()=>supabase.rpc("current_user_has_permission",{p_permission:"task.write"})),
+    // Protokoll nur im Verlauf. Die Datenbank liefert es ohnehin nur mit
+    // audit.read (RLS); die Rechtepruefung laeuft parallel statt davor.
+    nur(["verlauf"],()=>supabase.from("audit_events").select("id,occurred_at,actor_display_name_snapshot,action,field_changes,metadata").eq("entity_type","PROPERTY").eq("entity_id",propertyId).order("occurred_at",{ascending:false}).limit(60)),
   ]);
   const firstError=[addressRes,ownersRes,contactsRes,featuresRes,customFeaturesRes,energyRes,checklistRes,transitionsRes,usersRes].find((r)=>r.error)?.error;
-  // Nur fuer die Uebersicht: Anfragen, Besichtigungen, Aktivitaeten und die
-  // Zahl der Dokumente (P1, 14.10.2026). Die anderen Teile der Akte brauchen
-  // sie nicht und laden sie nicht.
-  const taskRecht=supabase.rpc("current_user_has_permission",{p_permission:"task.write"});
-  const leer={data:[] as any[],error:null,count:null as number|null};
-  const [blickAnfragen,blickBesichtigungen,blickAktivitaeten,blickDokumente]=teilAusPfad(new URL(request.url).pathname)==="record"?await Promise.all([
-    supabase.from("inquiries").select("id,inquiry_number,status,received_at,answered_at,contact_id,contacts(id,first_name,last_name)").eq("property_id",propertyId).is("archived_at",null).order("received_at",{ascending:false}).limit(50),
-    supabase.from("viewings").select("id,viewing_number,status,starts_at,contact_id,contacts(id,first_name,last_name)").eq("property_id",propertyId).is("archived_at",null).order("starts_at",{ascending:false}).limit(100),
-    supabase.from("activity_events").select("id,activity_type,title,occurred_at").eq("property_id",propertyId).order("occurred_at",{ascending:false}).limit(5),
-    supabase.from("documents").select("id",{count:"exact",head:true}).eq("property_id",propertyId).is("archived_at",null),
-  ]):[leer,leer,leer,leer];
   if(firstError) throw new Response("Objektdaten konnten nicht vollständig geladen werden.",{status:500,headers:responseHeaders()});
-
-  let auditEvents:any[]=[];
-  if(auditPermissionRes.data===true){
-    const auditRes=await supabase.from("audit_events").select("id,occurred_at,actor_display_name_snapshot,action,field_changes,metadata").eq("entity_type","PROPERTY").eq("entity_id",propertyId).order("occurred_at",{ascending:false}).limit(60);
-    if(!auditRes.error) auditEvents=auditRes.data??[];
-  }
+  const auditEvents:any[]=auditPermissionRes.data===true&&!auditRes.error?(auditRes.data??[]):[];
   // Ein Vorgang, der sich nicht lesen laesst, darf die Akte nicht werfen --
   // aber er darf auch nicht als "nichts vorhanden" durchgehen. Die Station
   // sagt dann, dass sie gerade nichts weiss.
@@ -146,7 +157,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   const contactMap=Object.fromEntries(((ownersRes.data??[]) as any[]).map((o)=>o.contacts).filter(Boolean).map((c:any)=>[c.id,c]));
   const neuerEigentuemer=((contactsRes.data??[]) as any[])[0]??null;
   const customFeatureOptions=Array.from(new Map((customFeaturesRes.data??[]).map((f)=>[f.feature_key,{key:f.feature_key,label:f.label}])).values());
-  return data({darfAufgaben:(await taskRecht).data===true,property,blick,jetzt:new Date().toISOString(),haltepunkte,vorgangsFehler,offeneAufgaben:tasksRes.error?null:(tasksRes.data??[]),mandates:mandatesRes.data??[],hoa:hoaRes.data??null,specialLevies:leviesRes.data??[],tenancies:tenanciesRes.data??[],disclosureGaps:(disclosureGapsRes.data??[]) as string[],dispositionGaps:(dispositionGapsRes.data??[]) as string[],saleProject:saleProjectRes.data??null,canGwgRead:gwgPermissionRes.data===true,gwgCase:(gwgCaseRes.data??[])[0]??null,legal:legalRes.data??null,encumbrances:encumbranceRes.data??[],canDispositionRead:dispositionPermissionRes.data===true,priceStages:priceStagesRes.data??[],valuations:valuationsRes.data??[],disposition:dispositionRes.data??null,dispositionParties:((dispositionPartyRes.data??[]) as any[]).filter((row)=>Boolean(dispositionRes.data)&&row.disposition_id===(dispositionRes.data as any).id),address:addressRes.data,owners:ownersRes.data??[],neuerEigentuemer:neuerEigentuemer?{id:neuerEigentuemer.id,name:kontaktName(neuerEigentuemer),nummer:neuerEigentuemer.contact_number}:null,contactMap,features:featuresRes.data??[],customFeatureOptions,energy:energyRes.data,checklist:checklistRes.data??[],transitions:transitionsRes.data??[],users:usersRes.data??[],auditEvents,profile,newOwner},{headers:responseHeaders()});
+  return data({darfAufgaben:taskRechtRes.data===true,property,blick,jetzt:new Date().toISOString(),haltepunkte,vorgangsFehler,offeneAufgaben:tasksRes.error?null:(tasksRes.data??[]),mandates:mandatesRes.data??[],hoa:hoaRes.data??null,specialLevies:leviesRes.data??[],tenancies:tenanciesRes.data??[],disclosureGaps:(disclosureGapsRes.data??[]) as string[],dispositionGaps:(dispositionGapsRes.data??[]) as string[],saleProject:saleProjectRes.data??null,canGwgRead:gwgPermissionRes.data===true,gwgCase:(gwgCaseRes.data??[])[0]??null,legal:legalRes.data??null,encumbrances:encumbranceRes.data??[],canDispositionRead:dispositionPermissionRes.data===true,priceStages:priceStagesRes.data??[],valuations:valuationsRes.data??[],disposition:dispositionRes.data??null,dispositionParties:((dispositionPartyRes.data??[]) as any[]).filter((row)=>Boolean(dispositionRes.data)&&row.disposition_id===(dispositionRes.data as any).id),address:addressRes.data,owners:ownersRes.data??[],neuerEigentuemer:neuerEigentuemer?{id:neuerEigentuemer.id,name:kontaktName(neuerEigentuemer),nummer:neuerEigentuemer.contact_number}:null,contactMap,features:featuresRes.data??[],customFeatureOptions,energy:energyRes.data,checklist:checklistRes.data??[],transitions:transitionsRes.data??[],users:usersRes.data??[],auditEvents,profile,newOwner},{headers:responseHeaders()});
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {

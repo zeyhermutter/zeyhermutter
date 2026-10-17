@@ -111,8 +111,17 @@ pruefe(anonymSql.includes("has_permission('contact.anonymize')") && anonymSql.in
 pruefe(anonymSql.includes("converted_property_id is null") && anonymSql.includes("'ANONYMIZE'") && anonymSql.includes("revoke all on function public.anonymize_contact(uuid, text) from public, anon"), "anonymize_contact: umgewandelte Leads, Protokoll oder Sperre fuer anon fehlt");
 pruefe(compose.includes("schreiben?.werbewiderspruch") && !/werbewiderspruch[^\n]*(disabled|return null)/i.test(compose), "email-compose.tsx: Werbewiderspruch muss als Hinweis erscheinen, nicht als Sperre");
 
+// 9. P2-7: Objektakte -- jeder Teil laedt nur, was er zeigt, alles in einem parallelen Block
+const akte = await lies("app/routes/property-detail.tsx");
+const ladeteil = akte.slice(akte.indexOf("export async function loader"), akte.indexOf("export async function action"));
+const nurFuer = (tabelle, teile) => new RegExp(`nur\\(\\[${teile.map((t) => `"${t}"`).join(",")}\\],\\(\\)=>supabase\\.from\\("${tabelle}"\\)`).test(ladeteil);
+for (const [tabelle, teile] of [["audit_events", ["verlauf"]], ["inquiries", ["record"]], ["viewings", ["record"]], ["property_features", ["objektdaten"]],
+  ["property_addresses", ["objektdaten"]], ["property_legal_data", ["record"]], ["brokerage_mandates", ["record"]], ["tasks", ["record"]]])
+  pruefe(nurFuer(tabelle, teile), `property-detail.tsx: ${tabelle} nicht nur fuer ${teile.join("/")} geladen`);
+pruefe((ladeteil.match(/await Promise\.all\(/g) ?? []).length === 1 && !/\]\);[\s\S]*await supabase/.test(ladeteil), "property-detail.tsx: Abfragen der Akte wieder nacheinander statt in einem Block");
+
 if (fehler.length) {
   console.error("P2:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung, Datenauskunft aus allen Kontakt-Tabellen, Rechtsgrundlage und Werbewiderspruch (Hinweis, keine Sperre), Anonymisieren nur mit Recht, Grund, Bestätigung und ohne Einwand der Datenbank.");
+console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung, Datenauskunft aus allen Kontakt-Tabellen, Rechtsgrundlage und Werbewiderspruch (Hinweis, keine Sperre), Anonymisieren nur mit Recht, Grund, Bestätigung und ohne Einwand der Datenbank, Objektakte lädt je Teil nur, was er zeigt.");
