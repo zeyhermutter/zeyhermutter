@@ -20,6 +20,14 @@ const WURZEL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OEFFENTLICH = new Set(["public-website.css", "homepage-v7-realtor.css", "homepage-variants.css", "homepage-variants-image.css", "brand-logo.css"]);
 
 // Erreichter Stand. Nur nach unten aendern.
+//
+// Lehre vom 19.10.2026: Alle 284 "!important" des hellen Themas auf einmal zu
+// entfernen, hat der Stil-Fingerabdruck (scripts/stil-fingerabdruck.browser.js)
+// auf 35 Seiten mit 225 Abweichungen beantwortet -- darunter unlesbare
+// Kartenmarker und ein dunkles Feld in der Lead-Akte. Grund: die dunklen
+// Grundregeln sind oft spezifischer oder selbst "!important". Deshalb erst die
+// dunkle Grundregel auf den hellen Wert setzen, dann das "!important" der
+// passenden hellen Regel entfernen -- Datei fuer Datei, mit Fingerabdruck.
 const HOECHSTENS = { hex: 1396, important: 372, schriftgroessen: 40 };
 
 const ROLLEN = ["grund", "flaeche", "text", "text-2", "text-leise", "text-blass", "linie", "linie-leise", "linie-feld", "handlung", "auf-dunkel", "verweis", "fehler", "gut"];
