@@ -467,7 +467,8 @@ export const HELP_CHAPTERS: HelpChapter[] = [
     bloecke: [
       { art: "absatz", text:
         "Objektakte, Reiter **Objektdaten › WEG & Miete**. Für Eigentumswohnungen: "
-        + "Miteigentumsanteil, Hausgeld getrennt nach Umlage und Rücklagenanteil, "
+        + "Miteigentumsanteil, Hausgeld gesamt und getrennt nach Umlage und Rücklagenanteil "
+        + "(nur hier gepflegt; bleibt das Gesamtfeld leer, wird die Summe der beiden Teile übernommen), "
         + "Höhe der Erhaltungsrücklage, beschlossene und absehbare Sonderumlagen mit "
         + "Betrag und Zweck, Sondernutzungsrechte, Verwalter mit Vertragslaufzeit, "
         + "Beschlusssammlung, Wirtschaftsplan, Jahresabrechnung und anstehende "

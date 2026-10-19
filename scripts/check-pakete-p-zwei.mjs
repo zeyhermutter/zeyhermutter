@@ -197,8 +197,17 @@ pruefe(!(await lies("app/routes/closing-detail.tsx")).includes('to={`/closings/$
   pruefe((await lies("app/components/email-schreiben.tsx")).includes("expose_link_zurueckziehen"), "email-schreiben.tsx: ausgegebene Links lassen sich nicht zurueckziehen");
 }
 
+// 20. Hausgeld an einer Stelle (19.10.2026, Entscheidung Sebastian): Gesamtbetrag und
+//     Aufteilung nur unter WEG & Miete; Objektdaten zeigt den Betrag nur an.
+{
+  const objekt = await lies("app/routes/property-detail.tsx");
+  const weg = await lies("app/routes/property-hoa-tenancy.tsx");
+  pruefe(!objekt.includes('name="hoa_fee"') && !/hoa_fee:num\(/.test(objekt), "property-detail.tsx: Hausgeld wieder in den Objektdaten editierbar (doppelte Pflege)");
+  pruefe(weg.includes('name="hoa_fee"') && weg.includes('name="hoa_fee_vorher"') && weg.includes("gesamtEingabe??summe"), "property-hoa-tenancy.tsx: Hausgeld gesamt fehlt oder wird nicht aus der Aufteilung errechnet");
+}
+
 if (fehler.length) {
   console.error("P2:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung, Datenauskunft aus allen Kontakt-Tabellen, Rechtsgrundlage und Werbewiderspruch (Hinweis, keine Sperre), Anonymisieren nur mit Recht, Grund, Bestätigung und ohne Einwand der Datenbank, Objektakte lädt je Teil nur, was er zeigt, 16 volle Listen als Programmtabelle, tägliche Automatik nur mit Aufgaben/Benachrichtigungen, dublettensicher und abschaltbar, 8 Listen blättern über die Datenbank, Aufgabe anlegen sucht seine Bezüge, Arbeitsplatz ohne Seitenkopf mit h1, jede Liste mit h1, Dialoge halten den Fokus, Absenden zeigt Warten, Akten lesen zuerst, Exposé als kurzer, zurückziehbarer Link.");
+console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung, Datenauskunft aus allen Kontakt-Tabellen, Rechtsgrundlage und Werbewiderspruch (Hinweis, keine Sperre), Anonymisieren nur mit Recht, Grund, Bestätigung und ohne Einwand der Datenbank, Objektakte lädt je Teil nur, was er zeigt, 16 volle Listen als Programmtabelle, tägliche Automatik nur mit Aufgaben/Benachrichtigungen, dublettensicher und abschaltbar, 8 Listen blättern über die Datenbank, Aufgabe anlegen sucht seine Bezüge, Arbeitsplatz ohne Seitenkopf mit h1, jede Liste mit h1, Dialoge halten den Fokus, Absenden zeigt Warten, Akten lesen zuerst, Exposé als kurzer, zurückziehbarer Link, Hausgeld an einer Stelle.");

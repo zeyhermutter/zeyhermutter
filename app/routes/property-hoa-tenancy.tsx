@@ -39,7 +39,7 @@ function errorMessage(error:any){
   if(message.includes("HOA_PROPERTY_NOT_FOUND")||message.includes("LEVY_PROPERTY_NOT_FOUND")||message.includes("TENANCY_PROPERTY_NOT_FOUND"))return"Die Immobilie wurde nicht gefunden.";
   if(message.includes("HOA_RESERVE_DATE_IN_FUTURE"))return"Der Stichtag der Erhaltungsrücklage darf nicht in der Zukunft liegen.";
   if(message.includes("HOA_MANAGER_ORGANIZATION_NOT_FOUND"))return"Die gewählte Verwaltung wurde nicht gefunden.";
-  if(message.includes("HOA_FEE_SPLIT_EXCEEDS_TOTAL"))return"Umlage und Rücklagenanteil zusammen überschreiten das in der Objektakte geführte Hausgeld.";
+  if(message.includes("HOA_FEE_SPLIT_EXCEEDS_TOTAL"))return"Umlage und Rücklagenanteil zusammen überschreiten das Hausgeld gesamt.";
   if(message.includes("property_hoa_data_reserve_dated_check"))return"Zur Erhaltungsrücklage gehört ein Stichtag.";
   if(message.includes("LEVY_RESOLVED_IN_FUTURE"))return"Das Beschlussdatum darf nicht in der Zukunft liegen.";
   if(message.includes("property_hoa_special_levies_resolved_dated_check"))return"Eine beschlossene Sonderumlage braucht ein Beschlussdatum.";
@@ -107,6 +107,21 @@ export async function action({request,context,params}:Route.ActionArgs){
   if(intent==="hoa_save"){
     const operating=numOrNull(fd,"fee_operating"),reserve=numOrNull(fd,"fee_reserve");
     if((typeof operating==="number"&&!Number.isFinite(operating))||(typeof reserve==="number"&&!Number.isFinite(reserve)))return invalid("Ungültige Hausgeldaufteilung.");
+    // Hausgeld gesamt (19.10.2026): wird nur noch hier gepflegt, nicht mehr in
+    // den Objektdaten. Leer und beide Teile erfasst -> die Summe wird übernommen.
+    const gesamtEingabe=numOrNull(fd,"hoa_fee");
+    if(typeof gesamtEingabe==="number"&&(!Number.isFinite(gesamtEingabe)||gesamtEingabe<0))return invalid("Ungültiges Hausgeld gesamt.");
+    const summe=operating!==null&&reserve!==null?Math.round((operating+reserve)*100)/100:null;
+    const gesamt=gesamtEingabe??summe;
+    if(gesamt!==null&&summe!==null&&summe>gesamt+0.01)return invalid(`Umlage und Rücklagenanteil ergeben ${money(summe)}, das Hausgeld gesamt ist ${money(gesamt)}. Bitte angleichen – oder das Gesamtfeld leeren, dann wird die Summe übernommen.`);
+    const vorherRoh=text(fd,"hoa_fee_vorher"),vorher=vorherRoh===""?null:Number(vorherRoh);
+    if(gesamt!==vorher){
+      let q=supabase.from("properties").update({hoa_fee:gesamt}).eq("id",propertyId);
+      q=vorher===null?q.is("hoa_fee",null):q.eq("hoa_fee",vorher);
+      const {data:geaendert,error}=await q.select("id").maybeSingle();
+      if(error)return fail(error);
+      if(!geaendert)return conflict();
+    }
     const balance=numOrNull(fd,"maintenance_reserve_balance");
     if(typeof balance==="number"&&!Number.isFinite(balance))return invalid("Ungültiger Stand der Erhaltungsrücklage.");
     if(balance!==null&&!dateOrNull(fd,"maintenance_reserve_date"))return invalid("Zur Erhaltungsrücklage gehört ein Stichtag.");
@@ -274,8 +289,10 @@ export default function PropertyHoaTenancy(){
         <input type="hidden" name="_intent" value="hoa_save"/>
         {hoa?<input type="hidden" name="hoa_id" value={hoa.id}/>:null}
         {hoa?<input type="hidden" name="version" value={hoa.version}/>:null}
+        <input type="hidden" name="hoa_fee_vorher" value={p.hoa_fee??""}/>
         <div className="form-grid">
-          <label className="form-field"><span>Hausgeld · Umlage €</span><input name="fee_operating" inputMode="decimal" defaultValue={hoa?.fee_operating??""} disabled={locked}/><small className="subtle">Gesamt laut Objektakte: {money(p.hoa_fee)}</small></label>
+          <label className="form-field"><span>Hausgeld gesamt € / Monat</span><input name="hoa_fee" inputMode="decimal" defaultValue={p.hoa_fee??""} disabled={locked}/><small className="subtle">Steht in Exposé und Website. Leer lassen, wenn Umlage und Rücklagenanteil erfasst sind – dann wird die Summe übernommen.</small></label>
+          <label className="form-field"><span>Hausgeld · Umlage €</span><input name="fee_operating" inputMode="decimal" defaultValue={hoa?.fee_operating??""} disabled={locked}/></label>
           <label className="form-field"><span>Hausgeld · Rücklagenanteil €</span><input name="fee_reserve" inputMode="decimal" defaultValue={hoa?.fee_reserve??""} disabled={locked}/></label>
           <label className="form-field"><span>Stand des Hausgelds</span><input name="fee_reference_month" type="date" defaultValue={hoa?.fee_reference_month??""} disabled={locked}/></label>
           <label className="form-field"><span>Erhaltungsrücklage €</span><input name="maintenance_reserve_balance" inputMode="decimal" defaultValue={hoa?.maintenance_reserve_balance??""} disabled={locked}/></label>

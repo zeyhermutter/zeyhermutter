@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Form, Link, useFetcher } from "react-router";
 import { tag, zeitpunkt } from "~/lib/format";
 import { MAILTO_SICHER, PLATZHALTER, VORLAGENANLASS, fuelle, mailtoAdresse, type Werte } from "~/lib/email-vorlage";
@@ -49,6 +49,11 @@ export function EmailSchreiben({ kontext, daten }: { kontext: Kontext; daten: Sc
   const [kopiert, setKopiert] = useState(false);
   const linkFetcher = useFetcher<{ link?: string; linkId?: string; bis?: string; error?: string }>();
   const link = linkFetcher.data?.link ?? null;
+  const linkId = linkFetcher.data?.linkId ?? null;
+  // Wurde der eingefügte Link inzwischen zurückgezogen, öffnet er nichts mehr:
+  // dann wieder "Neuen Link erzeugen" anbieten und keinen Nachweis dafür buchen.
+  const linkZurueckgezogen = Boolean(linkId && daten.links.some((l) => l.id === linkId && l.zurueckgezogen));
+  const vorigerLink = useRef<string | null>(null);
 
   const werte = useMemo<Werte>(() => ({ ...daten.werte, expose_link: link }), [daten.werte, link]);
 
@@ -63,10 +68,15 @@ export function EmailSchreiben({ kontext, daten }: { kontext: Kontext; daten: Sc
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vorlageId]);
 
-  // Kommt der Link, ersetzt er {{expose_link}}; fehlt der Platzhalter, steht er am Ende.
+  // Kommt der Link, ersetzt er {{expose_link}} oder einen vorher eingefügten
+  // (zurückgezogenen) Link; fehlt beides, steht er am Ende.
   useEffect(() => {
     if (!link) return;
-    setText((t) => (/\{\{\s*expose_link\s*\}\}/.test(t) ? t.replace(/\{\{\s*expose_link\s*\}\}/g, link) : t.includes(link) ? t : `${t.replace(/\s+$/, "")}${t ? "\n\n" : ""}${link}`));
+    const alt = vorigerLink.current;
+    vorigerLink.current = link;
+    setText((t) => (/\{\{\s*expose_link\s*\}\}/.test(t) ? t.replace(/\{\{\s*expose_link\s*\}\}/g, link)
+      : alt && t.includes(alt) ? t.split(alt).join(link)
+      : t.includes(link) ? t : `${t.replace(/\s+$/, "")}${t ? "\n\n" : ""}${link}`));
   }, [link]);
 
   const offen = useMemo(() => {
@@ -78,7 +88,7 @@ export function EmailSchreiben({ kontext, daten }: { kontext: Kontext; daten: Sc
 
   const adresse = kontext.email ? mailtoAdresse(kontext.email, betreff, text) : null;
   const zuLang = adresse ? adresse.length > MAILTO_SICHER : false;
-  const exposeGewaehlt = daten.expose && (weg === "PDF" || (weg === "LINK" && link));
+  const exposeGewaehlt = daten.expose && (weg === "PDF" || (weg === "LINK" && link && !linkZurueckgezogen));
   const gruppen = Object.entries(VORLAGENANLASS).map(([k, name]) => ({ name, vorlagen: daten.vorlagen.filter((v) => v.purpose === k) })).filter((g) => g.vorlagen.length);
 
   const kopieren = async () => {
@@ -112,17 +122,18 @@ export function EmailSchreiben({ kontext, daten }: { kontext: Kontext; daten: Sc
           <label><input type="radio" name="weg" checked={weg === "PDF"} onChange={() => setWeg("PDF")} /> Als PDF anhängen</label>
           <label><input type="radio" name="weg" checked={weg === "LINK"} onChange={() => setWeg("LINK")} /> Als Link einfügen ({daten.linkTage} Tage gültig, jederzeit zurückziehbar)</label>
           {weg === "PDF" ? <p className="form-help"><a className="secondary-button link-button compact" href={`/crm/email?inquiry_id=${encodeURIComponent(kontext.id)}&expose_pdf=${encodeURIComponent(daten.expose.id)}`} download>PDF herunterladen</a> Danach im Mailprogramm anhängen.</p> : null}
-          {weg === "LINK" && !link ? (
+          {weg === "LINK" && linkZurueckgezogen ? <p className="form-warning">Der eingefügte Link ist zurückgezogen und öffnet nichts mehr. Ein neuer Link ersetzt ihn im Text.</p> : null}
+          {weg === "LINK" && (!link || linkZurueckgezogen) ? (
             <linkFetcher.Form method="post" className="email-schreiben-link">
               <input type="hidden" name="_intent" value="expose_link" />
               <input type="hidden" name="context_type" value={kontext.type} />
               <input type="hidden" name="context_id" value={kontext.id} />
               <input type="hidden" name="expose_id" value={daten.expose.id} />
-              <button className="secondary-button compact" type="submit" disabled={linkFetcher.state !== "idle"}>{linkFetcher.state !== "idle" ? "Link wird erzeugt …" : "Link erzeugen und einfügen"}</button>
+              <button className="secondary-button compact" type="submit" disabled={linkFetcher.state !== "idle"}>{linkFetcher.state !== "idle" ? "Link wird erzeugt …" : linkZurueckgezogen ? "Neuen Link erzeugen und einsetzen" : "Link erzeugen und einfügen"}</button>
               <small>Wer den Link hat, kann das PDF {daten.linkTage} Tage lang öffnen – bis Sie ihn zurückziehen.</small>
             </linkFetcher.Form>
           ) : null}
-          {weg === "LINK" && link ? <p className="form-help">Link eingefügt, gültig bis {linkFetcher.data?.bis ? tag(linkFetcher.data.bis) : `in ${daten.linkTage} Tagen`}. Zurückziehen unter „Ausgegebene Links“.</p> : null}
+          {weg === "LINK" && link && !linkZurueckgezogen ? <p className="form-help">Link eingefügt, gültig bis {linkFetcher.data?.bis ? tag(linkFetcher.data.bis) : `in ${daten.linkTage} Tagen`}. Zurückziehen unter „Ausgegebene Links“.</p> : null}
           {linkFetcher.data?.error ? <p className="form-error">{linkFetcher.data.error}</p> : null}
         </fieldset>
       ) : daten.anfrage ? <p className="form-help">Kein zur Verwendung freigegebenes Exposé zu dieser Anfrage – Exposé-Versand ist erst danach möglich.</p> : null}
@@ -149,7 +160,7 @@ export function EmailSchreiben({ kontext, daten }: { kontext: Kontext; daten: Sc
         <input type="hidden" name="body" value={text} />
         <input type="hidden" name="template_id" value={vorlageId} />
         {exposeGewaehlt ? <><input type="hidden" name="expose_id" value={daten.expose!.id} /><input type="hidden" name="expose_weg" value={weg} /></> : null}
-        {exposeGewaehlt && weg === "LINK" && linkFetcher.data?.linkId ? <input type="hidden" name="expose_link_id" value={linkFetcher.data.linkId} /> : null}
+        {exposeGewaehlt && weg === "LINK" && linkId ? <input type="hidden" name="expose_link_id" value={linkId} /> : null}
         {daten.anfrage ? <input type="hidden" name="inquiry_version" value={daten.anfrage.version} /> : null}
         <p className="form-help">{geoeffnet ? "Haben Sie die E-Mail im Mailprogramm abgeschickt? Dann hier festhalten." : "Nach dem Senden im Mailprogramm hier festhalten – das Öffnen allein zählt nicht als Versand."}</p>
         {daten.anfrage?.status === "NEW" ? <label className="checkbox-row"><input type="checkbox" name="kontaktiert" value="1" defaultChecked /><span>Anfrage auf „Kontaktiert“ setzen</span></label> : null}
@@ -167,8 +178,10 @@ export function EmailSchreiben({ kontext, daten }: { kontext: Kontext; daten: Sc
  */
 function AusgegebeneLinks({ links }: { links: SchreibDaten["links"] }) {
   const jetzt = Date.now();
+  // Nur der Anfangszustand: nach "Zurückziehen" klappt die Liste nicht zu.
+  const [offen] = useState(() => links.some((l) => !l.zurueckgezogen && Date.parse(l.bis) > jetzt));
   return (
-    <details className="email-schreiben-links" open={links.some((l) => !l.zurueckgezogen && Date.parse(l.bis) > jetzt)}>
+    <details className="email-schreiben-links" open={offen}>
       <summary>Ausgegebene Links ({links.length})</summary>
       <ul>
         {links.map((l) => {

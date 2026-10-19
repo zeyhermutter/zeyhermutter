@@ -6,7 +6,7 @@ import type { Route } from "./+types/property-detail";
 import { requirePermission } from "~/lib/auth.server";
 import { grossYield } from "./property-hoa-tenancy";
 import { PHASE as PROJECT_PHASE_LABELS } from "./projects";
-import { euroRund as euro, tag, tag as formatDay, zeitpunkt as formatDate } from "~/lib/format";
+import { euroGenau, euroRund as euro, tag, tag as formatDay, zeitpunkt as formatDate } from "~/lib/format";
 import { ABSCHLUSSSTATUS, IMMOBILIENSTATUS, AUFMASSSTATUS, CHECKLISTENKATEGORIE, KAUFANGEBOTSTATUS, MAKLERAUFTRAGART as MANDATE_TYPE, MAKLERAUFTRAGSTATUS as MANDATE_STATUS, PROVISIONSSTATUS, VERFUEGUNGSROLLE as DISPOSITION_ROLE, beschrifte, AUDITAKTION } from "~/lib/labels";
 import { RESERVATION_STATUS } from "~/lib/reservierung";
 import { fahrplan } from "~/lib/objektakte-fahrplan";
@@ -197,7 +197,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       internal_title:text(fd,"internal_title"), property_type:text(fd,"property_type"), transaction_type:transactionType,
       primary_responsible_user:responsibleUser, purchase_price:transactionType==="SALE"?num(text(fd,"purchase_price")):null,
       rent_cold:transactionType==="RENT"?num(text(fd,"rent_cold")):null,
-      additional_costs:num(text(fd,"additional_costs")), hoa_fee:num(text(fd,"hoa_fee")), living_area_sqm:num(text(fd,"living_area_sqm")), usable_area_sqm:num(text(fd,"usable_area_sqm")), plot_area_sqm:num(text(fd,"plot_area_sqm")), rooms:num(text(fd,"rooms")), bedrooms:num(text(fd,"bedrooms")), bathrooms:num(text(fd,"bathrooms")), floor:num(text(fd,"floor")), year_built:num(text(fd,"year_built")), modernization_year:num(text(fd,"modernization_year")), condition:text(fd,"condition")||null, available_from:text(fd,"available_from")||null, tenancy_status:text(fd,"tenancy_status")||null, parking_spaces:num(text(fd,"parking_spaces")), residential_units:num(text(fd,"residential_units")), internal_notes:text(fd,"internal_notes")||null,
+      additional_costs:num(text(fd,"additional_costs")), living_area_sqm:num(text(fd,"living_area_sqm")), usable_area_sqm:num(text(fd,"usable_area_sqm")), plot_area_sqm:num(text(fd,"plot_area_sqm")), rooms:num(text(fd,"rooms")), bedrooms:num(text(fd,"bedrooms")), bathrooms:num(text(fd,"bathrooms")), floor:num(text(fd,"floor")), year_built:num(text(fd,"year_built")), modernization_year:num(text(fd,"modernization_year")), condition:text(fd,"condition")||null, available_from:text(fd,"available_from")||null, tenancy_status:text(fd,"tenancy_status")||null, parking_spaces:num(text(fd,"parking_spaces")), residential_units:num(text(fd,"residential_units")), internal_notes:text(fd,"internal_notes")||null,
     };
     if(!update.internal_title) return data<ActionResult>({error:"Interner Titel ist erforderlich."},{status:400,headers:responseHeaders()});
     const {data:updated,error}=await supabase.from("properties").update(update).eq("id",propertyId).eq("version",version).select("id").maybeSingle();
@@ -490,9 +490,10 @@ export default function PropertyDetail(){
     {/* Felder in Gruppen (19.10.2026, UX-Note 4,9): vorher standen 23 Felder
         ungegliedert in einem Raster. Formular, Feldnamen und Aktion "core" sind
         unveraendert, nur Reihenfolge und Zwischenueberschriften sind neu.
-        Hausgeld: hier der Gesamtbetrag (properties.hoa_fee), unter WEG & Miete
-        die Aufteilung (property_hoa_data.fee_operating/fee_reserve) -- zwei
-        verschiedene Spalten, deshalb nicht zusammengelegt, nur verlinkt. */}
+        Hausgeld (19.10.2026, Entscheidung Sebastian): Gesamtbetrag
+        (properties.hoa_fee) und Aufteilung (property_hoa_data) werden nur noch
+        unter WEG & Miete gepflegt; hier steht der Betrag zum Lesen. Die Aktion
+        "core" schreibt hoa_fee deshalb nicht mehr. */}
     <section className="editor-card property-section" id="stammdaten"><div className="card-head"><div><p className="eyebrow">Objektstammdaten</p><h2>Basis & Kennzahlen</h2></div></div><Form method="post"><input type="hidden" name="_intent" value="core"/><input type="hidden" name="version" value={p.version}/>
       <h3 className="akte-feldgruppe">Grunddaten</h3>
       <div className="form-grid">
@@ -502,7 +503,7 @@ export default function PropertyDetail(){
       </div>
       <h3 className="akte-feldgruppe">Preis & laufende Kosten</h3>
       <div className="form-grid">
-        <label className="form-field"><span>Kaufpreis</span><input name="purchase_price" defaultValue={p.purchase_price??""}/></label><label className="form-field"><span>Kaltmiete</span><input name="rent_cold" defaultValue={p.rent_cold??""}/></label><label className="form-field"><span>Nebenkosten</span><input name="additional_costs" defaultValue={p.additional_costs??""}/></label><label className="form-field"><span>Hausgeld</span><input name="hoa_fee" defaultValue={p.hoa_fee??""}/><small className="subtle">Gesamtbetrag im Monat. Die Aufteilung in Umlage und Rücklage steht unter <Link className="subtle-link" to={`/properties/${p.id}/hoa-tenancy#weg`}>WEG & Miete</Link>.</small></label>
+        <label className="form-field"><span>Kaufpreis</span><input name="purchase_price" defaultValue={p.purchase_price??""}/></label><label className="form-field"><span>Kaltmiete</span><input name="rent_cold" defaultValue={p.rent_cold??""}/></label><label className="form-field"><span>Nebenkosten</span><input name="additional_costs" defaultValue={p.additional_costs??""}/></label><div className="form-field"><span>Hausgeld</span><strong>{p.hoa_fee!==null&&p.hoa_fee!==undefined?euroGenau(p.hoa_fee):"nicht erfasst"}</strong><small className="subtle">Gesamtbetrag und Aufteilung werden an einer Stelle gepflegt: <Link className="subtle-link" to={`/properties/${p.id}/hoa-tenancy#weg`}>WEG & Miete →</Link></small></div>
       </div>
       <h3 className="akte-feldgruppe">Flächen & Räume</h3>
       <div className="form-grid">
