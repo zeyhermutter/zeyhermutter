@@ -37,6 +37,16 @@ export const EDGE_FUNKTIONEN = [
     zweck: "Erzeugt das Expose. Wird aus dem angemeldeten CRM gerufen, also mit Benutzer-Token.",
   },
   {
+    name: "expose-link",
+    umgebungen: ["beta", "production"],
+    verifyJwt: false,
+    imRepo: true,
+    zweck:
+      "Loest kurze Exposé-Links (/e/<Kennung>) auf. Der Empfaenger der E-Mail ist nicht angemeldet; "
+      + "der Worker ruft sie mit dem veroeffentlichbaren Schluessel -- deshalb verify_jwt = false. "
+      + "Steht sie auf true, oeffnet kein einziger versandter Link.",
+  },
+  {
     name: "seed-demo-assets",
     umgebungen: ["beta"],
     verifyJwt: true,

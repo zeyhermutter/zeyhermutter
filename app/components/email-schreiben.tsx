@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Form, Link, useFetcher } from "react-router";
+import { tag, zeitpunkt } from "~/lib/format";
 import { MAILTO_SICHER, PLATZHALTER, VORLAGENANLASS, fuelle, mailtoAdresse, type Werte } from "~/lib/email-vorlage";
 import "~/email-schreiben.css";
 
@@ -21,6 +22,8 @@ export type SchreibDaten = {
   werte: Werte;
   expose: { id: string; nummer: string; datei: string } | null;
   linkTage: number;
+  /** Ausgegebene Kurzlinks zu dieser Anfrage (A7), neueste zuerst. */
+  links: { id: string; erstellt: string; von: string | null; bis: string; zurueckgezogen: string | null; nummer: string | null }[];
   anfrage: { status: string; version: number } | null;
   /** Werbewiderspruch des Kontakts (P2-6 Teil 2): Hinweis, keine Sperre. */
   werbewiderspruch: string | null;
@@ -44,7 +47,7 @@ export function EmailSchreiben({ kontext, daten }: { kontext: Kontext; daten: Sc
   const [weg, setWeg] = useState<"" | "PDF" | "LINK">("");
   const [geoeffnet, setGeoeffnet] = useState(false);
   const [kopiert, setKopiert] = useState(false);
-  const linkFetcher = useFetcher<{ link?: string; error?: string }>();
+  const linkFetcher = useFetcher<{ link?: string; linkId?: string; bis?: string; error?: string }>();
   const link = linkFetcher.data?.link ?? null;
 
   const werte = useMemo<Werte>(() => ({ ...daten.werte, expose_link: link }), [daten.werte, link]);
@@ -107,7 +110,7 @@ export function EmailSchreiben({ kontext, daten }: { kontext: Kontext; daten: Sc
           <legend>Exposé {daten.expose.nummer} <small>(zur Verwendung freigegeben)</small></legend>
           <label><input type="radio" name="weg" checked={weg === ""} onChange={() => setWeg("")} /> Ohne Exposé</label>
           <label><input type="radio" name="weg" checked={weg === "PDF"} onChange={() => setWeg("PDF")} /> Als PDF anhängen</label>
-          <label><input type="radio" name="weg" checked={weg === "LINK"} onChange={() => setWeg("LINK")} /> Als Download-Link einfügen ({daten.linkTage} Tage gültig)</label>
+          <label><input type="radio" name="weg" checked={weg === "LINK"} onChange={() => setWeg("LINK")} /> Als Link einfügen ({daten.linkTage} Tage gültig, jederzeit zurückziehbar)</label>
           {weg === "PDF" ? <p className="form-help"><a className="secondary-button link-button compact" href={`/crm/email?inquiry_id=${encodeURIComponent(kontext.id)}&expose_pdf=${encodeURIComponent(daten.expose.id)}`} download>PDF herunterladen</a> Danach im Mailprogramm anhängen.</p> : null}
           {weg === "LINK" && !link ? (
             <linkFetcher.Form method="post" className="email-schreiben-link">
@@ -116,13 +119,15 @@ export function EmailSchreiben({ kontext, daten }: { kontext: Kontext; daten: Sc
               <input type="hidden" name="context_id" value={kontext.id} />
               <input type="hidden" name="expose_id" value={daten.expose.id} />
               <button className="secondary-button compact" type="submit" disabled={linkFetcher.state !== "idle"}>{linkFetcher.state !== "idle" ? "Link wird erzeugt …" : "Link erzeugen und einfügen"}</button>
-              <small>Wer den Link hat, kann das PDF {daten.linkTage} Tage lang öffnen.</small>
+              <small>Wer den Link hat, kann das PDF {daten.linkTage} Tage lang öffnen – bis Sie ihn zurückziehen.</small>
             </linkFetcher.Form>
           ) : null}
-          {weg === "LINK" && link ? <p className="form-help">Link eingefügt, gültig {daten.linkTage} Tage.</p> : null}
+          {weg === "LINK" && link ? <p className="form-help">Link eingefügt, gültig bis {linkFetcher.data?.bis ? tag(linkFetcher.data.bis) : `in ${daten.linkTage} Tagen`}. Zurückziehen unter „Ausgegebene Links“.</p> : null}
           {linkFetcher.data?.error ? <p className="form-error">{linkFetcher.data.error}</p> : null}
         </fieldset>
       ) : daten.anfrage ? <p className="form-help">Kein zur Verwendung freigegebenes Exposé zu dieser Anfrage – Exposé-Versand ist erst danach möglich.</p> : null}
+
+      {daten.links.length ? <AusgegebeneLinks links={daten.links} /> : null}
 
       {offen.length ? (
         <p className="form-warning">Noch nicht ersetzt: {offen.map((o) => `{{${o}}}`).join(", ")} – {offen.map((o) => bekannt.has(o) ? (o === "expose_link" ? "Link noch nicht erzeugt" : "in dieser Akte kein Wert") : "unbekannter Platzhalter").filter((x, i, a) => a.indexOf(x) === i).join(", ")}. Bitte vor dem Senden anpassen.</p>
@@ -144,6 +149,7 @@ export function EmailSchreiben({ kontext, daten }: { kontext: Kontext; daten: Sc
         <input type="hidden" name="body" value={text} />
         <input type="hidden" name="template_id" value={vorlageId} />
         {exposeGewaehlt ? <><input type="hidden" name="expose_id" value={daten.expose!.id} /><input type="hidden" name="expose_weg" value={weg} /></> : null}
+        {exposeGewaehlt && weg === "LINK" && linkFetcher.data?.linkId ? <input type="hidden" name="expose_link_id" value={linkFetcher.data.linkId} /> : null}
         {daten.anfrage ? <input type="hidden" name="inquiry_version" value={daten.anfrage.version} /> : null}
         <p className="form-help">{geoeffnet ? "Haben Sie die E-Mail im Mailprogramm abgeschickt? Dann hier festhalten." : "Nach dem Senden im Mailprogramm hier festhalten – das Öffnen allein zählt nicht als Versand."}</p>
         {daten.anfrage?.status === "NEW" ? <label className="checkbox-row"><input type="checkbox" name="kontaktiert" value="1" defaultChecked /><span>Anfrage auf „Kontaktiert“ setzen</span></label> : null}
@@ -151,5 +157,44 @@ export function EmailSchreiben({ kontext, daten }: { kontext: Kontext; daten: Sc
         <button className={geoeffnet ? "primary-button" : "secondary-button"} type="submit" disabled={!betreff.trim()}>Gesendet – festhalten</button>
       </Form>
     </section>
+  );
+}
+
+/**
+ * Ausgegebene Exposé-Links dieser Anfrage (A7). Ein Link lässt sich jederzeit
+ * zurückziehen; danach zeigt er dem Empfänger nur noch „nicht mehr gültig“.
+ * Ob ein Link geöffnet wurde, wird nicht erfasst.
+ */
+function AusgegebeneLinks({ links }: { links: SchreibDaten["links"] }) {
+  const jetzt = Date.now();
+  return (
+    <details className="email-schreiben-links" open={links.some((l) => !l.zurueckgezogen && Date.parse(l.bis) > jetzt)}>
+      <summary>Ausgegebene Links ({links.length})</summary>
+      <ul>
+        {links.map((l) => {
+          const stand = l.zurueckgezogen ? `zurückgezogen ${zeitpunkt(l.zurueckgezogen)}` : Date.parse(l.bis) <= jetzt ? `abgelaufen ${tag(l.bis)}` : `gültig bis ${tag(l.bis)}`;
+          const aktiv = !l.zurueckgezogen && Date.parse(l.bis) > jetzt;
+          return (
+            <li key={l.id}>
+              <span>{l.nummer ? `Exposé ${l.nummer}` : "Exposé"} · erzeugt {zeitpunkt(l.erstellt)}</span>
+              <span className={aktiv ? "email-schreiben-link-aktiv" : "leise"}>{stand}</span>
+              {aktiv ? <Zurueckziehen id={l.id} /> : null}
+            </li>
+          );
+        })}
+      </ul>
+    </details>
+  );
+}
+
+function Zurueckziehen({ id }: { id: string }) {
+  const f = useFetcher<{ zurueckgezogen?: string | null; error?: string }>();
+  return (
+    <f.Form method="post">
+      <input type="hidden" name="_intent" value="expose_link_zurueckziehen" />
+      <input type="hidden" name="link_id" value={id} />
+      <button className="secondary-button compact" type="submit">Zurückziehen</button>
+      {f.data?.error ? <span className="form-error">{f.data.error}</span> : null}
+    </f.Form>
   );
 }

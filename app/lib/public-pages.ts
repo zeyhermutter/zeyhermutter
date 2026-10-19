@@ -62,6 +62,7 @@ export const NICHT_IN_DIE_SITEMAP: Record<string, string> = {
   "/immobilien/medien/:mediaId/:version": "Bilddateien, keine Seiten",
   "/immobilien/:slug": "aus der Datenbank ergaenzt, siehe app/routes/sitemap.ts",
   "/ratgeber/:thema": "die vier Anlassseiten stehen einzeln in WEBSITE_PAGE_DEFINITIONS",
+  "/e/:token": "kurzer Exposé-Link aus einer E-Mail, persoenlich und zeitlich begrenzt",
   "/login": "interner Zugang",
   "/logout": "interner Zugang",
   "/__preview/sales-readiness": "interne Vorschau",
@@ -90,7 +91,7 @@ export const INTERNE_PRAEFIXE = [
 ];
 
 /** Weitere Pfade, die robots.txt sperrt, ohne zum internen Bereich zu gehoeren. */
-export const WEITERE_GESPERRTE_PFADE = ["/api/", "/login", "/logout", "/homepage-varianten", "/__preview"];
+export const WEITERE_GESPERRTE_PFADE = ["/api/", "/e/", "/login", "/logout", "/homepage-varianten", "/__preview"];
 
 /**
  * Alle Pfade, die in die Sitemap gehoeren -- ohne die Objektseiten, die aus der

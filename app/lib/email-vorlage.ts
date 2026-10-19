@@ -28,7 +28,7 @@ export const PLATZHALTER: { schluessel: string; bedeutung: string }[] = [
   { schluessel: "objekt_ort", bedeutung: "PLZ und Ort des Objekts" },
   { schluessel: "anfrage_nummer", bedeutung: "Nummer der Anfrage" },
   { schluessel: "besichtigung_termin", bedeutung: "Nächste geplante Besichtigung, Datum und Uhrzeit" },
-  { schluessel: "expose_link", bedeutung: "Download-Link zum Exposé (nur wenn „Link einfügen“ gewählt ist)" },
+  { schluessel: "expose_link", bedeutung: "Kurzer Link zum Exposé (nur wenn „Link einfügen“ gewählt ist)" },
   { schluessel: "mein_name", bedeutung: "Ihr Name (angemeldeter Benutzer)" },
 ];
 

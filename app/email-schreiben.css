@@ -13,3 +13,9 @@
 .email-schreiben-festhalten button { justify-self: start; }
 .email-rueckmeldung { display: grid; gap: 6px; }
 .email-rueckmeldung p { margin: 0; }
+.email-schreiben-links { margin-top: 12px; font-size: 13px; }
+.email-schreiben-links summary { cursor: pointer; font-weight: 600; }
+.email-schreiben-links ul { display: grid; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; }
+.email-schreiben-links li { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.email-schreiben-links form { display: flex; align-items: center; gap: 8px; margin: 0; }
+.email-schreiben-link-aktiv { color: var(--crm-farbe-gut); }

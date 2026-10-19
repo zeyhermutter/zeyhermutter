@@ -25,6 +25,7 @@ export default [
   route("datenschutz", "routes/public-privacy.tsx"),
   route("widerruf", "routes/public-withdrawal.tsx"),
   route("login", "routes/login.tsx"),
+  route("e/:token", "routes/expose-kurzlink.ts"),
   layout("routes/internal-layout.tsx", [
     route("crm", "routes/crm-dashboard.tsx"),
     route("reports", "routes/reports.tsx"),

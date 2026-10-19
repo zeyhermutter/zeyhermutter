@@ -186,8 +186,19 @@ for (const datei of ["property-compliance", "property-legal", "property-disposit
 }
 pruefe(!(await lies("app/routes/closing-detail.tsx")).includes('to={`/closings/${row.id}/milestones#'), "closing-detail.tsx: Meilensteine wieder doppelt (volle Liste in der Akte)");
 
+// 19. Kurzer Exposé-Link (A7, 19.10.2026): kein langlebiger Speicherlink mehr in E-Mails,
+//     die Datenbank kennt nur den Hash der Kennung, im Verlauf steht kein Zugangsschluessel.
+{
+  const mail = await lies("app/routes/email-compose.tsx");
+  pruefe(!/createSignedUrl\([^)]*LINK_GUELTIG_TAGE/.test(mail), "email-compose.tsx: wieder ein signierter Speicherlink mit Tagen Laufzeit statt Kurzlink");
+  pruefe(mail.includes('rpc("expose_link_anlegen"') && mail.includes("p_token_hash: hash"), "email-compose.tsx: Kurzlink wird nicht ueber expose_link_anlegen mit Hash angelegt");
+  pruefe(mail.includes("ohneZugangsschluessel(String(formData.get(\"body\")"), "email-compose.tsx: festgehaltener Text wird nicht von Zugangsschluesseln befreit");
+  pruefe((await lies("app/routes.ts")).includes('route("e/:token", "routes/expose-kurzlink.ts")'), "routes.ts: /e/:token fehlt");
+  pruefe((await lies("app/components/email-schreiben.tsx")).includes("expose_link_zurueckziehen"), "email-schreiben.tsx: ausgegebene Links lassen sich nicht zurueckziehen");
+}
+
 if (fehler.length) {
   console.error("P2:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung, Datenauskunft aus allen Kontakt-Tabellen, Rechtsgrundlage und Werbewiderspruch (Hinweis, keine Sperre), Anonymisieren nur mit Recht, Grund, Bestätigung und ohne Einwand der Datenbank, Objektakte lädt je Teil nur, was er zeigt, 16 volle Listen als Programmtabelle, tägliche Automatik nur mit Aufgaben/Benachrichtigungen, dublettensicher und abschaltbar, 8 Listen blättern über die Datenbank, Aufgabe anlegen sucht seine Bezüge, Arbeitsplatz ohne Seitenkopf mit h1, jede Liste mit h1, Dialoge halten den Fokus, Absenden zeigt Warten, Akten lesen zuerst.");
+console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung, Datenauskunft aus allen Kontakt-Tabellen, Rechtsgrundlage und Werbewiderspruch (Hinweis, keine Sperre), Anonymisieren nur mit Recht, Grund, Bestätigung und ohne Einwand der Datenbank, Objektakte lädt je Teil nur, was er zeigt, 16 volle Listen als Programmtabelle, tägliche Automatik nur mit Aufgaben/Benachrichtigungen, dublettensicher und abschaltbar, 8 Listen blättern über die Datenbank, Aufgabe anlegen sucht seine Bezüge, Arbeitsplatz ohne Seitenkopf mit h1, jede Liste mit h1, Dialoge halten den Fokus, Absenden zeigt Warten, Akten lesen zuerst, Exposé als kurzer, zurückziehbarer Link.");

@@ -219,10 +219,13 @@ async function ladeSchreibDaten(supabase: any, ctx: EmailContext, meinName: stri
   const anfrage = anfrageR.data as any;
   const objekt = anfrage ? one(anfrage.properties) as any : null;
   const adresse = objekt ? one(objekt.property_addresses) as any : null;
-  const [expose, besichtigung] = await Promise.all([
+  const [expose, besichtigung, links] = await Promise.all([
     anfrage?.property_id ? freigegebenesExpose(supabase, anfrage.id) : Promise.resolve(null),
     supabase.from("viewings").select("starts_at").eq("contact_id", ctx.contactId).in("status", ["PLANNED", "CONFIRMED"])
       .gte("starts_at", new Date().toISOString()).is("archived_at", null).order("starts_at", { ascending: true }).limit(1).maybeSingle(),
+    // Ausgegebene Kurzlinks zu dieser Anfrage (A7). Ohne Leserecht auf Exposés leer (RLS).
+    anfrageId ? supabase.from("expose_links").select("id,created_at,created_by,expires_at,revoked_at,property_exposes(expose_number)")
+      .eq("inquiry_id", anfrageId).order("created_at", { ascending: false }).limit(20) : Promise.resolve({ data: [] }),
   ]);
   return {
     vorlagen: vorlagenR.error ? [] : (vorlagenR.data ?? []),
@@ -240,6 +243,10 @@ async function ladeSchreibDaten(supabase: any, ctx: EmailContext, meinName: stri
     },
     expose: expose ? { id: expose.id, nummer: expose.expose_number, datei: expose.original_filename } : null,
     linkTage: LINK_GUELTIG_TAGE,
+    links: ((links.data ?? []) as any[]).map((l) => ({
+      id: l.id as string, erstellt: l.created_at as string, von: l.created_by as string | null, bis: l.expires_at as string,
+      zurueckgezogen: l.revoked_at as string | null, nummer: (one(l.property_exposes) as any)?.expose_number ?? null,
+    })),
     anfrage: anfrage ? { status: anfrage.status, version: Number(anfrage.version) } : null,
     werbewiderspruch: k.marketing_objection_at ?? null,
   };
@@ -303,7 +310,8 @@ export async function action({ request, context }: Route.ActionArgs) {
   const { supabase, responseHeaders, userId } = await requireActiveUser(request, context.cloudflare.env);
   const formData = await request.formData();
   const absicht = text(formData, "_intent");
-  if (absicht === "expose_link") return exposeLink(supabase, formData, responseHeaders);
+  if (absicht === "expose_link") return exposeLink(supabase, formData, request, responseHeaders);
+  if (absicht === "expose_link_zurueckziehen") return exposeLinkZurueckziehen(supabase, formData, responseHeaders);
   if (absicht === "gesendet") return gesendetFesthalten(supabase, formData, userId, responseHeaders);
   if (absicht !== "log_email") {
     return data<ActionResult>({ error: "Unbekannte Aktion." }, { status: 400, headers: responseHeaders() });
@@ -330,7 +338,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   const insert: Record<string, unknown> = {
     activity_type: "EMAIL",
     title,
-    description: text(formData, "description") || null,
+    description: ohneZugangsschluessel(text(formData, "description")) || null,
     actor_user_id: userId,
     contact_id: emailContext.contactId,
     occurred_at: occurredAt,
@@ -344,17 +352,53 @@ export async function action({ request, context }: Route.ActionArgs) {
   return redirect(`/crm/email${contextQuery(emailContext)}`, { headers: responseHeaders() });
 }
 
-/** Download-Link zum freigegebenen Exposé, nur auf ausdrücklichen Klick erzeugt. */
-async function exposeLink(supabase: any, formData: FormData, responseHeaders: () => Headers) {
+/**
+ * Kurzer Exposé-Link (A7, 19.10.2026), nur auf ausdrücklichen Klick erzeugt.
+ *
+ * Vorher stand hier eine signierte Speicheradresse mit eingebautem
+ * Zugangsschlüssel, 14 Tage gültig und nicht zurückzuholen. Jetzt erzeugt der
+ * Worker eine zufällige Kennung (128 Bit), die Datenbank bekommt nur deren
+ * SHA-256, und der Link lautet <CRM-Adresse>/e/<Kennung>. Aufgelöst wird er von
+ * app/routes/expose-kurzlink.ts über die Edge-Funktion expose-link;
+ * zurückziehen geht jederzeit.
+ */
+async function exposeLink(supabase: any, formData: FormData, request: Request, responseHeaders: () => Headers) {
   const anfrageId = text(formData, "context_id");
   if (text(formData, "context_type") !== "INQUIRY" || !UUID_RE.test(anfrageId)) return data({ error: "Ein Exposé-Link geht nur aus einer Anfrage." }, { status: 400, headers: responseHeaders() });
-  const { data: darf } = await supabase.rpc("current_user_has_permission", { p_permission: "expose.read" });
-  if (darf !== true) return data({ error: "Keine Berechtigung, Exposés zu lesen." }, { status: 403, headers: responseHeaders() });
-  const expose = await freigegebenesExpose(supabase, anfrageId, text(formData, "expose_id"));
-  if (!expose) return data({ error: "Kein zur Verwendung freigegebenes Exposé zu dieser Anfrage." }, { status: 404, headers: responseHeaders() });
-  const { data: signiert } = await supabase.storage.from(expose.storage_bucket).createSignedUrl(expose.storage_path, LINK_GUELTIG_TAGE * 86400, { download: expose.original_filename });
-  if (!signiert?.signedUrl) return data({ error: "Der Link konnte nicht erzeugt werden." }, { status: 500, headers: responseHeaders() });
-  return data({ link: signiert.signedUrl as string }, { headers: responseHeaders() });
+  const exposeId = text(formData, "expose_id");
+  if (!UUID_RE.test(exposeId)) return data({ error: "Kein zur Verwendung freigegebenes Exposé zu dieser Anfrage." }, { status: 404, headers: responseHeaders() });
+  const roh = crypto.getRandomValues(new Uint8Array(16));
+  const kennung = btoa(String.fromCharCode(...roh)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const hash = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(kennung))))
+    .map((b) => b.toString(16).padStart(2, "0")).join("");
+  const { data: zeilen, error } = await supabase.rpc("expose_link_anlegen", { p_inquiry_id: anfrageId, p_expose_id: exposeId, p_token_hash: hash });
+  if (error) {
+    const meldung = /PERMISSION/.test(error.message ?? "") ? "Keine Berechtigung, Exposé-Links zu erzeugen."
+      : /NOT_RELEASED/.test(error.message ?? "") ? "Kein zur Verwendung freigegebenes Exposé zu dieser Anfrage."
+      : "Der Link konnte nicht erzeugt werden.";
+    return data({ error: meldung }, { status: 400, headers: responseHeaders() });
+  }
+  const zeile = Array.isArray(zeilen) ? zeilen[0] : zeilen;
+  return data({ link: `${new URL(request.url).origin}/e/${kennung}`, linkId: zeile?.id as string, bis: zeile?.expires_at as string }, { headers: responseHeaders() });
+}
+
+async function exposeLinkZurueckziehen(supabase: any, formData: FormData, responseHeaders: () => Headers) {
+  const id = text(formData, "link_id");
+  if (!UUID_RE.test(id)) return data({ error: "Unbekannter Link." }, { status: 400, headers: responseHeaders() });
+  const { data: ok, error } = await supabase.rpc("expose_link_zurueckziehen", { p_id: id });
+  if (error) return data({ error: /PERMISSION/.test(error.message ?? "") ? "Keine Berechtigung, Exposé-Links zurückzuziehen." : "Der Link konnte nicht zurückgezogen werden." }, { status: 400, headers: responseHeaders() });
+  return data({ zurueckgezogen: ok === true ? id : null }, { headers: responseHeaders() });
+}
+
+/**
+ * Zugangsschlüssel gehören nicht in den Verlauf: ein Kurzlink oder eine
+ * signierte Speicheradresse im festgehaltenen Text wird durch einen Hinweis
+ * ersetzt. Der Link selbst steht in der Liste der ausgegebenen Links.
+ */
+function ohneZugangsschluessel(inhalt: string) {
+  return inhalt
+    .replace(/https?:\/\/[^\s<>"]+\/e\/[A-Za-z0-9_-]{22}(?![A-Za-z0-9_-])/g, "[Exposé-Link]")
+    .replace(/https?:\/\/[^\s<>"]+\/storage\/v1\/object\/sign\/[^\s<>"]+/g, "[Exposé-Download-Link]");
 }
 
 /**
@@ -373,7 +417,7 @@ async function gesendetFesthalten(supabase: any, formData: FormData, userId: str
 
   const betreff = text(formData, "subject").slice(0, 300);
   if (!betreff) return data<ActionResult>({ error: "Bitte einen Betreff angeben – er steht danach im Verlauf." }, { status: 400, headers: responseHeaders() });
-  const inhalt = String(formData.get("body") ?? "").trim().slice(0, 20000);
+  const inhalt = ohneZugangsschluessel(String(formData.get("body") ?? "").trim()).slice(0, 20000);
   const vorlageId = text(formData, "template_id");
   const exposeId = text(formData, "expose_id");
   const exposeWeg = text(formData, "expose_weg");
@@ -383,6 +427,8 @@ async function gesendetFesthalten(supabase: any, formData: FormData, userId: str
   const metadata: Record<string, unknown> = { channel: "EMAIL", direction: "SENT", capture: vorlageId ? "TEMPLATE" : "COMPOSE" };
   if (UUID_RE.test(vorlageId)) metadata.template_id = vorlageId;
   if (expose) { metadata.expose_id = expose.id; metadata.expose_weg = exposeWeg; }
+  const linkId = text(formData, "expose_link_id");
+  if (expose && exposeWeg === "LINK" && UUID_RE.test(linkId)) metadata.expose_link_id = linkId;
   const insert: Record<string, unknown> = {
     activity_type: "EMAIL", title: betreff, description: inhalt || null, actor_user_id: userId,
     contact_id: ctx.contactId, occurred_at: new Date().toISOString(), metadata,
@@ -402,7 +448,7 @@ async function gesendetFesthalten(supabase: any, formData: FormData, userId: str
         property_id: expose.property_id, contact_id: ctx.contactId, inquiry_id: ref.id,
         expose_id: expose.id, publication_version_id: expose.publication_version_id,
         channel: "EXPOSE_EMAIL", channel_reference: `E-Mail: ${betreff}`.slice(0, 300),
-        notes: exposeWeg === "LINK" ? `Exposé als Download-Link (${LINK_GUELTIG_TAGE} Tage gültig)` : "Exposé als PDF-Anhang",
+        notes: exposeWeg === "LINK" ? `Exposé als Kurzlink (${LINK_GUELTIG_TAGE} Tage gültig, zurückziehbar)` : "Exposé als PDF-Anhang",
       });
       nachweis = nachweisFehler ? "fehler" : "ok";
     }
