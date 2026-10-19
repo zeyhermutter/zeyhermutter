@@ -11,3 +11,6 @@ supabase/.temp/
 !.env.example
 .DS_Store
 *.log
+
+# Uebergabepakete aus der Cowork-Sitzung -- nicht Teil des Projekts
+_bundles/
