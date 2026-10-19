@@ -11,6 +11,7 @@
 // passen (jedes Wort muss passen: "Max Muster" findet Max Mustermann).
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { redirect } from "react-router";
 
 export const SEITE = 50;
 /** Hoechstens so viele passende Kontakte/Objekte gehen in den Filter (Laenge der Adresse). */
@@ -77,4 +78,16 @@ export async function passendeBezuege(
 /** "spalte.in.(ids)" -- nie leer, damit der Filter gueltig bleibt. */
 export function inListe(spalte: string, ids: string[]) {
   return `${spalte}.in.(${(ids.length ? ids : [NIE]).join(",")})`;
+}
+
+/**
+ * Seite hinter dem Ende (alte Adresse, Filter geaendert): die Datenbank
+ * antwortet mit PGRST103 statt mit einer leeren Seite. Dann zur ersten Seite
+ * derselben Ansicht, statt "konnte nicht geladen werden" zu zeigen.
+ */
+export function seiteZuWeit(error: { code?: string } | null | undefined, url: URL, headers?: HeadersInit, param = "page") {
+  if (error?.code !== "PGRST103") return;
+  const ziel = new URL(url);
+  ziel.searchParams.delete(param);
+  throw redirect(`${ziel.pathname}${ziel.search}`, { headers });
 }

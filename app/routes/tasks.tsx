@@ -6,6 +6,7 @@ import { requireActiveUser } from "~/lib/auth.server";
 import { zeitpunkt as formatDate } from "~/lib/format";
 import { AUFGABENPRIORITAET as PRIORITY } from "~/lib/labels";
 import "~/inquiry.css";
+import { seiteZuWeit } from "~/lib/blaettern.server";
 import "~/programm-liste.css";
 import { crmDateAtTimeToIso } from "~/lib/local-time";
 
@@ -49,6 +50,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     supabase.rpc("current_user_has_permission", { p_permission: "task.write" }),
   ]);
 
+  seiteZuWeit(taskError, url, responseHeaders(), "seite");
   if (taskError || profileError) throw new Response("Aufgaben konnten nicht geladen werden.", { status: 500 });
   const taskIds = (tasks ?? []).map((task: any) => task.id);
   const watcherPromise = taskIds.length ? supabase.from("task_watchers").select("task_id,user_id,created_at").in("task_id", taskIds).order("created_at", { ascending: true }) : Promise.resolve({ data: [], error: null } as any);

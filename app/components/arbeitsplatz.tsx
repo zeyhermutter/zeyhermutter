@@ -122,6 +122,7 @@ export function Arbeitsplatz({
   kopf,
   reiter,
   seitenkopf = "zeigen",
+  ueberschriftImKopf,
   ampel,
   children,
 }: {
@@ -151,6 +152,12 @@ export function Arbeitsplatz({
    * Bei den Immobilien nicht: dort tragen die Koepfe Knoepfe und Zustaende.
    */
   seitenkopf?: "zeigen" | "ausblenden";
+  /**
+   * Ob der Titel im Kopf der Akte die Hauptueberschrift (h1) ist. Ohne
+   * Angabe: genau dann, wenn die Seitenkoepfe ausgeblendet sind. Die
+   * Immobilien blenden ihn nur auf den vier Teilen der Akte aus (eigene CSS).
+   */
+  ueberschriftImKopf?: boolean;
   /** Mit welchem Bereich die Zeilen ihre Ampel holen (P2-1). Ohne: keine Ampel. */
   ampel?: AmpelArt;
   children: ReactNode;
@@ -215,7 +222,7 @@ export function Arbeitsplatz({
       </aside>
 
       <section className="arbeitsplatz-akte" aria-label={`Geöffneter Datensatz`}>
-        <SeitenkopfAusgeblendet.Provider value={seitenkopf === "ausblenden"}>{kopf}</SeitenkopfAusgeblendet.Provider>
+        <SeitenkopfAusgeblendet.Provider value={ueberschriftImKopf ?? seitenkopf === "ausblenden"}>{kopf}</SeitenkopfAusgeblendet.Provider>
         {reiter}
         <div className={`arbeitsplatz-inhalt${seitenkopf === "ausblenden" ? " ohne-seitenkopf" : ""}`}>{children}</div>
       </section>

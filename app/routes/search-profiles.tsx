@@ -3,7 +3,7 @@ import { istEinstieg } from "~/lib/einstieg";
 import type { Route } from "./+types/search-profiles";
 import { requirePermission } from "~/lib/auth.server";
 import { euroRund as money, tag } from "~/lib/format";
-import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege, BEZUG_GRENZE } from "~/lib/blaettern.server";
+import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege, BEZUG_GRENZE, seiteZuWeit } from "~/lib/blaettern.server";
 import { Seiten, SucheZuAllgemein } from "~/components/seiten";
 import "~/programm-liste.css";
 
@@ -30,7 +30,7 @@ export async function loader({request,context}:Route.LoaderArgs){
     abfrage.order("updated_at",{ascending:false}).range(from,to),
     supabase.from("profiles").select("user_id,display_name,status").eq("status","ACTIVE").order("display_name")
   ]);
-  if(error)throw new Response("Suchprofile konnten nicht geladen werden.",{status:500});
+  seiteZuWeit(error,url,responseHeaders());if(error)throw new Response("Suchprofile konnten nicht geladen werden.",{status:500});
   const profileMap=Object.fromEntries((profiles??[]).map((p:any)=>[p.user_id,p.display_name]));
   return data({rows:rows??[],total:count??0,page,pageCount:seitenzahl(count),zuViele:bezug.zuViele,profiles:profiles??[],profileMap,profile,filters:{q,status,transaction,responsible,archived}},{headers:responseHeaders()});
 }

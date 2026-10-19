@@ -4,7 +4,7 @@ import { istEinstieg } from "~/lib/einstieg";
 import type { Route } from "./+types/organizations";
 import { requireActiveUser } from "~/lib/auth.server";
 import { tag } from "~/lib/format";
-import { seiteAus, seitenzahl, sicher, enthaelt } from "~/lib/blaettern.server";
+import { seiteAus, seitenzahl, sicher, enthaelt, seiteZuWeit } from "~/lib/blaettern.server";
 import { Seiten } from "~/components/seiten";
 import "~/programm-liste.css";
 
@@ -57,7 +57,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     supabase.from("organizations").select("legal_form, city, status").is("archived_at", null).limit(10000),
   ]);
 
-  if (error) throw new Response("Organisationen konnten nicht geladen werden.", { status: 500 });
+  seiteZuWeit(error,url,responseHeaders());if (error) throw new Response("Organisationen konnten nicht geladen werden.", { status: 500 });
 
   const alle = (auswahlRes.data ?? []) as { legal_form: string | null; city: string | null; status: string | null }[];
   const legalForms = Array.from(new Set(alle.map((o) => o.legal_form).filter((v): v is string => Boolean(v)))).sort((a, b) => String(a).localeCompare(String(b), "de"));

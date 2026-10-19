@@ -4,6 +4,7 @@ import { requireActiveUser } from "~/lib/auth.server";
 import { tag } from "~/lib/format";
 import { KONTAKTSTATUS, beschrifte } from "~/lib/labels";
 import { Ampel, useNaechsteSchritte } from "~/components/ampel";
+import { seiteZuWeit } from "~/lib/blaettern.server";
 import "~/programm-liste.css";
 
 // Die Kontaktliste.
@@ -79,6 +80,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   if (rollenFilter) abfrage = rollenFilter.length ? abfrage.in("id", rollenFilter) : abfrage.eq("id", "00000000-0000-0000-0000-000000000000");
 
   const { data: kontakte, count, error } = await abfrage;
+  seiteZuWeit(error, url, responseHeaders(), "seite");
   if (error) throw new Response("Die Kontaktliste konnte nicht geladen werden.", { status: 500, headers: responseHeaders() });
 
   return data({

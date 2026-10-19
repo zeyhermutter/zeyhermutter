@@ -4,7 +4,7 @@ import type { Route } from "./+types/viewings";
 import { requirePermission } from "~/lib/auth.server";
 import { zeitpunkt as formatDate } from "~/lib/format";
 import { BESICHTIGUNGSSTATUS as STATUS } from "~/lib/labels";
-import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege, BEZUG_GRENZE } from "~/lib/blaettern.server";
+import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege, BEZUG_GRENZE, seiteZuWeit } from "~/lib/blaettern.server";
 import { Seiten, SucheZuAllgemein } from "~/components/seiten";
 import "~/programm-liste.css";
 
@@ -21,7 +21,7 @@ export async function loader({request,context}:Route.LoaderArgs){const {supabase
   if(responsible!=="ALL")abfrage=abfrage.eq("primary_responsible_user",responsible);
   if(text)abfrage=abfrage.or([enthaelt(["viewing_number","meeting_point"],text),inListe("contact_id",bezug.kontakte),inListe("property_id",bezug.objekte),inListe("search_profile_id",((profilTreffer.data??[]) as any[]).map(r=>r.id)),inListe("inquiry_id",((anfrageTreffer.data??[]) as any[]).map(r=>r.id))].join(","));
   const [{data:rows,error,count},{data:profiles}]=await Promise.all([abfrage.order("starts_at",{ascending:true}).range(from,to),supabase.from("profiles").select("user_id,display_name,status").eq("status","ACTIVE").order("display_name")]);
-  if(error)throw new Response("Besichtigungen konnten nicht geladen werden.",{status:500});const profileMap=Object.fromEntries((profiles??[]).map((x:any)=>[x.user_id,x.display_name]));
+  seiteZuWeit(error,u,responseHeaders());if(error)throw new Response("Besichtigungen konnten nicht geladen werden.",{status:500});const profileMap=Object.fromEntries((profiles??[]).map((x:any)=>[x.user_id,x.display_name]));
   return data({rows:rows??[],total:count??0,page,pageCount:seitenzahl(count),zuViele:bezug.zuViele,profiles:profiles??[],profileMap,profile,filters:{status,responsible,q}},{headers:responseHeaders()});}
 // Eine Programmliste wie Kontakte und Makleraufträge (P2-8, 17.10.2026).
 // Vorher Seitenkopf, Filterkasten und Kartenzeilen.

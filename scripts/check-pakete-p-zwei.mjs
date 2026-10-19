@@ -140,6 +140,7 @@ for (const [datei, tabelle] of [["inquiries", "inquiries"], ["leads", "leads"], 
   const quelle = await lies(`app/routes/${datei}.tsx`);
   const lader = quelle.slice(quelle.indexOf("export async function loader"));
   pruefe(lader.includes("seiteAus(") && /\.range\(from, ?to\)/.test(lader) && (lader.includes('{count:"exact"}') || lader.includes('{ count: "exact" }')), `${datei}.tsx: blaettert nicht ueber die Datenbank`);
+  pruefe(lader.includes("seiteZuWeit("), `${datei}.tsx: Seite hinter dem Ende endet mit Fehler 500 statt auf Seite 1`);
   pruefe(!new RegExp(`from\\("${tabelle}"\\)\\.select\\("id,[^"]{40,}"\\)[^;]*\\.limit\\(500\\)`).test(lader) && !lader.includes("gekappt:"), `${datei}.tsx: wieder 500 Zeilen geladen und im Worker gefiltert`);
 }
 
@@ -149,7 +150,7 @@ pruefe(!aufgabenListe.includes(".limit(500)") && (aufgabenDialog.match(/<Datensa
 
 // 14. Arbeitsplatz: blendet er die Seitenkoepfe aus, traegt der Kopf der Akte die Hauptueberschrift
 const arbeitsplatzBaustein = await lies("app/components/arbeitsplatz.tsx");
-pruefe(/alsUeberschrift \? <h1 className="arbeitsplatz-kopf-titel">/.test(arbeitsplatzBaustein) && arbeitsplatzBaustein.includes('value={seitenkopf === "ausblenden"}'), "Arbeitsplatz: ohne Seitenkopf keine h1 im Kopf der Akte");
+pruefe(/alsUeberschrift \? <h1 className="arbeitsplatz-kopf-titel">/.test(arbeitsplatzBaustein) && arbeitsplatzBaustein.includes('value={ueberschriftImKopf ?? seitenkopf === "ausblenden"}') && (await lies("app/routes/immobilien-arbeitsplatz.tsx")).includes("ueberschriftImKopf={akteTeil}"), "Arbeitsplatz: ohne Seitenkopf keine h1 im Kopf der Akte");
 
 if (fehler.length) {
   console.error("P2:\n  " + fehler.join("\n  "));

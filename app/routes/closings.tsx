@@ -4,7 +4,7 @@ import type { Route } from "./+types/closings";
 import { requirePermission } from "~/lib/auth.server";
 import { euroGenau as money, tag, zeitpunkt } from "~/lib/format";
 import { IMMOBILIENSTATUS, beschrifte } from "~/lib/labels";
-import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege, BEZUG_GRENZE } from "~/lib/blaettern.server";
+import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege, BEZUG_GRENZE, seiteZuWeit } from "~/lib/blaettern.server";
 import { Seiten, SucheZuAllgemein } from "~/components/seiten";
 import "~/programm-liste.css";
 
@@ -29,7 +29,7 @@ export async function loader({request,context}:Route.LoaderArgs){const {supabase
     supabase.from("properties").select("id,property_number,internal_title").eq("transaction_type","SALE").order("updated_at",{ascending:false}).limit(500),
     zaehle(["PREPARATION","NOTARY_INSTRUCTED","DRAFT_RECEIVED","APPOINTMENT_SCHEDULED"]),zaehle(["NOTARIZED"]),zaehle(["PURCHASE_PRICE_DUE","PURCHASE_PRICE_PAID"]),zaehle(["HANDOVER_COMPLETED"]),zaehle(["COMPLETED"]),
   ]);
-  if(error)throw new Response("Abschlussvorgänge konnten nicht geladen werden.",{status:500,headers:responseHeaders()});
+  seiteZuWeit(error,url,responseHeaders());if(error)throw new Response("Abschlussvorgänge konnten nicht geladen werden.",{status:500,headers:responseHeaders()});
   const [preparation,notarized,payment,handover,completed]=zahlen.map((z:any)=>z.count??0);
   return data({profile,rows:(rows??[]) as any[],total:count??0,page,pageCount:seitenzahl(count),zuViele:bezug.zuViele,properties:properties??[],summary:{preparation,notarized,payment,handover,completed},filters},{headers:responseHeaders()});}
 

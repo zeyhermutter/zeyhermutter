@@ -4,6 +4,7 @@ import { requirePermission } from "~/lib/auth.server";
 import { euroRund as money, tag } from "~/lib/format";
 import { IMMOBILIENSTATUS } from "~/lib/labels";
 import { Ampel, useNaechsteSchritte } from "~/components/ampel";
+import { seiteZuWeit } from "~/lib/blaettern.server";
 import "~/programm-liste.css";
 
 const PAGE_SIZE = 50;
@@ -68,6 +69,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   }
 
   const { data: properties, count, error } = await query;
+  seiteZuWeit(error, url, responseHeaders());
   if (error) throw new Response("Immobilien konnten nicht geladen werden.", { status: 500 });
 
   const ids = (properties ?? []).map((item) => item.id);

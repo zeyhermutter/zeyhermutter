@@ -6,7 +6,7 @@ import { zeitpunktKurz as formatDate } from "~/lib/format";
 import { ANFRAGEKANAL as CHANNEL, ANFRAGESTATUS as STATUS } from "~/lib/labels";
 import { Ampel, useNaechsteSchritte } from "~/components/ampel";
 import { Aufklapper } from "~/components/aufklapper";
-import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege, BEZUG_GRENZE } from "~/lib/blaettern.server";
+import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege, BEZUG_GRENZE, seiteZuWeit } from "~/lib/blaettern.server";
 import { Seiten, SucheZuAllgemein } from "~/components/seiten";
 import "~/programm-liste.css";
 
@@ -59,7 +59,7 @@ export async function loader({request,context}:Route.LoaderArgs){
   zaehle(a=>a.eq("state","ANSWERED_LATE")),
   zaehle(a=>a.eq("state","ANSWERED_IN_TIME")),
  ]);
- if(error)throw new Response("Anfragen konnten nicht geladen werden.",{status:500});
+ seiteZuWeit(error,u,responseHeaders());if(error)throw new Response("Anfragen konnten nicht geladen werden.",{status:500});
  const seitenIds=((rows??[]) as any[]).map(r=>r.id);
  const responseRes=seitenIds.length?await supabase.rpc("inquiry_response_overview",{p_only_open:false}).in("inquiry_id",seitenIds):{data:[],error:null};
  // Ein verschluckter Lesefehler sähe hier aus wie "keine Reaktionszeit überschritten".

@@ -1,4 +1,4 @@
-import { data, Outlet, useLoaderData, useParams } from "react-router";
+import { data, Outlet, useLoaderData, useMatches, useParams } from "react-router";
 import type { Route } from "./+types/immobilien-arbeitsplatz";
 import { requirePermission } from "~/lib/auth.server";
 import { euroRund } from "~/lib/format";
@@ -99,9 +99,14 @@ function statusKlasse(status: string) {
   return `status-pill status-${status.toLowerCase().replaceAll("_", "-")}`;
 }
 
+const AKTE_TEILE = new Set(["routes/property-detail", "property-objektdaten", "property-eigentuemer", "property-verlauf"]);
+
 export default function ImmobilienArbeitsplatz() {
   const { zeilen, listeFehlt, abgeschnitten, akte } = useLoaderData<typeof loader>();
   const { propertyId } = useParams();
+  // Auf den vier Teilen der Akte ist der Seitenkopf ausgeblendet
+  // (immobilien-arbeitsplatz.css) -- dann traegt der Kopf darueber die h1.
+  const akteTeil = useMatches().some((m) => AKTE_TEILE.has(m.id));
 
   const alsZeile = (z: { id: string; nummer: string; titel: string; status: string; ort: string | null; preis?: string | null }): ArbeitsplatzZeile => ({
     id: z.id,
@@ -139,6 +144,7 @@ export default function ImmobilienArbeitsplatz() {
         />
       ) : null}
       reiter={<ObjektakteReiter />}
+      ueberschriftImKopf={akteTeil}
     >
       <Outlet />
     </Arbeitsplatz>

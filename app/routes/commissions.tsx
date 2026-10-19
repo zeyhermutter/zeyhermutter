@@ -4,7 +4,7 @@ import type { Route } from "./+types/commissions";
 import { requirePermission } from "~/lib/auth.server";
 import { euroGenau as money, tag as formatDate } from "~/lib/format";
 import { RECHNUNGSSTATUS, ZAHLUNGSSTATUS, beschrifte } from "~/lib/labels";
-import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege } from "~/lib/blaettern.server";
+import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege, seiteZuWeit } from "~/lib/blaettern.server";
 import { Seiten, SucheZuAllgemein } from "~/components/seiten";
 import "~/programm-liste.css";
 
@@ -41,7 +41,7 @@ export async function loader({request,context}:Route.LoaderArgs){
     supabase.from("properties").select("id,property_number,internal_title").eq("transaction_type","SALE").order("updated_at",{ascending:false}).limit(500),
     supabase.from("commissions").select("status,expected_amount,actual_amount,paid_amount").is("archived_at",null).limit(SUMMEN_GRENZE),
   ]);
-  if(error||summenRes.error)throw new Response("Provisionen konnten nicht geladen werden.",{status:500,headers:responseHeaders()});
+  seiteZuWeit(error,url,responseHeaders());if(error||summenRes.error)throw new Response("Provisionen konnten nicht geladen werden.",{status:500,headers:responseHeaders()});
   const active=(summenRes.data??[]) as any[];
   const expectedSum=active.filter((row)=>row.status!=="CANCELLED").reduce((sum,row)=>sum+Number(row.expected_amount??0),0);
   const openSum=active.filter((row)=>!['PAID','CANCELLED'].includes(row.status)).reduce((sum,row)=>sum+Math.max(0,targetAmount(row)-Number(row.paid_amount??0)),0);

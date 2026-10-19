@@ -6,7 +6,7 @@ import { requirePermission } from "~/lib/auth.server";
 import { zeitpunktKurz as fmt } from "~/lib/format";
 import { Ampel, useNaechsteSchritte } from "~/components/ampel";
 import "~/lead-workflow.css";
-import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege } from "~/lib/blaettern.server";
+import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege, seiteZuWeit } from "~/lib/blaettern.server";
 import { SucheZuAllgemein } from "~/components/seiten";
 import "~/programm-liste.css";
 
@@ -73,7 +73,7 @@ export async function loader({request,context}:Route.LoaderArgs){
     basis("status,converted_property_id,property_street,property_house_number,property_postal_code,property_city,property_type,living_area_sqm,plot_area_sqm,rooms").eq("status","WON").limit(5000),
     ...STATUS_ORDER.map(st=>basis("id",{count:"exact"}).eq("status",st).limit(1)),
   ]);
-  if(error)throw new Response("Leads konnten nicht geladen werden.",{status:500});
+  seiteZuWeit(error,url,responseHeaders());if(error)throw new Response("Leads konnten nicht geladen werden.",{status:500});
   const ueberfaellig=((ueberfaelligRes.data??[]) as any[]);
   const pipeline=STATUS_ORDER.map((s,i)=>({status:s,count:(stufenZahlen[i] as any).count??0,overdue:ueberfaellig.filter((r:any)=>r.status===s).length}));
   const wonBreakdown=((gewonnenRes.data??[]) as any[]).reduce((acc:any,row:any)=>{const state=wonObjectState(row);if(state)acc[state.key]=(acc[state.key]??0)+1;return acc;},{prepare:0,ready:0,created:0});

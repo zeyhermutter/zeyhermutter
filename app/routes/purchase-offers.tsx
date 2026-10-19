@@ -3,7 +3,7 @@ import { istEinstieg } from "~/lib/einstieg";
 import type { Route } from "./+types/purchase-offers";
 import { requirePermission } from "~/lib/auth.server";
 import { euroGenau as money, tag as formatDate } from "~/lib/format";
-import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege } from "~/lib/blaettern.server";
+import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege, seiteZuWeit } from "~/lib/blaettern.server";
 import { Seiten, SucheZuAllgemein } from "~/components/seiten";
 import "~/programm-liste.css";
 
@@ -33,7 +33,7 @@ export async function loader({request,context}:Route.LoaderArgs){
     supabase.from("properties").select("id,property_number,internal_title").eq("transaction_type","SALE").is("archived_at",null).order("updated_at",{ascending:false}).limit(500),
     zaehle(["DRAFT"]),zaehle(["SUBMITTED","COUNTERED"]),zaehle(["ACCEPTED"]),zaehle(["REJECTED","WITHDRAWN","FAILED"]),
   ]);
-  if(error)throw new Response("Kaufangebote konnten nicht geladen werden.",{status:500,headers:responseHeaders()});
+  seiteZuWeit(error,url,responseHeaders());if(error)throw new Response("Kaufangebote konnten nicht geladen werden.",{status:500,headers:responseHeaders()});
   const [draft,negotiation,accepted,failed]=zahlen.map((z:any)=>z.count??0);
   return data({profile,rows:(rows??[]) as any[],total:count??0,page,pageCount:seitenzahl(count),zuViele:bezug.zuViele,summary:{draft,negotiation,accepted,failed},canWrite:canWrite===true,properties:properties??[],filters},{headers:responseHeaders()});
 }
