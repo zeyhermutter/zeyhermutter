@@ -19,16 +19,32 @@ const BEDIENBAR = [
   "select:not([disabled])", "textarea:not([disabled])", "[tabindex]:not([tabindex='-1'])",
 ].join(",");
 
+// Wo der Fokus zuletzt ausserhalb eines Dialogs stand. Gebraucht, weil ein
+// Feld mit autoFocus den Fokus schon beim Zeichnen in den Dialog holt -- dann
+// waere "das aktive Element beim Oeffnen" bereits das Feld im Dialog.
+let zuletztAussen: HTMLElement | null = null;
+let beobachtet = false;
+function beobachteFokus() {
+  if (beobachtet || typeof document === "undefined") return;
+  beobachtet = true;
+  document.addEventListener("focusin", (e) => {
+    const ziel = e.target;
+    if (ziel instanceof HTMLElement && !ziel.closest('[aria-modal="true"]')) zuletztAussen = ziel;
+  });
+}
+
 export function useDialogFokus(
   ref: RefObject<HTMLElement | null>,
   offen: boolean,
   beiEscape?: () => void,
 ) {
+  useEffect(() => { beobachteFokus(); }, []);
   useEffect(() => {
     if (!offen) return;
-    const vorher = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const dialog = ref.current;
     if (!dialog) return;
+    const aktivBeimOeffnen = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const vorher = aktivBeimOeffnen && !dialog.contains(aktivBeimOeffnen) ? aktivBeimOeffnen : zuletztAussen;
     const bedienbar = () => Array.from(dialog.querySelectorAll<HTMLElement>(BEDIENBAR))
       .filter((el) => el.getClientRects().length > 0);
     if (!dialog.contains(document.activeElement)) (bedienbar()[0] ?? dialog).focus();
