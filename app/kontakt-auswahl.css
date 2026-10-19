@@ -30,14 +30,14 @@
   overflow-y: auto;
   border: 1px solid #c9d2da;
   border-radius: var(--crm-field-radius);
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
 }
 .kontakt-auswahl-treffer p { margin: 0; padding: var(--crm-field-padding); }
 .kontakt-auswahl-treffer button {
   padding: var(--crm-field-padding);
   border: 0;
   border-bottom: 1px solid #eef1f3;
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
   text-align: left;
   font: inherit;
   cursor: pointer;

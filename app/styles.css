@@ -236,6 +236,41 @@ h1 { max-width: 850px; margin: 0; font-size: clamp(42px, 7vw, 82px); line-height
    * daneben steht. Vorher 7 verschiedene Wertepaare. */
   --crm-modal-padding: 24px;
   --crm-modal-radius: 18px;
+
+  /* Farben nach Rolle (Paket C, 19.10.2026).
+   *
+   * Gemessen am 19.10.: 706 verschiedene Hex-Farben im Programm, zwei
+   * Textfamilien (blaugrau #1b2733 / gruengrau #1d2a2b) nebeneinander. Hier
+   * steht jede Rolle einmal. Die Werte sind die, die das Programm heute
+   * zeigt (Programmrahmen, Listen, Akten) -- umgestellt wurde ohne
+   * sichtbare Aenderung, nachgewiesen mit scripts/stil-fingerabdruck.browser.js.
+   * scripts/check-design-fundament.mjs haelt fest, dass die Zahl der
+   * Hex-Werte und der !important nicht wieder steigt. */
+  --crm-farbe-grund: #eef2f1;        /* Seitengrund hinter Karten */
+  --crm-farbe-flaeche: #ffffff;      /* Karte, Tabelle, Feld */
+  --crm-farbe-text: #1b2733;         /* Haupttext, 15,2:1 auf Weiss */
+  --crm-farbe-text-2: #3d4a56;       /* Beschriftung, Spaltenkopf */
+  --crm-farbe-text-leise: #4a5763;   /* Zusatz, 7,4:1 auf Weiss */
+  --crm-farbe-text-blass: #6b7782;   /* Nebensache, 4,6:1 nur auf Weiss (4,1:1 auf Grund) */
+  --crm-farbe-linie: #cdd3d9;        /* Rahmen */
+  --crm-farbe-linie-leise: #dde2e7;  /* Trennlinie in Tabellen */
+  --crm-farbe-linie-feld: #c3cad1;   /* Rahmen von Eingabefeldern */
+  --crm-farbe-handlung: #062037;     /* Navy: Hauptknopf, Titelleiste */
+  --crm-farbe-auf-dunkel: #ffffff;   /* Schrift auf Navy */
+  --crm-farbe-verweis: #0b5cad;      /* Links, Fokus */
+  --crm-farbe-fehler: #a12a1f;
+  --crm-farbe-gut: #275f3d;
+
+  /* Schriftstufen (Paket C). Vorher 44 verschiedene Groessen. Neue Regeln
+   * nehmen eine dieser Stufen; der Bestand wird schrittweise umgestellt. */
+  --crm-schrift-11: 11px;
+  --crm-schrift-12: 12px;
+  --crm-schrift-13: 13px;
+  --crm-schrift-14: 14px;
+  --crm-schrift-15: 15px;
+  --crm-schrift-16: 16px;
+  --crm-schrift-20: 20px;
+  --crm-schrift-24: 24px;
 }
 
 /* Arbeitsbereiche nutzen auf Laptopbreite die tatsächlich verfügbare Fläche. */

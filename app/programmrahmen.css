@@ -18,7 +18,7 @@
   display: grid;
   grid-template-columns: var(--rahmen-modul-breite) minmax(0, 1fr);
   grid-template-rows: var(--rahmen-titel-hoehe) minmax(0, 1fr);
-  background: #eef2f1;
+  background: var(--crm-farbe-grund);
 }
 
 /* --- Titelleiste ---------------------------------------------------------- */
@@ -33,15 +33,15 @@
   gap: 18px;
   height: var(--rahmen-titel-hoehe);
   padding: 0 14px;
-  background: #062037;
-  color: #ffffff;
+  background: var(--crm-farbe-handlung);
+  color: var(--crm-farbe-auf-dunkel);
 }
 
 .titelleiste-marke {
   display: flex;
   align-items: center;
   gap: 9px;
-  color: #ffffff;
+  color: var(--crm-farbe-auf-dunkel);
   text-decoration: none;
   font-weight: 600;
   font-size: 14px;
@@ -85,7 +85,7 @@
   min-width: 0;
   border: 0;
   background: transparent;
-  color: #ffffff;
+  color: var(--crm-farbe-auf-dunkel);
   font: inherit;
   font-size: 13px;
   outline: none;
@@ -134,7 +134,7 @@
 }
 
 .titelleiste-abmelden:hover,
-.titelleiste-glocke:hover { color: #ffffff; }
+.titelleiste-glocke:hover { color: var(--crm-farbe-auf-dunkel); }
 
 /*
  * Glocke und Suchfeld stehen auf Navy. crm-light-theme.css und
@@ -150,8 +150,8 @@
   border-color: transparent !important;
   color: #dce3ea !important;
 }
-.persistent-app-frame .titelleiste .notification-bell-trigger:hover { color: #ffffff !important; }
-.persistent-app-frame .titelleiste .notification-bell-count { border-color: #062037 !important; }
+.persistent-app-frame .titelleiste .notification-bell-trigger:hover { color: var(--crm-farbe-auf-dunkel) !important; }
+.persistent-app-frame .titelleiste .notification-bell-count { border-color: var(--crm-farbe-handlung) !important; }
 
 .persistent-app-frame .titelleiste-suche input:not([type="checkbox"]):not([type="radio"]),
 .persistent-app-frame .titelleiste-suche input:not([type="checkbox"]):not([type="radio"]):hover,
@@ -159,7 +159,7 @@
   border: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
-  color: #ffffff !important;
+  color: var(--crm-farbe-auf-dunkel) !important;
   caret-color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
@@ -181,7 +181,7 @@
   flex-direction: column;
   gap: 2px;
   padding: 8px 6px;
-  border-right: 1px solid #cdd3d9;
+  border-right: 1px solid var(--crm-farbe-linie);
   background: #f4f6f8;
   overflow-y: auto;
 }
@@ -200,11 +200,11 @@
   text-decoration: none;
 }
 
-.modulleiste-eintrag:hover { background: #dde2e7; color: #1b2733; }
+.modulleiste-eintrag:hover { background: #dde2e7; color: var(--crm-farbe-text); }
 
 .modulleiste-eintrag.aktiv {
-  background: #062037;
-  color: #ffffff;
+  background: var(--crm-farbe-handlung);
+  color: var(--crm-farbe-auf-dunkel);
   font-weight: 600;
 }
 
@@ -230,8 +230,8 @@
   align-items: stretch;
   gap: 18px;
   padding: 0 18px;
-  border-bottom: 1px solid #cdd3d9;
-  background: #ffffff;
+  border-bottom: 1px solid var(--crm-farbe-linie);
+  background: var(--crm-farbe-flaeche);
 }
 
 .bereichsleiste-titel {
@@ -239,7 +239,7 @@
   align-items: center;
   font-size: 13px;
   font-weight: 600;
-  color: #1b2733;
+  color: var(--crm-farbe-text);
   white-space: nowrap;
 }
 
@@ -254,23 +254,23 @@
   align-items: center;
   padding: 2px 13px 0;
   border-bottom: 2px solid transparent;
-  color: #3d4a56;
+  color: var(--crm-farbe-text-2);
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
   text-decoration: none;
 }
 
-.bereichsleiste-eintrag:hover { background: #f3f6fa; color: #1b2733; }
+.bereichsleiste-eintrag:hover { background: #f3f6fa; color: var(--crm-farbe-text); }
 
 /* Tastaturfokus: ein schmaler blauer Rand innen, statt des schwarzen
  * Browser-Rahmens, der um den ganzen Reiter lief. */
 .bereichsleiste-eintrag:focus { outline: none; }
-.bereichsleiste-eintrag:focus-visible { outline: 2px solid #0b5cad; outline-offset: -3px; border-radius: 3px; }
+.bereichsleiste-eintrag:focus-visible { outline: 2px solid var(--crm-farbe-verweis); outline-offset: -3px; border-radius: 3px; }
 
 .bereichsleiste-eintrag.aktiv {
-  border-bottom-color: #062037;
-  color: #062037;
+  border-bottom-color: var(--crm-farbe-handlung);
+  color: var(--crm-farbe-handlung);
   font-weight: 600;
 }
 
@@ -288,7 +288,7 @@
   gap: 18px;
   min-height: 26px;
   padding: 0 14px;
-  border-top: 1px solid #cdd3d9;
+  border-top: 1px solid var(--crm-farbe-linie);
   background: #dde2e7;
   color: #2e3b47;
   font-size: 12px;
@@ -330,7 +330,7 @@ body > [aria-label="Nächste Schritte nach Lead-Übernahme"] {
     gap: 2px;
     padding: 6px;
     border-right: 0;
-    border-bottom: 1px solid #cdd3d9;
+    border-bottom: 1px solid var(--crm-farbe-linie);
     overflow-x: auto;
   }
 

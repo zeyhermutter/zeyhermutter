@@ -3,25 +3,25 @@
 
 /* Verkäufer-Leads + Verkaufsstrategie-Übersicht: Status-Pills vollständig hell. */
 .persistent-app-frame .lead-status-pill {
-  background: #edf1f0 !important;
-  border-color: #c7d1cf !important;
-  color: #465758 !important;
+  background: #edf1f0;
+  border-color: #c7d1cf;
+  color: #465758;
 }
 .persistent-app-frame .lead-status-pill.status-marketing {
-  background: #e6f1f8 !important;
-  border-color: #a8c5d6 !important;
-  color: #285e78 !important;
+  background: #e6f1f8;
+  border-color: #a8c5d6;
+  color: #285e78;
 }
 .persistent-app-frame .lead-status-pill.status-sold {
-  background: #e5f4e9 !important;
-  border-color: #98bea4 !important;
-  color: #275f3d !important;
+  background: #e5f4e9;
+  border-color: #98bea4;
+  color: #275f3d;
 }
 .persistent-app-frame .lead-status-pill.status-archived,
 .persistent-app-frame .lead-status-pill.status-draft {
-  background: #edf1f0 !important;
-  border-color: #c7d1cf !important;
-  color: #4d5d5e !important;
+  background: #edf1f0;
+  border-color: #c7d1cf;
+  color: #4d5d5e;
 }
 
 /* Immobilien-Verzeichnis: der interaktive Workflow hatte noch eigene dunkle Flächen. */
@@ -33,9 +33,9 @@
 .persistent-app-frame .workflow-action-panel,
 .persistent-app-frame .workflow-transition-panel,
 .persistent-app-frame .workflow-recommended {
-  background: #ffffff !important;
-  border-color: #d4dddb !important;
-  color: #263536 !important;
+  background: #ffffff;
+  border-color: #d4dddb;
+  color: #263536;
 }
 .persistent-app-frame .workflow-main-step span,
 .persistent-app-frame .workflow-status-card > p,
@@ -45,51 +45,51 @@
 .persistent-app-frame .workflow-footnote,
 .persistent-app-frame .workflow-side-statuses > span,
 .persistent-app-frame .workflow-recommended small {
-  color: #667576 !important;
+  color: #667576;
 }
 .persistent-app-frame .workflow-callout b,
 .persistent-app-frame .workflow-transition span,
 .persistent-app-frame .workflow-action-panel ol,
 .persistent-app-frame .workflow-status-button {
-  color: #263536 !important;
+  color: #263536;
 }
 .persistent-app-frame .workflow-status-card-head > span {
-  background: #edf1f0 !important;
-  color: #59696a !important;
+  background: #edf1f0;
+  color: #59696a;
 }
 .persistent-app-frame .workflow-transition.preferred,
 .persistent-app-frame .workflow-recommended {
-  background: #edf5f3 !important;
-  border-color: #a8beb9 !important;
+  background: #edf5f3;
+  border-color: #a8beb9;
 }
 .persistent-app-frame .workflow-recommended.terminal {
-  background: #f7f9f8 !important;
-  border-color: #cbd4d2 !important;
+  background: #f7f9f8;
+  border-color: #cbd4d2;
 }
 .persistent-app-frame .workflow-transition-list.interactive button.workflow-transition:hover {
-  background: #f1f5f4 !important;
-  border-color: #9caeaa !important;
+  background: #f1f5f4;
+  border-color: #9caeaa;
 }
 .persistent-app-frame .workflow-status-button.selected {
-  border-color: #617a76 !important;
-  box-shadow: 0 0 0 2px rgba(82, 116, 110, .14) !important;
+  border-color: #617a76;
+  box-shadow: 0 0 0 2px rgba(82, 116, 110, .14);
 }
-.persistent-app-frame .workflow-arrow { color: #82908f !important; }
+.persistent-app-frame .workflow-arrow { color: #82908f; }
 .persistent-app-frame .workflow-rule-badge {
-  background: #f7f9f8 !important;
-  color: #59696a !important;
-  border-color: #c7d1cf !important;
+  background: #f7f9f8;
+  color: #59696a;
+  border-color: #c7d1cf;
 }
 .persistent-app-frame .workflow-side-button {
-  background: #fbe9e9 !important;
-  color: #873b3e !important;
-  border-color: #d7a3a4 !important;
+  background: #fbe9e9;
+  color: #873b3e;
+  border-color: #d7a3a4;
 }
 .persistent-app-frame .workflow-side-button:hover,
 .persistent-app-frame .workflow-side-button.selected {
-  background: #f5dada !important;
-  color: #702f32 !important;
-  border-color: #c78183 !important;
+  background: #f5dada;
+  color: #702f32;
+  border-color: #c78183;
 }
 
 /* Fachliche Workflowfarben bleiben erhalten, aber als helle Flächen. */
@@ -101,9 +101,9 @@
 .persistent-app-frame .workflow-status-card.status-valuation,
 .persistent-app-frame .workflow-status-card.status-contract-pending,
 .persistent-app-frame .workflow-status-card.status-preparation {
-  background: #fff3d8 !important;
-  border-color: #d7bc70 !important;
-  color: #6b5518 !important;
+  background: #fff3d8;
+  border-color: #d7bc70;
+  color: #6b5518;
 }
 .persistent-app-frame .workflow-main-step.status-marketing,
 .persistent-app-frame .workflow-main-step.status-reserved,
@@ -111,48 +111,48 @@
 .persistent-app-frame .workflow-status-card.status-marketing,
 .persistent-app-frame .workflow-status-card.status-reserved,
 .persistent-app-frame .workflow-status-card.status-notary {
-  background: #e6f1f8 !important;
-  border-color: #a8c5d6 !important;
-  color: #285e78 !important;
+  background: #e6f1f8;
+  border-color: #a8c5d6;
+  color: #285e78;
 }
 .persistent-app-frame .workflow-main-step.status-sold,
 .persistent-app-frame .workflow-status-card.status-sold {
-  background: #e5f4e9 !important;
-  border-color: #98bea4 !important;
-  color: #275f3d !important;
+  background: #e5f4e9;
+  border-color: #98bea4;
+  color: #275f3d;
 }
 .persistent-app-frame .workflow-main-step.status-archived,
 .persistent-app-frame .workflow-status-card.status-archived {
-  background: #edf1f0 !important;
-  border-color: #c7d1cf !important;
-  color: #4d5d5e !important;
+  background: #edf1f0;
+  border-color: #c7d1cf;
+  color: #4d5d5e;
 }
 .persistent-app-frame .workflow-status-card.status-lost,
 .persistent-app-frame .workflow-status-card.status-withdrawn {
-  background: #fbe9e9 !important;
-  border-color: #d7a3a4 !important;
-  color: #873b3e !important;
+  background: #fbe9e9;
+  border-color: #d7a3a4;
+  color: #873b3e;
 }
 
 /* Modul 04: Zusammenfassungen, Matches und Status-Pills auf heller Fläche. */
 .persistent-app-frame .inquiry-summary > div,
 .persistent-app-frame .match-row,
 .persistent-app-frame .match-reasons span {
-  background: #f7f9f8 !important;
-  border-color: #d8e0de !important;
-  color: #263536 !important;
+  background: #f7f9f8;
+  border-color: #d8e0de;
+  color: #263536;
 }
-.persistent-app-frame .inquiry-row { border-color: #dde5e3 !important; }
+.persistent-app-frame .inquiry-row { border-color: #dde5e3; }
 .persistent-app-frame .inquiry-status {
-  background: #edf1f0 !important;
-  color: #465758 !important;
+  background: #edf1f0;
+  color: #465758;
 }
-.persistent-app-frame .inquiry-status.new { background: #e6f1f8 !important; color: #285e78 !important; }
+.persistent-app-frame .inquiry-status.new { background: #e6f1f8; color: #285e78; }
 .persistent-app-frame .inquiry-status.contacted,
-.persistent-app-frame .inquiry-status.qualified { background: #e5f4e9 !important; color: #275f3d !important; }
-.persistent-app-frame .inquiry-status.viewing_planned { background: #fff3d8 !important; color: #6b5518 !important; }
-.persistent-app-frame .inquiry-status.closed { background: #edf1f0 !important; color: #4d5d5e !important; }
-.persistent-app-frame .inquiry-status.lost { background: #fbe9e9 !important; color: #873b3e !important; }
+.persistent-app-frame .inquiry-status.qualified { background: #e5f4e9; color: #275f3d; }
+.persistent-app-frame .inquiry-status.viewing_planned { background: #fff3d8; color: #6b5518; }
+.persistent-app-frame .inquiry-status.closed { background: #edf1f0; color: #4d5d5e; }
+.persistent-app-frame .inquiry-status.lost { background: #fbe9e9; color: #873b3e; }
 
 /* Deutlich sichtbare Abschnittsnavigation für Anfragen, Suchprofile und Besichtigungen. */
 .record-section-nav {
@@ -195,7 +195,7 @@
 
 /* Aufgaben: Erfassung als Modal oberhalb der Wiedervorlagen. */
 .tasks-page.tasks-page-modal-layout {
-  grid-template-columns: 1fr !important;
+  grid-template-columns: 1fr;
 }
 .task-create-toolbar {
   display: flex;
@@ -281,34 +281,34 @@
 
 /* Immobilien-Karte: Popup und Attribution waren noch dunkel. */
 .persistent-app-frame .property-map {
-  border-color: #d4dddb !important;
+  border-color: #d4dddb;
 }
 .persistent-app-frame .property-map-popup {
-  background: rgba(255, 255, 255, .97) !important;
-  border-color: #cbd6d4 !important;
-  color: #263536 !important;
+  background: rgba(255, 255, 255, .97);
+  border-color: #cbd6d4;
+  color: #263536;
 }
 .persistent-app-frame .property-map-popup-head {
-  border-bottom-color: #e0e7e5 !important;
+  border-bottom-color: #e0e7e5;
 }
 .persistent-app-frame .property-map-popup-head small,
 .persistent-app-frame .property-map-popup-item small,
 .persistent-app-frame .map-coverage-note {
-  color: #5f6f70 !important;
+  color: #5f6f70;
 }
 .persistent-app-frame .property-map-popup-head button {
-  background: #eef2f1 !important;
-  color: #3a4a4b !important;
+  background: #eef2f1;
+  color: #3a4a4b;
 }
 .persistent-app-frame .property-map-popup-head button:hover {
-  background: #dfe8e5 !important;
+  background: #dfe8e5;
 }
 .persistent-app-frame .property-map-popup-item:hover {
-  background: #eef2f1 !important;
+  background: #eef2f1;
 }
 .persistent-app-frame .property-map-attribution {
-  background: rgba(255, 255, 255, .92) !important;
-  color: #3a4a4b !important;
+  background: rgba(255, 255, 255, .92);
+  color: #3a4a4b;
 }
 
 /* Lange, ungetrennte Zeichenketten (URLs, Freitext ohne Leerzeichen) dürfen
@@ -328,159 +328,159 @@
 /* Verkäufer-Leads: Pipeline und Objektstatus-Badges waren noch dunkel und
    dadurch kontrastarm. Nur Farben – Kachelgrößen und Grid bleiben unverändert. */
 .persistent-app-frame .lead-workflow-step {
-  background: #ffffff !important;
-  border-color: #d4dddb !important;
-  color: #263536 !important;
+  background: #ffffff;
+  border-color: #d4dddb;
+  color: #263536;
 }
 .persistent-app-frame .lead-workflow-step:hover {
-  background: #f4f7f6 !important;
-  border-color: #aebbb8 !important;
+  background: #f4f7f6;
+  border-color: #aebbb8;
 }
 .persistent-app-frame .lead-workflow-step.active {
-  background: #dfe8e5 !important;
-  border-color: #7f9490 !important;
+  background: #dfe8e5;
+  border-color: #7f9490;
 }
 .persistent-app-frame .lead-workflow-step.outcome-won {
-  background: #e9f4ec !important;
-  border-color: #98bea4 !important;
+  background: #e9f4ec;
+  border-color: #98bea4;
 }
 .persistent-app-frame .lead-workflow-step.outcome-lost {
-  background: #fbeeee !important;
-  border-color: #d3aaac !important;
+  background: #fbeeee;
+  border-color: #d3aaac;
 }
 .persistent-app-frame .lead-workflow-index {
-  border-color: #b3bfbd !important;
-  color: #4d5d5e !important;
+  border-color: #b3bfbd;
+  color: #4d5d5e;
 }
 .persistent-app-frame .lead-workflow-copy strong,
 .persistent-app-frame .lead-row-main-link strong {
-  color: #1d2a2b !important;
+  color: #1d2a2b;
 }
 .persistent-app-frame .lead-workflow-copy small,
 .persistent-app-frame .lead-workflow-popover-head small,
 .persistent-app-frame .lead-workflow-finished,
 .persistent-app-frame .lead-workflow-action small {
-  color: #5f6f70 !important;
+  color: #5f6f70;
 }
 .persistent-app-frame .lead-workflow-menu[open] > summary {
-  background: #eef2f1 !important;
-  border-color: #9eaeab !important;
+  background: #eef2f1;
+  border-color: #9eaeab;
 }
 .persistent-app-frame .lead-workflow-popover {
-  background: #ffffff !important;
-  border-color: #cbd6d4 !important;
-  color: #263536 !important;
+  background: #ffffff;
+  border-color: #cbd6d4;
+  color: #263536;
 }
 .persistent-app-frame .lead-workflow-popover-head {
-  border-bottom-color: #e0e7e5 !important;
+  border-bottom-color: #e0e7e5;
 }
 .persistent-app-frame .lead-workflow-action {
-  color: #263536 !important;
+  color: #263536;
 }
 .persistent-app-frame .lead-workflow-action:hover {
-  background: #eef2f1 !important;
+  background: #eef2f1;
 }
 .persistent-app-frame .lead-row-main-link:hover strong,
 .persistent-app-frame .lead-open-link:hover {
-  color: #0f1a1b !important;
+  color: #0f1a1b;
 }
 .persistent-app-frame .lead-open-link {
-  color: #4d5d5e !important;
+  color: #4d5d5e;
 }
 
 .persistent-app-frame .lead-object-state {
-  background: #edf1f0 !important;
-  border-color: #c7d1cf !important;
-  color: #465758 !important;
+  background: #edf1f0;
+  border-color: #c7d1cf;
+  color: #465758;
 }
 .persistent-app-frame .lead-object-state.state-prepare {
-  background: #fbf1de !important;
-  border-color: #d7bf92 !important;
-  color: #6b5320 !important;
+  background: #fbf1de;
+  border-color: #d7bf92;
+  color: #6b5320;
 }
 .persistent-app-frame .lead-object-state.state-ready {
-  background: #e9f4ec !important;
-  border-color: #98bea4 !important;
-  color: #275f3d !important;
+  background: #e9f4ec;
+  border-color: #98bea4;
+  color: #275f3d;
 }
 .persistent-app-frame .lead-object-state.state-created {
-  background: #e6f1f8 !important;
-  border-color: #a8c5d6 !important;
-  color: #285e78 !important;
+  background: #e6f1f8;
+  border-color: #a8c5d6;
+  color: #285e78;
 }
-.persistent-app-frame .lead-object-action.ready { background: #e9f4ec !important; }
-.persistent-app-frame .lead-object-action.created { background: #e6f1f8 !important; }
+.persistent-app-frame .lead-object-action.ready { background: #e9f4ec; }
+.persistent-app-frame .lead-object-action.created { background: #e6f1f8; }
 
 .persistent-app-frame .lead-workflow-copy .won-breakdown,
 .persistent-app-frame .lead-workflow-overdue {
-  color: #5f6f70 !important;
+  color: #5f6f70;
 }
 .persistent-app-frame .lead-workflow-step.outcome-won .lead-workflow-copy strong,
 .persistent-app-frame .lead-workflow-step.outcome-lost .lead-workflow-copy strong {
-  color: #1d2a2b !important;
+  color: #1d2a2b;
 }
 .persistent-app-frame .lead-workflow-count {
-  color: #1d2a2b !important;
+  color: #1d2a2b;
 }
 
 /* Dashboard: die Benachrichtigungsglocke im Inhaltsbereich war noch dunkel. */
 .persistent-app-frame .notification-bell-trigger {
-  background: #ffffff !important;
-  border-color: #cbd6d4 !important;
-  color: #4d5d5e !important;
+  background: #ffffff;
+  border-color: #cbd6d4;
+  color: #4d5d5e;
 }
 .persistent-app-frame .notification-bell-trigger:hover,
 .persistent-app-frame .notification-bell[open] .notification-bell-trigger {
-  background: #eef2f1 !important;
-  border-color: #9eaeab !important;
+  background: #eef2f1;
+  border-color: #9eaeab;
 }
 .persistent-app-frame .notification-bell-count {
-  background: #2f4b47 !important;
-  border-color: #ffffff !important;
-  color: #ffffff !important;
+  background: #2f4b47;
+  border-color: #ffffff;
+  color: #ffffff;
 }
 .persistent-app-frame .notification-bell-popover {
-  background: #ffffff !important;
-  border-color: #cbd6d4 !important;
-  color: #263536 !important;
+  background: #ffffff;
+  border-color: #cbd6d4;
+  color: #263536;
 }
 .persistent-app-frame .notification-bell-head {
-  border-bottom-color: #e0e7e5 !important;
+  border-bottom-color: #e0e7e5;
 }
 .persistent-app-frame .notification-bell-head small,
 .persistent-app-frame .notification-bell-item-message,
 .persistent-app-frame .notification-bell-item small,
 .persistent-app-frame .notification-bell-empty {
-  color: #5f6f70 !important;
+  color: #5f6f70;
 }
 .persistent-app-frame .notification-bell-head > a,
 .persistent-app-frame .notification-bell-footer {
-  color: #4d5d5e !important;
+  color: #4d5d5e;
 }
 .persistent-app-frame .notification-bell-head > a:hover,
 .persistent-app-frame .notification-bell-footer:hover {
-  color: #0f1a1b !important;
+  color: #0f1a1b;
 }
 .persistent-app-frame .notification-bell-item {
-  border-bottom-color: #e6ebea !important;
-  color: #263536 !important;
+  border-bottom-color: #e6ebea;
+  color: #263536;
 }
-.persistent-app-frame .notification-bell-item:hover { background: #eef2f1 !important; }
-.persistent-app-frame .notification-bell-item.unread { background: #f2f6f5 !important; }
-.persistent-app-frame .notification-bell-item.unread:hover { background: #e7edec !important; }
-.persistent-app-frame .notification-bell-item-title i { background: #2f4b47 !important; }
-.persistent-app-frame .notification-bell-footer { background: #f7f9f8 !important; }
+.persistent-app-frame .notification-bell-item:hover { background: #eef2f1; }
+.persistent-app-frame .notification-bell-item.unread { background: #f2f6f5; }
+.persistent-app-frame .notification-bell-item.unread:hover { background: #e7edec; }
+.persistent-app-frame .notification-bell-item-title i { background: #2f4b47; }
+.persistent-app-frame .notification-bell-footer { background: #f7f9f8; }
 
 /* Der Build-Stempel liegt ausserhalb von .persistent-app-frame und lag daher
    im CRM unverändert dunkel über der Seitenleiste. */
 body:has(.persistent-app-frame) .build-version {
-  left: auto !important;
-  top: auto !important;
-  right: 16px !important;
-  bottom: 12px !important;
-  background: rgba(255, 255, 255, .92) !important;
-  color: #647273 !important;
-  border-color: #cbd5d3 !important;
+  left: auto;
+  top: auto;
+  right: 16px;
+  bottom: 12px;
+  background: rgba(255, 255, 255, .92);
+  color: #647273;
+  border-color: #cbd5d3;
 }
 
 /* Thema 2 · Objektnachweis: archivierte Nachweise erkennbar, Erfassungsformular
@@ -503,9 +503,9 @@ body:has(.persistent-app-frame) .build-version {
    Ergebnis war dunkler Text auf dunklem Grund, praktisch unlesbar.
    Aufgefallen beim Fotografieren der Masken fuer die Anleitung. */
 .persistent-app-frame .readiness-edit-card > .readiness-number-grid > div {
-  background: #ffffff !important;
-  border-color: #d6dfdd !important;
+  background: #ffffff;
+  border-color: #d6dfdd;
 }
 .persistent-app-frame .readiness-edit-card > .readiness-number-grid > div small {
-  color: #697778 !important;
+  color: #697778;
 }

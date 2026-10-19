@@ -9,10 +9,10 @@
 
 .akte-blick { display: grid; gap: 12px; }
 .akte-blick-kopf { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 10px 16px; }
-.akte-blick-satz { margin: 0; color: #1b2733; font-size: 15px; font-weight: 600; line-height: 1.4; }
+.akte-blick-satz { margin: 0; color: var(--crm-farbe-text); font-size: 15px; font-weight: 600; line-height: 1.4; }
 .akte-blick-satz + .akte-blick-satz { margin-top: 2px; }
 .akte-blick-erreichbar { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 6px 0 0; font-size: 13px; }
-.akte-blick-erreichbar a { color: #0b5cad; }
+.akte-blick-erreichbar a { color: var(--crm-farbe-verweis); }
 .akte-blick-aktionen { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px; }
 
 .akte-blick-zahlen { margin: 0; }
@@ -32,15 +32,15 @@
   background: #f3f7fb;
   color: #17406b;
 }
-.akte-naechster.ueberfaellig { border-color: #e2b4ae; background: #fdf4f3; color: #a12a1f; }
+.akte-naechster.ueberfaellig { border-color: #e2b4ae; background: #fdf4f3; color: var(--crm-farbe-fehler); }
 .akte-naechster > span { font-size: var(--crm-pill-font-sm); font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
 .akte-naechster a { color: inherit; }
 .akte-naechster strong { font-size: 15px; }
-.akte-naechster small { flex: 1 1 220px; color: #3d4a56; }
+.akte-naechster small { flex: 1 1 220px; color: var(--crm-farbe-text-2); }
 
 /* Status aendern: zugeklappt, damit "Verloren" oder "Archiviert" nicht als
  * erster Knopf der Akte im Weg stehen. */
-.akte-blick-status > summary { cursor: pointer; color: #0b5cad; font-size: 13px; list-style: none; }
+.akte-blick-status > summary { cursor: pointer; color: var(--crm-farbe-verweis); font-size: 13px; list-style: none; }
 .akte-blick-status > summary::-webkit-details-marker { display: none; }
 .akte-blick-status > summary::after { content: " ▾"; }
 .akte-blick-status[open] > summary::after { content: " ▴"; }

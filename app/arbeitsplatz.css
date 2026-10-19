@@ -30,8 +30,8 @@
   height: calc(100vh - var(--arbeitsplatz-oben) - 26px);
   display: flex;
   flex-direction: column;
-  border-right: 1px solid #cdd3d9;
-  background: #ffffff;
+  border-right: 1px solid var(--crm-farbe-linie);
+  background: var(--crm-farbe-flaeche);
   min-width: 0;
 }
 
@@ -40,7 +40,7 @@
   display: flex;
   gap: 6px;
   padding: 8px;
-  border-bottom: 1px solid #dde2e7;
+  border-bottom: 1px solid var(--crm-farbe-linie-leise);
   background: #f8f9fa;
 }
 
@@ -51,10 +51,10 @@
   box-sizing: border-box;
   height: 30px;
   padding: 0 9px;
-  border: 1px solid #c3cad1;
+  border: 1px solid var(--crm-farbe-linie-feld);
   border-radius: var(--crm-field-radius);
-  background: #ffffff;
-  color: #1b2733;
+  background: var(--crm-farbe-flaeche);
+  color: var(--crm-farbe-text);
   font: inherit;
   font-size: 13px;
 }
@@ -66,15 +66,15 @@
   height: 30px;
   padding: 0 10px;
   border-radius: var(--crm-field-radius);
-  background: #062037;
-  color: #ffffff;
+  background: var(--crm-farbe-handlung);
+  color: var(--crm-farbe-auf-dunkel);
   font-size: 13px;
   font-weight: 500;
   text-decoration: none;
   white-space: nowrap;
 }
 
-.arbeitsplatz-neu:hover { background: #102d47; color: #ffffff; }
+.arbeitsplatz-neu:hover { background: #102d47; color: var(--crm-farbe-auf-dunkel); }
 
 .arbeitsplatz-zeilen {
   flex: 1 1 auto;
@@ -87,7 +87,7 @@
   gap: 2px;
   padding: 8px 10px 8px 12px;
   border-bottom: 1px solid #eef1f4;
-  color: #1b2733;
+  color: var(--crm-farbe-text);
   text-decoration: none;
 }
 
@@ -107,7 +107,7 @@
 }
 
 .arbeitsplatz-zeile-nummer {
-  color: #3d4a56;
+  color: var(--crm-farbe-text-2);
   font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
@@ -125,7 +125,7 @@
   align-items: center;
   gap: 8px;
   min-width: 0;
-  color: #4a5763;
+  color: var(--crm-farbe-text-leise);
   font-size: 12px;
   white-space: nowrap;
 }
@@ -137,7 +137,7 @@
 
 .arbeitsplatz-zeile-preis {
   margin-left: auto;
-  color: #1b2733;
+  color: var(--crm-farbe-text);
   font-variant-numeric: tabular-nums;
 }
 
@@ -152,7 +152,7 @@
 .arbeitsplatz-hinweis {
   margin: 0;
   padding: 12px;
-  color: #4a5763;
+  color: var(--crm-farbe-text-leise);
   font-size: 13px;
   line-height: 1.5;
 }
@@ -160,9 +160,9 @@
 .arbeitsplatz-liste-fuss {
   flex: 0 0 auto;
   padding: 7px 10px;
-  border-top: 1px solid #dde2e7;
+  border-top: 1px solid var(--crm-farbe-linie-leise);
   background: #f8f9fa;
-  color: #3d4a56;
+  color: var(--crm-farbe-text-2);
   font-size: 12px;
 }
 
@@ -176,12 +176,12 @@
   flex-wrap: wrap;
   gap: 6px 12px;
   padding: 12px 22px 10px;
-  border-bottom: 1px solid #dde2e7;
-  background: #ffffff;
+  border-bottom: 1px solid var(--crm-farbe-linie-leise);
+  background: var(--crm-farbe-flaeche);
 }
 
 .arbeitsplatz-kopf-nummer {
-  color: #3d4a56;
+  color: var(--crm-farbe-text-2);
   font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
@@ -193,10 +193,10 @@
   line-height: inherit;
   font-size: 17px;
   font-weight: 600;
-  color: #1b2733;
+  color: var(--crm-farbe-text);
 }
 
-.arbeitsplatz-kopf-ort { color: #4a5763; font-size: 13px; }
+.arbeitsplatz-kopf-ort { color: var(--crm-farbe-text-leise); font-size: 13px; }
 
 /* Knoepfe im Kopf einer Akte (14.10.2026): rechts, klein, immer sichtbar. */
 .arbeitsplatz-kopf-aktionen { display: inline-flex; gap: 6px; margin-left: auto; }
@@ -207,8 +207,8 @@
 .arbeitsplatz-reiter {
   display: flex;
   padding: 0 14px;
-  border-bottom: 1px solid #cdd3d9;
-  background: #ffffff;
+  border-bottom: 1px solid var(--crm-farbe-linie);
+  background: var(--crm-farbe-flaeche);
   overflow-x: auto;
 }
 
@@ -216,18 +216,18 @@
   flex: 0 0 auto;
   padding: 10px 12px 8px;
   border-bottom: 2px solid transparent;
-  color: #3d4a56;
+  color: var(--crm-farbe-text-2);
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
   text-decoration: none;
 }
 
-.arbeitsplatz-reiter-eintrag:hover { background: #f3f6fa; color: #1b2733; }
+.arbeitsplatz-reiter-eintrag:hover { background: #f3f6fa; color: var(--crm-farbe-text); }
 
 .arbeitsplatz-reiter-eintrag.aktiv {
-  border-bottom-color: #062037;
-  color: #062037;
+  border-bottom-color: var(--crm-farbe-handlung);
+  color: var(--crm-farbe-handlung);
   font-weight: 600;
 }
 
@@ -239,7 +239,7 @@
   align-items: center;
   gap: 2px;
   padding: 5px 14px;
-  border-bottom: 1px solid #dde2e7;
+  border-bottom: 1px solid var(--crm-farbe-linie-leise);
   background: #f4f6f8;
   overflow-x: auto;
 }
@@ -251,23 +251,23 @@
   gap: 4px;
   padding: var(--crm-pill-padding-sm);
   border-radius: var(--crm-pill-radius);
-  color: #3d4a56;
+  color: var(--crm-farbe-text-2);
   font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
   text-decoration: none;
 }
 
-.arbeitsplatz-unterreiter-eintrag:hover { background: #e4e8ec; color: #1b2733; }
+.arbeitsplatz-unterreiter-eintrag:hover { background: #e4e8ec; color: var(--crm-farbe-text); }
 
 .arbeitsplatz-unterreiter-eintrag.aktiv {
-  background: #062037;
-  color: #ffffff;
+  background: var(--crm-farbe-handlung);
+  color: var(--crm-farbe-auf-dunkel);
   font-weight: 600;
 }
 
 /* Ein Verweis hinaus in eine andere Akte: Linkfarbe und Pfeil, abgesetzt. */
-.arbeitsplatz-unterreiter-eintrag.hinaus { color: #0b5cad; }
+.arbeitsplatz-unterreiter-eintrag.hinaus { color: var(--crm-farbe-verweis); }
 .arbeitsplatz-unterreiter-eintrag.hinaus svg { width: 10px; height: 10px; }
 .arbeitsplatz-unterreiter-eintrag:not(.hinaus) + .hinaus { margin-left: 14px; }
 
@@ -327,7 +327,7 @@
     height: auto;
     max-height: 280px;
     border-right: 0;
-    border-bottom: 1px solid #cdd3d9;
+    border-bottom: 1px solid var(--crm-farbe-linie);
   }
 }
 
@@ -342,15 +342,15 @@
 }
 .akte-felder > div { min-width: 0; }
 .akte-felder > div.breit { grid-column: 1 / -1; }
-.akte-felder dt { color: #4a5763; font-size: 12px; }
-.akte-felder dd { margin: 2px 0 0; color: #1b2733; font-size: 13px; overflow-wrap: anywhere; white-space: pre-line; }
-.akte-felder dd a { color: #0b5cad; text-decoration: none; }
+.akte-felder dt { color: var(--crm-farbe-text-leise); font-size: 12px; }
+.akte-felder dd { margin: 2px 0 0; color: var(--crm-farbe-text); font-size: 13px; overflow-wrap: anywhere; white-space: pre-line; }
+.akte-felder dd a { color: var(--crm-farbe-verweis); text-decoration: none; }
 .akte-felder dd a:hover { text-decoration: underline; }
-.akte-felder .leise { color: #6b7782; font-size: 12px; }
+.akte-felder .leise { color: var(--crm-farbe-text-blass); font-size: 12px; }
 
 /* Zwischenueberschrift in einem langen Formular der Akte (Objektdaten,
  * 19.10.2026): gliedert die 23 Stammdatenfelder in Gruppen. */
-.akte-feldgruppe { margin: 22px 0 10px; color: #3d4a56; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.akte-feldgruppe { margin: 22px 0 10px; color: var(--crm-farbe-text-2); font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
 .akte-feldgruppe:first-of-type { margin-top: 4px; }
 /* "Bearbeiten" unter den Feldern einer Lesekarte (Geldwaescheakte,
  * 19.10.2026): etwas Luft, damit der Knopf nicht an der letzten Zeile klebt. */
@@ -369,4 +369,4 @@
 
 /* Die rechte Seite, solange es noch keinen Datensatz gibt
  * (app/components/leerer-arbeitsplatz.tsx). */
-.leere-akte .programm-erklaerung { margin: 0 0 12px; color: #3d4a56; font-size: 13px; line-height: 1.5; }
+.leere-akte .programm-erklaerung { margin: 0 0 12px; color: var(--crm-farbe-text-2); font-size: 13px; line-height: 1.5; }

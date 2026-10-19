@@ -26,10 +26,10 @@
   box-sizing: border-box;
   height: 32px;
   padding: 0 9px;
-  border: 1px solid #c3cad1;
+  border: 1px solid var(--crm-farbe-linie-feld);
   border-radius: var(--crm-field-radius);
-  background: #ffffff;
-  color: #1b2733;
+  background: var(--crm-farbe-flaeche);
+  color: var(--crm-farbe-text);
   font: inherit;
   font-size: 13px;
 }
@@ -39,7 +39,7 @@
 
 .programm-liste-zaehler {
   margin-left: auto;
-  color: #3d4a56;
+  color: var(--crm-farbe-text-2);
   font-size: 13px;
   white-space: nowrap;
 }
@@ -50,23 +50,23 @@
   height: 32px;
   padding: 0 12px;
   border-radius: var(--crm-field-radius);
-  background: #062037;
-  color: #ffffff;
+  background: var(--crm-farbe-handlung);
+  color: var(--crm-farbe-auf-dunkel);
   font-size: 13px;
   font-weight: 500;
   text-decoration: none;
   white-space: nowrap;
 }
 
-.programm-liste-neu:hover { background: #102d47; color: #ffffff; }
+.programm-liste-neu:hover { background: #102d47; color: var(--crm-farbe-auf-dunkel); }
 
 .programm-tabelle-rahmen {
   max-width: var(--crm-content-max);
   margin-left: auto;
   margin-right: auto;
-  border: 1px solid #cdd3d9;
+  border: 1px solid var(--crm-farbe-linie);
   border-radius: var(--crm-card-radius-sm);
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
   overflow-x: auto;
 }
 
@@ -74,16 +74,16 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
-  color: #1b2733;
+  color: var(--crm-farbe-text);
 }
 
 .programm-tabelle th {
   position: sticky;
   top: 0;
   padding: 8px 12px;
-  border-bottom: 1px solid #cdd3d9;
+  border-bottom: 1px solid var(--crm-farbe-linie);
   background: #eef1f4;
-  color: #3d4a56;
+  color: var(--crm-farbe-text-2);
   font-size: 12px;
   font-weight: 600;
   text-align: left;
@@ -99,18 +99,18 @@
 .programm-tabelle tbody tr:hover { background: #f3f6fa; }
 .programm-tabelle tbody tr:last-child td { border-bottom: 0; }
 
-.programm-tabelle a { color: #0b5cad; text-decoration: none; }
+.programm-tabelle a { color: var(--crm-farbe-verweis); text-decoration: none; }
 .programm-tabelle a:hover { text-decoration: underline; }
-.programm-tabelle td:nth-child(2) a { color: #1b2733; font-weight: 600; }
+.programm-tabelle td:nth-child(2) a { color: var(--crm-farbe-text); font-weight: 600; }
 
 .programm-tabelle .zahl { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .programm-tabelle .rechts { text-align: right; }
-.programm-tabelle .leise { color: #6b7782; }
+.programm-tabelle .leise { color: var(--crm-farbe-text-blass); }
 
 .programm-liste-leer {
   margin: 0;
   padding: 18px 14px;
-  color: #4a5763;
+  color: var(--crm-farbe-text-leise);
   font-size: 13px;
 }
 
@@ -122,7 +122,7 @@
   justify-content: space-between;
   align-items: center;
   font-size: 13px;
-  color: #3d4a56;
+  color: var(--crm-farbe-text-2);
 }
 
 @media (max-width: 760px) {
@@ -164,22 +164,22 @@
  * Auf "Mein Tag" und in den Aufgaben. */
 .programm-umfang {
   display: inline-flex;
-  border: 1px solid #c3cad1;
+  border: 1px solid var(--crm-farbe-linie-feld);
   border-radius: var(--crm-field-radius);
   overflow: hidden;
 }
 
 .programm-umfang a {
   padding: 6px 14px;
-  color: #3d4a56;
+  color: var(--crm-farbe-text-2);
   font-size: 13px;
   text-decoration: none;
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
 }
 
-.programm-umfang a + a { border-left: 1px solid #c3cad1; }
-.programm-umfang a:hover { background: #f3f6fa; color: #1b2733; }
-.programm-umfang a.aktiv { background: #062037; color: #ffffff; font-weight: 600; }
+.programm-umfang a + a { border-left: 1px solid var(--crm-farbe-linie-feld); }
+.programm-umfang a:hover { background: #f3f6fa; color: var(--crm-farbe-text); }
+.programm-umfang a.aktiv { background: var(--crm-farbe-handlung); color: var(--crm-farbe-auf-dunkel); font-weight: 600; }
 
 /* Ein Knopf in der Werkzeugleiste (etwa "+ Aufgabe anlegen") in der Hoehe
  * der Felder daneben. */
@@ -195,10 +195,10 @@
   box-sizing: border-box;
   height: 28px;
   padding: 0 6px;
-  border: 1px solid #c3cad1;
+  border: 1px solid var(--crm-farbe-linie-feld);
   border-radius: var(--crm-field-radius);
-  background: #ffffff;
-  color: #1b2733;
+  background: var(--crm-farbe-flaeche);
+  color: var(--crm-farbe-text);
   font: inherit;
   font-size: 12px;
 }
@@ -211,7 +211,7 @@
 }
 
 /* Ueberfaellig: das Datum in Rot (#a12a1f auf Weiss 6,9:1), sonst ruhig. */
-.programm-tabelle tr.ueberfaellig td:first-child { color: #a12a1f; font-weight: 600; }
+.programm-tabelle tr.ueberfaellig td:first-child { color: var(--crm-farbe-fehler); font-weight: 600; }
 
 /* Kennzahlen einer Liste als eine ruhige Zeile unter der Werkzeugleiste --
  * statt fuenf grosser Kacheln (Makleraufträge, Aufmaß, 12.10.2026). */
@@ -222,22 +222,22 @@
   display: flex;
   flex-wrap: wrap;
   gap: 4px 18px;
-  color: #4a5763;
+  color: var(--crm-farbe-text-leise);
   font-size: 12px;
 }
 
-.programm-kennzahlen strong { color: #1b2733; font-size: 13px; font-variant-numeric: tabular-nums; }
+.programm-kennzahlen strong { color: var(--crm-farbe-text); font-size: 13px; font-variant-numeric: tabular-nums; }
 .programm-kennzahlen .warnung strong,
-.programm-tabelle .warnung-text { color: #a12a1f; }
+.programm-tabelle .warnung-text { color: var(--crm-farbe-fehler); }
 .programm-tabelle .warnung-text { margin-top: 3px; font-size: 11px; font-weight: 600; }
 .programm-tabelle td > .leise,
 .programm-tabelle td .leise { font-size: 12px; }
-.programm-liste-leer a { color: #0b5cad; }
+.programm-liste-leer a { color: var(--crm-farbe-verweis); }
 /* Kennzahlen, die filtern (Lead-Stufen, P2-8): Link in der Farbe der Zeile, gewaehlte Stufe hervorgehoben. */
 .programm-kennzahlen a { color: inherit; text-decoration: none; border-bottom: 2px solid transparent; }
-.programm-kennzahlen a:hover { color: #1b2733; border-bottom-color: #c3cad1; }
-.programm-kennzahlen a.aktiv { color: #1b2733; border-bottom-color: #062037; font-weight: 600; }
-.programm-kennzahlen .leise { color: #6b7782; }
+.programm-kennzahlen a:hover { color: var(--crm-farbe-text); border-bottom-color: var(--crm-farbe-linie-feld); }
+.programm-kennzahlen a.aktiv { color: var(--crm-farbe-text); border-bottom-color: var(--crm-farbe-handlung); font-weight: 600; }
+.programm-kennzahlen .leise { color: var(--crm-farbe-text-blass); }
 .programm-kennzahlen form { margin: 0; }
 
 /* Zwischenzeile einer gruppierten Tabelle ("Ueberfaellig · 2"). Sie steht
@@ -245,14 +245,14 @@
 .programm-tabelle tr.programm-gruppe th {
   position: static;
   padding: 6px 12px;
-  border-top: 1px solid #cdd3d9;
+  border-top: 1px solid var(--crm-farbe-linie);
   background: #f7f9fa;
-  color: #1b2733;
+  color: var(--crm-farbe-text);
   font-size: 12px;
 }
 .programm-tabelle tr.programm-gruppe:first-child th { border-top: 0; }
 .programm-tabelle tr.programm-gruppe .leise { font-weight: 400; }
-.programm-tabelle tr.frist-vorbei td:last-child { color: #a12a1f; font-weight: 600; }
+.programm-tabelle tr.frist-vorbei td:last-child { color: var(--crm-farbe-fehler); font-weight: 600; }
 
 /* Ein Aufklapper in der Werkzeugleiste ("Worum geht es ...?") oeffnet als
  * Tafel unter dem Knopf, statt die Leiste umzubrechen. */
@@ -265,26 +265,26 @@
   width: min(520px, 86vw);
   margin-top: 6px;
   padding: var(--crm-card-padding-sm);
-  border: 1px solid #cdd3d9;
+  border: 1px solid var(--crm-farbe-linie);
   border-radius: var(--crm-card-radius-sm);
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
   box-shadow: 0 6px 18px rgba(6, 32, 55, 0.12);
 }
-.programm-erklaerung { margin: 0; color: #3d4a56; font-size: 13px; line-height: 1.5; }
+.programm-erklaerung { margin: 0; color: var(--crm-farbe-text-2); font-size: 13px; line-height: 1.5; }
 .programm-erklaerung + .programm-erklaerung { margin-top: 8px; }
 
 /* Ein Haken in der Werkzeugleiste ("Archiv einbeziehen"). */
-.programm-liste-haken { display: inline-flex; align-items: center; gap: 6px; color: #3d4a56; font-size: 13px; white-space: nowrap; }
+.programm-liste-haken { display: inline-flex; align-items: center; gap: 6px; color: var(--crm-farbe-text-2); font-size: 13px; white-space: nowrap; }
 .programm-liste-haken input { width: 15px; height: 15px; margin: 0; }
 
 /* Zaehler links, Knopf rechts (Benachrichtigungen). */
 .programm-liste-zaehler-links { margin-left: 0; }
-.programm-liste-zaehler strong { color: #1b2733; font-variant-numeric: tabular-nums; }
+.programm-liste-zaehler strong { color: var(--crm-farbe-text); font-variant-numeric: tabular-nums; }
 .programm-liste-rechts { margin: 0 0 0 auto; }
 
 /* Ungelesen: Meldung fett und ein Punkt davor, sonst ruhig. */
 .programm-tabelle tr.ungelesen td:nth-child(2) { font-weight: 600; }
-.programm-tabelle tr.ungelesen td:first-child::before { content: "●"; margin-right: 6px; color: #0b5cad; font-size: 9px; vertical-align: 2px; }
+.programm-tabelle tr.ungelesen td:first-child::before { content: "●"; margin-right: 6px; color: var(--crm-farbe-verweis); font-size: 9px; vertical-align: 2px; }
 .programm-tabelle td form { margin: 0; }
 
 /* Ein Verweis, der ein Formular abschickt (Meldung oeffnen und dabei als
@@ -293,13 +293,13 @@
   padding: 0;
   border: 0;
   background: none;
-  color: #1b2733;
+  color: var(--crm-farbe-text);
   font: inherit;
   font-weight: 600;
   text-align: left;
   cursor: pointer;
 }
-.programm-tabelle-verweis:hover { color: #0b5cad; text-decoration: underline; }
+.programm-tabelle-verweis:hover { color: var(--crm-farbe-verweis); text-decoration: underline; }
 
 /* Mehrere Tabellen auf einer Seite (Kampagnen, Gebiete): je eine kleine
  * Kopfzeile, Tabelle, darunter der Aufklapper zum Anlegen. */
@@ -310,28 +310,28 @@
   display: grid;
   gap: 8px;
 }
-.programm-abschnitt-kopf { margin: 0; color: #1b2733; font-size: 14px; font-weight: 600; }
-.programm-abschnitt-kopf .leise { color: #6b7782; font-weight: 400; }
+.programm-abschnitt-kopf { margin: 0; color: var(--crm-farbe-text); font-size: 14px; font-weight: 600; }
+.programm-abschnitt-kopf .leise { color: var(--crm-farbe-text-blass); font-weight: 400; }
 .programm-abschnitt > .programm-tabelle-rahmen { width: 100%; }
 .programm-abschnitt .programm-aufklapper-inhalt > form {
   padding: 14px var(--crm-card-padding-x);
-  border: 1px solid #cdd3d9;
+  border: 1px solid var(--crm-farbe-linie);
   border-radius: var(--crm-card-radius-sm);
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
 }
-.programm-tabelle td.warnung { color: #a12a1f; font-weight: 600; }
+.programm-tabelle td.warnung { color: var(--crm-farbe-fehler); font-weight: 600; }
 
 /* Freier Zeitraum in der Werkzeugleiste (Auswertung): zwei Datumsfelder in
  * der Hoehe der anderen Felder. */
-.programm-liste-zeitraum { display: inline-flex; align-items: center; gap: 6px; margin: 0; color: #4a5763; font-size: 13px; }
+.programm-liste-zeitraum { display: inline-flex; align-items: center; gap: 6px; margin: 0; color: var(--crm-farbe-text-leise); font-size: 13px; }
 .programm-liste-zeitraum input[type="date"] {
   box-sizing: border-box;
   height: 32px;
   padding: 0 8px;
-  border: 1px solid #c3cad1;
+  border: 1px solid var(--crm-farbe-linie-feld);
   border-radius: var(--crm-field-radius);
-  background: #ffffff;
-  color: #1b2733;
+  background: var(--crm-farbe-flaeche);
+  color: var(--crm-farbe-text);
   font: inherit;
   font-size: 13px;
 }
@@ -353,9 +353,9 @@
 /* Systemhistorie: die geaenderten Felder je Zeile zum Aufklappen. Lange
  * Werte (ein ganzer Datensatz) brechen um, statt die Tabelle zu sprengen. */
 .programm-tabelle.historie td:last-child { max-width: 520px; }
-.historie-felder summary { color: #0b5cad; cursor: pointer; font-size: 12px; }
+.historie-felder summary { color: var(--crm-farbe-verweis); cursor: pointer; font-size: 12px; }
 .historie-felder dl { display: grid; gap: 4px; margin: 6px 0 0; }
-.historie-felder dt { color: #4a5763; font-size: 11px; }
+.historie-felder dt { color: var(--crm-farbe-text-leise); font-size: 11px; }
 .historie-felder dd { margin: 0; font-size: 12px; overflow-wrap: anywhere; }
 
 /* Fortschrittsbalken (Weiterbildung: erreichte Stunden zum Zielwert).
@@ -363,7 +363,7 @@
 .fortschritt { display: inline-flex; align-items: center; gap: 8px; min-width: 160px; }
 .fortschritt-balken { position: relative; flex: 1 1 120px; height: 8px; border-radius: 999px; background: #e3e8ed; overflow: hidden; }
 .fortschritt-balken > span { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--ton, #0b5cad); }
-.fortschritt-zahl { color: #3d4a56; font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fortschritt-zahl { color: var(--crm-farbe-text-2); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .fortschritt.ton-erreicht  { --ton: #2a7130; }
 .fortschritt.ton-laeuft    { --ton: #0b5cad; }
 .fortschritt.ton-knapp     { --ton: #b7791f; }
@@ -377,28 +377,28 @@
 .rolle-schalter {
   min-height: 26px;
   padding: 0 10px;
-  border: 1px solid #c3cad1;
+  border: 1px solid var(--crm-farbe-linie-feld);
   border-radius: var(--crm-pill-radius);
-  background: #ffffff;
-  color: #3d4a56;
+  background: var(--crm-farbe-flaeche);
+  color: var(--crm-farbe-text-2);
   font: inherit;
   font-size: 12px;
   cursor: pointer;
 }
-.rolle-schalter:hover { border-color: #0b5cad; color: #0b5cad; }
+.rolle-schalter:hover { border-color: var(--crm-farbe-verweis); color: var(--crm-farbe-verweis); }
 .rolle-schalter.an { border-color: #98bea4; background: #e5f4e9; color: #275f3d; font-weight: 600; }
 .rolle-schalter.an:hover { border-color: #b42318; background: #fbe9e9; color: #873b3e; }
-.rolle-zelle { color: #6b7782; }
+.rolle-zelle { color: var(--crm-farbe-text-blass); }
 .rolle-zelle.an { color: #275f3d; font-weight: 600; }
 .rolle-status { display: inline; margin-left: 6px; }
-.leise-verweis { color: #0b5cad; font-size: 12px; font-weight: 400; }
+.leise-verweis { color: var(--crm-farbe-verweis); font-size: 12px; font-weight: 400; }
 
 /* Prioritaet einer Aufgabe: Hoch und Dringend fallen auf, Normal und
  * Niedrig bleiben ruhig. Pfeil und Wort zusaetzlich zur Farbe. */
 .prioritaet { font-size: 12px; white-space: nowrap; }
-.prioritaet-low { color: #6b7782; }
+.prioritaet-low { color: var(--crm-farbe-text-blass); }
 .ueberfaellig-text { color: #b42318; font-weight: 600; }
-.prioritaet-normal { color: #3d4a56; }
+.prioritaet-normal { color: var(--crm-farbe-text-2); }
 .prioritaet-high { color: #8a4a00; font-weight: 600; }
 .prioritaet-urgent { color: #b42318; font-weight: 700; }
 .prioritaet-high::before { content: "▲ "; }

@@ -231,7 +231,7 @@
 
 .programm-arbeitsflaeche .programm-seite .data-card > form[method="get"] > label > span:first-child {
   margin: 0;
-  color: #4a5763;
+  color: var(--crm-farbe-text-leise);
   font-size: 12px;
   white-space: nowrap;
 }
@@ -277,7 +277,7 @@
 }
 
 .programm-arbeitsflaeche .programm-seite .metric-grid > * > strong { order: -1; margin: 0; font-size: 13px; line-height: 1.3; }
-.programm-arbeitsflaeche .programm-seite .metric-grid > * > span { font-size: 12px; color: #4a5763; }
+.programm-arbeitsflaeche .programm-seite .metric-grid > * > span { font-size: 12px; color: var(--crm-farbe-text-leise); }
 .programm-arbeitsflaeche .programm-seite .metric-grid > * > small { display: none; }
 
 /* Kartenkoepfe ohne Versalienzeile ("WER EMPFIEHLT WEN"), Titel 15 px. */
@@ -298,13 +298,13 @@
 .programm-arbeitsflaeche .programm-seite .data-card:has(> .data-list) {
   overflow: hidden;
   padding: 0;
-  border-color: #cdd3d9;
+  border-color: var(--crm-farbe-linie);
 }
 
 .programm-arbeitsflaeche .programm-seite .data-card:has(> .data-list) > .card-head {
   margin: 0;
   padding: 9px 12px;
-  border-bottom: 1px solid #dde2e7;
+  border-bottom: 1px solid var(--crm-farbe-linie-leise);
   background: #f4f6f8;
 }
 
@@ -352,7 +352,7 @@
 
 .programm-arbeitsflaeche :is(.form-field, .auth-form label, .search-bar > label, .filter-grid > label, .inline-upload label) {
   gap: 4px;
-  color: #3d4a56;
+  color: var(--crm-farbe-text-2);
   font-size: 12px;
   font-weight: 500;
 }
@@ -389,10 +389,10 @@
   align-items: center;
   min-height: 32px;
   padding: 0 12px;
-  border: 1px solid #c3cad1;
+  border: 1px solid var(--crm-farbe-linie-feld);
   border-radius: var(--crm-field-radius);
-  background: #ffffff;
-  color: #1b2733;
+  background: var(--crm-farbe-flaeche);
+  color: var(--crm-farbe-text);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -401,7 +401,7 @@
 
 .programm-aufklapper-knopf::-webkit-details-marker { display: none; }
 .programm-aufklapper-knopf:hover { background: #f3f6fa; }
-.programm-aufklapper[open] > .programm-aufklapper-knopf { background: #062037; border-color: #062037; color: #ffffff; }
+.programm-aufklapper[open] > .programm-aufklapper-knopf { background: var(--crm-farbe-handlung); border-color: var(--crm-farbe-handlung); color: var(--crm-farbe-auf-dunkel); }
 .programm-aufklapper-inhalt { margin-top: 10px; }
 
 /* In einer Listenkarte ohne Innenabstand (Programmseite) braucht der Knopf
@@ -427,7 +427,7 @@
  * den Programmlisten. Zu steht er auf einer Programmseite rechts oben neben
  * der Werkzeugleiste; offen nimmt er die volle Breite unter ihr ein -- dafuer
  * steht er im Quelltext direkt hinter dem Filterkasten. */
-.programm-aufklapper-neu > .programm-aufklapper-knopf { border-color: #062037; background: #062037; color: #ffffff; font-weight: 500; }
+.programm-aufklapper-neu > .programm-aufklapper-knopf { border-color: var(--crm-farbe-handlung); background: var(--crm-farbe-handlung); color: var(--crm-farbe-auf-dunkel); font-weight: 500; }
 .programm-aufklapper-neu > .programm-aufklapper-knopf:hover { background: #102d47; }
 .programm-arbeitsflaeche .programm-seite:has(> .programm-aufklapper-neu) { grid-template-columns: minmax(0, 1fr) auto auto; }
 .programm-arbeitsflaeche .programm-seite > .programm-aufklapper-neu:not([open]) { grid-column: 3; grid-row: 1; width: auto; }
