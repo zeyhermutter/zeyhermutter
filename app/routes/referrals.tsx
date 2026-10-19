@@ -7,6 +7,7 @@ import { KontaktAuswahl } from "~/components/kontakt-auswahl";
 import { requirePermission } from "~/lib/auth.server";
 import { tag } from "~/lib/format";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 type ActionResult={error?:string};
 
 export const REFERRAL_STATUS:Record<string,string>={OPEN:"Offen",CONTACTED:"Kontakt aufgenommen",DECLINED:"Kein Interesse",LEAD_CREATED:"Lead entstanden",WON:"Auftrag gewonnen",LOST:"Nicht zustande gekommen"};
@@ -115,7 +116,7 @@ export default function Referrals(){
   // Eine Programmliste wie Kontakte und Makleraufträge (P2-8, 17.10.2026):
   // Werkzeugleiste, Kennzahlen, Tabelle. "Herkunft prüfen" bleibt als eigene
   // Tabelle darunter, das Formular im Aufklapper.
-  return <main className="editor-shell programm-liste">
+  return <main className="editor-shell programm-liste"><ListenUeberschrift/>
     <Form method="get" className="programm-liste-werkzeuge">
       <input type="hidden" name="ansicht" value="tabelle"/>
       <label><span className="sr-only">Ansicht</span><select name="status" defaultValue={d.filter}>

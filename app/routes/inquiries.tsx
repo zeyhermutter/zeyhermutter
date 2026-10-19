@@ -10,6 +10,7 @@ import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege, BEZUG
 import { Seiten, SucheZuAllgemein } from "~/components/seiten";
 import "~/programm-liste.css";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 type ActionResult={error?:string;ok?:string};
 
 export const RESPONSE_STATE:Record<string,string>={
@@ -96,7 +97,7 @@ export default function Inquiries(){
  const summary=d.responseSummary as any;
  const responseByInquiry=d.responseByInquiry as Record<string,any>;
  const gefiltert=Boolean(filters.q||filters.status!=="OPEN"||filters.channel!=="ALL"||filters.responsible!=="ALL"||filters.archived);
- return <main className="editor-shell programm-liste">
+ return <main className="editor-shell programm-liste"><ListenUeberschrift/>
   <Form method="get" className="programm-liste-werkzeuge" role="search">
    <input type="hidden" name="ansicht" value="tabelle"/>
    <label className="programm-liste-suche"><span className="sr-only">Suche</span><input type="search" name="q" defaultValue={filters.q} placeholder="Name, Anfrage-, Objekt- oder Profilnummer …" autoComplete="off"/></label>

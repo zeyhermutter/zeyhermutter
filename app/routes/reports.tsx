@@ -7,6 +7,7 @@ import { crmToday as berlinToday } from "~/lib/local-time";
 import "~/reporting.css";
 import "~/programm-liste.css";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 type PipelineRow = { status: string; count: number };
 type LeadSourceRow = {
   source_key: string;
@@ -276,7 +277,7 @@ export default function Reports() {
   const viewingOfferConversion = formatRate(period.viewing_offer_rate);
   const marketingDays = formatDays(period.avg_marketing_days);
 
-  return <main className="reporting-shell">
+  return <main className="reporting-shell"><ListenUeberschrift/>
     {/* Programmansicht (13.10.2026): Ebene, Zeitraum und freie Daten in einer
         Werkzeugleiste -- vorher Seitentitel und eine hohe Karte mit drei
         beschrifteten Gruppen. */}

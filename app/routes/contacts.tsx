@@ -7,6 +7,7 @@ import { Ampel, useNaechsteSchritte } from "~/components/ampel";
 import { seiteZuWeit } from "~/lib/blaettern.server";
 import "~/programm-liste.css";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 // Die Kontaktliste.
 //
 // WARUM ES SIE GIBT
@@ -121,7 +122,7 @@ export default function Kontaktliste() {
   const laedt = navigation.state === "loading" && navigation.location?.pathname === "/crm/contacts";
 
   return (
-    <main className="editor-shell programm-liste">
+    <main className="editor-shell programm-liste"><ListenUeberschrift/>
       <Form method="get" className="programm-liste-werkzeuge" role="search">
         {/* Haelt die Tabelle fest, auch wenn alle Filter leer sind -- sonst oeffnete "/crm/contacts" den ersten Kontakt. */}
         <input type="hidden" name="ansicht" value="tabelle" />

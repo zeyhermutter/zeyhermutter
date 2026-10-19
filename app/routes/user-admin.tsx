@@ -5,6 +5,7 @@ import "~/programm-liste.css";
 import { requireActiveUser, requirePermission } from "~/lib/auth.server";
 import "~/user-admin.css";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 type ActionResult = { error?: string };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -145,7 +146,7 @@ export default function UserAdmin() {
   };
 
   return (
-    <main className="editor-shell programm-liste">
+    <main className="editor-shell programm-liste"><ListenUeberschrift/>
       <div className="programm-liste-werkzeuge">
         <span className="programm-liste-zaehler programm-liste-zaehler-links"><strong>{users.length}</strong> Benutzer · <strong>{activeUsers}</strong> aktiv · <strong>{roles.length}</strong> Rollen · <strong>{permissions.length}</strong> Berechtigungen</span>
         <Aufklapper knopf="Wer darf was ändern?">

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router";
 import { HELP_CHAPTERS, chapterForPath, type HelpChapter } from "~/help-content";
 import { HelpChapterBody } from "~/components/help-blocks";
+import { useDialogFokus } from "~/components/dialog-fokus";
 
 // Der Hilfe-Knopf, der auf jeder internen Seite steht.
 //
@@ -22,6 +23,7 @@ export function HelpEntry() {
   const [kapitelId, setKapitelId] = useState<string | null>(null);
   const dialog = useRef<HTMLDivElement | null>(null);
   const ausloeser = useRef<HTMLButtonElement | null>(null);
+  useDialogFokus(dialog, offen);
 
   const passend = chapterForPath(pathname);
   const gezeigt: HelpChapter | null =

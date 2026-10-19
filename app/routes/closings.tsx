@@ -8,6 +8,7 @@ import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege, BEZUG
 import { Seiten, SucheZuAllgemein } from "~/components/seiten";
 import "~/programm-liste.css";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 const STATUS:Record<string,string>={PREPARATION:"Abschlussvorbereitung",NOTARY_INSTRUCTED:"Notariat beauftragt",DRAFT_RECEIVED:"Entwurf eingegangen",APPOINTMENT_SCHEDULED:"Beurkundung terminiert",NOTARIZED:"Beurkundet",PURCHASE_PRICE_DUE:"Kaufpreis fällig",PURCHASE_PRICE_PAID:"Kaufpreis bezahlt",HANDOVER_COMPLETED:"Übergabe erfolgt",COMPLETED:"Abgeschlossen",CANCELLED:"Abgebrochen"};
 function one(v:any){return Array.isArray(v)?v[0]:v;}function formatDate(v:string|null,withTime=false){return withTime?zeitpunkt(v):tag(v);}
 
@@ -39,7 +40,7 @@ export async function loader({request,context}:Route.LoaderArgs){const {supabase
 export default function Closings(){
   const d=useLoaderData<typeof loader>();
   const gefiltert=Boolean(d.filters.q||d.filters.propertyId||d.filters.status!=="ACTIVE");
-  return <main className="editor-shell programm-liste">
+  return <main className="editor-shell programm-liste"><ListenUeberschrift/>
     <Form method="get" className="programm-liste-werkzeuge" role="search">
       <input type="hidden" name="ansicht" value="tabelle"/>
       <label className="programm-liste-suche"><span className="sr-only">Suche</span><input type="search" name="q" defaultValue={d.filters.q} placeholder="Abschluss, Angebot, Objekt oder Käufer …" autoComplete="off"/></label>

@@ -7,6 +7,7 @@ import { Ampel, useNaechsteSchritte } from "~/components/ampel";
 import { seiteZuWeit } from "~/lib/blaettern.server";
 import "~/programm-liste.css";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 const PAGE_SIZE = 50;
 
 // Die Beschriftungen stehen einmal in labels.ts (14.10.2026).
@@ -92,7 +93,7 @@ export default function Properties() {
   // Werkzeugleiste und Tabelle. Vorher Seitenkopf, Filterkasten und
   // Kartenzeilen mit drei Links je Objekt.
   return (
-    <main className="editor-shell programm-liste">
+    <main className="editor-shell programm-liste"><ListenUeberschrift/>
       <Form method="get" className="programm-liste-werkzeuge" role="search">
         {/* Haelt die Tabelle fest, auch wenn alle Filter leer sind -- sonst oeffnete "/properties" die erste Akte. */}
         <input type="hidden" name="ansicht" value="tabelle"/>

@@ -10,6 +10,7 @@ import { seiteZuWeit } from "~/lib/blaettern.server";
 import "~/programm-liste.css";
 import { crmDateAtTimeToIso } from "~/lib/local-time";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 type ActionResult = { error?: string };
 
 // Seiten statt Kappung (P2-2, 16.10.2026). Vorher lud die Liste die ersten
@@ -203,7 +204,7 @@ export default function Tasks() {
   // Werkzeugleiste, darunter eine Zeile je Aufgabe. Vorher eine Karte mit
   // Unterzeilen, "ÜBERFÄLLIG" als Text und einem Zuordnen-Knopf je Aufgabe.
   // Zuordnen geht jetzt direkt in der Spalte "Verantwortlich".
-  return <main className="editor-shell programm-liste">
+  return <main className="editor-shell programm-liste"><ListenUeberschrift/>
     {result?.error ? <div className="form-error">{result.error}</div> : null}
     <div className="programm-liste-werkzeuge">
       <nav className="programm-umfang" aria-label="Wessen Aufgaben">

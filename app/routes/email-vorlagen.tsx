@@ -7,6 +7,7 @@ import { beschrifte } from "~/lib/labels";
 import "~/programm-liste.css";
 import "~/email-vorlagen.css";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 // Verwaltung > E-Mail-Vorlagen (P2-3, 16.10.2026).
 //
 // Das Buero pflegt hier die Texte fuer wiederkehrende E-Mails. Beim Schreiben
@@ -101,7 +102,7 @@ export default function EmailVorlagen() {
   const neu = suche.get("neu") === "1";
 
   return (
-    <main className="editor-shell programm-liste email-vorlagen">
+    <main className="editor-shell programm-liste email-vorlagen"><ListenUeberschrift/>
       <div className="programm-liste-werkzeuge">
         <span className="programm-liste-zaehler">{vorlagen.length} {vorlagen.length === 1 ? "Vorlage" : "Vorlagen"}</span>
         {darfPflegen && !neu ? <Link className="programm-liste-neu" to="/crm/email-vorlagen?neu=1#neue-vorlage">+ Vorlage</Link> : null}

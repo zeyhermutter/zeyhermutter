@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useDialogFokus } from "~/components/dialog-fokus";
 import "~/asset-preview-modal.css";
 
 export type AssetPreviewKind = "image" | "pdf" | "video" | "file";
@@ -78,6 +79,8 @@ export function AssetPreviewModal({
   const [editing, setEditing] = useState(false);
   const [versionsVisible, setVersionsVisible] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const dialog = useRef<HTMLElement>(null);
+  useDialogFokus(dialog, open);
   const printable = kind === "image" || kind === "pdf";
   const effectiveDownloadUrl = downloadUrl ?? browserDownloadUrl(url, downloadName);
 
@@ -115,7 +118,7 @@ export function AssetPreviewModal({
   if (!open) return null;
 
   return <div className="asset-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-    <section className={`asset-modal${metadataVisible ? "" : " metadata-hidden"}`} role="dialog" aria-modal="true" aria-label={`${title} Vorschau`}>
+    <section className={`asset-modal${metadataVisible ? "" : " metadata-hidden"}`} role="dialog" aria-modal="true" aria-label={`${title} Vorschau`} tabIndex={-1} ref={dialog}>
       <header className="asset-modal-header">
         <div className="asset-modal-heading">
           <p className="eyebrow">Vorschau{positionLabel ? ` · ${positionLabel}` : ""}</p>

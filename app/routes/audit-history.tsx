@@ -6,6 +6,7 @@ import { AUFGABENPRIORITAET as PRIORITY_LABELS } from "~/lib/labels";
 import "~/module04-fixes.css";
 import "~/programm-liste.css";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 const PAGE_SIZE = 50;
 // Alle Felder, die tatsaechlich in field_changes vorkommen. Vorher war rund ein
 // Drittel benannt, der Rest erschien als englischer Spaltenname mit Unterstrich
@@ -90,7 +91,7 @@ export default function AuditHistory(){
   // Aktion, Bereich, Referenz, Benutzer. Die geaenderten Felder klappen je
   // Zeile auf; vorher stand jeder Eintrag als Karte mit dem vollen
   // Datensatz als JSON darunter.
-  return <main className="editor-shell programm-liste">
+  return <main className="editor-shell programm-liste"><ListenUeberschrift/>
     <Form method="get" className="programm-liste-werkzeuge">
       <label><span className="sr-only">Bereich</span><select name="entity" defaultValue={filters.entityType}><option value="">Alle Bereiche</option>{ENTITY_GROUPS.map(group=><optgroup key={group.label} label={group.label}>{group.types.map(([value,label])=><option key={value} value={value}>{label}</option>)}</optgroup>)}</select></label>
       <label><span className="sr-only">Aktion</span><select name="action" defaultValue={filters.action}><option value="">Alle Aktionen</option>{Object.entries(ACTION_LABELS).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label>

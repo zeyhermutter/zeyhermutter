@@ -6,6 +6,7 @@ import { euroRund, prozent, tag as formatDate } from "~/lib/format";
 import { MAKLERAUFTRAGART as TYPE, MAKLERAUFTRAGSTATUS as STATUS } from "~/lib/labels";
 import "~/programm-liste.css";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 const STATUS_CLASS: Record<string,string> = {DRAFT:"status-draft",ACTIVE:"status-marketing",WITHDRAWN:"status-lost",TERMINATED:"status-lost",EXPIRED:"status-archived",FULFILLED:"status-sold",CANCELLED:"status-archived"};
 
 const CLIENT_SIDE: Record<string,string> = {SELLER:"Verkäuferauftrag",BUYER:"Käuferauftrag",BOTH:"Doppeltätigkeit"};
@@ -65,7 +66,7 @@ export default function Mandates(){
   // Eine Programmliste wie die Kontaktliste (12.10.2026): Werkzeugleiste,
   // eine Zeile Kennzahlen, Tabelle. Vorher Seitenkopf, fuenf grosse Kacheln,
   // ein Filterkasten und Karten -- auch dann, wenn es keinen Auftrag gibt.
-  return <main className="editor-shell programm-liste">
+  return <main className="editor-shell programm-liste"><ListenUeberschrift/>
     <Form method="get" className="programm-liste-werkzeuge" role="search">
       <input type="hidden" name="ansicht" value="tabelle"/>
       <label className="programm-liste-suche"><span className="sr-only">Suche</span><input type="search" name="q" defaultValue={filters.q} placeholder="Auftrag, Objekt oder Auftraggeber …" autoComplete="off"/></label>

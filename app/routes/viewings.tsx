@@ -8,6 +8,7 @@ import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege, BEZUG
 import { Seiten, SucheZuAllgemein } from "~/components/seiten";
 import "~/programm-liste.css";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 function one(v:any){return Array.isArray(v)?v[0]:v;}
 export async function loader({request,context}:Route.LoaderArgs){const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"viewing.read");
   // Einstieg: gleich den obersten Datensatz im Arbeitsplatz oeffnen (app/lib/einstieg.ts).
@@ -28,7 +29,7 @@ export async function loader({request,context}:Route.LoaderArgs){const {supabase
 export default function Viewings(){
  const {rows,total,page,pageCount,zuViele,profiles,profileMap,filters}=useLoaderData<typeof loader>();
  const gefiltert=Boolean(filters.q||filters.status!=="UPCOMING"||filters.responsible!=="ALL");
- return <main className="editor-shell programm-liste">
+ return <main className="editor-shell programm-liste"><ListenUeberschrift/>
   <Form method="get" className="programm-liste-werkzeuge" role="search">
    <input type="hidden" name="ansicht" value="tabelle"/>
    <label className="programm-liste-suche"><span className="sr-only">Suche</span><input type="search" name="q" defaultValue={filters.q} placeholder="Kontakt, Objekt oder Nummer …" autoComplete="off"/></label>

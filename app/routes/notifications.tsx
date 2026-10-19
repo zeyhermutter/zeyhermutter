@@ -6,6 +6,7 @@ import { benachrichtigungsZiel } from "~/lib/benachrichtigungsziele";
 import "~/notifications.css";
 import "~/programm-liste.css";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 type ActionResult = { error?: string };
 function text(formData: FormData, key: string) { return String(formData.get(key) ?? "").trim(); }
 
@@ -29,7 +30,7 @@ export default function Notifications() {
   const { notifications } = useLoaderData<typeof loader>(); const result = useActionData<typeof action>(); const unread = notifications.filter((item) => !item.read_at).length;
   // Programmliste (13.10.2026): Posteingang als Tabelle -- Eingang, Meldung,
   // Text, Aktion. Vorher je Meldung eine hohe Zeile mit zwei grossen Knoepfen.
-  return <main className="editor-shell programm-liste">
+  return <main className="editor-shell programm-liste"><ListenUeberschrift/>
     <div className="programm-liste-werkzeuge">
       <span className="programm-liste-zaehler programm-liste-zaehler-links"><strong>{unread}</strong> ungelesen · letzte {notifications.length}</span>
       {unread > 0 ? <Form method="post" className="programm-liste-rechts"><button className="secondary-button" type="submit" name="_intent" value="read_all">Alle als gelesen</button></Form> : null}

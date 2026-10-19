@@ -7,6 +7,7 @@ import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege, seite
 import { Seiten, SucheZuAllgemein } from "~/components/seiten";
 import "~/programm-liste.css";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 const STATUS:Record<string,string>={DRAFT:"Entwurf",SUBMITTED:"Abgegeben",COUNTERED:"Gegenangebot",ACCEPTED:"Angenommen",REJECTED:"Abgelehnt",WITHDRAWN:"Zurückgezogen",REPLACED:"Ersetzt",FAILED:"Abschluss gescheitert"};
 const FINANCING:Record<string,string>={OPEN:"Offen",IN_PROGRESS:"In Klärung",CONFIRMED:"Bestätigt",NOT_REQUIRED:"Nicht erforderlich"};
 const STATUS_CLASS:Record<string,string>={DRAFT:"status-draft",SUBMITTED:"status-marketing",COUNTERED:"status-contract-pending",ACCEPTED:"status-reserved",REJECTED:"status-lost",WITHDRAWN:"status-withdrawn",REPLACED:"status-archived",FAILED:"status-lost"};
@@ -45,7 +46,7 @@ export default function PurchaseOffers(){
   const d=useLoaderData<typeof loader>();
   const neu=d.filters.propertyId?`/purchase-offers/new?property_id=${encodeURIComponent(d.filters.propertyId)}`:"/purchase-offers/new";
   const gefiltert=Boolean(d.filters.q||d.filters.propertyId||d.filters.status!=="ACTIVE");
-  return <main className="editor-shell programm-liste">
+  return <main className="editor-shell programm-liste"><ListenUeberschrift/>
     <Form method="get" className="programm-liste-werkzeuge" role="search">
       <input type="hidden" name="ansicht" value="tabelle"/>
       <label className="programm-liste-suche"><span className="sr-only">Suche</span><input type="search" name="q" defaultValue={d.filters.q} placeholder="Angebot, Objekt oder Käufer …" autoComplete="off"/></label>

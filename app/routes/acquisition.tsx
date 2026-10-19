@@ -8,6 +8,7 @@ import { euroRund as money, tag as formatDate } from "~/lib/format";
 import { KAMPAGNENSTATUS as CAMPAIGN_STATUS } from "~/lib/labels";
 import "~/programm-liste.css";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 type ActionResult={error?:string};
 
 const AREA_TYPE:Record<string,string>={CITY:"Stadt",DISTRICT:"Stadtteil",QUARTER:"Quartier",REGION:"Region",OTHER:"Sonstiges"};
@@ -209,7 +210,7 @@ export default function Acquisition(){
 
   // Programmliste (13.10.2026): Kennzahlen als eine Zeile, Kampagnen und
   // Gebiete als Tabellen mit Spaltenkoepfen; Anlegen klappt darunter auf.
-  return <div className="editor-shell programm-liste">
+  return <div className="editor-shell programm-liste"><ListenUeberschrift/>
     <div className="programm-liste-werkzeuge">
       <span className="programm-liste-zaehler programm-liste-zaehler-links">Zeitraum {formatDate(d.from)} – {formatDate(d.to)}</span>
       <Link className="secondary-button link-button programm-liste-rechts" to="/reports">Auswertung öffnen</Link>

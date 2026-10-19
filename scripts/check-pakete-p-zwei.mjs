@@ -153,8 +153,34 @@ pruefe(!aufgabenListe.includes(".limit(500)") && (aufgabenDialog.match(/<Datensa
 const arbeitsplatzBaustein = await lies("app/components/arbeitsplatz.tsx");
 pruefe(/alsUeberschrift \? <h1 className="arbeitsplatz-kopf-titel">/.test(arbeitsplatzBaustein) && arbeitsplatzBaustein.includes('value={ueberschriftImKopf ?? seitenkopf === "ausblenden"}') && (await lies("app/routes/immobilien-arbeitsplatz.tsx")).includes("ueberschriftImKopf={akteTeil}"), "Arbeitsplatz: ohne Seitenkopf keine h1 im Kopf der Akte");
 
+// 15. Jede Programmliste hat eine Hauptueberschrift (h1) -- sichtbar oder fuer Bildschirmleser
+//     (ListenUeberschrift, Text aus app/lib/programmbereiche.ts). Akten im Arbeitsplatz haben sie im Kopf.
+{
+  const { readdir } = await import("node:fs/promises");
+  for (const datei of (await readdir(path.join(WURZEL, "app/routes"))).filter((n) => n.endsWith(".tsx"))) {
+    const quelle = await lies(`app/routes/${datei}`);
+    if (!/className="(editor-shell programm-liste|calendar-shell kalender-programm|reporting-shell)/.test(quelle)) continue;
+    pruefe(quelle.includes("<h1") || quelle.includes("<ListenUeberschrift"), `${datei}: Liste ohne Hauptueberschrift (h1)`);
+  }
+}
+
+// 16. Jeder modale Dialog haelt den Fokus und gibt ihn zurueck (app/components/dialog-fokus.ts)
+{
+  const { readdir } = await import("node:fs/promises");
+  for (const ordner of ["app/components", "app/routes"]) {
+    for (const datei of (await readdir(path.join(WURZEL, ordner))).filter((n) => n.endsWith(".tsx"))) {
+      const quelle = await lies(`${ordner}/${datei}`);
+      if (!quelle.includes('aria-modal="true"')) continue;
+      pruefe(quelle.includes("useDialogFokus("), `${ordner}/${datei}: modaler Dialog ohne useDialogFokus (Fokus laeuft hinaus)`);
+    }
+  }
+}
+
+// 17. Wartezustand beim Absenden fuer alle Formulare des Programms
+pruefe((await lies("app/routes/internal-layout.tsx")).includes("<AbsendenWarten />") && (await lies("app/styles.css")).includes('[data-wartet="1"]'), "internal-layout.tsx: Wartezustand beim Absenden fehlt");
+
 if (fehler.length) {
   console.error("P2:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung, Datenauskunft aus allen Kontakt-Tabellen, Rechtsgrundlage und Werbewiderspruch (Hinweis, keine Sperre), Anonymisieren nur mit Recht, Grund, Bestätigung und ohne Einwand der Datenbank, Objektakte lädt je Teil nur, was er zeigt, 16 volle Listen als Programmtabelle, tägliche Automatik nur mit Aufgaben/Benachrichtigungen, dublettensicher und abschaltbar, 8 Listen blättern über die Datenbank, Aufgabe anlegen sucht seine Bezüge, Arbeitsplatz ohne Seitenkopf mit h1.");
+console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung, Datenauskunft aus allen Kontakt-Tabellen, Rechtsgrundlage und Werbewiderspruch (Hinweis, keine Sperre), Anonymisieren nur mit Recht, Grund, Bestätigung und ohne Einwand der Datenbank, Objektakte lädt je Teil nur, was er zeigt, 16 volle Listen als Programmtabelle, tägliche Automatik nur mit Aufgaben/Benachrichtigungen, dublettensicher und abschaltbar, 8 Listen blättern über die Datenbank, Aufgabe anlegen sucht seine Bezüge, Arbeitsplatz ohne Seitenkopf mit h1, jede Liste mit h1, Dialoge halten den Fokus, Absenden zeigt Warten.");

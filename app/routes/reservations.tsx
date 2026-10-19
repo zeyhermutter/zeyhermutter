@@ -10,6 +10,7 @@ import { reservierungAktion } from "~/lib/reservierung.server";
 import { RESERVATION_STATUS, contactLabel, one, reservationExpired, reservierungStand, today } from "~/lib/reservierung";
 import "~/programm-liste.css";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 // Reservierungen: Liste (?ansicht=tabelle) und Einstieg in den Arbeitsplatz.
 // Die Akte einer Reservierung ist app/routes/reservation-detail.tsx; was
 // eine Reservierung aendert, steht in app/lib/reservierung.server.ts.
@@ -99,7 +100,7 @@ export default function Reservations(){
 
   // Programmliste (13.10.2026) wie die Makleraufträge: Werkzeugleiste, eine
   // Zeile Kennzahlen, Tabelle; jede Zeile oeffnet die Akte.
-  return <main className="editor-shell programm-liste">
+  return <main className="editor-shell programm-liste"><ListenUeberschrift/>
     <Form method="get" className="programm-liste-werkzeuge" role="search">
       <input type="hidden" name="ansicht" value="tabelle"/>
       <label className="programm-liste-suche"><span className="sr-only">Suche</span><input type="search" name="q" defaultValue={d.filters.q} placeholder="Reservierung, Objekt oder Interessent …" autoComplete="off"/></label>

@@ -500,11 +500,8 @@ export default function EmailCompose() {
           </Form>
         </section> : context ? <section className="data-card"><div className="card-head"><div><p className="eyebrow">Berechtigung</p><h2>Nur Lesen</h2></div></div><p className="communication-note">Du kannst die vorhandene Kommunikationshistorie lesen, aber für diesen CRM-Bezug keine neue Aktivität dokumentieren.</p></section> : null}
 
-        <section className="data-card">
-          <div className="card-head"><div><p className="eyebrow">Kalender</p><h2>CRM-Termine</h2></div></div>
-          <p className="communication-note">Besichtigungen, Wiedervorlagen, Eigentümer-/Bewertungstermine und Notartermine werden aus ihren bestehenden CRM-Datensätzen zusammengeführt.</p>
-          <div className="communication-actions" style={{ marginTop: 14 }}><Link className="secondary-button link-button" to="/crm/calendar">Kalender öffnen →</Link></div>
-        </section>
+        {/* Die Karte "Kalender · CRM-Termine" stand hier bis 19.10.2026 -- fachfremd
+            auf der E-Mail-Seite; der Kalender ist unter Mein Tag › Kalender. */}
       </aside>
     </div>
   </main>;

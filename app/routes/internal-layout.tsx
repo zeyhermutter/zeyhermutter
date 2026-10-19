@@ -5,6 +5,7 @@ import type { HeaderNotification } from "~/components/notification-bell";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
 import { CrmFormGuardrails } from "~/components/crm-form-guardrails";
 import { HelpEntry } from "~/components/help-entry";
+import { AbsendenWarten } from "~/components/absenden-warten";
 import { LiveListFilters } from "~/components/live-list-filters";
 import { Programmrahmen } from "~/components/programmrahmen";
 import { RecordSectionNavigation } from "~/components/record-section-navigation";
@@ -131,6 +132,7 @@ export default function InternalLayout({ loaderData }: Route.ComponentProps) {
       hilfe={<HelpEntry />}
     >
       <CrmFormGuardrails />
+      <AbsendenWarten />
       <SmartBackNavigation />
       <ViewingDetailEnhancements />
       <ViewingReplanModal />

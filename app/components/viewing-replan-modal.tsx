@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useFetcher, useLocation } from "react-router";
+import { useDialogFokus } from "~/components/dialog-fokus";
 import "~/viewing-replan-modal.css";
 
 type Context = {
@@ -79,6 +80,7 @@ export function ViewingReplanModal() {
   const location = useLocation();
   const fetcher = useFetcher<CreateResult>();
   const [open, setOpen] = useState(false);
+  const dialog = useRef<HTMLElement>(null);
   const [context, setContext] = useState<Context | null>(null);
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
@@ -143,6 +145,8 @@ export function ViewingReplanModal() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open, submitting]);
 
+  useDialogFokus(dialog, open && Boolean(context));
+
   if (!open || !context) return null;
 
   const contextError = !context.propertyId || !context.contactId
@@ -153,7 +157,7 @@ export function ViewingReplanModal() {
 
   return (
     <div className="viewing-replan-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !submitting) setOpen(false); }}>
-      <section className="viewing-replan-modal" role="dialog" aria-modal="true" aria-labelledby="viewing-replan-title">
+      <section className="viewing-replan-modal" role="dialog" aria-modal="true" aria-labelledby="viewing-replan-title" tabIndex={-1} ref={dialog}>
         <div className="viewing-replan-head">
           <div>
             <p className="eyebrow">Besichtigung</p>

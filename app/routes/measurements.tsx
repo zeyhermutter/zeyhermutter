@@ -6,6 +6,7 @@ import { euroRund, flaeche, tag as formatDate, zeitpunkt } from "~/lib/format";
 import { AUFMASSPAKET as PAKET, AUFMASSSTATUS as STATUS, AUFTRAGSQUELLE as QUELLE } from "~/lib/labels";
 import "~/programm-liste.css";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 // Aufmass-Auftraege: die Liste der Dienstleistung neben der Vermittlung.
 //
 // Die Kennzahlen oben sind die vier Fragen eines Arbeitstages: Was ist neu
@@ -69,7 +70,7 @@ export default function Measurements(){
   const neu=filters.propertyId?`/measurements/new?property_id=${encodeURIComponent(filters.propertyId)}`:"/measurements/new";
   // Eine Programmliste wie die Kontaktliste (12.10.2026): Werkzeugleiste,
   // eine Zeile Kennzahlen, Tabelle -- statt Seitenkopf, Kacheln und Karten.
-  return <main className="editor-shell programm-liste">
+  return <main className="editor-shell programm-liste"><ListenUeberschrift/>
     <Form method="get" className="programm-liste-werkzeuge" role="search">
       <input type="hidden" name="ansicht" value="tabelle"/>
       <label className="programm-liste-suche"><span className="sr-only">Suche</span><input type="search" name="q" defaultValue={filters.q} placeholder="Auftrag, Objekt oder Kunde …" autoComplete="off"/></label>

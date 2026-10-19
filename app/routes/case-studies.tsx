@@ -6,6 +6,7 @@ import "~/programm-liste.css";
 import { requirePermission } from "~/lib/auth.server";
 import { euroRund, tag } from "~/lib/format";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 type ActionResult={error?:string};
 
 export const CASE_STATUS:Record<string,string>={DRAFT:"In Arbeit",INTERNAL:"Nur intern",PUBLISHABLE:"Öffentlich verwendbar",WITHDRAWN:"Zurückgezogen"};
@@ -92,7 +93,7 @@ export default function CaseStudies(){
   const actionData=useActionData<typeof action>();
   // Eine Programmliste wie Kontakte und Makleraufträge (P2-8, 17.10.2026):
   // Werkzeugleiste mit "+ Case Study anlegen", Kennzahlen, Tabelle.
-  return <main className="editor-shell programm-liste">
+  return <main className="editor-shell programm-liste"><ListenUeberschrift/>
     <Form method="get" className="programm-liste-werkzeuge">
       <input type="hidden" name="ansicht" value="tabelle"/>
       <label><span className="sr-only">Ansicht</span><select name="status" defaultValue={d.filter}>

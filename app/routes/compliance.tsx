@@ -5,6 +5,7 @@ import { tag as formatDate } from "~/lib/format";
 import { GELDWAESCHERISIKO as RISK } from "~/lib/labels";
 import "~/programm-liste.css";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 const RISK_CLASS:Record<string,string>={LOW:"status-sold",MEDIUM:"status-marketing",HIGH:"status-lost"};
 const RETENTION_CATEGORY:Record<string,string>={
   GWG_IDENTIFICATION:"Geldwäsche · Identifizierung",
@@ -99,7 +100,7 @@ export default function Compliance(){
   const overdue=retentionDocuments.filter((row:any)=>row.retention_until<today());
   // Das Aktenverzeichnis als Programmliste (P2-8, 17.10.2026): Werkzeugleiste,
   // Kennzahlen, Tabelle. Die Abschnitte zur Aufbewahrung bleiben darunter.
-  return <main className="editor-shell programm-liste">
+  return <main className="editor-shell programm-liste"><ListenUeberschrift/>
     <Form method="get" className="programm-liste-werkzeuge" role="search">
       <label className="programm-liste-suche"><span className="sr-only">Suche</span><input type="search" name="q" defaultValue={filters.q} placeholder="Akte oder Immobilie …" autoComplete="off"/></label>
       <label><span className="sr-only">Ansicht</span><select name="view" defaultValue={filters.view}><option value="OPEN">Mit offenen Punkten</option><option value="ACTIVE">Alle aktiven Akten</option><option value="HIGH">Hohes Risiko</option><option value="RETENTION">Aufbewahrung läuft ab</option><option value="ARCHIVED">Archiviert</option></select></label>

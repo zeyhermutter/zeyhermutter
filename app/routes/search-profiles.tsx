@@ -7,6 +7,7 @@ import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege, BEZUG
 import { Seiten, SucheZuAllgemein } from "~/components/seiten";
 import "~/programm-liste.css";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 const STATUS_LABELS:Record<string,string>={ACTIVE:"Aktiv",PAUSED:"Pausiert",CLOSED:"Abgeschlossen"};
 const TYPE_LABELS:Record<string,string>={DETACHED_HOUSE:"Einfamilienhaus",SEMI_DETACHED_HOUSE:"Doppelhaushälfte",TERRACED_HOUSE:"Reihenhaus",APARTMENT_BUILDING:"Mehrfamilienhaus",APARTMENT:"Wohnung",PENTHOUSE:"Penthouse",MAISONETTE:"Maisonette",LAND:"Grundstück",COMMERCIAL:"Gewerbe",OFFICE:"Büro",RETAIL:"Einzelhandel",GARAGE:"Garage",PARKING_SPACE:"Stellplatz",OTHER:"Sonstige"};
 function one(v:any){return Array.isArray(v)?v[0]:v;}
@@ -40,7 +41,7 @@ export async function loader({request,context}:Route.LoaderArgs){
 export default function SearchProfiles(){
  const {rows,total,page,pageCount,zuViele,profiles,profileMap,filters}=useLoaderData<typeof loader>();
  const gefiltert=Boolean(filters.q||(filters.status!=="ACTIVE"&&!filters.archived)||filters.transaction!=="ALL"||filters.responsible!=="ALL");
- return <main className="editor-shell programm-liste">
+ return <main className="editor-shell programm-liste"><ListenUeberschrift/>
   <Form method="get" className="programm-liste-werkzeuge" role="search">
    <input type="hidden" name="ansicht" value="tabelle"/>
    <label className="programm-liste-suche"><span className="sr-only">Suche</span><input type="search" name="q" defaultValue={filters.q} placeholder="Name, Profilnummer, Ort, E-Mail …" autoComplete="off"/></label>

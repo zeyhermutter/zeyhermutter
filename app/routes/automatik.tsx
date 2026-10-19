@@ -4,6 +4,7 @@ import { requireActiveUser } from "~/lib/auth.server";
 import { zeitpunkt } from "~/lib/format";
 import "~/programm-liste.css";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 // Verwaltung > Automatik (P2-4, 19.10.2026).
 //
 // Jeden Morgen legt ein Lauf in der Datenbank Aufgaben und Benachrichtigungen
@@ -71,7 +72,7 @@ export default function Automatik() {
   const letzter = laeufe?.[0] ?? null;
 
   return (
-    <main className="editor-shell programm-liste">
+    <main className="editor-shell programm-liste"><ListenUeberschrift/>
       <div className="programm-liste-werkzeuge">
         <p className="programm-erklaerung">
           Jeden Morgen ({ZEITPLAN}) legt das CRM nach diesen Regeln Aufgaben und Benachrichtigungen an.

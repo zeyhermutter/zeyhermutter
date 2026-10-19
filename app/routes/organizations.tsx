@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useDialogFokus } from "~/components/dialog-fokus";
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import { istEinstieg } from "~/lib/einstieg";
 import type { Route } from "./+types/organizations";
@@ -8,6 +9,7 @@ import { seiteAus, seitenzahl, sicher, enthaelt, seiteZuWeit } from "~/lib/blaet
 import { Seiten } from "~/components/seiten";
 import "~/programm-liste.css";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 type ActionResult = { error?: string; fields?: Record<string, string> };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -141,6 +143,8 @@ export default function Organizations() {
   const result = useActionData<typeof action>();
   const fields = result?.fields ?? {};
   const [createOpen, setCreateOpen] = useState(Boolean(result?.error));
+  const dialog = useRef<HTMLElement>(null);
+  useDialogFokus(dialog, createOpen);
 
   useEffect(() => {
     if (result?.error) setCreateOpen(true);
@@ -159,7 +163,7 @@ export default function Organizations() {
     // Eine Programmliste wie Kontakte und Makleraufträge (P2-8, 17.10.2026).
     // Vorher Seitenkopf, Filterkasten und Kartenzeilen. "+ Neue Organisation"
     // oeffnet weiter das Formular als Dialog.
-    <main className="editor-shell programm-liste">
+    <main className="editor-shell programm-liste"><ListenUeberschrift/>
       <Form method="get" className="programm-liste-werkzeuge" role="search">
         <input type="hidden" name="ansicht" value="tabelle" />
         <label className="programm-liste-suche"><span className="sr-only">Suche</span><input type="search" name="q" defaultValue={filters.q} placeholder="Name, Nummer, E-Mail, Telefon oder Ort …" autoComplete="off" /></label>
@@ -196,7 +200,7 @@ export default function Organizations() {
 
       {createOpen ? (
         <div className="organization-create-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setCreateOpen(false); }}>
-          <section className="organization-create-modal" role="dialog" aria-modal="true" aria-labelledby="organization-create-title">
+          <section className="organization-create-modal" role="dialog" aria-modal="true" aria-labelledby="organization-create-title" tabIndex={-1} ref={dialog}>
             <div className="organization-create-head">
               <div><p className="eyebrow">Neu</p><h2 id="organization-create-title">Organisation anlegen</h2></div>
               <button className="organization-create-close" type="button" aria-label="Modal schließen" onClick={() => setCreateOpen(false)}>×</button>

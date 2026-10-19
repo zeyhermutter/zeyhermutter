@@ -10,6 +10,7 @@ import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege, seite
 import { SucheZuAllgemein } from "~/components/seiten";
 import "~/programm-liste.css";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 const STATUS_ORDER=["NEW","CONTACTED","QUALIFIED","APPOINTMENT","VALUATION","OFFER","WON","NURTURE","LOST"] as const;
 const MAIN_STATUSES=["NEW","CONTACTED","QUALIFIED","APPOINTMENT","VALUATION","OFFER","WON"] as const;
 const OUTCOME_STATUSES=["NURTURE","LOST"] as const;
@@ -112,7 +113,7 @@ export default function Leads(){const schritte=useNaechsteSchritte("lead");
   // Kartenzeilen. "Status ändern" bleibt in jeder Zeile.
   const stufe=(status:string)=>{const stage=pipelineByStatus[status]??{status,count:0,overdue:0};return <Link key={status} to={filterHref(status)} className={[filters.status===status?"aktiv":"",stage.overdue?"warnung":""].filter(Boolean).join(" ")||undefined} title={STATUS_HELP[status]}><strong>{stage.count}</strong> {STATUS_LABELS[status]}{stage.overdue?` (${stage.overdue} überfällig)`:""}</Link>;};
   const gefiltert=Boolean(filters.q||filters.status!=="ALL"||filters.source!=="ALL"||filters.responsible!=="ALL"||filters.followup!=="ALL"||filters.archived);
-  return <main className="editor-shell programm-liste">
+  return <main className="editor-shell programm-liste"><ListenUeberschrift/>
     <Form method="get" className="programm-liste-werkzeuge" role="search">
       <input type="hidden" name="ansicht" value="tabelle"/>
       <label className="programm-liste-suche"><span className="sr-only">Suche</span><input type="search" name="q" defaultValue={filters.q} placeholder="Leadnummer, Kontakt, Telefon, E-Mail, Adresse …" autoComplete="off"/></label>

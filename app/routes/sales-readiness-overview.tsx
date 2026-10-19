@@ -15,6 +15,7 @@ const OWNER_DECISION: Record<string, string> = OWNER_DECISION_LABELS;
 import "~/lead.css";
 import "~/programm-liste.css";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 const CHECK_STATUS_CLASS: Record<string, string> = {
   DRAFT: "status-draft",
   READY_FOR_REVIEW: "status-marketing",
@@ -96,7 +97,7 @@ export default function SalesReadinessOverview() {
   // Programmliste (13.10.2026) wie Makleraufträge: Werkzeugleiste, eine
   // Zeile Kennzahlen, Tabelle mit Spaltenkoepfen.
   return (
-    <main className="editor-shell programm-liste">
+    <main className="editor-shell programm-liste"><ListenUeberschrift/>
       <div className="programm-liste-werkzeuge">
         <Aufklapper knopf="Worum geht es beim Verkaufsstrategie-Check?">
           <p className="programm-erklaerung">

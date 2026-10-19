@@ -32,6 +32,7 @@ import { crmToday } from "~/lib/local-time";
 import "~/pipeline.css";
 import "~/programm-liste.css";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 const ANGEBOTSSTATUS: Record<string, string> = {
   DRAFT: "Entwurf", SUBMITTED: "Abgegeben", COUNTERED: "Gegenangebot", ACCEPTED: "Angenommen",
 };
@@ -222,7 +223,7 @@ export default function Pipeline() {
   // Tabelle mit Spaltenkoepfen. Die vier Fristgruppen sind Zwischenzeilen
   // derselben Tabelle -- vorher je eine Karte mit Zeilen ohne Spalten.
   return (
-    <main className="editor-shell programm-liste">
+    <main className="editor-shell programm-liste"><ListenUeberschrift/>
       {d.ladefehler.length > 0 ? (
         <div className="form-warning pipeline-breite">
           <strong>Ein Teil der Vorgänge konnte nicht geladen werden.</strong>

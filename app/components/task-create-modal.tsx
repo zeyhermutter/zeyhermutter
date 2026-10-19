@@ -1,5 +1,6 @@
 import { DatensatzAuswahl, KontaktAuswahl } from "~/components/kontakt-auswahl";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useDialogFokus } from "~/components/dialog-fokus";
 import { Form } from "react-router";
 
 type ProfileOption = { user_id: string; display_name: string };
@@ -14,6 +15,8 @@ type Props = {
 
 export function TaskCreateModal({ profiles, currentUserId }: Props) {
   const [open, setOpen] = useState(false);
+  const dialog = useRef<HTMLElement>(null);
+  useDialogFokus(dialog, open);
 
   useEffect(() => {
     if (!open) return;
@@ -31,7 +34,7 @@ export function TaskCreateModal({ profiles, currentUserId }: Props) {
       </div>
       {open ? (
         <div className="task-create-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
-          <section className="task-create-modal" role="dialog" aria-modal="true" aria-labelledby="task-create-title">
+          <section className="task-create-modal" role="dialog" aria-modal="true" aria-labelledby="task-create-title" tabIndex={-1} ref={dialog}>
             <div className="task-create-modal-head">
               <div><p className="eyebrow">Wiedervorlage</p><h2 id="task-create-title">Aufgabe anlegen</h2></div>
               <button className="task-create-modal-close" type="button" onClick={() => setOpen(false)} aria-label="Schließen">×</button>

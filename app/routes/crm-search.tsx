@@ -8,6 +8,7 @@ import "~/programm-liste.css";
 
 import { sucheUeberall, type Treffer } from "~/lib/globale-suche.server";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 // Woher die Treffer kommen: app/lib/globale-suche.server.ts (P2-2, 16.10.2026).
 // Vorher filterte diese Seite Kaufangebote und Abschluesse im Browser aus den
 // 300 zuletzt geaenderten und schnitt bei 100 Treffern still ab.
@@ -45,7 +46,7 @@ export default function CrmSearch() {
   const { q, includeArchived, results, mehr, fehler } = useLoaderData<typeof loader>();
   // Programmliste (13.10.2026): Suchleiste als Werkzeugleiste, Treffer als
   // Tabelle mit Spalten -- vorher grosses Suchfeld und Zeilen ohne Spalten.
-  return <main className="editor-shell programm-liste">
+  return <main className="editor-shell programm-liste"><ListenUeberschrift/>
     <Form method="get" className="programm-liste-werkzeuge" role="search">
       <label className="programm-liste-suche"><span className="sr-only">CRM durchsuchen</span><input type="search" name="q" defaultValue={q} placeholder="Name, Nummer, Ort, Adresse oder E-Mail …" minLength={2} autoFocus autoComplete="off"/></label>
       <label className="programm-liste-haken"><input type="checkbox" name="archived" value="1" defaultChecked={includeArchived}/><span>Archiv einbeziehen</span></label>

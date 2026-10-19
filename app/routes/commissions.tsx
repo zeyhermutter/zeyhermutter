@@ -8,6 +8,7 @@ import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege, seite
 import { Seiten, SucheZuAllgemein } from "~/components/seiten";
 import "~/programm-liste.css";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 const STATUS: Record<string,string> = {DRAFT:"Entwurf",EXPECTED:"Erwartet",DUE:"Fällig",INVOICED:"Abgerechnet",PARTIALLY_PAID:"Teilweise bezahlt",PAID:"Bezahlt",CANCELLED:"Storniert"};
 const SIDE: Record<string,string> = {SELLER:"Innenprovision",BUYER:"Außenprovision"};
 const STATUS_CLASS: Record<string,string> = {DRAFT:"status-draft",EXPECTED:"status-valuation",DUE:"status-contract-pending",INVOICED:"status-marketing",PARTIALLY_PAID:"status-preparation",PAID:"status-sold",CANCELLED:"status-lost"};
@@ -63,7 +64,7 @@ export default function Commissions(){
   const neu=filters.propertyId?`/commissions/new?property_id=${encodeURIComponent(filters.propertyId)}`:"/commissions/new";
   const gefiltert=Boolean(filters.q||filters.side||filters.propertyId||filters.status!=="OPEN");
   const heute=new Date().toISOString().slice(0,10);
-  return <main className="editor-shell programm-liste">
+  return <main className="editor-shell programm-liste"><ListenUeberschrift/>
     <Form method="get" className="programm-liste-werkzeuge" role="search">
       <input type="hidden" name="ansicht" value="tabelle"/>
       <label className="programm-liste-suche"><span className="sr-only">Suche</span><input type="search" name="q" defaultValue={filters.q} placeholder="Provision, Objekt oder Partei …" autoComplete="off"/></label>

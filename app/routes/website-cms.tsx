@@ -9,6 +9,7 @@ import "~/website-cms.css";
 import "~/programm-liste.css";
 
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { supabase, responseHeaders } = await requirePermission(request, context.cloudflare.env, "website.read");
   const { data: pages, error } = await supabase.from("website_pages").select("id,page_key,path,label,status,candidate_version,published_version,has_unpublished_changes,updated_at,version").order("path");
@@ -25,7 +26,7 @@ export default function WebsiteCms() {
   const offen = pages.filter((page: any) => stateLabel(page) !== "Veröffentlicht").length;
   // Programmliste (13.10.2026): eine Zeile je Seite der Website statt einer
   // Karte je Seite -- 15 Seiten passen so auf einen Bildschirm.
-  return <main className="editor-shell programm-liste">
+  return <main className="editor-shell programm-liste"><ListenUeberschrift/>
     <div className="programm-liste-werkzeuge">
       <Aufklapper knopf="Wie die Veröffentlichung funktioniert">
         <p className="programm-erklaerung">Nur freigegebene Stände gehen live. Bearbeitungen ändern zunächst nur den internen Entwurf. Erst eine vorbereitete Version kann veröffentlicht werden, und nur mit dem Recht zum Veröffentlichen. Bereits veröffentlichte Versionen bleiben unverändert erhalten.</p>

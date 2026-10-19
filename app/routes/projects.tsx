@@ -9,6 +9,7 @@ import { Ampel, useNaechsteSchritte } from "~/components/ampel";
 import { VERKAUFSPROJEKTSTATUS } from "~/lib/labels";
 import "~/programm-liste.css";
 
+import { ListenUeberschrift } from "~/components/listen-ueberschrift";
 type ActionResult={error?:string};
 
 export const PHASE:Record<string,string>={LEAD:"Lead",OWNER_TALK:"Eigentümergespräch",READINESS_CHECK:"Verkaufsstrategie-Check",CONSULTATION:"Beratung",MANDATE:"Maklerauftrag",PREPARATION:"Vorbereitung",MARKETING:"Vermarktung",NOTARY:"Notar",COMPLETED:"Abgeschlossen"};
@@ -127,7 +128,7 @@ export default function Projects(){
 
   // Programmliste (13.10.2026) wie die Makleraufträge daneben: Werkzeugleiste,
   // eine Zeile Kennzahlen, Tabelle. Vorher Zeilen ohne Spaltenkoepfe.
-  return <div className="editor-shell programm-liste">
+  return <div className="editor-shell programm-liste"><ListenUeberschrift/>
     <div className="programm-liste-werkzeuge">
       <nav className="programm-umfang" aria-label="Ansicht">
         <Link className={d.showAll?undefined:"aktiv"} to="/projects?ansicht=tabelle">Laufende</Link>
