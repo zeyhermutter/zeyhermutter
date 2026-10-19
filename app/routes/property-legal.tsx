@@ -1,8 +1,20 @@
-import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
+import { useEffect, useState } from "react";
+import { data, Form, Link, redirect, useActionData, useLoaderData, useNavigation } from "react-router";
 import type { Route } from "./+types/property-legal";
 import { requirePermission } from "~/lib/auth.server";
-import { euroRund as money, tag as formatDate } from "~/lib/format";
+import { euroGenau, euroRund as money, flaeche, tag as formatDate } from "~/lib/format";
+import { beschrifte } from "~/lib/labels";
+import { Aufklapper } from "~/components/aufklapper";
 import { KontaktAuswahl } from "~/components/kontakt-auswahl";
+
+// Lesen zuerst (19.10.2026). Bis dahin standen das Formular der Rechtsdaten
+// und je Eintrag ein Bearbeitungsformular dauerhaft offen -- die Seite war vor
+// allem Formular (UX-Note 4,6), und wer nur nachsehen wollte, was im Grundbuch
+// steht, musste die Werte aus Eingabefeldern ablesen. Jetzt zeigt eine
+// Lesekarte die gespeicherten Rechtsdaten in Worten; Bearbeiten und Anlegen
+// gehen erst auf Klick auf (Aufklapper). Formulare, Feldnamen, _intent-Werte,
+// Rechte und die action sind unverändert. Schlägt das Speichern fehl, steht
+// genau das abgeschickte Formular wieder offen.
 
 type ActionResult={error?:string};
 
@@ -252,15 +264,43 @@ function EncumbranceForm({row,section,disabled,formKey}:{row?:any;section:string
   </Form>;
 }
 
+// Welches Formular zuletzt abgeschickt wurde -- damit bei einem Fehler genau
+// dieses wieder offen steht. Die action meldet nur den Fehlertext; den Bezug
+// liefert das abgeschickte Formular selbst.
+function formularSchluessel(fd:FormData){
+  const intent=String(fd.get("_intent")??"");
+  if(intent==="legal_save")return "rechtsdaten";
+  if(intent==="encumbrance_save"){const id=String(fd.get("encumbrance_id")??"");return id?`e-${id}`:`neu-${String(fd.get("section")??"")}`;}
+  return intent;
+}
+
+function useFehlerBei(fehler:string|undefined){
+  const navigation=useNavigation();
+  const [zuletzt,setZuletzt]=useState<string|null>(null);
+  useEffect(()=>{if(navigation.formData)setZuletzt(formularSchluessel(navigation.formData));},[navigation.formData]);
+  // Ohne JavaScript ist unbekannt, welches Formular es war: dann alle offen.
+  return (schluessel:string)=>Boolean(fehler)&&(zuletzt===null||zuletzt===schluessel);
+}
+
+const NEU_KNOPF:Record<string,string>={LAND_REGISTER_II:"+ Recht erfassen",LAND_REGISTER_III:"+ Grundpfandrecht erfassen",BUILDING_ENCUMBRANCE:"+ Baulast erfassen"};
+
+function jaNein(wert:unknown){return wert?"Ja":"Nein";}
+
+function JaNeinFeld({titel,wert,notiz}:{titel:string;wert:unknown;notiz?:string|null}){
+  return <div><dt>{titel}</dt><dd>{jaNein(wert)}{notiz?<div className="leise">{notiz}</div>:null}</dd></div>;
+}
+
 export default function PropertyLegal(){
   const d=useLoaderData<typeof loader>();
   const r=useActionData<typeof action>();
+  const fehlerBei=useFehlerBei(r?.error);
   const legal=d.legal as any;
   const encumbrances=d.encumbrances as any[];
   const locked=!d.canWrite;
   const warnings=legalWarnings(legal,encumbrances);
   const heritable=Boolean(legal?.heritable_building_right);
   const open=encumbrances.filter(isOpenBurden);
+  const pruefer=legal?.reviewed_by?(d.profiles as any[]).find((p)=>p.user_id===legal.reviewed_by)?.display_name:null;
   return <main className="editor-shell">
     <header className="editor-header"><div><Link className="back-link" to={`/properties/${d.property.id}`}>← Objektakte</Link><p className="eyebrow">{d.property.property_number}</p><h1 className="editor-title">Recht & Lasten</h1><p className="editor-meta">{d.property.internal_title}</p></div><div className="header-actions"><span className="badge">{__APP_ENV_LABEL__}</span><small>{d.profile.display_name}</small></div></header>
 
@@ -277,7 +317,42 @@ export default function PropertyLegal(){
 
     {warnings.length?<div className="form-warning"><strong>Offene Punkte</strong><ul>{warnings.map((warning)=><li key={warning}>{warning}</li>)}</ul></div>:<div className="form-success">Grundbuchdaten und Belastungen sind vollständig erfasst und bewertet.</div>}
 
-    <section className="editor-card"><div className="card-head"><div><p className="eyebrow">Rechtsobjekt</p><h2>Grundbuch, Erbbaurecht und öffentliches Recht</h2></div>{legal?<span className="status-pill">Erfasst</span>:<span className="status-pill status-draft">Noch nicht erfasst</span>}</div>
+    <section className="data-card"><div className="card-head"><div><p className="eyebrow">Rechtsobjekt</p><h2>Grundbuch, Erbbaurecht und öffentliches Recht</h2></div>{legal?<span className="status-pill">Erfasst</span>:<span className="status-pill status-draft">Noch nicht erfasst</span>}</div>
+      {legal?<>
+        <dl className="akte-felder">
+          <div><dt>Amtsgericht</dt><dd>{legal.land_registry_court||"—"}</dd></div>
+          <div><dt>Grundbuch von / Blatt</dt><dd>{legal.land_register_sheet||"—"}</dd></div>
+          <div><dt>Gemarkung</dt><dd>{legal.cadastral_district||"—"}</dd></div>
+          <div><dt>Flur / Flurstück</dt><dd>{legal.parcel_section||"—"} / {legal.parcel_number||"—"}</dd></div>
+          <div><dt>Größe laut Grundbuch</dt><dd>{flaeche(legal.registered_area_sqm)}<div className="leise">Vermarktungsangabe: {flaeche(d.property.plot_area_sqm)}</div></dd></div>
+          <div><dt>Miteigentumsanteil</dt><dd>{legal.co_ownership_share||"—"}</dd></div>
+          <div><dt>Auszug vom</dt><dd>{formatDate(legal.extract_dated_on)}</dd></div>
+          <div><dt>Grundlage der Wohnfläche</dt><dd>{beschrifte(AREA_BASIS,legal.living_area_basis)}<div className="leise">Ausgewiesen: {flaeche(d.property.living_area_sqm)}</div></dd></div>
+          <div><dt>Geprüft am</dt><dd>{formatDate(legal.reviewed_on)}{pruefer?<div className="leise">von {pruefer}</div>:null}</dd></div>
+        </dl>
+
+        <div className="card-head" style={{marginTop:"1.25rem"}}><div><p className="eyebrow">Erbbaurecht</p><h3>Bestehendes Erbbaurecht</h3></div></div>
+        <dl className="akte-felder">
+          <JaNeinFeld titel="Erbbaurecht besteht" wert={heritable}/>
+          {heritable?<>
+            <div><dt>Erbbauzins</dt><dd>{euroGenau(legal.ground_rent_amount)}{legal.ground_rent_interval?<div className="leise">{beschrifte(INTERVAL,legal.ground_rent_interval)}</div>:null}</dd></div>
+            <div><dt>Laufzeit bis</dt><dd>{formatDate(legal.ground_lease_until)}</dd></div>
+            <div><dt>Erbbaurechtsgeber</dt><dd>{legal.ground_lessor_name||(legal.ground_lessor_contact_id?null:"—")}{legal.ground_lessor_contact_id?<div><Link to={`/crm/contacts/${legal.ground_lessor_contact_id}`}>Kontakt öffnen</Link></div>:null}</dd></div>
+          </>:null}
+        </dl>
+
+        <div className="card-head" style={{marginTop:"1.25rem"}}><div><p className="eyebrow">Öffentliches Recht</p><h3>Beschränkungen und Auskünfte</h3></div></div>
+        <dl className="akte-felder">
+          <JaNeinFeld titel="Denkmalschutz" wert={legal.monument_protection} notiz={legal.monument_protection_note}/>
+          <JaNeinFeld titel="Milieuschutz" wert={legal.milieu_protection} notiz={legal.milieu_protection_note}/>
+          <JaNeinFeld titel="Sanierungsgebiet" wert={legal.redevelopment_area} notiz={legal.redevelopment_area_note}/>
+          <JaNeinFeld titel="Altlastenverdacht" wert={legal.contamination_suspicion} notiz={legal.contamination_suspicion_note}/>
+          <JaNeinFeld titel="Erschließungsbeiträge offen" wert={legal.development_charges_open} notiz={legal.development_charges_note}/>
+          <div className="breit"><dt>Interne Notizen zur Rechtslage</dt><dd>{legal.legal_notes||"—"}</dd></div>
+        </dl>
+      </>:<p className="empty-state">Für diese Immobilie sind noch keine Grundbuchdaten erfasst.</p>}
+
+      {d.canWrite?<div style={{marginTop:"1rem"}}><Aufklapper id="rechtsdaten-bearbeiten" knopf={legal?"Bearbeiten":"+ Rechtsdaten anlegen"} offen={!legal||fehlerBei("rechtsdaten")}>
       <Form method="post">
         <input type="hidden" name="_intent" value="legal_save"/>
         {legal?<input type="hidden" name="legal_id" value={legal.id}/>:null}
@@ -321,6 +396,7 @@ export default function PropertyLegal(){
         <label className="form-field full-width"><span>Interne Notizen zur Rechtslage</span><textarea name="legal_notes" rows={4} defaultValue={legal?.legal_notes??""} disabled={locked}/></label>
         <div className="form-actions"><button className="primary-button" type="submit" disabled={locked}>{legal?"Rechtsdaten speichern":"Rechtsdaten anlegen"}</button></div>
       </Form>
+      </Aufklapper></div>:null}
     </section>
 
     {SECTION_KEYS.map((section)=>{
@@ -328,7 +404,7 @@ export default function PropertyLegal(){
       return <section className="data-card" id={section.toLowerCase()} key={section}>
         <div className="card-head"><div><p className="eyebrow">{SECTION_SHORT[section]}</p><h2>{SECTION[section]}</h2></div><span className="subtle">{rows.filter(isOpenBurden).length} bestehend · {rows.length} erfasst</span></div>
         {rows.length===0?<p className="empty-state">Keine Einträge erfasst.</p>:<div className="data-list">
-          {rows.map((row:any)=>{const contact=one(row.contacts);const beneficiary=contactLabel(contact)||row.beneficiary_name||row.authority||"—";return <div className="data-row" key={row.id}>
+          {rows.map((row:any)=>{const contact=one(row.contacts);const beneficiary=contactLabel(contact)||row.beneficiary_name||row.authority||"—";const bearbeitbar=!locked&&!row.archived_at;return <div className="data-row" key={row.id} style={{flexWrap:"wrap"}}>
             <div><strong>{row.rank_position?`Rang ${row.rank_position} · `:""}{KINDS[section][row.kind]??row.kind}</strong><small>{beneficiary}{row.reference?` · ${row.reference}`:""}{row.registered_on?` · eingetragen ${formatDate(row.registered_on)}`:""}</small></div>
             <div className="row-meta"><span>{row.content.length>90?`${row.content.slice(0,90)}…`:row.content}</span>{section==="LAND_REGISTER_III"?<small>{money(row.nominal_amount)} nominal{row.remaining_amount!==null&&row.remaining_amount!==undefined?` · ${money(row.remaining_amount)} offen`:""}</small>:null}</div>
             <div className="row-meta">
@@ -336,10 +412,10 @@ export default function PropertyLegal(){
               <small>{SALE_IMPACT[row.sale_impact]}{section==="LAND_REGISTER_III"?row.deletion_consent_available?" · Bewilligung liegt vor":" · Bewilligung offen":""}</small>
             </div>
             {d.canArchive?<Form method="post"><input type="hidden" name="_intent" value={row.archived_at?"encumbrance_restore":"encumbrance_archive"}/><input type="hidden" name="encumbrance_id" value={row.id}/><input type="hidden" name="encumbrance_version" value={row.version}/><button className="secondary-button" type="submit">{row.archived_at?"Wiederherstellen":"Archivieren"}</button></Form>:null}
+            <div style={{flexBasis:"100%"}}><Aufklapper knopf={bearbeitbar?"Bearbeiten":"Alle Angaben ansehen"} offen={fehlerBei(`e-${row.id}`)}><EncumbranceForm formKey={`f-${row.id}`} row={row} section={section} disabled={locked||Boolean(row.archived_at)}/></Aufklapper></div>
           </div>;})}
         </div>}
-        {rows.map((row:any)=><EncumbranceForm key={`f-${row.id}`} formKey={`f-${row.id}`} row={row} section={section} disabled={locked||Boolean(row.archived_at)}/>)}
-        {d.canWrite?<EncumbranceForm formKey={`new-${section}`} section={section} disabled={false}/>:null}
+        {d.canWrite?<div style={{marginTop:"1rem"}}><Aufklapper id={`${section.toLowerCase()}-neu`} knopf={NEU_KNOPF[section]} offen={fehlerBei(`neu-${section}`)}><EncumbranceForm formKey={`new-${section}`} section={section} disabled={false}/></Aufklapper></div>:null}
       </section>;
     })}
 

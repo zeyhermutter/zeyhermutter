@@ -1,10 +1,12 @@
-import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
+import { useEffect, useState } from "react";
+import { data, Form, Link, redirect, useActionData, useLoaderData, useNavigation } from "react-router";
 import type { Route } from "./+types/property-compliance";
 import { requirePermission } from "~/lib/auth.server";
 import { tag as formatDate } from "~/lib/format";
 import { LeerOderFehler } from "~/components/leer-oder-fehler";
 import { KontaktAuswahl } from "~/components/kontakt-auswahl";
-import { GELDWAESCHERISIKO as RISK } from "~/lib/labels";
+import { Aufklapper } from "~/components/aufklapper";
+import { GELDWAESCHERISIKO as RISK, beschrifte } from "~/lib/labels";
 
 type ActionResult={error?:string};
 
@@ -198,12 +200,14 @@ export function complianceWarnings(gwgCase:any,identifications:any[],closings:an
 }
 
 function IdentificationForm({row,documents,caseId,disabled}:{row?:any;documents:any[];caseId:string;disabled:boolean}){
-  return <Form method="post" className="editor-card">
+  // Seit 19.10.2026 ohne eigene Kartenhuelle und Kopf: das Formular steht in
+  // einem Aufklapper, dessen Knopf ("Bearbeiten", "+ Beteiligte Person
+  // erfassen") sagt, worum es geht; Rolle und Name stehen in der Karte darueber.
+  return <Form method="post">
     <input type="hidden" name="_intent" value="identification_save"/>
     <input type="hidden" name="case_id" value={caseId}/>
     {row?<input type="hidden" name="identification_id" value={row.id}/>:null}
     {row?<input type="hidden" name="identification_version" value={row.version}/>:null}
-    <div className="card-head"><div><p className="eyebrow">{row?"Bestehender Eintrag":"Neue Erfassung"}</p><h3>{row?`${PARTY_ROLE[row.party_role]??row.party_role} · ${contactLabel(one(row.contacts))}`:"Beteiligte Person erfassen"}</h3></div></div>
     <div className="form-grid">
       <KontaktAuswahl name="contact_id" beschriftung="Person" pflicht vorbelegtId={row?.contact_id||null} disabled={disabled}/>
       <label className="form-field"><span>Rolle *</span><select name="party_role" defaultValue={row?.party_role??"SELLER"} required disabled={disabled}>{Object.entries(PARTY_ROLE).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label>
@@ -231,13 +235,31 @@ function IdentificationForm({row,documents,caseId,disabled}:{row?:any;documents:
 }
 
 export default function PropertyCompliance(){
+  // Lesen zuerst (19.10.2026). Vorher standen das Formular der Akte und je
+  // erfasster Person ein vollstaendiges Formular dauerhaft offen -- wer nur
+  // nachsehen wollte, was dokumentiert ist, las Eingabefelder (UX-Audit: 4,6).
+  // Jetzt zeigt jede Karte zuerst die gespeicherten Angaben in Worten;
+  // Bearbeiten und Erfassen gehen erst auf Klick auf (Aufklapper). Formulare,
+  // Feldnamen, Absichten und Rechte sind unveraendert.
+  //
+  // Schlaegt ein Speichern fehl, ist genau das Formular offen, das abgeschickt
+  // wurde: die Absicht (und bei Personen der Eintrag) wird beim Absenden
+  // gemerkt. Ohne JavaScript ist das nicht bekannt -- dann sind bei einem
+  // Fehler alle in Frage kommenden Formulare offen, wie frueher.
   const d=useLoaderData<typeof loader>();
   const r=useActionData<typeof action>();
+  const navigation=useNavigation();
+  const [abgeschickt,setAbgeschickt]=useState<{absicht:string;eintrag:string}|null>(null);
+  useEffect(()=>{const fd=navigation.formData;if(fd)setAbgeschickt({absicht:String(fd.get("_intent")??""),eintrag:String(fd.get("identification_id")??"")});},[navigation.formData]);
+  const fehlerBei=(absicht:string,eintrag="")=>Boolean(r?.error)&&(!abgeschickt||(abgeschickt.absicht===absicht&&abgeschickt.eintrag===eintrag));
   const gwgCase=d.gwgCase as any;
   const archived=Boolean(gwgCase?.archived_at);
   const locked=!d.canWrite||archived;
   const warnings=complianceWarnings(gwgCase,d.identifications,d.closings);
   const ownerIds=new Set((d.owners as any[]).map((owner)=>owner.contact_id));
+  const benutzer=(userId:string|null|undefined)=>(d.profiles as any[]).find((item)=>item.user_id===userId)?.display_name??null;
+  const closing=gwgCase?(d.closings as any[]).find((item)=>item.id===gwgCase.sale_closing_id):null;
+  const mitNotiz=(datum:string|null|undefined,notiz:string|null|undefined)=><dd>{formatDate(datum)}{notiz?<div className="leise">{notiz}</div>:null}</dd>;
   return <main className="editor-shell">
     <header className="editor-header"><div><Link className="back-link" to={`/properties/${d.property.id}`}>← Objektakte</Link><p className="eyebrow">{d.property.property_number}</p><h1 className="editor-title">Geldwäsche-Compliance</h1><p className="editor-meta">{d.property.internal_title}{gwgCase?` · ${gwgCase.case_number}`:""}</p></div><div className="header-actions"><Link className="secondary-button link-button" to="/compliance">Gesamtübersicht</Link><span className="badge">{__APP_ENV_LABEL__}</span><small>{d.profile.display_name}</small></div></header>
 
@@ -256,7 +278,24 @@ export default function PropertyCompliance(){
       <article className="metric-card"><span>Ausweisnachweise</span><strong>{d.documents.length}</strong><small>vertraulich abgelegt</small></article>
     </section>
 
-    <section className="editor-card"><div className="card-head"><div><p className="eyebrow">Akte {gwgCase.case_number}</p><h2>Risiko, Prüfungen und Aufbewahrung</h2></div><span className={`status-pill ${archived?"status-archived":RISK_CLASS[gwgCase.risk_level]??"status-draft"}`}>{archived?"Archiviert":gwgCase.risk_level?`Risiko ${RISK[gwgCase.risk_level]}`:"Ohne Einstufung"}</span></div>
+    <section className="data-card"><div className="card-head"><div><p className="eyebrow">Akte {gwgCase.case_number}</p><h2>Risiko, Prüfungen und Aufbewahrung</h2></div><span className={`status-pill ${archived?"status-archived":RISK_CLASS[gwgCase.risk_level]??"status-draft"}`}>{archived?"Archiviert":gwgCase.risk_level?`Risiko ${RISK[gwgCase.risk_level]}`:"Ohne Einstufung"}</span></div>
+      <dl className="akte-felder">
+        <div><dt>Risikostufe</dt><dd>{gwgCase.risk_level?beschrifte(RISK,gwgCase.risk_level):"Noch nicht eingestuft"}</dd></div>
+        <div><dt>Eingestuft am</dt><dd>{formatDate(gwgCase.risk_assessed_on)}{gwgCase.risk_assessed_on&&benutzer(gwgCase.risk_assessed_by)?<span className="leise"> · von {benutzer(gwgCase.risk_assessed_by)}</span>:null}</dd></div>
+        <div><dt>Wiedervorlage Einstufung</dt><dd>{formatDate(gwgCase.risk_next_review_on)}</dd></div>
+        <div><dt>Verantwortlich</dt><dd>{benutzer(gwgCase.primary_responsible_user)??"—"}</dd></div>
+        <div><dt>Zugehöriger Abschlussvorgang</dt><dd>{closing?closing.closing_number:gwgCase.sale_closing_id?"archivierter Vorgang":"—"}</dd></div>
+        <div><dt>Transparenzregister eingesehen am</dt>{mitNotiz(gwgCase.transparency_register_checked_on,gwgCase.transparency_register_note)}</div>
+        <div><dt>Herkunft der Mittel dokumentiert am</dt>{mitNotiz(gwgCase.source_of_funds_documented_on,gwgCase.source_of_funds_note)}</div>
+        <div><dt>Nachweis unbarer Zahlung am</dt>{mitNotiz(gwgCase.non_cash_payment_evidence_on,gwgCase.non_cash_payment_note)}</div>
+        <div><dt>Auf Verdachtsmomente geprüft am</dt>{mitNotiz(gwgCase.suspicious_indication_reviewed_on,gwgCase.suspicious_indication_note)}</div>
+        <div><dt>Meldung abgegeben am</dt><dd>{formatDate(gwgCase.report_filed_on)}{gwgCase.report_reference?<div className="leise">Referenz: {gwgCase.report_reference}</div>:null}</dd></div>
+        <div><dt>Aufbewahrung bis</dt><dd>{formatDate(gwgCase.retention_until)}</dd></div>
+        <div><dt>Löschsperre</dt><dd>{gwgCase.legal_hold?"Ja":"Nein"}</dd></div>
+        <div className="breit"><dt>Begründung der Risikoeinstufung</dt><dd>{gwgCase.risk_rationale??"—"}</dd></div>
+        <div className="breit"><dt>Interne Notizen</dt><dd>{gwgCase.internal_notes??"—"}</dd></div>
+      </dl>
+      {!locked?<Aufklapper knopf="Bearbeiten" offen={fehlerBei("case_update")}>
       <Form method="post">
         <input type="hidden" name="_intent" value="case_update"/>
         <input type="hidden" name="case_id" value={gwgCase.id}/>
@@ -284,20 +323,39 @@ export default function PropertyCompliance(){
         <label className="form-field full-width"><span>Interne Notizen</span><textarea name="internal_notes" rows={3} defaultValue={gwgCase.internal_notes??""} disabled={locked}/></label>
         <div className="form-actions"><button className="primary-button" type="submit" disabled={locked}>Akte speichern</button></div>
       </Form>
+      </Aufklapper>:null}
     </section>
 
     <section className="data-card"><div className="card-head"><div><p className="eyebrow">Beteiligte</p><h2>{d.identifications.length} Identifizierungen</h2></div><Link className="subtle-link" to={`/properties/${d.property.id}/documents`}>Dokumente öffnen →</Link></div>
-      {d.identifications.length===0?<LeerOderFehler fehler={d.ladefehler} name="identifications">Noch keine Person erfasst.</LeerOderFehler>:<div className="data-list">
-        {d.identifications.map((row:any)=>{const contact=one(row.contacts);const represents=one(row.represents);return <div className="data-row" key={row.id}>
-          <div><strong>{contactLabel(contact)} · {PARTY_ROLE[row.party_role]??row.party_role}</strong><small>{row.identified_on?`identifiziert am ${formatDate(row.identified_on)} · ${METHOD[row.identification_method]??"Verfahren offen"}`:"Identifizierung noch nicht abgeschlossen"}{represents?` · handelt für ${contactLabel(represents)}`:""}{ownerIds.has(row.contact_id)?" · als Eigentümer geführt":""}</small></div>
-          <div className="row-meta"><span>{row.document_type?DOCUMENT_TYPE[row.document_type]:"Ausweis offen"}</span><small>{row.document_valid_until?`gültig bis ${formatDate(row.document_valid_until)}`:"Gültigkeit nicht erfasst"}</small></div>
-          <div className="row-meta">{row.screening_result?<span className={`status-pill ${row.screening_result==="NO_MATCH"?"status-sold":"status-lost"}`}>{SCREENING[row.screening_result]}</span>:<span>Abgleich offen</span>}<small>{row.politically_exposed?"politisch exponiert":"nicht als PEP erfasst"}</small></div>
-          {d.canWrite&&!archived?<Form method="post"><input type="hidden" name="_intent" value="identification_remove"/><input type="hidden" name="identification_id" value={row.id}/><button className="secondary-button" type="submit">Entfernen</button></Form>:null}
-        </div>;})}
-      </div>}
-      {d.identifications.map((row:any)=><IdentificationForm key={`form-${row.id}`} row={row} documents={d.documents} caseId={gwgCase.id} disabled={locked}/>)}
-      {d.canWrite&&!archived?<IdentificationForm documents={d.documents} caseId={gwgCase.id} disabled={false}/>:null}
+      {d.identifications.length===0?<LeerOderFehler fehler={d.ladefehler} name="identifications">Noch keine Person erfasst.</LeerOderFehler>:null}
+      {d.canWrite&&!archived?<Aufklapper id="person-erfassen" knopf="+ Beteiligte Person erfassen" offen={fehlerBei("identification_save")}><IdentificationForm documents={d.documents} caseId={gwgCase.id} disabled={false}/></Aufklapper>:null}
     </section>
+
+    {d.identifications.map((row:any)=>{const contact=one(row.contacts);const represents=one(row.represents);const nachweis=(d.documents as any[]).find((document)=>document.id===row.proof_document_id);return <section className="data-card" key={row.id}>
+      <div className="card-head"><div><p className="eyebrow">{beschrifte(PARTY_ROLE,row.party_role)}</p><h2>{contactLabel(contact)}</h2></div>
+        <div className="akte-werkzeuge"><span className={`status-pill ${row.identified_on?"status-sold":"status-draft"}`}>{row.identified_on?"Identifiziert":"Identifizierung offen"}</span>{d.canWrite&&!archived?<Form method="post"><input type="hidden" name="_intent" value="identification_remove"/><input type="hidden" name="identification_id" value={row.id}/><button className="secondary-button" type="submit">Entfernen</button></Form>:null}</div></div>
+      <dl className="akte-felder">
+        <div><dt>Person</dt><dd>{contact?<Link to={`/crm/contacts/${contact.id}`}>{contactLabel(contact)}</Link>:"—"}{contact?.contact_number?<span className="leise"> {contact.contact_number}</span>:null}{ownerIds.has(row.contact_id)?<div className="leise">als Eigentümer geführt</div>:null}</dd></div>
+        <div><dt>Handelt für</dt><dd>{represents?contactLabel(represents):"—"}</dd></div>
+        <div><dt>Geburtsdatum</dt><dd>{formatDate(row.birth_date)}</dd></div>
+        <div><dt>Geburtsort</dt><dd>{row.birth_place??"—"}</dd></div>
+        <div><dt>Staatsangehörigkeit</dt><dd>{row.nationality??"—"}</dd></div>
+        <div><dt>Wohnanschrift</dt><dd>{row.residential_address??"—"}</dd></div>
+        <div><dt>Ausweisart</dt><dd>{beschrifte(DOCUMENT_TYPE,row.document_type)}</dd></div>
+        <div><dt>Ausweisnummer</dt><dd>{row.document_number??"—"}</dd></div>
+        <div><dt>Ausstellende Behörde</dt><dd>{row.issuing_authority??"—"}</dd></div>
+        <div><dt>Ausweis gültig bis</dt><dd>{formatDate(row.document_valid_until)}{row.document_valid_until&&row.document_valid_until<today()?<span className="leise"> · abgelaufen</span>:null}</dd></div>
+        <div><dt>Verfahren</dt><dd>{beschrifte(METHOD,row.identification_method)}</dd></div>
+        <div><dt>Identifiziert am</dt><dd>{formatDate(row.identified_on)}{row.identified_on&&benutzer(row.identified_by)?<span className="leise"> · von {benutzer(row.identified_by)}</span>:null}</dd></div>
+        <div><dt>Ausweiskopie im Dokumentenbereich</dt><dd>{nachweis?nachweis.title:"—"}</dd></div>
+        <div><dt>Politisch exponierte Person</dt><dd>{row.politically_exposed?"Ja":"Nein"}</dd></div>
+        <div><dt>Listenabgleich am</dt><dd>{formatDate(row.screening_done_on)}{row.screening_source?<div className="leise">{row.screening_source}</div>:null}</dd></div>
+        <div><dt>Ergebnis des Listenabgleichs</dt><dd>{row.screening_result?<span className={`status-pill ${row.screening_result==="NO_MATCH"?"status-sold":"status-lost"}`}>{beschrifte(SCREENING,row.screening_result)}</span>:"—"}</dd></div>
+        <div className="breit"><dt>Anmerkung zum Listenabgleich</dt><dd>{row.screening_note??"—"}</dd></div>
+        <div className="breit"><dt>Interne Notiz</dt><dd>{row.notes??"—"}</dd></div>
+      </dl>
+      {!locked?<Aufklapper knopf="Bearbeiten" offen={fehlerBei("identification_save",row.id)}><IdentificationForm row={row} documents={d.documents} caseId={gwgCase.id} disabled={locked}/></Aufklapper>:null}
+    </section>;})}
 
     <div className="dashboard-grid property-section">
       <section className="data-card"><div className="card-head"><div><p className="eyebrow">Ablage</p><h2>Identitätsnachweise</h2></div><Link className="subtle-link" to={`/properties/${d.property.id}/documents`}>Hochladen →</Link></div>

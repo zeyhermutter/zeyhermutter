@@ -1,8 +1,16 @@
+import { useState } from "react";
 import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import type { Route } from "./+types/closing-milestones";
+import { Aufklapper } from "~/components/aufklapper";
 import { requirePermission } from "~/lib/auth.server";
 import { tag as formatDate, zeitpunkt as formatMoment } from "~/lib/format";
 import { crmDateAtTimeToIso, crmIsoToLocalDateTime as isoToLocal, crmLocalDateTimeToIso } from "~/lib/local-time";
+import "~/programm-liste.css";
+
+// 19.10.2026: Die Seite ruhig gemacht (UX-Note 4,1). Vorher standen alle
+// Formulare offen (je Meilenstein eines, dazu Protokoll, Zähler, Schlüssel).
+// Jetzt zeigt jeder Bereich zuerst, was erfasst ist; Bearbeiten und Erfassen
+// stecken im Aufklapper, bei einem Fehler steht der betroffene offen.
 
 type ActionResult={error?:string};
 
@@ -239,40 +247,54 @@ export default function ClosingMilestones(){
   const titleTransfer=milestones.find((m)=>m.milestone_key==="TITLE_TRANSFER");
   const overdue=open.filter((m)=>m.deadline_on&&m.deadline_on<today());
   const totalKeys=(d.keys as any[]).reduce((sum,k)=>sum+Number(k.quantity??0),0);
+  // Welches Formular zuletzt abgeschickt wurde: bei einem Fehler steht sein
+  // Aufklapper offen, die anderen bleiben zu.
+  const [zuletzt,setZuletzt]=useState<string|null>(null);
+  const fehlerBei=(schluessel:string)=>Boolean(r?.error)&&zuletzt===schluessel;
+  const dokument=protocol?.document_id?(d.documents as any[]).find((doc)=>doc.id===protocol.document_id):null;
+  const bestaetigt=(name:string|null,am:string|null)=>am?<>{name||"—"}<div className="leise">bestätigt {formatMoment(am)}</div></>:"noch nicht bestätigt";
   return <main className="editor-shell">
     <header className="editor-header"><div><Link className="back-link" to={`/closings/${row.id}`}>← Abschlussakte</Link><p className="eyebrow">{row.closing_number}</p><h1 className="editor-title">Meilensteine & Übergabe</h1><p className="editor-meta">{property.property_number} · {buyer.first_name} {buyer.last_name}</p></div><div className="header-actions"><span className={`status-pill ${titleTransfer?.completed_on?"status-sold":"status-draft"}`}>{titleTransfer?.completed_on?"Umgeschrieben":`${open.length} offen`}</span><span className="badge">{__APP_ENV_LABEL__}</span><small>{d.profile.display_name}</small></div></header>
 
     {r?.error?<div className="form-error">{r.error}</div>:null}
     <div className="form-warning"><strong>Erfassung, keine rechtliche Prüfung.</strong> Ob ein Meilenstein im konkreten Fall einschlägig ist, entscheidet die Bearbeitung. Das System schlägt nichts vor und leitet keine Rechtsfolge ab. Erst mit dokumentierter Eigentumsumschreibung lässt sich der Vorgang abschließen.</div>
 
-    <section className="metric-grid">
-      <article className="metric-card"><span>Offene Meilensteine</span><strong>{open.length}</strong><small>von {milestones.filter((m)=>m.applicability!=="NOT_APPLICABLE").length} einschlägigen</small></article>
-      <article className="metric-card"><span>Fristen überschritten</span><strong>{overdue.length}</strong><small>{overdue.length?"dringend prüfen":"keine Überschreitung"}</small></article>
-      <article className="metric-card"><span>Eigentumsumschreibung</span><strong>{titleTransfer?.completed_on?formatDate(titleTransfer.completed_on):"offen"}</strong><small>Voraussetzung für den Abschluss</small></article>
-      <article className="metric-card"><span>Übergabeprotokoll</span><strong>{protocol?.handover_at?formatMoment(protocol.handover_at):protocol?"angelegt":"fehlt"}</strong><small>{protocol?`${(d.meters as any[]).length} Zähler · ${totalKeys} Schlüssel`:"noch nicht erfasst"}</small></article>
+    <section className="data-card"><div className="card-head"><div><h2>Stand</h2></div></div>
+      <dl className="akte-felder">
+        <div><dt>Offene Meilensteine</dt><dd>{open.length} <span className="leise">von {milestones.filter((m)=>m.applicability!=="NOT_APPLICABLE").length} einschlägigen</span></dd></div>
+        <div><dt>Fristen überschritten</dt><dd>{overdue.length} <span className="leise">{overdue.length?"dringend prüfen":"keine Überschreitung"}</span></dd></div>
+        <div><dt>Eigentumsumschreibung</dt><dd>{titleTransfer?.completed_on?formatDate(titleTransfer.completed_on):"offen"} <span className="leise">Voraussetzung für den Abschluss</span></dd></div>
+        <div><dt>Übergabeprotokoll</dt><dd>{protocol?.handover_at?formatMoment(protocol.handover_at):protocol?"angelegt":"fehlt"} <span className="leise">{protocol?`${(d.meters as any[]).length} Zähler · ${totalKeys} Schlüssel`:"noch nicht erfasst"}</span></dd></div>
+      </dl>
     </section>
 
     <section className="data-card" id="meilensteine"><div className="card-head"><div><p className="eyebrow">Zwischen Beurkundung und Grundbuch</p><h2>Notarielle Meilensteine</h2></div></div>
-      <div className="data-list">
-        {milestones.map((m:any)=>{
+      <div className="programm-tabelle-rahmen"><table className="programm-tabelle">
+        <thead><tr><th>Meilenstein</th><th>Stand</th><th>Frist / Zuständig</th><th>Referenz / Notiz</th><th></th></tr></thead>
+        <tbody>{milestones.map((m:any)=>{
           const responsible=one(m.profiles);
           const isOverdue=m.deadline_on&&!m.completed_on&&m.deadline_on<today()&&m.applicability!=="NOT_APPLICABLE";
-          return <div className="data-row" key={m.id}>
-            <div><strong>{m.title}</strong><small>{MILESTONE_HINT[m.milestone_key]??""}</small></div>
-            <div className="row-meta">
+          return <tr key={m.id}>
+            <td><strong>{m.title}</strong>{MILESTONE_HINT[m.milestone_key]?<div className="leise">{MILESTONE_HINT[m.milestone_key]}</div>:null}</td>
+            <td>
               {m.applicability==="NOT_APPLICABLE"?<span className="status-pill status-archived">Nicht einschlägig</span>
                 :m.completed_on?<span className="status-pill status-sold">Erledigt {formatDate(m.completed_on)}</span>
                 :isOverdue?<span className="status-pill status-lost">Frist überschritten</span>
                 :m.initiated_on?<span className="status-pill status-marketing">Eingeleitet {formatDate(m.initiated_on)}</span>
                 :<span className="status-pill status-draft">{APPLICABILITY[m.applicability]}</span>}
-              <small>{m.deadline_on?`Frist ${formatDate(m.deadline_on)}`:responsible?.display_name??""}</small>
-            </div>
-            <div className="row-meta"><span>{m.reference||"—"}</span><small>{m.note?m.note.slice(0,60):""}</small></div>
-            {d.canTask&&!m.completed_on&&m.applicability!=="NOT_APPLICABLE"?<Form method="post"><input type="hidden" name="_intent" value="milestone_reminder"/><input type="hidden" name="milestone_id" value={m.id}/><button className="secondary-button" type="submit">Wiedervorlage</button></Form>:null}
-          </div>;
-        })}
-      </div>
-      {milestones.map((m:any)=><Form method="post" className="editor-card" key={`f-${m.id}`}>
+              {m.initiated_on&&(m.completed_on||isOverdue)?<div className="leise">eingeleitet {formatDate(m.initiated_on)}</div>:null}
+              {m.applicability==="UNCLEAR"&&(m.completed_on||isOverdue||m.initiated_on)?<div className="leise">{APPLICABILITY[m.applicability]}</div>:null}
+            </td>
+            <td>{m.deadline_on?`Frist ${formatDate(m.deadline_on)}`:"—"}{responsible?.display_name?<div className="leise">{responsible.display_name}</div>:null}</td>
+            <td>{m.reference||"—"}{m.note?<div className="leise">{m.note}</div>:null}</td>
+            <td className="rechts">
+              {d.canTask&&!m.completed_on&&m.applicability!=="NOT_APPLICABLE"?<Form method="post"><input type="hidden" name="_intent" value="milestone_reminder"/><input type="hidden" name="milestone_id" value={m.id}/><button className="secondary-button" type="submit">Wiedervorlage</button></Form>:null}
+              {d.canWrite?<Link to={`#meilenstein-${m.id}`}>Bearbeiten</Link>:null}
+            </td>
+          </tr>;
+        })}</tbody>
+      </table></div>
+      {d.canWrite?<div style={{display:"grid",gap:"0.5rem",marginTop:"0.75rem"}}>{milestones.map((m:any)=><Aufklapper id={`meilenstein-${m.id}`} knopf={`${m.title} bearbeiten`} offen={fehlerBei(`meilenstein-${m.id}`)} key={`f-${m.id}`}><Form method="post" className="editor-card" onSubmit={()=>setZuletzt(`meilenstein-${m.id}`)}>
         <input type="hidden" name="_intent" value="milestone_save"/>
         <input type="hidden" name="milestone_id" value={m.id}/>
         <input type="hidden" name="version" value={m.version}/>
@@ -287,11 +309,23 @@ export default function ClosingMilestones(){
         </div>
         <label className="form-field full-width"><span>Notiz</span><textarea name="note" rows={2} defaultValue={m.note??""} disabled={locked}/></label>
         <div className="form-actions"><button className="primary-button" type="submit" disabled={locked}>Meilenstein speichern</button></div>
-      </Form>)}
+      </Form></Aufklapper>)}</div>:null}
     </section>
 
-    <section className="editor-card" id="uebergabe"><div className="card-head"><div><p className="eyebrow">Schlüsselübergabe</p><h2>Übergabeprotokoll</h2></div>{protocol?<span className="status-pill">Angelegt</span>:<span className="status-pill status-draft">Noch nicht angelegt</span>}</div>
-      <Form method="post">
+    <section className="data-card" id="uebergabe"><div className="card-head"><div><p className="eyebrow">Schlüsselübergabe</p><h2>Übergabeprotokoll</h2></div>{protocol?<span className="status-pill">Angelegt</span>:<span className="status-pill status-draft">Noch nicht angelegt</span>}</div>
+      {protocol?<dl className="akte-felder">
+        <div><dt>Übergabetermin</dt><dd>{formatMoment(protocol.handover_at)}<div className="leise">Abschlussakte: {row.handover_date?formatDate(row.handover_date):"kein Übergabedatum"}</div></dd></div>
+        <div><dt>Energieausweis übergeben</dt><dd>{protocol.energy_certificate_handed_over?"Ja":"Nein"}</dd></div>
+        <div><dt>Verkäuferseite</dt><dd>{bestaetigt(protocol.seller_confirmed_name,protocol.seller_confirmed_at)}</dd></div>
+        <div><dt>Käuferseite</dt><dd>{bestaetigt(protocol.buyer_confirmed_name,protocol.buyer_confirmed_at)}</dd></div>
+        <div className="breit"><dt>Protokoll als Dokument</dt><dd>{dokument?dokument.title:protocol.document_id?"verknüpft":"—"}</dd></div>
+        <div className="breit"><dt>Anwesende</dt><dd>{protocol.attendees||"—"}</dd></div>
+        <div className="breit"><dt>Zustand der Räume</dt><dd>{protocol.room_condition||"—"}</dd></div>
+        <div className="breit"><dt>Verbleibendes Inventar</dt><dd>{protocol.remaining_inventory||"—"}</dd></div>
+        <div className="breit"><dt>Mängel</dt><dd>{protocol.defects||"—"}</dd></div>
+        <div className="breit"><dt>Bemerkungen</dt><dd>{protocol.remarks||"—"}</dd></div>
+      </dl>:<p className="empty-state">Zu diesem Vorgang ist noch kein Übergabeprotokoll angelegt. Zählerstände und Schlüssel lassen sich erfassen, sobald es angelegt ist.</p>}
+      {d.canWrite?<div style={{marginTop:"0.75rem"}}><Aufklapper id="protokoll" knopf={protocol?"Bearbeiten":"+ Übergabeprotokoll anlegen"} offen={fehlerBei("protokoll")}><Form method="post" onSubmit={()=>setZuletzt("protokoll")}>
         <input type="hidden" name="_intent" value="protocol_save"/>
         {protocol?<input type="hidden" name="protocol_id" value={protocol.id}/>:null}
         {protocol?<input type="hidden" name="version" value={protocol.version}/>:null}
@@ -312,19 +346,21 @@ export default function ClosingMilestones(){
         <label className="form-field full-width"><span>Mängel</span><textarea name="defects" rows={3} defaultValue={protocol?.defects??""} disabled={locked}/></label>
         <label className="form-field full-width"><span>Bemerkungen</span><textarea name="remarks" rows={2} defaultValue={protocol?.remarks??""} disabled={locked}/></label>
         <div className="form-actions"><button className="primary-button" type="submit" disabled={locked}>{protocol?"Protokoll speichern":"Protokoll anlegen"}</button></div>
-      </Form>
+      </Form></Aufklapper></div>:null}
     </section>
 
     {protocol?<div className="dashboard-grid property-section">
       <section className="data-card"><div className="card-head"><div><p className="eyebrow">Ablesung</p><h2>Zählerstände</h2></div><span className="subtle">{(d.meters as any[]).length}</span></div>
-        {(d.meters as any[]).length===0?<p className="empty-state">Noch kein Zählerstand erfasst.</p>:<div className="data-list">
-          {(d.meters as any[]).map((m:any)=><div className="data-row" key={m.id}>
-            <div><strong>{METER_TYPE[m.meter_type]??m.meter_type}</strong><small>{m.meter_number?`Nr. ${m.meter_number}`:"ohne Zählernummer"}{m.note?` · ${m.note}`:""}</small></div>
-            <div className="row-meta"><span>{Number(m.reading).toLocaleString("de-DE",{maximumFractionDigits:3})}{m.unit?` ${m.unit}`:""}</span><small>abgelesen {formatDate(m.read_on)}</small></div>
-            {d.canWrite?<Form method="post"><input type="hidden" name="_intent" value="meter_remove"/><input type="hidden" name="meter_id" value={m.id}/><button className="secondary-button" type="submit">Entfernen</button></Form>:null}
-          </div>)}
-        </div>}
-        {d.canWrite?<Form method="post" style={{marginTop:"1rem"}}>
+        {(d.meters as any[]).length===0?<p className="empty-state">Noch kein Zählerstand erfasst.</p>:<div className="programm-tabelle-rahmen"><table className="programm-tabelle">
+          <thead><tr><th>Zähler</th><th className="rechts">Stand</th><th>Abgelesen</th>{d.canWrite?<th></th>:null}</tr></thead>
+          <tbody>{(d.meters as any[]).map((m:any)=><tr key={m.id}>
+            <td><strong>{METER_TYPE[m.meter_type]??m.meter_type}</strong><div className="leise">{m.meter_number?`Nr. ${m.meter_number}`:"ohne Zählernummer"}{m.note?` · ${m.note}`:""}</div></td>
+            <td className="zahl rechts">{Number(m.reading).toLocaleString("de-DE",{maximumFractionDigits:3})}{m.unit?` ${m.unit}`:""}</td>
+            <td className="zahl">{formatDate(m.read_on)}</td>
+            {d.canWrite?<td className="rechts"><Form method="post"><input type="hidden" name="_intent" value="meter_remove"/><input type="hidden" name="meter_id" value={m.id}/><button className="secondary-button" type="submit">Entfernen</button></Form></td>:null}
+          </tr>)}</tbody>
+        </table></div>}
+        {d.canWrite?<div style={{marginTop:"0.75rem"}}><Aufklapper id="zaehler" knopf="+ Zählerstand erfassen" offen={fehlerBei("zaehler")}><Form method="post" onSubmit={()=>setZuletzt("zaehler")}>
           <input type="hidden" name="_intent" value="meter_add"/>
           <input type="hidden" name="protocol_id" value={protocol.id}/>
           <div className="form-grid">
@@ -336,18 +372,19 @@ export default function ClosingMilestones(){
             <label className="form-field"><span>Notiz</span><input name="note"/></label>
           </div>
           <div className="form-actions"><button className="secondary-button" type="submit">Zähler erfassen</button></div>
-        </Form>:null}
+        </Form></Aufklapper></div>:null}
       </section>
 
       <section className="data-card"><div className="card-head"><div><p className="eyebrow">Übergeben</p><h2>Schlüssel</h2></div><span className="subtle">{totalKeys} Stück</span></div>
-        {(d.keys as any[]).length===0?<p className="empty-state">Noch kein Schlüssel erfasst.</p>:<div className="data-list">
-          {(d.keys as any[]).map((k:any)=><div className="data-row" key={k.id}>
-            <div><strong>{KEY_TYPE[k.key_type]??k.key_type}{k.label?` · ${k.label}`:""}</strong><small>{k.note||"—"}</small></div>
-            <div className="row-meta"><span>{k.quantity} Stück</span></div>
-            {d.canWrite?<Form method="post"><input type="hidden" name="_intent" value="key_remove"/><input type="hidden" name="key_id" value={k.id}/><button className="secondary-button" type="submit">Entfernen</button></Form>:null}
-          </div>)}
-        </div>}
-        {d.canWrite?<Form method="post" style={{marginTop:"1rem"}}>
+        {(d.keys as any[]).length===0?<p className="empty-state">Noch kein Schlüssel erfasst.</p>:<div className="programm-tabelle-rahmen"><table className="programm-tabelle">
+          <thead><tr><th>Schlüssel</th><th className="rechts">Anzahl</th>{d.canWrite?<th></th>:null}</tr></thead>
+          <tbody>{(d.keys as any[]).map((k:any)=><tr key={k.id}>
+            <td><strong>{KEY_TYPE[k.key_type]??k.key_type}{k.label?` · ${k.label}`:""}</strong><div className="leise">{k.note||"—"}</div></td>
+            <td className="zahl rechts">{k.quantity} Stück</td>
+            {d.canWrite?<td className="rechts"><Form method="post"><input type="hidden" name="_intent" value="key_remove"/><input type="hidden" name="key_id" value={k.id}/><button className="secondary-button" type="submit">Entfernen</button></Form></td>:null}
+          </tr>)}</tbody>
+        </table></div>}
+        {d.canWrite?<div style={{marginTop:"0.75rem"}}><Aufklapper id="schluessel" knopf="+ Schlüssel erfassen" offen={fehlerBei("schluessel")}><Form method="post" onSubmit={()=>setZuletzt("schluessel")}>
           <input type="hidden" name="_intent" value="key_add"/>
           <input type="hidden" name="protocol_id" value={protocol.id}/>
           <div className="form-grid">
@@ -357,7 +394,7 @@ export default function ClosingMilestones(){
             <label className="form-field"><span>Notiz</span><input name="note"/></label>
           </div>
           <div className="form-actions"><button className="secondary-button" type="submit">Schlüssel erfassen</button></div>
-        </Form>:null}
+        </Form></Aufklapper></div>:null}
       </section>
     </div>:null}
 

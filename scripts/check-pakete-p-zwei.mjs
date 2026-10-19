@@ -179,8 +179,15 @@ pruefe(/alsUeberschrift \? <h1 className="arbeitsplatz-kopf-titel">/.test(arbeit
 // 17. Wartezustand beim Absenden fuer alle Formulare des Programms
 pruefe((await lies("app/routes/internal-layout.tsx")).includes("<AbsendenWarten />") && (await lies("app/styles.css")).includes('[data-wartet="1"]'), "internal-layout.tsx: Wartezustand beim Absenden fehlt");
 
+// 18. Paket B (19.10.2026): Akten "Lesen zuerst" -- Lesekarte oben, Formulare erst auf Klick
+for (const datei of ["property-compliance", "property-legal", "property-disposition", "property-marketing", "closing-detail", "closing-milestones"]) {
+  const quelle = await lies(`app/routes/${datei}.tsx`);
+  pruefe(quelle.includes("<Aufklapper") && /className="akte-felder"|className="programm-tabelle"/.test(quelle), `${datei}.tsx: wieder Formulare dauerhaft offen statt Lesen zuerst`);
+}
+pruefe(!(await lies("app/routes/closing-detail.tsx")).includes('to={`/closings/${row.id}/milestones#'), "closing-detail.tsx: Meilensteine wieder doppelt (volle Liste in der Akte)");
+
 if (fehler.length) {
   console.error("P2:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung, Datenauskunft aus allen Kontakt-Tabellen, Rechtsgrundlage und Werbewiderspruch (Hinweis, keine Sperre), Anonymisieren nur mit Recht, Grund, Bestätigung und ohne Einwand der Datenbank, Objektakte lädt je Teil nur, was er zeigt, 16 volle Listen als Programmtabelle, tägliche Automatik nur mit Aufgaben/Benachrichtigungen, dublettensicher und abschaltbar, 8 Listen blättern über die Datenbank, Aufgabe anlegen sucht seine Bezüge, Arbeitsplatz ohne Seitenkopf mit h1, jede Liste mit h1, Dialoge halten den Fokus, Absenden zeigt Warten.");
+console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung, Datenauskunft aus allen Kontakt-Tabellen, Rechtsgrundlage und Werbewiderspruch (Hinweis, keine Sperre), Anonymisieren nur mit Recht, Grund, Bestätigung und ohne Einwand der Datenbank, Objektakte lädt je Teil nur, was er zeigt, 16 volle Listen als Programmtabelle, tägliche Automatik nur mit Aufgaben/Benachrichtigungen, dublettensicher und abschaltbar, 8 Listen blättern über die Datenbank, Aufgabe anlegen sucht seine Bezüge, Arbeitsplatz ohne Seitenkopf mit h1, jede Liste mit h1, Dialoge halten den Fokus, Absenden zeigt Warten, Akten lesen zuerst.");

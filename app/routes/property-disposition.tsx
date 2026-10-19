@@ -1,10 +1,22 @@
-import { data, Form, Link, redirect, useActionData, useLoaderData } from "react-router";
+import { useEffect, useState } from "react";
+import { data, Form, Link, redirect, useActionData, useLoaderData, useNavigation } from "react-router";
 import type { Route } from "./+types/property-disposition";
 import { requirePermission } from "~/lib/auth.server";
 import { crmDateAtTimeToIso } from "~/lib/local-time";
 import { tag as formatDate } from "~/lib/format";
-import { VERFUEGUNGSROLLE as PARTY_ROLE } from "~/lib/labels";
+import { beschrifte, VERFUEGUNGSROLLE as PARTY_ROLE } from "~/lib/labels";
+import { Aufklapper } from "~/components/aufklapper";
 import { KontaktAuswahl } from "~/components/kontakt-auswahl";
+
+// Lesen zuerst (19.10.2026). Bis dahin standen das Formular zu
+// Eigentümerstellung, Erbfall und Ehegattenzustimmung sowie je Beteiligtem ein
+// Bearbeitungsformular dauerhaft offen (UX-Note 4,8): wer nur wissen wollte,
+// wer verkaufen darf, las Eingabefelder. Jetzt zeigt eine Lesekarte die
+// gespeicherten Angaben in Worten, die Beteiligten stehen als ruhige Liste;
+// Bearbeiten und "+ Beteiligten erfassen" gehen erst auf Klick auf
+// (Aufklapper). Formulare, Feldnamen, _intent-Werte, Rechte und die action
+// sind unverändert. Schlägt das Speichern fehl, steht genau das abgeschickte
+// Formular wieder offen.
 
 type ActionResult={error?:string};
 
@@ -292,15 +304,37 @@ function PartyForm({row,dispositionId,disabled,formKey}:{row?:any;dispositionId:
   </Form>;
 }
 
+// Welches Formular zuletzt abgeschickt wurde -- damit bei einem Fehler genau
+// dieses wieder offen steht. Die action meldet nur den Fehlertext; den Bezug
+// liefert das abgeschickte Formular selbst.
+function formularSchluessel(fd:FormData){
+  const intent=String(fd.get("_intent")??"");
+  if(intent==="record_save")return "grundlage";
+  if(intent==="party_save"){const id=String(fd.get("party_id")??"");return id?`p-${id}`:"neu-beteiligter";}
+  return intent;
+}
+
+function useFehlerBei(fehler:string|undefined){
+  const navigation=useNavigation();
+  const [zuletzt,setZuletzt]=useState<string|null>(null);
+  useEffect(()=>{if(navigation.formData)setZuletzt(formularSchluessel(navigation.formData));},[navigation.formData]);
+  // Ohne JavaScript ist unbekannt, welches Formular es war: dann alle offen.
+  return (schluessel:string)=>Boolean(fehler)&&(zuletzt===null||zuletzt===schluessel);
+}
+
+function jaNein(wert:unknown){return wert?"Ja":"Nein";}
+
 export default function PropertyDisposition(){
   const d=useLoaderData<typeof loader>();
   const r=useActionData<typeof action>();
+  const fehlerBei=useFehlerBei(r?.error);
   const record=d.record as any;
   const parties=d.parties as any[];
   const locked=!d.canWrite;
   const gaps=(d.gaps??[]) as string[];
   const active=parties.filter((row)=>!row.archived_at);
   const inheritance=Boolean(record?.inheritance_case);
+  const pruefer=record?.reviewed_by?(d.profiles as any[]).find((p)=>p.user_id===record.reviewed_by)?.display_name:null;
   return <main className="editor-shell">
     <header className="editor-header"><div><Link className="back-link" to={`/properties/${d.property.id}`}>← Objektakte</Link><p className="eyebrow">{d.property.property_number}</p><h1 className="editor-title">Verfügungsberechtigung</h1><p className="editor-meta">{d.property.internal_title}</p></div><div className="header-actions"><span className={`status-pill ${gaps.length?"status-lost":"status-sold"}`}>{gaps.length?`${gaps.length} offen`:"Geklärt"}</span><span className="badge">{__APP_ENV_LABEL__}</span><small>{d.profile.display_name}</small></div></header>
 
@@ -319,7 +353,30 @@ export default function PropertyDisposition(){
       <article className="metric-card"><span>Erbfall</span><strong>{inheritance?"Ja":"Nein"}</strong><small>{inheritance&&record?.succession_proof_issued_on?`Nachweis vom ${formatDate(record.succession_proof_issued_on)}`:inheritance?"Nachweis offen":"kein Erbfall erfasst"}</small></article>
     </section>
 
-    <section className="editor-card"><div className="card-head"><div><p className="eyebrow">Grundlage</p><h2>Eigentümerstellung, Erbfall und Ehegattenzustimmung</h2></div>{record?<span className="status-pill">Erfasst</span>:<span className="status-pill status-draft">Noch nicht erfasst</span>}</div>
+    <section className="data-card"><div className="card-head"><div><p className="eyebrow">Grundlage</p><h2>Eigentümerstellung, Erbfall und Ehegattenzustimmung</h2></div>{record?<span className="status-pill">Erfasst</span>:<span className="status-pill status-draft">Noch nicht erfasst</span>}</div>
+      {record?<>
+        <dl className="akte-felder">
+          <div><dt>Eigentümerstellung</dt><dd>{beschrifte(STRUCTURE,record.ownership_structure)}<div className="leise">{d.owners.length} Eigentümer in der Objektakte</div></dd></div>
+          <div><dt>Testamentsvollstreckung</dt><dd>{jaNein(record.executor_appointed)}</dd></div>
+          <div><dt>Ehegattenzustimmung erforderlich</dt><dd>{jaNein(record.spousal_consent_required)}{record.spousal_consent_required?<div className="leise">erteilt am {formatDate(record.spousal_consent_given_on)}</div>:null}</dd></div>
+          <div><dt>Geprüft am</dt><dd>{formatDate(record.reviewed_on)}{pruefer?<div className="leise">von {pruefer}</div>:null}</dd></div>
+        </dl>
+
+        <div className="card-head" style={{marginTop:"1.25rem"}}><div><p className="eyebrow">Nachlass</p><h3>Erbfall</h3></div></div>
+        <dl className="akte-felder">
+          <div><dt>Erbfall liegt vor</dt><dd>{jaNein(inheritance)}</dd></div>
+          {inheritance?<>
+            <div><dt>Erblasser</dt><dd>{record.decedent_name||(record.decedent_contact_id?null:"—")}{record.decedent_contact_id?<div><Link to={`/crm/contacts/${record.decedent_contact_id}`}>Kontakt öffnen</Link></div>:null}</dd></div>
+            <div><dt>Sterbedatum</dt><dd>{formatDate(record.date_of_death)}</dd></div>
+            <div><dt>Erbnachweis</dt><dd>{record.succession_proof_type?beschrifte(PROOF,record.succession_proof_type):"Noch nicht festgelegt"}{record.succession_proof_reference?<div className="leise">Aktenzeichen {record.succession_proof_reference}</div>:null}</dd></div>
+            <div><dt>Erbnachweis beantragt / erteilt</dt><dd>{formatDate(record.succession_proof_applied_on)} / {formatDate(record.succession_proof_issued_on)}</dd></div>
+            <div><dt>Grundbuch berichtigt</dt><dd>{jaNein(record.land_register_corrected)}{record.land_register_corrected_on?<div className="leise">am {formatDate(record.land_register_corrected_on)}</div>:null}</dd></div>
+          </>:null}
+          <div className="breit"><dt>Interne Notizen zur Verfügungsberechtigung</dt><dd>{record.disposition_notes||"—"}</dd></div>
+        </dl>
+      </>:<p className="empty-state">Die Verfügungsberechtigung ist für diese Immobilie noch nicht erfasst.</p>}
+
+      {d.canWrite?<div style={{marginTop:"1rem"}}><Aufklapper id="grundlage-bearbeiten" knopf={record?"Bearbeiten":"+ Verfügungsberechtigung anlegen"} offen={!record||fehlerBei("grundlage")}>
       <Form method="post">
         <input type="hidden" name="_intent" value="record_save"/>
         {record?<input type="hidden" name="record_id" value={record.id}/>:null}
@@ -348,6 +405,7 @@ export default function PropertyDisposition(){
         <label className="form-field full-width"><span>Interne Notizen zur Verfügungsberechtigung</span><textarea name="disposition_notes" rows={4} defaultValue={record?.disposition_notes??""} disabled={locked}/></label>
         <div className="form-actions"><button className="primary-button" type="submit" disabled={locked}>{record?"Angaben speichern":"Verfügungsberechtigung anlegen"}</button></div>
       </Form>
+      </Aufklapper></div>:null}
     </section>
 
     {record?<section className="data-card" id="beteiligte"><div className="card-head"><div><p className="eyebrow">Wer darf verkaufen</p><h2>{active.length} Beteiligte</h2></div><Link className="subtle-link" to={`/properties/${d.property.id}`}>Eigentümer der Objektakte →</Link></div>
@@ -356,7 +414,8 @@ export default function PropertyDisposition(){
           const contact=one(row.contacts);const represents=one(row.represents);
           const approvalOpen=row.court_approval_required&&!row.court_approval_granted_on;
           const poaProblem=row.party_role==="ATTORNEY_IN_FACT"&&(row.power_of_attorney_revoked_on||(row.power_of_attorney_valid_until&&row.power_of_attorney_valid_until<today()));
-          return <div className="data-row" key={row.id}>
+          const bearbeitbar=!locked&&!row.archived_at;
+          return <div className="data-row" key={row.id} style={{flexWrap:"wrap"}}>
             <div><strong>{contactLabel(contact)} · {PARTY_ROLE[row.party_role]??row.party_role}</strong><small>{row.share_percentage?`Quote ${Number(row.share_percentage).toLocaleString("de-DE",{maximumFractionDigits:3})} % · `:""}{represents?`handelt für ${contactLabel(represents)}`:row.is_minor?"minderjährig":"—"}</small></div>
             <div className="row-meta"><span className={`status-pill ${CONSENT_CLASS[row.consent_status]}`}>{CONSENT[row.consent_status]}</span><small>{row.consent_on?`${formatDate(row.consent_on)}${row.consent_form?` · ${FORM[row.consent_form]}`:""}`:"kein Datum erfasst"}</small></div>
             <div className="row-meta">
@@ -367,11 +426,11 @@ export default function PropertyDisposition(){
               {d.canTask&&!row.archived_at&&(approvalOpen||row.consent_status==="OPEN")?<Form method="post"><input type="hidden" name="_intent" value="reminder"/><input type="hidden" name="party_id" value={row.id}/><button className="secondary-button" type="submit">Wiedervorlage</button></Form>:null}
               {d.canArchive?<Form method="post"><input type="hidden" name="_intent" value={row.archived_at?"party_restore":"party_archive"}/><input type="hidden" name="party_id" value={row.id}/><input type="hidden" name="party_version" value={row.version}/><button className="secondary-button" type="submit">{row.archived_at?"Wiederherstellen":"Archivieren"}</button></Form>:null}
             </div>
+            <div style={{flexBasis:"100%"}}><Aufklapper knopf={bearbeitbar?"Bearbeiten":"Alle Angaben ansehen"} offen={fehlerBei(`p-${row.id}`)}><PartyForm formKey={`f-${row.id}`} row={row} dispositionId={record.id} disabled={locked||Boolean(row.archived_at)}/></Aufklapper></div>
           </div>;
         })}
       </div>}
-      {parties.map((row:any)=><PartyForm key={`f-${row.id}`} formKey={`f-${row.id}`} row={row} dispositionId={record.id} disabled={locked||Boolean(row.archived_at)}/>)}
-      {d.canWrite?<PartyForm formKey="new-party" dispositionId={record.id} disabled={false}/>:null}
+      {d.canWrite?<div style={{marginTop:"1rem"}}><Aufklapper id="beteiligten-erfassen" knopf="+ Beteiligten erfassen" offen={parties.length===0||fehlerBei("neu-beteiligter")}><PartyForm formKey="new-party" dispositionId={record.id} disabled={false}/></Aufklapper></div>:null}
     </section>:null}
 
   </main>;

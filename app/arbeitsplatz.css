@@ -348,6 +348,14 @@
 .akte-felder dd a:hover { text-decoration: underline; }
 .akte-felder .leise { color: #6b7782; font-size: 12px; }
 
+/* Zwischenueberschrift in einem langen Formular der Akte (Objektdaten,
+ * 19.10.2026): gliedert die 23 Stammdatenfelder in Gruppen. */
+.akte-feldgruppe { margin: 22px 0 10px; color: #3d4a56; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.akte-feldgruppe:first-of-type { margin-top: 4px; }
+/* "Bearbeiten" unter den Feldern einer Lesekarte (Geldwaescheakte,
+ * 19.10.2026): etwas Luft, damit der Knopf nicht an der letzten Zeile klebt. */
+.akte-felder + .programm-aufklapper { margin-top: 12px; }
+
 /* Knoepfe einer Akte (Wiedervorlage, Archivieren) -- rechtsbuendig in einer
  * Reihe ueber den Feldern. */
 .akte-werkzeuge { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
