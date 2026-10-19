@@ -21,8 +21,9 @@
 
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const WURZEL = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+const WURZEL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const lies = (datei) => readFile(path.join(WURZEL, datei), "utf8");
 const fehler = [];
 const pruefe = (bedingung, text) => { if (!bedingung) fehler.push(text); };

@@ -18,8 +18,9 @@
 
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const WURZEL = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+const WURZEL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const lies = (datei) => readFile(path.join(WURZEL, datei), "utf8");
 const fehler = [];
 const pruefe = (bedingung, text) => { if (!bedingung) fehler.push(text); };
@@ -62,6 +63,13 @@ for (const datei of routen) {
 const wrangler = JSON.parse(await lies("wrangler.json"));
 pruefe(wrangler.vars?.SALES_READINESS_AI_ENABLED === "false", "wrangler.json: SALES_READINESS_AI_ENABLED ist nicht false");
 pruefe(wrangler.env?.beta?.vars?.SALES_READINESS_AI_ENABLED === "false", "wrangler.json (beta): SALES_READINESS_AI_ENABLED ist nicht false");
+
+// 7. Pruefskripte laufen auch unter Windows (19.10.2026): der Pfadteil einer file-URL
+//    ergibt dort "/D:/..." und daraus "D:\\D:\\...". Der lokale PROD-Deploy brach daran ab.
+for (const datei of (await readdir(path.join(WURZEL, "scripts"))).filter((n) => n.endsWith(".mjs"))) {
+  const quelle = await lies(`scripts/${datei}`);
+  pruefe(!/new URL\(import\.meta\.url\)\.pathname/.test(quelle), `scripts/${datei}: Pfad aus URL.pathname -- unter Windows falsch, fileURLToPath benutzen`);
+}
 
 if (fehler.length) {
   console.error("Aufraeumen (Paket 0):\n  " + fehler.join("\n  "));
