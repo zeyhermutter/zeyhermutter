@@ -165,6 +165,7 @@ export default [
     ]),
     route("properties/:propertyId/publication/preview", "routes/property-publication-preview.tsx"),
     route("properties/:propertyId/exposes/:exposeId/preview", "routes/property-expose-preview.tsx"),
+    route("properties/:propertyId/exposes/:exposeId/pdf", "routes/property-expose-pdf.ts"),
   ]),
   route("__preview/sales-readiness", "routes/sales-readiness-preview.tsx"),
   route("api/sales-readiness-ai", "routes/api-sales-readiness-ai.ts"),
