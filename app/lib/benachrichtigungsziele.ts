@@ -27,11 +27,15 @@ const MIT_KENNUNG: Record<string, (id: string) => string> = {
   INQUIRY: (id) => `/inquiries/${id}`,
   VIEWING: (id) => `/viewings/${id}`,
   MEASUREMENT_ORDER: (id) => `/measurements/${id}`,
+  // Taegliche Automatik (P2-4): direkt in den passenden Teil der Objektakte.
+  PROPERTY_INTERESTS: (id) => `/properties/${id}/interests`,
+  PROPERTY_COMPLIANCE: (id) => `/properties/${id}/compliance`,
 };
 
 /** Ziele, die ohne Kennung auskommen, weil die Uebersicht genuegt. */
 const OHNE_KENNUNG: Record<string, string> = {
   TASK: "/crm/tasks",
+  AUFBEWAHRUNG: "/compliance#aufbewahrung",
 };
 
 /** Alle Werte, zu denen es ein Ziel gibt -- fuer die Pruefung. */

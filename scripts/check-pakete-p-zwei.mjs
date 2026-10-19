@@ -128,8 +128,15 @@ for (const datei of ["properties", "inquiries", "leads", "viewings", "search-pro
   pruefe(!/className="(data-row data-row-link|inquiry-row|search-profile-row|data-row lead-list-row[^"]*)"/.test(quelle), `${datei}.tsx: wieder Kartenzeilen in der Liste`);
 }
 
+// 11. P2-4: Taegliche Automatik -- legt nur Aufgaben und Benachrichtigungen an, dublettensicher, abschaltbar
+const automatik = await lies("supabase/migrations/20261019064421_taegliche_automatik.sql") + await lies("supabase/migrations/20261019064739_automatik_suchprofile_rechte.sql");
+pruefe(automatik.includes("constraint automation_hits_once unique (rule_key, entity_id, occurrence_key)") && (automatik.match(/on conflict do nothing returning id into neu;/g) ?? []).length >= 6, "Automatik: Regel ohne Dublettensperre");
+pruefe(!/update public\.(properties|leads|inquiries|property_reservations|brokerage_mandates|gwg_cases|documents)\s+set/i.test(automatik) && !/net\.http|pg_net|send_mail|smtp/i.test(automatik), "Automatik: darf keinen Status aendern und nichts verschicken");
+pruefe(automatik.includes("where active") && (await lies("app/routes/automatik.tsx")).includes('value="schalten"'), "Automatik: Regeln nicht einzeln abschaltbar");
+pruefe(automatik.includes("cron.schedule('zeyhermutter-automatik'"), "Automatik: kein Zeitplan");
+
 if (fehler.length) {
   console.error("P2:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung, Datenauskunft aus allen Kontakt-Tabellen, Rechtsgrundlage und Werbewiderspruch (Hinweis, keine Sperre), Anonymisieren nur mit Recht, Grund, Bestätigung und ohne Einwand der Datenbank, Objektakte lädt je Teil nur, was er zeigt, 16 volle Listen als Programmtabelle.");
+console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung, Datenauskunft aus allen Kontakt-Tabellen, Rechtsgrundlage und Werbewiderspruch (Hinweis, keine Sperre), Anonymisieren nur mit Recht, Grund, Bestätigung und ohne Einwand der Datenbank, Objektakte lädt je Teil nur, was er zeigt, 16 volle Listen als Programmtabelle, tägliche Automatik nur mit Aufgaben/Benachrichtigungen, dublettensicher und abschaltbar.");

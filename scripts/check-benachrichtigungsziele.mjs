@@ -39,8 +39,10 @@ const lies = (p) => readFile(path.join(WURZEL, p), "utf8").then((t) => t.replace
  * Von Hand gepflegt, weil der Wert dort positionsgebunden steht. Die Zahl
  * unten haelt die Liste ehrlich.
  */
-const SQL_EINFUEGESTELLEN = 8;
-const SQL_TYPEN = ["CONTACT", "TASK"];
+// +8 durch die taegliche Automatik (P2-4): Lead-Wiedervorlage, Geldwaesche-Pruefung,
+// Aufbewahrung, passende Suchprofile -- je einmal im ersten Lauf und im Nachtrag.
+const SQL_EINFUEGESTELLEN = 16;
+const SQL_TYPEN = ["CONTACT", "TASK", "LEAD", "PROPERTY_COMPLIANCE", "AUFBEWAHRUNG", "PROPERTY_INTERESTS"];
 
 const fehler = [];
 const pruefe = (bedingung, text) => { if (!bedingung) fehler.push(text); };
