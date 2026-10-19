@@ -125,6 +125,7 @@ export const BEREICHE: Bereich[] = [
       { beschriftung: "Geldwäsche & Aufbewahrung", pfad: "/compliance" },
       { beschriftung: "Benutzer & Rollen", pfad: "/crm/users" },
       { beschriftung: "E-Mail-Vorlagen", pfad: "/crm/email-vorlagen" },
+      { beschriftung: "Firma & Fristen", pfad: "/crm/firma" },
       { beschriftung: "Automatik", pfad: "/crm/automatik" },
       { beschriftung: "Weiterbildung", pfad: "/crm/training" },
       { beschriftung: "Anwaltsprüfung", pfad: "/crm/anwaltspruefung" },

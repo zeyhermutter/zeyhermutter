@@ -572,6 +572,12 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         + "mit PEP- und Sanktionslisten; die Herkunft der Mittel; der Nachweis der "
         + "unbaren Zahlung." },
       { art: "absatz", text:
+        "Liegt zu einem Objekt ein Kaufangebot oder eine aktive Reservierung vor und "
+        + "ist für den Kaufinteressenten oder einen Eigentümer noch keine "
+        + "Identifizierung erfasst, legt die tägliche Automatik einmal die Aufgabe "
+        + "„Geldwäsche: Identifizierung prüfen“ an (abschaltbar unter Verwaltung › "
+        + "Automatik). Ob und wann identifiziert werden muss, entscheiden Sie." },
+      { art: "absatz", text:
         "Die Übersicht über alle Geldwäscheakten steht unter **Verwaltung › "
         + "Geldwäsche & Aufbewahrung**, zusammen mit den ablaufenden "
         + "Aufbewahrungsfristen, den Aufbewahrungsregeln und der Liste dessen, was "
@@ -835,6 +841,13 @@ export const HELP_CHAPTERS: HelpChapter[] = [
       { art: "absatz", text:
         "Rechnungsstatus und Zahlungsstatus sind zwei verschiedene Dinge und werden "
         + "getrennt geführt. Jeder Statuswechsel wird protokolliert." },
+      { art: "absatz", text:
+        "Die Rechnung selbst entsteht im Buchhaltungsprogramm; hier werden "
+        + "Rechnungsnummer, Status und Zahlung nachgeführt. Als Rechenhilfe zeigt die "
+        + "Provision, was bei 19 % Umsatzsteuer auf einen netto vereinbarten Betrag "
+        + "hinzukäme. Bei Wohnung oder Einfamilienhaus weist sie darauf hin, wenn "
+        + "Verkäufer- und Käuferprovision desselben Objekts verschieden sind – zum "
+        + "Abgleich mit dem Maklerauftrag; bewertet wird das nicht." },
     ],
   },
   {
@@ -894,7 +907,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
     nummer: "23",
     titel: "Verwaltung: Benutzer, Weiterbildung, Historie, Archiv",
     kurz: "Rechte vergeben, Nachweise führen, Änderungen nachvollziehen.",
-    pfade: ["/crm/users", "/crm/training", "/crm/history", "/crm/archive", "/crm/hilfe"],
+    pfade: ["/crm/users", "/crm/training", "/crm/history", "/crm/archive", "/crm/hilfe", "/crm/firma"],
     bloecke: [
       { art: "absatz", text:
         "Der Bereich **Verwaltung** steht in der Modulleiste unten abgesetzt, weil "
@@ -927,6 +940,17 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         + "**Archiviert** umgeschaltet. Archivieren ist kein Löschen: der Vorgang "
         + "verschwindet aus den Arbeitslisten und bleibt nachvollziehbar; von hier "
         + "aus lässt er sich wiederherstellen." },
+      { art: "absatz", text:
+        "Unter **Firma & Fristen** stehen die Firmenangaben an einer Stelle: "
+        + "vollständige Firma, Anschrift, Sitz, Registergericht und -nummer, "
+        + "Geschäftsführer, Steuernummer und USt-IdNr. Sie erscheinen in der Fußzeile "
+        + "neu erzeugter Exposés und im E-Mail-Platzhalter "
+        + "`{{firma_pflichtangaben}}`; leere Felder zeigt die Seite an. Darunter "
+        + "stehen wiederkehrende **Fristen des Unternehmens** (z. B. Vorauszahlungen, "
+        + "Jahresabschluss): Für jede eingeschaltete Frist legt die tägliche "
+        + "Automatik vor der Fälligkeit einmal eine Aufgabe für den Verantwortlichen "
+        + "an. Die vorbelegten Fristen sind ausgeschaltet – erst mit dem "
+        + "Steuerberater bestätigen, dann einschalten." },
       { art: "warnung", text:
         "Die hinterlegten Soll-Stunden, Zeiträume und Aufbewahrungsfristen sind "
         + "betriebliche Voreinstellungen und keine rechtliche Aussage." },

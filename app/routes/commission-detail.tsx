@@ -37,11 +37,14 @@ async function loadOptions(supabase:any){
 
 export async function loader({request,context,params}:Route.LoaderArgs){
  const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"commission.read");const id=params.commissionId!;
- const {data:row,error}=await supabase.from("commissions").select("*,properties(id,property_number,internal_title,status,purchase_price),party:contacts!commissions_party_contact_id_fkey(id,contact_number,first_name,last_name),purchase_offers(id,offer_number,amount,status,contact_id)").eq("id",id).maybeSingle();
+ const {data:row,error}=await supabase.from("commissions").select("*,properties(id,property_number,internal_title,status,purchase_price,property_type),party:contacts!commissions_party_contact_id_fkey(id,contact_number,first_name,last_name),purchase_offers(id,offer_number,amount,status,contact_id)").eq("id",id).maybeSingle();
  if(error||!row)throw new Response("Provision nicht gefunden.",{status:404,headers:responseHeaders()});
  const [options,{data:transitions,error:transitionsFehler},{data:canWrite},{data:canArchive},{data:canAudit}]=await Promise.all([loadOptions(supabase),supabase.from("commission_status_transitions").select("to_status,description").eq("from_status",row.status).order("to_status"),supabase.rpc("current_user_has_permission",{p_permission:"commission.write"}),supabase.rpc("current_user_has_permission",{p_permission:"commission.archive"}),supabase.rpc("current_user_has_permission",{p_permission:"audit.read"})]);
+ // Pruefhinweis (19.10.2026): bei Wohnung/Einfamilienhaus Verkaeufer- und
+ // Kaeuferprovision desselben Objekts gegenueberstellen. Das CRM bewertet nicht.
+ const {data:geschwister}=row.property_id?await supabase.from("commissions").select("id,commission_number,side,calculation_method,agreed_percent,agreed_fixed_amount,status").eq("property_id",row.property_id).is("archived_at",null).neq("status","CANCELLED"):{data:[]};
  let audit:any[]=[];if(canAudit===true){const result=await supabase.from("audit_events").select("id,occurred_at,actor_display_name_snapshot,action,field_changes").eq("entity_type","COMMISSION").eq("entity_id",id).order("occurred_at",{ascending:false}).limit(80);if(!result.error)audit=result.data??[];}
- return data({ladefehler:[transitionsFehler&&"transitions"].filter(Boolean) as string[],row,profile,transitions:transitions??[],canWrite:canWrite===true,canArchive:canArchive===true,audit,...options},{headers:responseHeaders()});
+ return data({geschwister:(geschwister??[]) as any[],ladefehler:[transitionsFehler&&"transitions"].filter(Boolean) as string[],row,profile,transitions:transitions??[],canWrite:canWrite===true,canArchive:canArchive===true,audit,...options},{headers:responseHeaders()});
 }
 
 export async function action({request,context,params}:Route.ActionArgs){
@@ -69,14 +72,15 @@ export async function action({request,context,params}:Route.ActionArgs){
 function auditLabel(changes:any){if(!changes||typeof changes!=="object")return"Änderung dokumentiert";const keys=Object.keys(changes);if(keys.includes("record"))return"Provisionsvorgang angelegt";return keys.map((key)=>({status:"Status",property_id:"Immobilie",party_contact_id:"Partei",side:"Provisionsseite",calculation_method:"Berechnungsart",calculation_basis:"Berechnungsgrundlage",agreed_percent:"Prozentsatz",agreed_fixed_amount:"Festbetrag",actual_amount:"Tatsächliche Provision",due_date:"Fälligkeit",invoice_reference:"Rechnungsreferenz",paid_amount:"Bezahlter Betrag",paid_at:"Zahlungsdatum",primary_responsible_user:"Verantwortlich",internal_notes:"Notizen",archived_at:"Archiv"}[key]??key)).join(", ");}
 
 export default function CommissionDetail(){
- const {row,profile,transitions,canWrite,canArchive,audit,properties,partyOptions,offers,mandates,profiles,ladefehler}=useLoaderData<typeof loader>();const result=useActionData<typeof action>();const property=one(row.properties),party=one(row.party),offer=one(row.purchase_offers),targetAmount=target(row),locked=Boolean(row.archived_at);
+ const {geschwister,row,profile,transitions,canWrite,canArchive,audit,properties,partyOptions,offers,mandates,profiles,ladefehler}=useLoaderData<typeof loader>();const result=useActionData<typeof action>();const property=one(row.properties),party=one(row.party),offer=one(row.purchase_offers),targetAmount=target(row),locked=Boolean(row.archived_at);
  return <main className="editor-shell">
  {result?.error?<div className="form-error">{result.error}</div>:null}
  <div className="property-summary-grid">
   <section className="data-card"><div className="card-head"><div><p className="eyebrow">Provisionsseite</p><h2>{row.side==="SELLER"?"Innenprovision":"Außenprovision"}</h2></div></div><p><strong>{party?`${party.first_name} ${party.last_name}`:"Partei noch offen"}</strong></p><p className="subtle">{party?.contact_number??(row.side==="SELLER"?"Eigentümerseite":"Käuferseite")}{offer?.offer_number?` · ${offer.offer_number}`:""}</p></section>
-  <section className="data-card"><div className="card-head"><div><p className="eyebrow">Betrag</p><h2>{money(row.actual_amount??row.expected_amount)}</h2></div></div><p className="subtle">Erwartet {money(row.expected_amount)}{row.actual_amount!==null?` · tatsächlich ${money(row.actual_amount)}`:""}</p><p className="subtle">Bezahlt {money(row.paid_amount)} · offen {money(Math.max(0,targetAmount-Number(row.paid_amount??0)))}</p></section>
+  <section className="data-card"><div className="card-head"><div><p className="eyebrow">Betrag</p><h2>{money(row.actual_amount??row.expected_amount)}</h2></div></div><p className="subtle">Erwartet {money(row.expected_amount)}{row.actual_amount!==null?` · tatsächlich ${money(row.actual_amount)}`:""}</p><p className="subtle">Bezahlt {money(row.paid_amount)} · offen {money(Math.max(0,targetAmount-Number(row.paid_amount??0)))}</p>{targetAmount>0?<p className="subtle" title="Rechenhilfe: gilt, wenn der Betrag netto vereinbart ist">Netto vereinbart? Dann zzgl. 19 % USt {money(Math.round(targetAmount*19)/100)} = Rechnungsbetrag {money(Math.round(targetAmount*119)/100)}</p>:null}</section>
   <section className="data-card"><div className="card-head"><div><p className="eyebrow">Abrechnung & Zahlung</p><h2>{PAYMENT_STATUS[row.payment_status]??row.payment_status}</h2></div></div><p className="subtle">{INVOICE_STATUS[row.invoice_status]??row.invoice_status} · Fälligkeit {formatDate(row.due_date)}</p><p className="subtle">{row.invoice_reference?`Referenz ${row.invoice_reference}`:"Keine Rechnungsreferenz"}{row.paid_at?` · bezahlt ${formatDate(row.paid_at)}`:""}</p></section>
  </div>
+ <ProvisionsVergleich property={property} geschwister={geschwister}/>
 
  <section className="data-card" id="status"><div className="card-head"><div><p className="eyebrow">Workflow</p><h2>Status & nächste Schritte</h2></div><span className={`status-pill ${STATUS_CLASS[row.status]??"status-draft"}`}>{STATUS[row.status]??row.status}</span></div>{locked?<p className="empty-state">Archivierte Provisionen können erst nach dem Wiederherstellen weiterbearbeitet werden.</p>:canWrite?<div className="commission-transition-list">{transitions.map((transition:any)=>{
    if(transition.to_status==="INVOICED")return <Form method="post" className="inline-actions" key={transition.to_status}><input type="hidden" name="_intent" value="status"/><input type="hidden" name="version" value={row.version}/><input type="hidden" name="target_status" value={transition.to_status}/><input name="invoice_reference" defaultValue={row.invoice_reference??""} placeholder="Rechnungsreferenz · optional"/><button className="secondary-button" type="submit">→ {STATUS[transition.to_status]}</button></Form>;
@@ -91,4 +95,21 @@ export default function CommissionDetail(){
 
  <section className="data-card"><div className="card-head"><div><p className="eyebrow">Historie</p><h2>Änderungsverlauf</h2></div><span className="subtle">{audit.length} Einträge</span></div><div className="data-list">{audit.map((event:any)=><div className="data-row" key={event.id}><div><strong>{auditLabel(event.field_changes)}</strong><small>{event.actor_display_name_snapshot??"System"} · {beschrifte(AUDITAKTION,event.action)}</small></div><div className="row-meta"><span>{zeitpunkt(event.occurred_at)}</span></div></div>)}{audit.length===0?<p className="empty-state">Keine sichtbare Historie vorhanden.</p>:null}</div></section>
  </main>;
+}
+
+const WOHNEN=new Set(["APARTMENT","PENTHOUSE","MAISONETTE","DETACHED_HOUSE","SEMI_DETACHED_HOUSE","TERRACED_HOUSE"]);
+function satz(c:any){return c.calculation_method==="PERCENT"?`${Number(c.agreed_percent??0).toLocaleString("de-DE",{maximumFractionDigits:2})} %`:money(c.agreed_fixed_amount);}
+/**
+ * Pruefhinweis (19.10.2026): Bei Wohnung oder Einfamilienhaus stehen
+ * Verkaeufer- und Kaeuferprovision desselben Objekts nebeneinander; weichen sie
+ * ab, ein Hinweis zum Abgleich mit dem Maklerauftrag. Ob die Abweichung
+ * zulaessig ist, bewertet das CRM nicht.
+ */
+function ProvisionsVergleich({property,geschwister}:{property:any;geschwister:any[]}){
+ if(!property||!WOHNEN.has(property.property_type))return null;
+ const verk=geschwister.filter((c)=>c.side==="SELLER"),kauf=geschwister.filter((c)=>c.side==="BUYER");
+ if(!verk.length||!kauf.length)return null;
+ const werte=new Set(geschwister.map((c)=>[c.calculation_method,c.calculation_method==="PERCENT"?Number(c.agreed_percent):Number(c.agreed_fixed_amount)].join(":")));
+ if(werte.size<=1)return null;
+ return <p className="form-warning" role="note">Verkäufer- und Käuferprovision zu {property.property_number} unterscheiden sich: {[...verk,...kauf].map((c)=>`${c.commission_number} (${c.side==="SELLER"?"Verkäufer":"Käufer"}) ${satz(c)}`).join(" · ")}. Bei einer Wohnung oder einem Einfamilienhaus und einem Käufer als Verbraucher bitte mit dem Maklerauftrag abgleichen (§§ 656c, 656d BGB). Das CRM bewertet das nicht.</p>;
 }

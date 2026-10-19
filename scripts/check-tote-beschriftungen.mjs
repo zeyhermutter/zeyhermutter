@@ -37,6 +37,10 @@
 // Nachgetragen am 16.10.2026 aus 20261016175556_email_templates.sql: der
 // Anlass einer E-Mail-Vorlage (INQUIRY_REPLY, VIEWING_CONFIRMATION, DECLINE;
 // EXPOSE und OTHER gab es schon).
+//
+// Nachgetragen am 19.10.2026 aus 20261019181646_firma_fristen_gwg.sql: der
+// Rhythmus einer Unternehmensfrist (ONCE, YEARLY; MONTHLY und QUARTERLY gab
+// es schon).
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, sep } from "node:path";
@@ -45,7 +49,7 @@ import { join, sep } from "node:path";
 // from pg_constraint, lateral regexp_split_to_table(
 //   (regexp_match(pg_get_constraintdef(oid),'= ANY \(ARRAY\[(.*?)\]\)'))[1], ',\s*') as x
 // where contype='c' and connamespace='public'::regnamespace;
-const ERLAUBT = new Set(`INQUIRY_REPLY VIEWING_CONFIRMATION DECLINE CONSENT LEGITIMATE_INTEREST CONTRACT
+const ERLAUBT = new Set(`ONCE YEARLY INQUIRY_REPLY VIEWING_CONFIRMATION DECLINE CONSENT LEGITIMATE_INTEREST CONTRACT
 A A+ ACCEPTED ACCESS ACQUISITION ACTIVE AFTER AGREED ANNUAL ANNUITY_CHARGE
 ANONYMIZED_ONLY APARTMENT APARTMENT_BUILDING API APPOINTMENT
 APPOINTMENT_SCHEDULED APPROVED ARCHIVED AS_IS AS_IS_SALE ASSET ATTIC

@@ -3,6 +3,7 @@ import type { Route } from "./+types/email-compose";
 import { Aufklapper } from "~/components/aufklapper";
 import { EmailSchreiben, type SchreibDaten } from "~/components/email-schreiben";
 import { anredeVon, mailtoAdresse } from "~/lib/email-vorlage";
+import { FIRMA_SPALTEN, pflichtangaben, type Firma } from "~/lib/firma";
 import { requireActiveUser } from "~/lib/auth.server";
 import { zeitpunkt as formatDate } from "~/lib/format";
 import { crmLocalDateTimeToIso as berlinLocalToIso, crmNowLocalDateTime as berlinInputNow } from "~/lib/local-time";
@@ -235,10 +236,11 @@ async function exposeAuswahl(supabase: any) {
 
 async function ladeSchreibDaten(supabase: any, ctx: EmailContext, meinName: string | null): Promise<SchreibDaten> {
   const anfrageId = ctx.type === "INQUIRY" ? ctx.id : null;
-  const [kontaktR, vorlagenR, anfrageR] = await Promise.all([
+  const [kontaktR, vorlagenR, anfrageR, firmaR] = await Promise.all([
     supabase.from("contacts").select("salutation,title,first_name,last_name,marketing_objection_at").eq("id", ctx.contactId).maybeSingle(),
     supabase.from("email_templates").select("id,purpose,name,subject,body").eq("active", true).order("purpose").order("sort_order").order("name"),
     anfrageId ? supabase.from("inquiries").select("id,status,version,property_id,properties(property_number,internal_title,property_addresses(postal_code,city))").eq("id", anfrageId).maybeSingle() : Promise.resolve({ data: null }),
+    supabase.from("company_profile").select(FIRMA_SPALTEN).maybeSingle(),
   ]);
   const k = kontaktR.data ?? {};
   const anfrage = anfrageR.data as any;
@@ -267,6 +269,8 @@ async function ladeSchreibDaten(supabase: any, ctx: EmailContext, meinName: stri
       anfrage_nummer: ctx.type === "INQUIRY" ? ctx.number : null,
       besichtigung_termin: besichtigung.data?.starts_at ? formatDate(besichtigung.data.starts_at) : null,
       mein_name: meinName,
+      firma: (firmaR.data as Firma | null)?.legal_name ?? null,
+      firma_pflichtangaben: pflichtangaben(firmaR.data as Firma | null),
     },
     expose: expose ? { id: expose.id, nummer: expose.expose_number, datei: expose.original_filename } : null,
     exposeAuswahl: auswahl,

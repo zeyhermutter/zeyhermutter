@@ -2,7 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.112.4";
 import { PDFDocument, StandardFonts, rgb } from "npm:pdf-lib@1.17.1";
 
-const GENERATOR_VERSION=2;
+const GENERATOR_VERSION=3; // 3: Fusszeile mit den Firmenangaben aus company_profile (19.10.2026)
 const BUCKET="zm-private-exposes";
 function response(body:unknown,status=200){return new Response(JSON.stringify(body),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"}});}
 function safeText(value:unknown){return String(value??"").replace(/[–—]/g,"-").replace(/[“”„]/g,'"').replace(/[‘’]/g,"'").replace(/…/g,"...").replace(/[^\x20-\x7E\u00A0-\u00FF€²]/g," ").replace(/\s+/g," ").trim();}
@@ -12,6 +12,8 @@ function wrap(text:string,font:any,size:number,maxWidth:number){const words=safe
 function hex(bytes:ArrayBuffer){return Array.from(new Uint8Array(bytes)).map(v=>v.toString(16).padStart(2,"0")).join("");}
 async function sha256(bytes:Uint8Array){const copy=new Uint8Array(bytes);return hex(await crypto.subtle.digest("SHA-256",copy.buffer));}
 function one(value:any){return Array.isArray(value)?value[0]:value;}
+// Wie pflichtangaben() in app/lib/firma.ts: nur eingetragene Angaben, nichts erfunden.
+function firmenzeile(f:any){if(!f)return "";const leer=(v:unknown)=>!String(v??"").trim();const anschrift=[f.street,[f.postal_code,f.city].filter((x:unknown)=>!leer(x)).join(" ")].filter((x:unknown)=>!leer(x)).join(", ");return [f.legal_name,anschrift||null,leer(f.registered_seat)?null:`Sitz: ${f.registered_seat}`,leer(f.register_court)&&leer(f.register_number)?null:`Registergericht: ${[f.register_court,f.register_number].filter((x:unknown)=>!leer(x)).join(", ")}`,leer(f.managing_directors)?null:`Geschäftsführer: ${f.managing_directors}`,leer(f.vat_id)?null:`USt-IdNr.: ${f.vat_id}`].filter((x:unknown)=>!leer(x)).join(" · ");}
 
 Deno.serve(async(req:Request)=>{
  if(req.method!=="POST")return response({ok:false},405);
@@ -32,7 +34,9 @@ Deno.serve(async(req:Request)=>{
  const facts:any=expose.facts??{},energy:any=expose.energy??{};
  const pdf=await PDFDocument.create();const serif=await pdf.embedFont(StandardFonts.TimesRoman);const serifBold=await pdf.embedFont(StandardFonts.TimesRomanBold);const sans=await pdf.embedFont(StandardFonts.Helvetica);const sansBold=await pdf.embedFont(StandardFonts.HelveticaBold);
  const pageSize:[number,number]=[595.28,841.89],margin=48,contentWidth=pageSize[0]-margin*2;
- const addFooter=(page:any,pageNo:number)=>{page.drawLine({start:{x:margin,y:35},end:{x:pageSize[0]-margin,y:35},thickness:.5,color:rgb(.75,.76,.74)});page.drawText(`ZeyherMutter · ${safeText(facts.property_number??"")} · Exposé ${expose.version_number} · Seite ${pageNo}`,{x:margin,y:20,size:8,font:sans,color:rgb(.35,.4,.4)});};
+ const {data:firma}=await db.from("company_profile").select("legal_name,brand_name,street,postal_code,city,registered_seat,register_court,register_number,managing_directors,vat_id").maybeSingle();
+ const firmaZeilen=wrap(firmenzeile(firma),sans,6.5,contentWidth).slice(0,2),absender=safeText(firma?.brand_name||firma?.legal_name||"ZeyherMutter");
+ const addFooter=(page:any,pageNo:number)=>{page.drawLine({start:{x:margin,y:46},end:{x:pageSize[0]-margin,y:46},thickness:.5,color:rgb(.75,.76,.74)});firmaZeilen.forEach((zeile,i)=>page.drawText(zeile,{x:margin,y:36-i*8,size:6.5,font:sans,color:rgb(.35,.4,.4)}));page.drawText(`${absender} · ${safeText(facts.property_number??"")} · Exposé ${expose.version_number} · Seite ${pageNo}`,{x:margin,y:16,size:8,font:sans,color:rgb(.35,.4,.4)});};
  const loadImage=async(item:any)=>{if(!item?.storage_bucket||!item?.storage_path)return null;const {data:blob}=await db.storage.from(item.storage_bucket).download(item.storage_path);if(!blob)return null;try{const bytes=new Uint8Array(await blob.arrayBuffer());if(blob.type==="image/jpeg"||blob.type==="image/jpg")return await pdf.embedJpg(bytes);if(blob.type==="image/png")return await pdf.embedPng(bytes);}catch{}return null;};
  const drawSection=async(title:string,text:unknown,pageNoRef:{value:number})=>{const bodyText=safeText(text);if(!bodyText)return;pageNoRef.value++;let page=pdf.addPage(pageSize);page.drawText(title,{x:margin,y:770,size:24,font:serifBold,color:rgb(.09,.13,.13)});let y=730;for(const line of wrap(bodyText,sans,10.5,contentWidth)){if(y<65){addFooter(page,pageNoRef.value);pageNoRef.value++;page=pdf.addPage(pageSize);y=770;}page.drawText(line,{x:margin,y,size:10.5,font:sans,color:rgb(.22,.28,.28)});y-=16;}addFooter(page,pageNoRef.value);};
  let pageNo={value:1};let page=pdf.addPage(pageSize);page.drawText("ZEYHERMUTTER",{x:margin,y:790,size:10,font:sansBold,color:rgb(.22,.3,.3),characterSpacing:1.5});

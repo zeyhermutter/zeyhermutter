@@ -1,0 +1,8 @@
+/* Verwaltung › Firma & Fristen (19.10.2026). */
+.firma-seite .data-card { max-width: var(--crm-content-max); margin-left: auto; margin-right: auto; }
+.firma-hinweis { max-width: var(--crm-content-max); margin: 0 auto 12px; }
+.firma-formular { display: grid; gap: 12px; margin-top: 12px; }
+.firma-formular h3 { margin: 8px 0 0; font-size: var(--crm-schrift-15); }
+.firma-vorschau { margin: 8px 0; padding: var(--crm-card-padding-sm); border: 1px solid var(--crm-farbe-linie-leise); border-radius: var(--crm-card-radius-sm); font-size: var(--crm-schrift-13); color: var(--crm-farbe-text-2); }
+.firma-vorschau span { display: block; margin-bottom: 4px; font-size: var(--crm-schrift-12); color: var(--crm-farbe-text-leise); }
+.firma-gespeichert { background: color-mix(in srgb, var(--crm-farbe-gut) 12%, var(--crm-farbe-flaeche)); }

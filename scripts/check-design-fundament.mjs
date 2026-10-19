@@ -41,7 +41,8 @@ for (const datei of (await readdir(path.join(WURZEL, "app"))).filter((n) => n.en
   if (datei === "styles.css") text = text.replace(/--crm-(farbe|schrift)-[a-z0-9-]+\s*:[^;]*;/g, "");
   hex += (text.match(/#[0-9a-fA-F]{3,8}\b/g) ?? []).length;
   important += (text.match(/!important/g) ?? []).length;
-  for (const m of text.matchAll(/font-size\s*:\s*([^;}!]+)/g)) groessen.add(m[1].trim());
+  // Die Stufen selbst (var(--crm-schrift-..)) zaehlen nicht -- sie sind das Ziel.
+  for (const m of text.matchAll(/font-size\s*:\s*([^;}!]+)/g)) if (!/^var\(--crm-schrift-/.test(m[1].trim())) groessen.add(m[1].trim());
 }
 
 const styles = (await readFile(path.join(WURZEL, "app/styles.css"), "utf8"));
