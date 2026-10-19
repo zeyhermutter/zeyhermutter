@@ -197,15 +197,40 @@ async function ladeJournal(supabase: any): Promise<JournalZeile[] | null> {
 
 const LINK_GUELTIG_TAGE = 14;
 
+/**
+ * Das freigegebene Exposé zu einer Anfrage. Hat die Anfrage ein Objekt, nur
+ * dessen Exposé. Eine allgemeine Anfrage ("Keine konkrete Immobilie",
+ * 19.10.2026) kann jedes freigegebene Exposé bekommen -- dann nur mit
+ * ausdrücklich gewählter exposeId.
+ */
 async function freigegebenesExpose(supabase: any, inquiryId: string, exposeId?: string) {
-  const { data: anfrage } = await supabase.from("inquiries").select("property_id").eq("id", inquiryId).maybeSingle();
-  if (!anfrage?.property_id) return null;
+  const { data: anfrage } = await supabase.from("inquiries").select("id,property_id").eq("id", inquiryId).maybeSingle();
+  if (!anfrage) return null;
+  if (!anfrage.property_id && !(exposeId && UUID_RE.test(exposeId))) return null;
   let abfrage = supabase.from("property_exposes")
-    .select("id,expose_number,publication_version_id,storage_bucket,storage_path,original_filename,released_at")
-    .eq("property_id", anfrage.property_id).eq("status", "RELEASED").is("archived_at", null);
+    .select("id,property_id,expose_number,publication_version_id,storage_bucket,storage_path,original_filename,released_at")
+    .eq("status", "RELEASED").is("archived_at", null);
+  if (anfrage.property_id) abfrage = abfrage.eq("property_id", anfrage.property_id);
   if (exposeId) abfrage = abfrage.eq("id", exposeId);
   const { data: expose } = await abfrage.order("released_at", { ascending: false }).limit(1).maybeSingle();
-  return expose ? { ...expose, property_id: anfrage.property_id as string } : null;
+  return expose ? { ...expose, property_id: expose.property_id as string } : null;
+}
+
+/** Für allgemeine Anfragen: alle Objekte mit freigegebenem Exposé zur Auswahl. */
+async function exposeAuswahl(supabase: any) {
+  const { data } = await supabase.from("property_exposes")
+    .select("id,expose_number,original_filename,properties(property_number,internal_title,property_addresses(postal_code,city))")
+    .eq("status", "RELEASED").is("archived_at", null).not("storage_path", "is", null)
+    .order("released_at", { ascending: false }).limit(200);
+  return ((data ?? []) as any[]).map((e) => {
+    const objekt = one(e.properties) as any;
+    const adresse = objekt ? one(objekt.property_addresses) as any : null;
+    return {
+      id: e.id as string, nummer: e.expose_number as string, datei: e.original_filename as string,
+      objektNummer: objekt?.property_number ?? null, objektTitel: objekt?.internal_title ?? null,
+      objektOrt: adresse ? [adresse.postal_code, adresse.city].filter(Boolean).join(" ") || null : null,
+    };
+  }).sort((a, b) => String(a.objektNummer).localeCompare(String(b.objektNummer), "de"));
 }
 
 async function ladeSchreibDaten(supabase: any, ctx: EmailContext, meinName: string | null): Promise<SchreibDaten> {
@@ -219,13 +244,15 @@ async function ladeSchreibDaten(supabase: any, ctx: EmailContext, meinName: stri
   const anfrage = anfrageR.data as any;
   const objekt = anfrage ? one(anfrage.properties) as any : null;
   const adresse = objekt ? one(objekt.property_addresses) as any : null;
-  const [expose, besichtigung, links] = await Promise.all([
+  const allgemein = Boolean(anfrage && !anfrage.property_id);
+  const [expose, besichtigung, links, auswahl] = await Promise.all([
     anfrage?.property_id ? freigegebenesExpose(supabase, anfrage.id) : Promise.resolve(null),
     supabase.from("viewings").select("starts_at").eq("contact_id", ctx.contactId).in("status", ["PLANNED", "CONFIRMED"])
       .gte("starts_at", new Date().toISOString()).is("archived_at", null).order("starts_at", { ascending: true }).limit(1).maybeSingle(),
     // Ausgegebene Kurzlinks zu dieser Anfrage (A7). Ohne Leserecht auf Exposés leer (RLS).
     anfrageId ? supabase.from("expose_links").select("id,created_at,created_by,expires_at,revoked_at,property_exposes(expose_number)")
       .eq("inquiry_id", anfrageId).order("created_at", { ascending: false }).limit(20) : Promise.resolve({ data: [] }),
+    allgemein ? exposeAuswahl(supabase) : Promise.resolve([]),
   ]);
   return {
     vorlagen: vorlagenR.error ? [] : (vorlagenR.data ?? []),
@@ -242,6 +269,7 @@ async function ladeSchreibDaten(supabase: any, ctx: EmailContext, meinName: stri
       mein_name: meinName,
     },
     expose: expose ? { id: expose.id, nummer: expose.expose_number, datei: expose.original_filename } : null,
+    exposeAuswahl: auswahl,
     linkTage: LINK_GUELTIG_TAGE,
     links: ((links.data ?? []) as any[]).map((l) => ({
       id: l.id as string, erstellt: l.created_at as string, von: l.created_by as string | null, bis: l.expires_at as string,

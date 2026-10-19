@@ -21,6 +21,8 @@ export type SchreibDaten = {
   vorlagenFehlen: boolean;
   werte: Werte;
   expose: { id: string; nummer: string; datei: string } | null;
+  /** Allgemeine Anfrage ("Keine konkrete Immobilie"): Objekte mit freigegebenem Exposé zur Auswahl. */
+  exposeAuswahl: { id: string; nummer: string; datei: string; objektNummer: string | null; objektTitel: string | null; objektOrt: string | null }[];
   linkTage: number;
   /** Ausgegebene Kurzlinks zu dieser Anfrage (A7), neueste zuerst. */
   links: { id: string; erstellt: string; von: string | null; bis: string; zurueckgezogen: string | null; nummer: string | null }[];
@@ -54,8 +56,14 @@ export function EmailSchreiben({ kontext, daten }: { kontext: Kontext; daten: Sc
   // dann wieder "Neuen Link erzeugen" anbieten und keinen Nachweis dafür buchen.
   const linkZurueckgezogen = Boolean(linkId && daten.links.some((l) => l.id === linkId && l.zurueckgezogen));
   const vorigerLink = useRef<string | null>(null);
+  // Das Exposé dieser E-Mail: bei einer Anfrage mit Objekt fest, bei einer
+  // allgemeinen Anfrage aus der Auswahl (19.10.2026).
+  const [auswahlId, setAuswahlId] = useState("");
+  const aus = daten.exposeAuswahl.find((e) => e.id === auswahlId) ?? null;
+  const expose = daten.expose ?? (aus ? { id: aus.id, nummer: aus.nummer, datei: aus.datei } : null);
+  const objektWerte = useMemo<Werte>(() => (aus ? { objekt_nummer: aus.objektNummer, objekt_titel: aus.objektTitel, objekt_ort: aus.objektOrt } : {}), [aus]);
 
-  const werte = useMemo<Werte>(() => ({ ...daten.werte, expose_link: link }), [daten.werte, link]);
+  const werte = useMemo<Werte>(() => ({ ...daten.werte, ...objektWerte, expose_link: link }), [daten.werte, objektWerte, link]);
 
   // Vorlage wählen = Betreff und Text neu setzen. Was der Benutzer danach
   // ändert, bleibt -- bis er eine andere Vorlage wählt.
@@ -88,7 +96,20 @@ export function EmailSchreiben({ kontext, daten }: { kontext: Kontext; daten: Sc
 
   const adresse = kontext.email ? mailtoAdresse(kontext.email, betreff, text) : null;
   const zuLang = adresse ? adresse.length > MAILTO_SICHER : false;
-  const exposeGewaehlt = daten.expose && (weg === "PDF" || (weg === "LINK" && link && !linkZurueckgezogen));
+  const exposeGewaehlt = expose && (weg === "PDF" || (weg === "LINK" && link && !linkZurueckgezogen));
+  const linkGueltig = Boolean(link && !linkZurueckgezogen);
+
+  // Objekt gewählt: noch offene Objekt-Platzhalter in Betreff und Text füllen
+  // (was schon ersetzt oder bearbeitet ist, bleibt).
+  const objektWaehlen = (id: string) => {
+    setAuswahlId(id);
+    setWeg("");
+    const e = daten.exposeAuswahl.find((x) => x.id === id);
+    if (!e) return;
+    const w: Werte = { objekt_nummer: e.objektNummer, objekt_titel: e.objektTitel, objekt_ort: e.objektOrt };
+    setBetreff((b) => fuelle(b, w).text);
+    setText((x) => fuelle(x, w).text);
+  };
   const gruppen = Object.entries(VORLAGENANLASS).map(([k, name]) => ({ name, vorlagen: daten.vorlagen.filter((v) => v.purpose === k) })).filter((g) => g.vorlagen.length);
 
   const kopieren = async () => {
@@ -115,20 +136,30 @@ export function EmailSchreiben({ kontext, daten }: { kontext: Kontext; daten: Sc
         <label className="form-field"><span>Text</span><textarea value={text} onChange={(e) => setText(e.currentTarget.value)} rows={10} /></label>
       </div>
 
-      {daten.expose ? (
+      {!daten.expose && daten.anfrage && daten.exposeAuswahl.length ? (
+        <label className="form-field email-schreiben-objekt"><span>Exposé zu welchem Objekt?</span>
+          <select value={auswahlId} onChange={(e) => objektWaehlen(e.currentTarget.value)} disabled={linkGueltig}>
+            <option value="">Ohne Exposé</option>
+            {daten.exposeAuswahl.map((e) => <option key={e.id} value={e.id}>{[e.objektNummer, e.objektTitel, e.objektOrt].filter(Boolean).join(" · ")} (Exposé {e.nummer})</option>)}
+          </select>
+          <small className="subtle">Allgemeine Anfrage ohne konkretes Objekt: jedes zur Verwendung freigegebene Exposé ist möglich.{linkGueltig ? " Für ein anderes Objekt zuerst den Link zurückziehen." : ""}</small>
+        </label>
+      ) : null}
+
+      {expose ? (
         <fieldset className="email-schreiben-expose">
-          <legend>Exposé {daten.expose.nummer} <small>(zur Verwendung freigegeben)</small></legend>
+          <legend>Exposé {expose.nummer} <small>(zur Verwendung freigegeben)</small></legend>
           <label><input type="radio" name="weg" checked={weg === ""} onChange={() => setWeg("")} /> Ohne Exposé</label>
           <label><input type="radio" name="weg" checked={weg === "PDF"} onChange={() => setWeg("PDF")} /> Als PDF anhängen</label>
           <label><input type="radio" name="weg" checked={weg === "LINK"} onChange={() => setWeg("LINK")} /> Als Link einfügen ({daten.linkTage} Tage gültig, jederzeit zurückziehbar)</label>
-          {weg === "PDF" ? <p className="form-help"><a className="secondary-button link-button compact" href={`/crm/email?inquiry_id=${encodeURIComponent(kontext.id)}&expose_pdf=${encodeURIComponent(daten.expose.id)}`} download>PDF herunterladen</a> Danach im Mailprogramm anhängen.</p> : null}
+          {weg === "PDF" ? <p className="form-help"><a className="secondary-button link-button compact" href={`/crm/email?inquiry_id=${encodeURIComponent(kontext.id)}&expose_pdf=${encodeURIComponent(expose.id)}`} download>PDF herunterladen</a> Danach im Mailprogramm anhängen.</p> : null}
           {weg === "LINK" && linkZurueckgezogen ? <p className="form-warning">Der eingefügte Link ist zurückgezogen und öffnet nichts mehr. Ein neuer Link ersetzt ihn im Text.</p> : null}
           {weg === "LINK" && (!link || linkZurueckgezogen) ? (
             <linkFetcher.Form method="post" className="email-schreiben-link">
               <input type="hidden" name="_intent" value="expose_link" />
               <input type="hidden" name="context_type" value={kontext.type} />
               <input type="hidden" name="context_id" value={kontext.id} />
-              <input type="hidden" name="expose_id" value={daten.expose.id} />
+              <input type="hidden" name="expose_id" value={expose.id} />
               <button className="secondary-button compact" type="submit" disabled={linkFetcher.state !== "idle"}>{linkFetcher.state !== "idle" ? "Link wird erzeugt …" : linkZurueckgezogen ? "Neuen Link erzeugen und einsetzen" : "Link erzeugen und einfügen"}</button>
               <small>Wer den Link hat, kann das PDF {daten.linkTage} Tage lang öffnen – bis Sie ihn zurückziehen.</small>
             </linkFetcher.Form>
@@ -136,7 +167,7 @@ export function EmailSchreiben({ kontext, daten }: { kontext: Kontext; daten: Sc
           {weg === "LINK" && link && !linkZurueckgezogen ? <p className="form-help">Link eingefügt, gültig bis {linkFetcher.data?.bis ? tag(linkFetcher.data.bis) : `in ${daten.linkTage} Tagen`}. Zurückziehen unter „Ausgegebene Links“.</p> : null}
           {linkFetcher.data?.error ? <p className="form-error">{linkFetcher.data.error}</p> : null}
         </fieldset>
-      ) : daten.anfrage ? <p className="form-help">Kein zur Verwendung freigegebenes Exposé zu dieser Anfrage – Exposé-Versand ist erst danach möglich.</p> : null}
+      ) : daten.anfrage && !daten.exposeAuswahl.length ? <p className="form-help">Kein zur Verwendung freigegebenes Exposé zu dieser Anfrage – Exposé-Versand ist erst danach möglich.</p> : null}
 
       {daten.links.length ? <AusgegebeneLinks links={daten.links} /> : null}
 
@@ -159,12 +190,12 @@ export function EmailSchreiben({ kontext, daten }: { kontext: Kontext; daten: Sc
         <input type="hidden" name="subject" value={betreff} />
         <input type="hidden" name="body" value={text} />
         <input type="hidden" name="template_id" value={vorlageId} />
-        {exposeGewaehlt ? <><input type="hidden" name="expose_id" value={daten.expose!.id} /><input type="hidden" name="expose_weg" value={weg} /></> : null}
+        {exposeGewaehlt ? <><input type="hidden" name="expose_id" value={expose!.id} /><input type="hidden" name="expose_weg" value={weg} /></> : null}
         {exposeGewaehlt && weg === "LINK" && linkId ? <input type="hidden" name="expose_link_id" value={linkId} /> : null}
         {daten.anfrage ? <input type="hidden" name="inquiry_version" value={daten.anfrage.version} /> : null}
         <p className="form-help">{geoeffnet ? "Haben Sie die E-Mail im Mailprogramm abgeschickt? Dann hier festhalten." : "Nach dem Senden im Mailprogramm hier festhalten – das Öffnen allein zählt nicht als Versand."}</p>
         {daten.anfrage?.status === "NEW" ? <label className="checkbox-row"><input type="checkbox" name="kontaktiert" value="1" defaultChecked /><span>Anfrage auf „Kontaktiert“ setzen</span></label> : null}
-        {exposeGewaehlt ? <p className="form-help">Mit dem Festhalten wird auch der Objektnachweis gespeichert: Exposé {daten.expose!.nummer}, Weg „Exposé per E-Mail“, jetzt.</p> : null}
+        {exposeGewaehlt ? <p className="form-help">Mit dem Festhalten wird auch der Objektnachweis gespeichert: Exposé {expose!.nummer}, Weg „Exposé per E-Mail“, jetzt.</p> : null}
         <button className={geoeffnet ? "primary-button" : "secondary-button"} type="submit" disabled={!betreff.trim()}>Gesendet – festhalten</button>
       </Form>
     </section>

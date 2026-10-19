@@ -195,6 +195,7 @@ pruefe(!(await lies("app/routes/closing-detail.tsx")).includes('to={`/closings/$
   pruefe(mail.includes("ohneZugangsschluessel(String(formData.get(\"body\")"), "email-compose.tsx: festgehaltener Text wird nicht von Zugangsschluesseln befreit");
   pruefe((await lies("app/routes.ts")).includes('route("e/:token", "routes/expose-kurzlink.ts")'), "routes.ts: /e/:token fehlt");
   pruefe((await lies("app/components/email-schreiben.tsx")).includes("expose_link_zurueckziehen"), "email-schreiben.tsx: ausgegebene Links lassen sich nicht zurueckziehen");
+  pruefe((await lies("app/components/email-schreiben.tsx")).includes("daten.exposeAuswahl") && mail.includes("exposeAuswahl(supabase)"), "E-Mail schreiben: allgemeine Anfrage ohne Objektauswahl fuer das Exposé");
   pruefe(!(await lies("app/routes/property-expose-detail.tsx")).includes("createSignedUrl(expose.storage_path"), "property-expose-detail.tsx: \"PDF herunterladen\" zeigt wieder eine lange signierte Speicheradresse statt /pdf");
 }
 
