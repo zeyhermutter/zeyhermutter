@@ -38,7 +38,10 @@ function pfad(el) {
   const teile = [];
   for (let e = el; e && e.nodeType === 1 && e.tagName !== "BODY"; e = e.parentElement) {
     let n = e.tagName.toLowerCase();
-    if (e.classList.length) n += "." + [...e.classList].sort().join(".");
+    // record-section-target setzt die Abschnittsleiste erst in einem
+    // requestAnimationFrame -- in einem verdeckten Rahmen mal ja, mal nein.
+    const klassen = [...e.classList].filter((k) => k !== "record-section-target").sort();
+    if (klassen.length) n += "." + klassen.join(".");
     const geschwister = e.parentElement ? [...e.parentElement.children].filter((x) => x.tagName === e.tagName) : [];
     if (geschwister.length > 1) n += `:${geschwister.indexOf(e)}`;
     teile.unshift(n);
@@ -82,7 +85,9 @@ async function fingerabdruck(name, seiten = SEITEN) {
     const werte = {};
     for (const el of doc.body.querySelectorAll("*")) {
       if (["SCRIPT", "STYLE", "LINK", "META", "TEMPLATE"].includes(el.tagName)) continue;
-      if (el.closest(".statusleiste-stand, .build-version")) continue;
+      // Stand-Anzeige aendert sich mit jedem Deploy; die Abschnittsleiste
+      // (record-section-nav) entsteht zeitabhaengig per requestAnimationFrame.
+      if (el.closest(".statusleiste-stand, .build-version, .record-section-nav")) continue;
       const cs = win.getComputedStyle(el);
       if (cs.display === "none") continue;
       werte[pfad(el)] = EIGENSCHAFTEN.map((p) => cs.getPropertyValue(p)).join("|");
