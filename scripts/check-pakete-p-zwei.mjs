@@ -219,8 +219,19 @@ pruefe(!(await lies("app/routes/closing-detail.tsx")).includes('to={`/closings/$
   pruefe(!(await lies("app/lib/programmbereiche.ts")).includes('pfad: "/crm/training"'), "Weiterbildung steht wieder im Menü (ausgeblendet am 19.10.2026)");
 }
 
+// 22. Maklerauftrag vor der Vermarktung (19.10.2026): Website-Veröffentlichung und
+//     Exposé-Freigabe warnen ohne aktiven Auftrag in Textform -- Hinweis, keine Sperre.
+{
+  const hinweis = await lies("app/lib/maklerauftrag-hinweis.ts");
+  pruefe(hinweis.includes('.eq("status", "ACTIVE")') && hinweis.includes("text_form_confirmed"), "Maklerauftrag-Hinweis prüft nicht mehr aktiven Auftrag und Textform");
+  for (const datei of ["app/routes/property-publication.tsx", "app/routes/property-expose-detail.tsx"]) {
+    const t = await lies(datei);
+    pruefe(t.includes("await maklerauftragHinweis(supabase,propertyId)") && t.includes("{auftragHinweis.text}"), `${datei}: Hinweis ohne Maklerauftrag fehlt`);
+  }
+}
+
 if (fehler.length) {
   console.error("P2:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung, Datenauskunft aus allen Kontakt-Tabellen, Rechtsgrundlage und Werbewiderspruch (Hinweis, keine Sperre), Anonymisieren nur mit Recht, Grund, Bestätigung und ohne Einwand der Datenbank, Objektakte lädt je Teil nur, was er zeigt, 16 volle Listen als Programmtabelle, tägliche Automatik nur mit Aufgaben/Benachrichtigungen, dublettensicher und abschaltbar, 8 Listen blättern über die Datenbank, Aufgabe anlegen sucht seine Bezüge, Arbeitsplatz ohne Seitenkopf mit h1, jede Liste mit h1, Dialoge halten den Fokus, Absenden zeigt Warten, Akten lesen zuerst, Exposé als kurzer, zurückziehbarer Link, Hausgeld an einer Stelle, Firma & Fristen.");
+console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung, Datenauskunft aus allen Kontakt-Tabellen, Rechtsgrundlage und Werbewiderspruch (Hinweis, keine Sperre), Anonymisieren nur mit Recht, Grund, Bestätigung und ohne Einwand der Datenbank, Objektakte lädt je Teil nur, was er zeigt, 16 volle Listen als Programmtabelle, tägliche Automatik nur mit Aufgaben/Benachrichtigungen, dublettensicher und abschaltbar, 8 Listen blättern über die Datenbank, Aufgabe anlegen sucht seine Bezüge, Arbeitsplatz ohne Seitenkopf mit h1, jede Liste mit h1, Dialoge halten den Fokus, Absenden zeigt Warten, Akten lesen zuerst, Exposé als kurzer, zurückziehbarer Link, Hausgeld an einer Stelle, Firma & Fristen, Hinweis ohne Maklerauftrag vor der Vermarktung.");

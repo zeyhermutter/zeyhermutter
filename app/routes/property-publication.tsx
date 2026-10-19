@@ -3,6 +3,7 @@ import type { Route } from "./+types/property-publication";
 import { requirePermission } from "~/lib/auth.server";
 import { euroRund, zeitpunkt as formatDate } from "~/lib/format";
 import { ADRESSANZEIGE, IMMOBILIENSTATUS, beschrifte } from "~/lib/labels";
+import { maklerauftragHinweis } from "~/lib/maklerauftrag-hinweis";
 import "~/publication.css";
 
 type ActionResult={error?:string;success?:string};
@@ -76,7 +77,9 @@ export async function loader({request,context,params}:Route.LoaderArgs){
   {id:"public-status",label:`Objektstatus mindestens „Vorbereitung“ (jetzt: ${beschrifte(IMMOBILIENSTATUS,property.status)})`,ok:VORBEREITEN_AB.includes(property.status),href:`/properties/${propertyId}#ueberblick`},
   ...((disclosureGapsRes.data??[]) as string[]).map((gap,index)=>({id:`public-disclosure-${index}`,label:`Pflichtangaben: ${gap}`,ok:false,href:`/properties/${propertyId}/mandatory-data`})),
  ].filter(item=>!item.ok):[];
- return data({property,publication,versions,liveVersion,canPublish:publishPermissionRes.data===true,profile,address,energy,approvedMedia,blockers,disclosureGaps:(disclosureGapsRes.data??[]) as string[]},{headers:responseHeaders()});
+ // Ohne aktiven Maklerauftrag (Textform) warnen, nicht blockieren (19.10.2026).
+ const auftragHinweis=publication?await maklerauftragHinweis(supabase,propertyId):null;
+ return data({auftragHinweis,property,publication,versions,liveVersion,canPublish:publishPermissionRes.data===true,profile,address,energy,approvedMedia,blockers,disclosureGaps:(disclosureGapsRes.data??[]) as string[]},{headers:responseHeaders()});
 }
 
 export async function action({request,context,params}:Route.ActionArgs){
@@ -114,7 +117,7 @@ export async function action({request,context,params}:Route.ActionArgs){
 function stateLabel(p:any,live:any){if(!p)return"Noch nicht angelegt";if(live&&p.status==="DRAFT")return"Veröffentlicht · Änderungen offen";if(live&&p.status==="READY")return"Veröffentlicht · neue Version bereit";if(p.status==="PUBLISHED")return"Veröffentlicht";if(p.status==="READY")return"Bereit zur Freigabe";if(p.status==="UNPUBLISHED")return"Nicht veröffentlicht";return"Entwurf";}
 
 export default function PropertyPublication(){
- const {property,publication,versions,liveVersion,canPublish,profile,address,energy,approvedMedia,blockers}=useLoaderData<typeof loader>();const result=useActionData<typeof action>();
+ const {auftragHinweis,property,publication,versions,liveVersion,canPublish,profile,address,energy,approvedMedia,blockers}=useLoaderData<typeof loader>();const result=useActionData<typeof action>();
  const values=publication??{slug:slugify(`${property.internal_title}-${property.property_number}`),public_title:property.internal_title,subtitle:"",teaser:"",description:"",location_description:"",features_description:"",public_highlights:[],seo_title:"",seo_description:""};
  const blockedIds=new Set(blockers.map((item:any)=>item.id));
  return <main className="editor-shell"><header className="editor-header"><div><Link className="back-link" to={`/properties/${property.id}`}>← Objektakte</Link><h1 className="editor-title">Veröffentlichung</h1><p className="editor-meta">{property.property_number} · {property.internal_title}</p></div><div className="header-user"><span className="publication-state">{stateLabel(publication,liveVersion)}</span><span className="badge">{__APP_ENV_LABEL__}</span><small>{profile.display_name}</small></div></header>
@@ -142,6 +145,7 @@ export default function PropertyPublication(){
     <div id="public-review" className={blockedIds.has("public-review")?"publication-check blocked":"publication-check ok"}><strong>Inhalts-/Datenschutzprüfung</strong><small>{publication.content_review_confirmed_at?`bestätigt ${formatDate(publication.content_review_confirmed_at)}`:"noch nicht bestätigt"}</small></div>
    </div>
    {canPublish&&!publication.content_review_confirmed_at?<Form method="post"><input type="hidden" name="publication_id" value={publication.id}/><input type="hidden" name="version" value={publication.version}/><button className="secondary-button" name="_intent" value="confirm_review" type="submit">Inhalte & Datenschutz geprüft</button></Form>:null}
+   {auftragHinweis?<p className="form-warning">{auftragHinweis.text} Das blockiert die Veröffentlichung nicht. <Link to={auftragHinweis.href}>{auftragHinweis.linkText}</Link></p>:null}
    {blockers.length?<div className="publication-blockers"><strong>Vor Veröffentlichung noch erforderlich</strong>{blockers.map((item:any)=><a key={item.id} href={item.href??`#${item.id}`}>→ {item.label}</a>)}</div>:<div className="publication-ready">Alle blockierenden Prüfungen sind erfüllt.</div>}
   </section>:null}
   {publication?<section className="data-card"><div className="card-head"><div><p className="eyebrow">Veröffentlichen</p><h2>Nächster Schritt</h2></div><span className="publication-state">{stateLabel(publication,liveVersion)}</span></div><div className="publication-workflow"><div><strong>1 · Inhalte bearbeiten</strong><small>Änderungen sind zunächst nur intern.</small></div><div><strong>2 · Version vorbereiten</strong><small>Nimmt die freigegebenen Fotos und die Texte von jetzt. Ab Objektstatus „Vorbereitung“.</small></div><div><strong>3 · Veröffentlichen</strong><small>Im Status „Vermarktung“ oder „Reserviert“, mit dem Recht zum Veröffentlichen. Die bisherige Version auf der Website wird ersetzt.</small></div></div><div className="inline-actions publication-actions">{publication.status!=="READY"?<Form method="post"><input type="hidden" name="publication_id" value={publication.id}/><input type="hidden" name="version" value={publication.version}/><button className="secondary-button" name="_intent" value="prepare" type="submit" disabled={blockers.length>0}>Version vorbereiten</button></Form>:<>{canPublish?<Form method="post"><input type="hidden" name="publication_id" value={publication.id}/><input type="hidden" name="version" value={publication.version}/><button className="primary-button" name="_intent" value="publish" type="submit" disabled={!VEROEFFENTLICHEN_IN.includes(property.status)}>Freigeben & veröffentlichen</button></Form>:<small className="subtle">Veröffentlichen darf nur, wer das Recht dazu hat.</small>}{!VEROEFFENTLICHEN_IN.includes(property.status)?<small className="subtle">Veröffentlichen geht erst im Status „Vermarktung“ oder „Reserviert“ (jetzt: {beschrifte(IMMOBILIENSTATUS,property.status)}). <Link to={`/properties/${property.id}#ueberblick`}>Status ändern</Link></small>:null}<Form method="post"><input type="hidden" name="publication_id" value={publication.id}/><input type="hidden" name="version" value={publication.version}/><button className="secondary-button" name="_intent" value="reset" type="submit">Zurück zum Entwurf</button></Form></>}{liveVersion&&publication.status!=="UNPUBLISHED"&&canPublish?<Form method="post"><input type="hidden" name="publication_id" value={publication.id}/><input type="hidden" name="version" value={publication.version}/><button className="secondary-button" name="_intent" value="unpublish" type="submit">Veröffentlichung stoppen</button></Form>:null}</div></section>:null}
