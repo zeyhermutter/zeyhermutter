@@ -152,7 +152,7 @@ export default function FirmaUndFristen() {
 
       <section className="data-card" aria-label="Firmenangaben" id="firma">
         <div className="card-head"><div><p className="eyebrow">An einer Stelle</p><h2>Firmenangaben</h2></div></div>
-        <p className="form-help">Stehen in der Fußzeile neu erzeugter Exposés und im E-Mail-Platzhalter <code>{"{{firma_pflichtangaben}}"}</code>.</p>
+        <p className="form-help">Stehen in neu erzeugten Exposés (Fußzeile jeder Seite; Telefon, E-Mail, Web und Anschrift auf der Schlussseite) und im E-Mail-Platzhalter <code>{"{{firma_pflichtangaben}}"}</code>. Leere Felder lässt das Exposé weg.</p>
         {fehlt.length ? <p className="form-warning">Noch leer: {fehlt.join(", ")}.</p> : <p className="form-success">Alle Kernangaben sind eingetragen.</p>}
         {zeile ? <p className="firma-vorschau"><span>So erscheint die Zeile:</span> {zeile}</p> : null}
         {firma && darfPflegen ? (

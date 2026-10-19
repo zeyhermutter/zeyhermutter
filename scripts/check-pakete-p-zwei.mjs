@@ -230,8 +230,21 @@ pruefe(!(await lies("app/routes/closing-detail.tsx")).includes('to={`/closings/$
   }
 }
 
+// 23. Exposé-Gestaltung (Generator 4, 19.10.2026, "Sieht sehr gut aus!"): Logo, Hausschriften,
+//     Firmenangaben mit Kontakt; die Schriften werden ohne pdf-lib-Verkleinern eingebettet
+//     (sonst fehlen bei Cormorant Glyphen) und tragen ihre Lizenz mit.
+{
+  const ordner = "supabase/functions/generate-property-expose";
+  const index = await lies(`${ordner}/index.ts`), layout = await lies(`${ordner}/layout.ts`);
+  pruefe(index.includes('from "./layout.ts"') && index.includes("zeichneExpose(pdf,"), "Exposé: index.ts zeichnet nicht mehr über layout.ts");
+  pruefe(/select\("[^"]*phone,email,website/.test(index), "Exposé: Kontaktangaben der Firma werden nicht geladen");
+  pruefe(index.includes("{subset:false}"), "Exposé: Schriften wieder mit pdf-lib verkleinert (Cormorant verliert Glyphen)");
+  pruefe(layout.includes("LOGO_GOLD") && layout.includes("Wir freuen uns auf Sie."), "Exposé: Logo oder Schlussseite fehlt");
+  for (const lizenz of ["OFL-Cormorant-Garamond.txt", "OFL-Montserrat.txt"]) pruefe((await lies(`${ordner}/schriften/${lizenz}`)).includes("SIL Open Font License"), `Exposé: Schriftlizenz ${lizenz} fehlt`);
+}
+
 if (fehler.length) {
   console.error("P2:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung, Datenauskunft aus allen Kontakt-Tabellen, Rechtsgrundlage und Werbewiderspruch (Hinweis, keine Sperre), Anonymisieren nur mit Recht, Grund, Bestätigung und ohne Einwand der Datenbank, Objektakte lädt je Teil nur, was er zeigt, 16 volle Listen als Programmtabelle, tägliche Automatik nur mit Aufgaben/Benachrichtigungen, dublettensicher und abschaltbar, 8 Listen blättern über die Datenbank, Aufgabe anlegen sucht seine Bezüge, Arbeitsplatz ohne Seitenkopf mit h1, jede Liste mit h1, Dialoge halten den Fokus, Absenden zeigt Warten, Akten lesen zuerst, Exposé als kurzer, zurückziehbarer Link, Hausgeld an einer Stelle, Firma & Fristen, Hinweis ohne Maklerauftrag vor der Vermarktung.");
+console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung, Datenauskunft aus allen Kontakt-Tabellen, Rechtsgrundlage und Werbewiderspruch (Hinweis, keine Sperre), Anonymisieren nur mit Recht, Grund, Bestätigung und ohne Einwand der Datenbank, Objektakte lädt je Teil nur, was er zeigt, 16 volle Listen als Programmtabelle, tägliche Automatik nur mit Aufgaben/Benachrichtigungen, dublettensicher und abschaltbar, 8 Listen blättern über die Datenbank, Aufgabe anlegen sucht seine Bezüge, Arbeitsplatz ohne Seitenkopf mit h1, jede Liste mit h1, Dialoge halten den Fokus, Absenden zeigt Warten, Akten lesen zuerst, Exposé als kurzer, zurückziehbarer Link, Hausgeld an einer Stelle, Firma & Fristen, Hinweis ohne Maklerauftrag vor der Vermarktung, Exposé mit Logo, Hausschriften und Firmenangaben.");
