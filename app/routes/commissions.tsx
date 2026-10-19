@@ -4,6 +4,8 @@ import type { Route } from "./+types/commissions";
 import { requirePermission } from "~/lib/auth.server";
 import { euroGenau as money, tag as formatDate } from "~/lib/format";
 import { RECHNUNGSSTATUS, ZAHLUNGSSTATUS, beschrifte } from "~/lib/labels";
+import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege } from "~/lib/blaettern.server";
+import { Seiten, SucheZuAllgemein } from "~/components/seiten";
 import "~/programm-liste.css";
 
 const STATUS: Record<string,string> = {DRAFT:"Entwurf",EXPECTED:"Erwartet",DUE:"Fällig",INVOICED:"Abgerechnet",PARTIALLY_PAID:"Teilweise bezahlt",PAID:"Bezahlt",CANCELLED:"Storniert"};
@@ -20,14 +22,27 @@ export async function loader({request,context}:Route.LoaderArgs){
   if(istEinstieg(request)){const {data:erster}=await supabase.from("commissions").select("id").is("archived_at",null).order("updated_at",{ascending:false}).limit(1).maybeSingle(); if(erster)throw redirect(`/commissions/${erster.id}`,{headers:responseHeaders()});}
   const url=new URL(request.url);
   const filters={q:(url.searchParams.get("q")??"").trim(),status:url.searchParams.get("status")??"OPEN",side:url.searchParams.get("side")??"",propertyId:url.searchParams.get("property_id")??""};
-  const [{data:rows,error},{data:canWrite},{data:properties}]=await Promise.all([
-    supabase.from("commissions").select("id,commission_number,property_id,side,status,expected_amount,actual_amount,due_date,invoice_status,payment_status,paid_amount,archived_at,updated_at,properties!inner(id,property_number,internal_title,status),party:contacts!commissions_party_contact_id_fkey(id,first_name,last_name),purchase_offers(id,offer_number,amount,status)").order("updated_at",{ascending:false}).limit(500),
+  // Blaettern ueber die Datenbank (19.10.2026, app/lib/blaettern.server.ts).
+  // Fuer Kennzahlen und Summen holt der Worker nur Status und Betraege aller
+  // nicht archivierten Provisionen -- nicht mehr nur der 500 zuletzt geaenderten.
+  const {page,from,to}=seiteAus(url);const text=sicher(filters.q);
+  const bezug=await passendeBezuege(supabase,filters.q,{kontakte:true,objekte:true});
+  let abfrage=supabase.from("commissions").select("id,commission_number,property_id,side,status,expected_amount,actual_amount,due_date,invoice_status,payment_status,paid_amount,archived_at,updated_at,properties!inner(id,property_number,internal_title,status),party:contacts!commissions_party_contact_id_fkey(id,first_name,last_name),purchase_offers(id,offer_number,amount,status)",{count:"exact"});
+  if(filters.propertyId)abfrage=abfrage.eq("property_id",filters.propertyId);
+  if(filters.side)abfrage=abfrage.eq("side",filters.side);
+  if(filters.status==="OPEN")abfrage=abfrage.is("archived_at",null).not("status","in","(PAID,CANCELLED)");
+  else if(filters.status==="ARCHIVED")abfrage=abfrage.not("archived_at","is",null);
+  else if(filters.status!=="ALL")abfrage=abfrage.eq("status",filters.status);
+  if(text)abfrage=abfrage.or([enthaelt(["commission_number"],text),inListe("party_contact_id",bezug.kontakte),inListe("property_id",bezug.objekte)].join(","));
+  const SUMMEN_GRENZE=10000;
+  const [{data:rows,error,count},{data:canWrite},{data:properties},summenRes]=await Promise.all([
+    abfrage.order("updated_at",{ascending:false}).range(from,to),
     supabase.rpc("current_user_has_permission",{p_permission:"commission.write"}),
     supabase.from("properties").select("id,property_number,internal_title").eq("transaction_type","SALE").order("updated_at",{ascending:false}).limit(500),
+    supabase.from("commissions").select("status,expected_amount,actual_amount,paid_amount").is("archived_at",null).limit(SUMMEN_GRENZE),
   ]);
-  if(error)throw new Response("Provisionen konnten nicht geladen werden.",{status:500,headers:responseHeaders()});
-  const all=(rows??[]) as any[];
-  const active=all.filter((row)=>!row.archived_at);
+  if(error||summenRes.error)throw new Response("Provisionen konnten nicht geladen werden.",{status:500,headers:responseHeaders()});
+  const active=(summenRes.data??[]) as any[];
   const expectedSum=active.filter((row)=>row.status!=="CANCELLED").reduce((sum,row)=>sum+Number(row.expected_amount??0),0);
   const openSum=active.filter((row)=>!['PAID','CANCELLED'].includes(row.status)).reduce((sum,row)=>sum+Math.max(0,targetAmount(row)-Number(row.paid_amount??0)),0);
   const summary={
@@ -37,25 +52,14 @@ export async function loader({request,context}:Route.LoaderArgs){
     paid:active.filter((row)=>row.status==="PAID").length,
     expectedSum,openSum,
   };
-  const needle=filters.q.toLocaleLowerCase("de-DE");
-  const filtered=all.filter((row)=>{
-    const property=one(row.properties),party=one(row.party);
-    if(filters.propertyId&&row.property_id!==filters.propertyId)return false;
-    if(filters.side&&row.side!==filters.side)return false;
-    if(filters.status==="OPEN"&&(row.archived_at||['PAID','CANCELLED'].includes(row.status)))return false;
-    if(filters.status==="ARCHIVED"&&!row.archived_at)return false;
-    if(!['OPEN','ALL','ARCHIVED'].includes(filters.status)&&row.status!==filters.status)return false;
-    if(!needle)return true;
-    return [row.commission_number,property?.property_number,property?.internal_title,party?.first_name,party?.last_name].filter(Boolean).join(" ").toLocaleLowerCase("de-DE").includes(needle);
-  });
-  return data({profile,rows:filtered,gekappt:all.length>=500,summary,canWrite:canWrite===true,properties:properties??[],filters},{headers:responseHeaders()});
+  return data({profile,rows:(rows??[]) as any[],total:count??0,page,pageCount:seitenzahl(count),zuViele:bezug.zuViele,summenGekappt:active.length>=SUMMEN_GRENZE,summary,canWrite:canWrite===true,properties:properties??[],filters},{headers:responseHeaders()});
 }
 
 // Eine Programmliste wie Kontakte und Makleraufträge (P2-8, 17.10.2026):
 // Werkzeugleiste, eine Zeile Kennzahlen mit den Summen, Tabelle. Vorher
 // Seitenkopf, sechs Kacheln, Filterkasten und Kartenzeilen.
 export default function Commissions(){
-  const {rows,summary,canWrite,properties,filters,gekappt}=useLoaderData<typeof loader>();
+  const {rows,total,page,pageCount,zuViele,summenGekappt,summary,canWrite,properties,filters}=useLoaderData<typeof loader>();
   const neu=filters.propertyId?`/commissions/new?property_id=${encodeURIComponent(filters.propertyId)}`:"/commissions/new";
   const gefiltert=Boolean(filters.q||filters.side||filters.propertyId||filters.status!=="OPEN");
   const heute=new Date().toISOString().slice(0,10);
@@ -67,7 +71,7 @@ export default function Commissions(){
       <label><span className="sr-only">Seite</span><select name="side" defaultValue={filters.side}><option value="">Innen- und Außenprovision</option><option value="SELLER">Innenprovision</option><option value="BUYER">Außenprovision</option></select></label>
       <label><span className="sr-only">Immobilie</span><select name="property_id" defaultValue={filters.propertyId}><option value="">Alle Immobilien</option>{properties.map((property:any)=><option key={property.id} value={property.id}>{property.property_number} · {property.internal_title}</option>)}</select></label>
       <button className="secondary-button" type="submit">Filtern</button>
-      <span className="programm-liste-zaehler">{rows.length} {rows.length===1?"Provision":"Provisionen"}</span>
+      <span className="programm-liste-zaehler">{total} {total===1?"Provision":"Provisionen"}</span>
       {canWrite?<Link className="programm-liste-neu" to={neu}>+ Neue Provision</Link>:null}
     </Form>
     <p className="programm-kennzahlen">
@@ -92,7 +96,9 @@ export default function Commissions(){
           <td className="zahl">{row.due_date?formatDate(row.due_date):<span className="leise">offen</span>}</td>
         </tr>;})}</tbody>
       </table>}
-      {gekappt?<p className="programm-liste-leer">Durchsucht werden die 500 zuletzt geänderten Provisionen; die Summen beziehen sich auf sie.</p>:null}
+      <SucheZuAllgemein an={zuViele}/>
+      {summenGekappt?<p className="programm-liste-leer">Kennzahlen und Summen beziehen sich auf 10.000 nicht archivierte Provisionen.</p>:null}
     </div>
+      <Seiten page={page} pageCount={pageCount}/>
   </main>;
 }

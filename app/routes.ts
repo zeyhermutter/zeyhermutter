@@ -176,5 +176,6 @@ export default [
   route("api/naechster-schritt", "routes/api-naechster-schritt.ts"),
   route("api/stillstand", "routes/api-stillstand.ts"),
   route("api/suche", "routes/api-suche.ts"),
+  route("api/datensaetze", "routes/api-datensaetze.ts"),
   route("logout", "routes/logout.tsx"),
 ] satisfies RouteConfig;

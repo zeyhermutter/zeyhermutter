@@ -4,6 +4,8 @@ import { istEinstieg } from "~/lib/einstieg";
 import type { Route } from "./+types/organizations";
 import { requireActiveUser } from "~/lib/auth.server";
 import { tag } from "~/lib/format";
+import { seiteAus, seitenzahl, sicher, enthaelt } from "~/lib/blaettern.server";
+import { Seiten } from "~/components/seiten";
 import "~/programm-liste.css";
 
 type ActionResult = { error?: string; fields?: Record<string, string> };
@@ -31,50 +33,43 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   }
 
   const url = new URL(request.url);
-  const q = (url.searchParams.get("q") ?? "").trim().toLowerCase();
+  const q = (url.searchParams.get("q") ?? "").trim();
   const status = url.searchParams.get("status") ?? "ALL";
   const legalForm = url.searchParams.get("legal_form") ?? "ALL";
   const city = url.searchParams.get("city") ?? "ALL";
 
-  const { data: rows, error } = await supabase
+  // Blaettern ueber die Datenbank (19.10.2026, app/lib/blaettern.server.ts).
+  // Die Auswahl fuer Rechtsform, Ort und Status kommt aus allen nicht
+  // archivierten Organisationen (nur diese drei Spalten).
+  const { page, from, to } = seiteAus(url);
+  const suchtext = sicher(q);
+  let abfrage = supabase
     .from("organizations")
-    .select("id, organization_number, name, legal_form, email, phone, city, status, updated_at")
-    .is("archived_at", null)
-    .order("updated_at", { ascending: false })
-    .limit(500);
+    .select("id, organization_number, name, legal_form, email, phone, city, status, updated_at", { count: "exact" })
+    .is("archived_at", null);
+  if (status !== "ALL") abfrage = abfrage.eq("status", status);
+  if (legalForm !== "ALL") abfrage = abfrage.eq("legal_form", legalForm);
+  if (city !== "ALL") abfrage = abfrage.eq("city", city);
+  if (suchtext) abfrage = abfrage.or(enthaelt(["organization_number", "name", "legal_form", "email", "phone", "city"], suchtext));
+
+  const [{ data: rows, error, count }, auswahlRes] = await Promise.all([
+    abfrage.order("updated_at", { ascending: false }).range(from, to),
+    supabase.from("organizations").select("legal_form, city, status").is("archived_at", null).limit(10000),
+  ]);
 
   if (error) throw new Response("Organisationen konnten nicht geladen werden.", { status: 500 });
 
-  const organizations = rows ?? [];
-  const legalForms = Array.from(new Set(organizations.map((organization) => organization.legal_form).filter(Boolean))).sort((a, b) => String(a).localeCompare(String(b), "de"));
-  const cities = Array.from(new Set(organizations.map((organization) => organization.city).filter(Boolean))).sort((a, b) => String(a).localeCompare(String(b), "de"));
-  const statuses = Array.from(new Set(organizations.map((organization) => organization.status).filter(Boolean))).sort();
-
-  const filtered = organizations.filter((organization) => {
-    if (status !== "ALL" && organization.status !== status) return false;
-    if (legalForm !== "ALL" && organization.legal_form !== legalForm) return false;
-    if (city !== "ALL" && organization.city !== city) return false;
-    if (q) {
-      const haystack = [
-        organization.organization_number,
-        organization.name,
-        organization.legal_form,
-        organization.email,
-        organization.phone,
-        organization.city,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      if (!haystack.includes(q)) return false;
-    }
-    return true;
-  });
+  const alle = (auswahlRes.data ?? []) as { legal_form: string | null; city: string | null; status: string | null }[];
+  const legalForms = Array.from(new Set(alle.map((o) => o.legal_form).filter((v): v is string => Boolean(v)))).sort((a, b) => String(a).localeCompare(String(b), "de"));
+  const cities = Array.from(new Set(alle.map((o) => o.city).filter((v): v is string => Boolean(v)))).sort((a, b) => String(a).localeCompare(String(b), "de"));
+  const statuses = Array.from(new Set(alle.map((o) => o.status).filter((v): v is string => Boolean(v)))).sort();
 
   return data(
     {
-      organizations: filtered,
-      gekappt: organizations.length >= 500,
+      organizations: rows ?? [],
+      total: count ?? 0,
+      page,
+      pageCount: seitenzahl(count),
       legalForms,
       cities,
       statuses,
@@ -142,7 +137,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 }
 
 export default function Organizations() {
-  const { organizations, legalForms, cities, statuses, filters, gekappt } = useLoaderData<typeof loader>();
+  const { organizations, total, page, pageCount, legalForms, cities, statuses, filters } = useLoaderData<typeof loader>();
   const result = useActionData<typeof action>();
   const fields = result?.fields ?? {};
   const [createOpen, setCreateOpen] = useState(Boolean(result?.error));
@@ -172,7 +167,7 @@ export default function Organizations() {
         <label><span className="sr-only">Rechtsform</span><select name="legal_form" defaultValue={filters.legalForm}><option value="ALL">Alle Rechtsformen</option>{legalForms.map((value) => <option key={String(value)} value={String(value)}>{String(value)}</option>)}</select></label>
         <label><span className="sr-only">Ort</span><select name="city" defaultValue={filters.city}><option value="ALL">Alle Orte</option>{cities.map((value) => <option key={String(value)} value={String(value)}>{String(value)}</option>)}</select></label>
         <button className="secondary-button" type="submit">Filtern</button>
-        <span className="programm-liste-zaehler">{organizations.length} {organizations.length === 1 ? "Organisation" : "Organisationen"}</span>
+        <span className="programm-liste-zaehler">{total} {total === 1 ? "Organisation" : "Organisationen"}</span>
         <button className="programm-liste-neu" type="button" onClick={() => setCreateOpen(true)}>+ Neue Organisation</button>
       </Form>
 
@@ -196,8 +191,8 @@ export default function Organizations() {
             </tbody>
           </table>
         )}
-        {gekappt ? <p className="programm-liste-leer">Durchsucht werden die 500 zuletzt geänderten Organisationen.</p> : null}
       </div>
+      <Seiten page={page} pageCount={pageCount} />
 
       {createOpen ? (
         <div className="organization-create-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setCreateOpen(false); }}>

@@ -6,6 +6,8 @@ import { zeitpunktKurz as formatDate } from "~/lib/format";
 import { ANFRAGEKANAL as CHANNEL, ANFRAGESTATUS as STATUS } from "~/lib/labels";
 import { Ampel, useNaechsteSchritte } from "~/components/ampel";
 import { Aufklapper } from "~/components/aufklapper";
+import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege, BEZUG_GRENZE } from "~/lib/blaettern.server";
+import { Seiten, SucheZuAllgemein } from "~/components/seiten";
 import "~/programm-liste.css";
 
 type ActionResult={error?:string;ok?:string};
@@ -32,32 +34,43 @@ export async function loader({request,context}:Route.LoaderArgs){
  const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"inquiry.read");
   // Einstieg: gleich den obersten Datensatz im Arbeitsplatz oeffnen (app/lib/einstieg.ts).
   if(istEinstieg(request)){const {data:erster}=await supabase.from("inquiries").select("id").is("archived_at",null).order("received_at",{ascending:false}).limit(1).maybeSingle(); if(erster)throw redirect(`/inquiries/${erster.id}`,{headers:responseHeaders()});}
- const u=new URL(request.url),q=(u.searchParams.get("q")??"").trim().toLowerCase(),status=u.searchParams.get("status")??"OPEN",channel=u.searchParams.get("channel")??"ALL",responsible=u.searchParams.get("responsible")??"ALL",archived=u.searchParams.get("archived")==="1";
- const [{data:rows,error},{data:profiles},responseRes,targetsRes,{data:canEscalate},{data:canManageTargets}]=await Promise.all([
-  supabase.from("inquiries").select("id,inquiry_number,status,channel,source_label,message,received_at,answered_at,primary_responsible_user,updated_at,archived_at,contacts!inner(id,contact_number,first_name,last_name,email,phone,mobile),properties(id,property_number,internal_title),search_profiles(id,search_profile_number,title)").order("received_at",{ascending:false}).limit(500),
+ const u=new URL(request.url),q=(u.searchParams.get("q")??"").trim(),status=u.searchParams.get("status")??"OPEN",channel=u.searchParams.get("channel")??"ALL",responsible=u.searchParams.get("responsible")??"ALL",archived=u.searchParams.get("archived")==="1";
+ // Blaettern ueber die Datenbank (19.10.2026, app/lib/blaettern.server.ts):
+ // gefiltert, gezaehlt und geblaettert wird dort. Die Reaktionszeit-Kennzahlen
+ // zaehlt die Datenbank, Reaktionszeiten geholt werden nur fuer die Seite.
+ const {page,from,to}=seiteAus(u);const text=sicher(q);
+ const [bezug,profilTreffer]=await Promise.all([passendeBezuege(supabase,q,{kontakte:true,objekte:true}),text?supabase.from("search_profiles").select("id").ilike("search_profile_number",`%${text}%`).limit(BEZUG_GRENZE):Promise.resolve({data:[]})]);
+ let abfrage=supabase.from("inquiries").select("id,inquiry_number,status,channel,source_label,message,received_at,answered_at,primary_responsible_user,updated_at,archived_at,contacts!inner(id,contact_number,first_name,last_name,email,phone,mobile),properties(id,property_number,internal_title),search_profiles(id,search_profile_number,title)",{count:"exact"});
+ abfrage=archived?abfrage.not("archived_at","is",null):abfrage.is("archived_at",null);
+ if(status==="OPEN")abfrage=abfrage.not("status","in","(CLOSED,LOST)");else if(status!=="ALL")abfrage=abfrage.eq("status",status);
+ if(channel!=="ALL")abfrage=abfrage.eq("channel",channel);
+ if(responsible!=="ALL")abfrage=abfrage.eq("primary_responsible_user",responsible);
+ if(text)abfrage=abfrage.or([enthaelt(["inquiry_number","message","source_label"],text),inListe("contact_id",bezug.kontakte),inListe("property_id",bezug.objekte),inListe("search_profile_id",((profilTreffer.data??[]) as any[]).map(r=>r.id))].join(","));
+ const zaehle=(f:(a:any)=>any)=>f(supabase.rpc("inquiry_response_overview",{p_only_open:false},{count:"exact"}).select("inquiry_id")).limit(1);
+ const [{data:rows,error,count},{data:profiles},targetsRes,{data:canEscalate},{data:canManageTargets},...zahlen]=await Promise.all([
+  abfrage.order("received_at",{ascending:false}).range(from,to),
   supabase.from("profiles").select("user_id,display_name,status").eq("status","ACTIVE").order("display_name"),
-  supabase.rpc("inquiry_response_overview",{p_only_open:false}),
   supabase.from("inquiry_response_targets").select("*").order("channel",{nullsFirst:true}),
   supabase.rpc("current_user_has_permission",{p_permission:"inquiry.escalate"}),
-  supabase.rpc("current_user_has_permission",{p_permission:"settings.manage"})
+  supabase.rpc("current_user_has_permission",{p_permission:"settings.manage"}),
+  zaehle(a=>a.eq("state","OVERDUE")),
+  zaehle(a=>a.eq("state","ESCALATION_DUE")),
+  zaehle(a=>a.eq("escalated",true)),
+  zaehle(a=>a.eq("state","ANSWERED_LATE")),
+  zaehle(a=>a.eq("state","ANSWERED_IN_TIME")),
  ]);
  if(error)throw new Response("Anfragen konnten nicht geladen werden.",{status:500});
+ const seitenIds=((rows??[]) as any[]).map(r=>r.id);
+ const responseRes=seitenIds.length?await supabase.rpc("inquiry_response_overview",{p_only_open:false}).in("inquiry_id",seitenIds):{data:[],error:null};
  // Ein verschluckter Lesefehler sähe hier aus wie "keine Reaktionszeit überschritten".
- if(responseRes.error||targetsRes.error)throw new Response("Die Reaktionszeiten konnten nicht geladen werden.",{status:500,headers:responseHeaders()});
+ if(responseRes.error||targetsRes.error||zahlen.some((z:any)=>z.error))throw new Response("Die Reaktionszeiten konnten nicht geladen werden.",{status:500,headers:responseHeaders()});
  const responseByInquiry=Object.fromEntries(((responseRes.data??[]) as any[]).map((row:any)=>[row.inquiry_id,row]));
  const profileMap=Object.fromEntries((profiles??[]).map((p:any)=>[p.user_id,p.display_name]));
- const filtered=(rows??[]).filter((r:any)=>{if(archived?!r.archived_at:r.archived_at)return false;if(status==="OPEN"&&["CLOSED","LOST"].includes(r.status))return false;if(status!=="ALL"&&status!=="OPEN"&&r.status!==status)return false;if(channel!=="ALL"&&r.channel!==channel)return false;if(responsible!=="ALL"&&r.primary_responsible_user!==responsible)return false;if(q){const c=one(r.contacts),p=one(r.properties),sp=one(r.search_profiles);const hay=[r.inquiry_number,c?.first_name,c?.last_name,c?.email,c?.phone,c?.mobile,p?.property_number,sp?.search_profile_number,r.message].filter(Boolean).join(" ").toLowerCase();if(!hay.includes(q))return false;}return true;});
- const response=(responseRes.data??[]) as any[];
- return data({rows:filtered,gekappt:(rows??[]).length>=500,profiles:profiles??[],profileMap,profile,
+ const [overdue,escalationDue,escalated,late,inTime]=zahlen.map((z:any)=>z.count??0);
+ return data({rows:rows??[],total:count??0,page,pageCount:seitenzahl(count),zuViele:bezug.zuViele,profiles:profiles??[],profileMap,profile,
   responseByInquiry,targets:targetsRes.data??[],
   canEscalate:canEscalate===true,canManageTargets:canManageTargets===true,
-  responseSummary:{
-   overdue:response.filter((r:any)=>r.state==="OVERDUE").length,
-   escalationDue:response.filter((r:any)=>r.state==="ESCALATION_DUE").length,
-   escalated:response.filter((r:any)=>r.escalated).length,
-   late:response.filter((r:any)=>r.state==="ANSWERED_LATE").length,
-   inTime:response.filter((r:any)=>r.state==="ANSWERED_IN_TIME").length,
-  },
+  responseSummary:{overdue,escalationDue,escalated,late,inTime},
   filters:{q,status,channel,responsible,archived}},{headers:responseHeaders()});
 }
 
@@ -70,7 +83,6 @@ export async function action({request,context}:Route.ActionArgs){
  const created=Number(count)||0;
  return data<ActionResult>({ok:created===0?"Es gab keine Anfrage, die zu eskalieren war.":created===1?"Eine Wiedervorlage wurde angelegt.":`${created} Wiedervorlagen wurden angelegt.`},{headers:responseHeaders()});
 }
-const GRENZE=500;
 
 // Eine Programmliste wie Kontakte und Makleraufträge (P2-8, 17.10.2026):
 // Werkzeugleiste, eine Zeile Kennzahlen zur Reaktionszeit, Tabelle. Vorher
@@ -93,7 +105,7 @@ export default function Inquiries(){
    <label><span className="sr-only">Verantwortlich</span><select name="responsible" defaultValue={filters.responsible}><option value="ALL">Alle Verantwortlichen</option>{profiles.map((p:any)=><option key={p.user_id} value={p.user_id}>{p.display_name}</option>)}</select></label>
    <label className="programm-liste-haken"><input name="archived" type="checkbox" value="1" defaultChecked={filters.archived}/>Archiv</label>
    <button className="secondary-button" type="submit">Filtern</button>
-   <span className="programm-liste-zaehler">{rows.length} {rows.length===1?"Anfrage":"Anfragen"}</span>
+   <span className="programm-liste-zaehler">{d.total} {d.total===1?"Anfrage":"Anfragen"}</span>
    <Link className="secondary-button link-button" to="/inquiries/assistent">Anfrage einfügen</Link>
    <Link className="programm-liste-neu" to="/inquiries/new">+ Neue Anfrage</Link>
   </Form>
@@ -123,8 +135,9 @@ export default function Inquiries(){
      <td className="zahl rechts leise">{formatDate(r.received_at)}</td>
     </tr>;})}</tbody>
    </table>}
-   {d.gekappt?<p className="programm-liste-leer">Durchsucht werden die {GRENZE} zuletzt eingegangenen Anfragen. Ältere findet die Suche über alles (Strg+K).</p>:null}
+   <SucheZuAllgemein an={d.zuViele}/>
   </div>
+  <Seiten page={d.page} pageCount={d.pageCount}/>
 
   {d.canManageTargets?<Aufklapper id="zielzeiten" knopf={`Zielzeiten je Kanal (${(d.targets as any[]).length})`}>
    <p className="programm-erklaerung">Die Zielzeit bis zur ersten Antwort wird je Kanal vorgegeben; ab der Eskalationszeit gilt eine Anfrage als zu eskalieren.</p>

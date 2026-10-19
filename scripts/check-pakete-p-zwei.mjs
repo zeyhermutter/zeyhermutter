@@ -135,8 +135,24 @@ pruefe(!/update public\.(properties|leads|inquiries|property_reservations|broker
 pruefe(automatik.includes("where active") && (await lies("app/routes/automatik.tsx")).includes('value="schalten"'), "Automatik: Regeln nicht einzeln abschaltbar");
 pruefe(automatik.includes("cron.schedule('zeyhermutter-automatik'"), "Automatik: kein Zeitplan");
 
+// 12. Blaettern ueber die Datenbank -- keine volle Liste laedt 500 Zeilen und filtert im Worker
+for (const [datei, tabelle] of [["inquiries", "inquiries"], ["leads", "leads"], ["viewings", "viewings"], ["search-profiles", "search_profiles"], ["purchase-offers", "purchase_offers"], ["closings", "sale_closings"], ["commissions", "commissions"], ["organizations", "organizations"]]) {
+  const quelle = await lies(`app/routes/${datei}.tsx`);
+  const lader = quelle.slice(quelle.indexOf("export async function loader"));
+  pruefe(lader.includes("seiteAus(") && /\.range\(from, ?to\)/.test(lader) && (lader.includes('{count:"exact"}') || lader.includes('{ count: "exact" }')), `${datei}.tsx: blaettert nicht ueber die Datenbank`);
+  pruefe(!new RegExp(`from\\("${tabelle}"\\)\\.select\\("id,[^"]{40,}"\\)[^;]*\\.limit\\(500\\)`).test(lader) && !lader.includes("gekappt:"), `${datei}.tsx: wieder 500 Zeilen geladen und im Worker gefiltert`);
+}
+
+// 13. Aufgabe anlegen sucht Bezuege in der Datenbank statt aus 500 vorab geladenen Datensaetzen
+const aufgabenListe = await lies("app/routes/tasks.tsx"), aufgabenDialog = await lies("app/components/task-create-modal.tsx");
+pruefe(!aufgabenListe.includes(".limit(500)") && (aufgabenDialog.match(/<DatensatzAuswahl art="(LEAD|PROPERTY|SEARCH_PROFILE|INQUIRY|VIEWING)"/g) ?? []).length === 5 && !aufgabenDialog.includes("<select name=\"lead_id\""), "Aufgabe anlegen: Bezuege wieder aus vorab geladenen Listen");
+
+// 14. Arbeitsplatz: blendet er die Seitenkoepfe aus, traegt der Kopf der Akte die Hauptueberschrift
+const arbeitsplatzBaustein = await lies("app/components/arbeitsplatz.tsx");
+pruefe(/alsUeberschrift \? <h1 className="arbeitsplatz-kopf-titel">/.test(arbeitsplatzBaustein) && arbeitsplatzBaustein.includes('value={seitenkopf === "ausblenden"}'), "Arbeitsplatz: ohne Seitenkopf keine h1 im Kopf der Akte");
+
 if (fehler.length) {
   console.error("P2:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung, Datenauskunft aus allen Kontakt-Tabellen, Rechtsgrundlage und Werbewiderspruch (Hinweis, keine Sperre), Anonymisieren nur mit Recht, Grund, Bestätigung und ohne Einwand der Datenbank, Objektakte lädt je Teil nur, was er zeigt, 16 volle Listen als Programmtabelle, tägliche Automatik nur mit Aufgaben/Benachrichtigungen, dublettensicher und abschaltbar.");
+console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung, Datenauskunft aus allen Kontakt-Tabellen, Rechtsgrundlage und Werbewiderspruch (Hinweis, keine Sperre), Anonymisieren nur mit Recht, Grund, Bestätigung und ohne Einwand der Datenbank, Objektakte lädt je Teil nur, was er zeigt, 16 volle Listen als Programmtabelle, tägliche Automatik nur mit Aufgaben/Benachrichtigungen, dublettensicher und abschaltbar, 8 Listen blättern über die Datenbank, Aufgabe anlegen sucht seine Bezüge, Arbeitsplatz ohne Seitenkopf mit h1.");

@@ -3,6 +3,8 @@ import { istEinstieg } from "~/lib/einstieg";
 import type { Route } from "./+types/search-profiles";
 import { requirePermission } from "~/lib/auth.server";
 import { euroRund as money, tag } from "~/lib/format";
+import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege, BEZUG_GRENZE } from "~/lib/blaettern.server";
+import { Seiten, SucheZuAllgemein } from "~/components/seiten";
 import "~/programm-liste.css";
 
 const STATUS_LABELS:Record<string,string>={ACTIVE:"Aktiv",PAUSED:"Pausiert",CLOSED:"Abgeschlossen"};
@@ -13,29 +15,30 @@ export async function loader({request,context}:Route.LoaderArgs){
   const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"search_profile.read");
   // Einstieg: gleich das zuletzt bearbeitete Suchprofil im Arbeitsplatz oeffnen (app/lib/einstieg.ts).
   if(istEinstieg(request)){const {data:erstes}=await supabase.from("search_profiles").select("id").is("archived_at",null).order("updated_at",{ascending:false}).limit(1).maybeSingle(); if(erstes)throw redirect(`/search-profiles/${erstes.id}`,{headers:responseHeaders()});}
-  const url=new URL(request.url);const q=(url.searchParams.get("q")??"").trim().toLowerCase();const archived=url.searchParams.get("archived")==="1";// Im Archiv zaehlt der Status nur, wenn er ausdruecklich gewaehlt ist: der Haken "Archiv" schickt die Voreinstellung "Aktiv" mit, und archivierte Profile sind fast nie aktiv (P2-8).
+  const url=new URL(request.url);const q=(url.searchParams.get("q")??"").trim();const archived=url.searchParams.get("archived")==="1";// Im Archiv zaehlt der Status nur, wenn er ausdruecklich gewaehlt ist: der Haken "Archiv" schickt die Voreinstellung "Aktiv" mit, und archivierte Profile sind fast nie aktiv (P2-8).
   const statusParam=url.searchParams.get("status");const status=archived&&(!statusParam||statusParam==="ACTIVE")?"ALL":(statusParam??"ACTIVE");const transaction=url.searchParams.get("transaction")??"ALL";const responsible=url.searchParams.get("responsible")??"ALL";
-  const [{data:rows,error},{data:profiles}]=await Promise.all([
-    supabase.from("search_profiles").select("id,search_profile_number,title,status,transaction_type,property_types,min_price,max_price,min_living_area,min_rooms,primary_responsible_user,updated_at,archived_at,contacts!inner(id,contact_number,first_name,last_name,email,mobile),search_profile_locations(id,postal_code,city,district,radius_km)").order("updated_at",{ascending:false}).limit(500),
+  // Blaettern ueber die Datenbank (19.10.2026, app/lib/blaettern.server.ts).
+  const {page,from,to}=seiteAus(url);const text=sicher(q);
+  const [bezug,ortTreffer]=await Promise.all([passendeBezuege(supabase,q,{kontakte:true}),text?supabase.from("search_profile_locations").select("search_profile_id").or(enthaelt(["postal_code","city","district"],text)).limit(BEZUG_GRENZE):Promise.resolve({data:[]})]);
+  let abfrage=supabase.from("search_profiles").select("id,search_profile_number,title,status,transaction_type,property_types,min_price,max_price,min_living_area,min_rooms,primary_responsible_user,updated_at,archived_at,contacts!inner(id,contact_number,first_name,last_name,email,mobile),search_profile_locations(id,postal_code,city,district,radius_km)",{count:"exact"});
+  abfrage=archived?abfrage.not("archived_at","is",null):abfrage.is("archived_at",null);
+  if(status!=="ALL")abfrage=abfrage.eq("status",status);
+  if(transaction!=="ALL")abfrage=abfrage.eq("transaction_type",transaction);
+  if(responsible!=="ALL")abfrage=abfrage.eq("primary_responsible_user",responsible);
+  if(text)abfrage=abfrage.or([enthaelt(["search_profile_number","title"],text),inListe("contact_id",bezug.kontakte),inListe("id",((ortTreffer.data??[]) as any[]).map(r=>r.search_profile_id))].join(","));
+  const [{data:rows,error,count},{data:profiles}]=await Promise.all([
+    abfrage.order("updated_at",{ascending:false}).range(from,to),
     supabase.from("profiles").select("user_id,display_name,status").eq("status","ACTIVE").order("display_name")
   ]);
   if(error)throw new Response("Suchprofile konnten nicht geladen werden.",{status:500});
   const profileMap=Object.fromEntries((profiles??[]).map((p:any)=>[p.user_id,p.display_name]));
-  const filtered=(rows??[]).filter((r:any)=>{
-    if(archived?!r.archived_at:r.archived_at)return false;
-    if(status!=="ALL"&&r.status!==status)return false;
-    if(transaction!=="ALL"&&r.transaction_type!==transaction)return false;
-    if(responsible!=="ALL"&&r.primary_responsible_user!==responsible)return false;
-    if(q){const c=one(r.contacts);const loc=(r.search_profile_locations??[]).map((l:any)=>`${l.postal_code??""} ${l.city??""} ${l.district??""}`).join(" ");const hay=[r.search_profile_number,r.title,c?.first_name,c?.last_name,c?.email,c?.mobile,loc].filter(Boolean).join(" ").toLowerCase();if(!hay.includes(q))return false;}
-    return true;
-  });
-  return data({rows:filtered,gekappt:(rows??[]).length>=500,profiles:profiles??[],profileMap,profile,filters:{q,status,transaction,responsible,archived}},{headers:responseHeaders()});
+  return data({rows:rows??[],total:count??0,page,pageCount:seitenzahl(count),zuViele:bezug.zuViele,profiles:profiles??[],profileMap,profile,filters:{q,status,transaction,responsible,archived}},{headers:responseHeaders()});
 }
 // Eine Programmliste wie Kontakte und Makleraufträge (P2-8, 17.10.2026).
 // Vorher Seitenkopf, Filterkasten und Kartenzeilen. Der Hinweis "Suchort
 // erforderlich" bleibt in der Zeile.
 export default function SearchProfiles(){
- const {rows,profiles,profileMap,filters,gekappt}=useLoaderData<typeof loader>();
+ const {rows,total,page,pageCount,zuViele,profiles,profileMap,filters}=useLoaderData<typeof loader>();
  const gefiltert=Boolean(filters.q||(filters.status!=="ACTIVE"&&!filters.archived)||filters.transaction!=="ALL"||filters.responsible!=="ALL");
  return <main className="editor-shell programm-liste">
   <Form method="get" className="programm-liste-werkzeuge" role="search">
@@ -46,7 +49,7 @@ export default function SearchProfiles(){
    <label><span className="sr-only">Verantwortlich</span><select name="responsible" defaultValue={filters.responsible}><option value="ALL">Alle Verantwortlichen</option>{profiles.map((p:any)=><option key={p.user_id} value={p.user_id}>{p.display_name}</option>)}</select></label>
    <label className="programm-liste-haken"><input type="checkbox" name="archived" value="1" defaultChecked={filters.archived}/>Archiv</label>
    <button className="secondary-button" type="submit">Filtern</button>
-   <span className="programm-liste-zaehler">{rows.length} {rows.length===1?"Suchprofil":"Suchprofile"}</span>
+   <span className="programm-liste-zaehler">{total} {total===1?"Suchprofil":"Suchprofile"}</span>
    <Link className="programm-liste-neu" to="/search-profiles/new">+ Neues Suchprofil</Link>
   </Form>
   <div className="programm-tabelle-rahmen">
@@ -64,7 +67,8 @@ export default function SearchProfiles(){
      <td className="zahl rechts leise">{tag(r.updated_at)}</td>
     </tr>;})}</tbody>
    </table>}
-   {gekappt?<p className="programm-liste-leer">Durchsucht werden die 500 zuletzt geänderten Suchprofile. Ältere findet die Suche über alles (Strg+K).</p>:null}
+   <SucheZuAllgemein an={zuViele}/>
   </div>
+  <Seiten page={page} pageCount={pageCount}/>
  </main>;
 }

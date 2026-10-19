@@ -3,6 +3,8 @@ import { istEinstieg } from "~/lib/einstieg";
 import type { Route } from "./+types/purchase-offers";
 import { requirePermission } from "~/lib/auth.server";
 import { euroGenau as money, tag as formatDate } from "~/lib/format";
+import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege } from "~/lib/blaettern.server";
+import { Seiten, SucheZuAllgemein } from "~/components/seiten";
 import "~/programm-liste.css";
 
 const STATUS:Record<string,string>={DRAFT:"Entwurf",SUBMITTED:"Abgegeben",COUNTERED:"Gegenangebot",ACCEPTED:"Angenommen",REJECTED:"Abgelehnt",WITHDRAWN:"Zurückgezogen",REPLACED:"Ersetzt",FAILED:"Abschluss gescheitert"};
@@ -15,17 +17,25 @@ export async function loader({request,context}:Route.LoaderArgs){
   // Einstieg: gleich den obersten Datensatz im Arbeitsplatz oeffnen (app/lib/einstieg.ts).
   if(istEinstieg(request)){const {data:erster}=await supabase.from("purchase_offers").select("id").is("archived_at",null).order("updated_at",{ascending:false}).limit(1).maybeSingle(); if(erster)throw redirect(`/purchase-offers/${erster.id}`,{headers:responseHeaders()});}
   const url=new URL(request.url);const filters={q:(url.searchParams.get("q")??"").trim(),status:url.searchParams.get("status")??"ACTIVE",propertyId:url.searchParams.get("property_id")??""};
-  const [{data:rows,error},{data:canWrite},{data:properties}]=await Promise.all([
-    supabase.from("purchase_offers").select("id,offer_number,property_id,contact_id,amount,status,financing_status,submitted_at,valid_until,archived_at,updated_at,properties!inner(id,property_number,internal_title,status),contacts!inner(id,contact_number,first_name,last_name),sale_closings(id,closing_number,status)").order("updated_at",{ascending:false}).limit(500),
+  // Blaettern ueber die Datenbank (19.10.2026, app/lib/blaettern.server.ts).
+  const {page,from,to}=seiteAus(url);const text=sicher(filters.q);
+  const bezug=await passendeBezuege(supabase,filters.q,{kontakte:true,objekte:true});
+  let abfrage=supabase.from("purchase_offers").select("id,offer_number,property_id,contact_id,amount,status,financing_status,submitted_at,valid_until,archived_at,updated_at,properties!inner(id,property_number,internal_title,status),contacts!inner(id,contact_number,first_name,last_name),sale_closings(id,closing_number,status)",{count:"exact"});
+  if(filters.propertyId)abfrage=abfrage.eq("property_id",filters.propertyId);
+  if(filters.status==="ACTIVE")abfrage=abfrage.is("archived_at",null).not("status","in","(REJECTED,WITHDRAWN,REPLACED,FAILED)");
+  else if(filters.status==="ARCHIVED")abfrage=abfrage.not("archived_at","is",null);
+  else if(filters.status!=="ALL")abfrage=abfrage.eq("status",filters.status);
+  if(text)abfrage=abfrage.or([enthaelt(["offer_number"],text),inListe("contact_id",bezug.kontakte),inListe("property_id",bezug.objekte)].join(","));
+  const zaehle=(st:string[])=>supabase.from("purchase_offers").select("id",{count:"exact"}).is("archived_at",null).in("status",st).limit(1);
+  const [{data:rows,error,count},{data:canWrite},{data:properties},...zahlen]=await Promise.all([
+    abfrage.order("updated_at",{ascending:false}).range(from,to),
     supabase.rpc("current_user_has_permission",{p_permission:"offer.write"}),
     supabase.from("properties").select("id,property_number,internal_title").eq("transaction_type","SALE").is("archived_at",null).order("updated_at",{ascending:false}).limit(500),
+    zaehle(["DRAFT"]),zaehle(["SUBMITTED","COUNTERED"]),zaehle(["ACCEPTED"]),zaehle(["REJECTED","WITHDRAWN","FAILED"]),
   ]);
   if(error)throw new Response("Kaufangebote konnten nicht geladen werden.",{status:500,headers:responseHeaders()});
-  const all=(rows??[]) as any[],active=all.filter(r=>!r.archived_at);
-  const summary={draft:active.filter(r=>r.status==="DRAFT").length,negotiation:active.filter(r=>["SUBMITTED","COUNTERED"].includes(r.status)).length,accepted:active.filter(r=>r.status==="ACCEPTED").length,failed:active.filter(r=>["REJECTED","WITHDRAWN","FAILED"].includes(r.status)).length};
-  const needle=filters.q.toLocaleLowerCase("de-DE");
-  const filtered=all.filter(row=>{const p=one(row.properties),c=one(row.contacts);if(filters.propertyId&&row.property_id!==filters.propertyId)return false;if(filters.status==="ACTIVE"&&(row.archived_at||["REJECTED","WITHDRAWN","REPLACED","FAILED"].includes(row.status)))return false;if(filters.status==="ARCHIVED"&&!row.archived_at)return false;if(!["ACTIVE","ALL","ARCHIVED"].includes(filters.status)&&row.status!==filters.status)return false;if(!needle)return true;return [row.offer_number,p?.property_number,p?.internal_title,c?.contact_number,c?.first_name,c?.last_name].filter(Boolean).join(" ").toLocaleLowerCase("de-DE").includes(needle);});
-  return data({profile,rows:filtered,gekappt:all.length>=500,summary,canWrite:canWrite===true,properties:properties??[],filters},{headers:responseHeaders()});
+  const [draft,negotiation,accepted,failed]=zahlen.map((z:any)=>z.count??0);
+  return data({profile,rows:(rows??[]) as any[],total:count??0,page,pageCount:seitenzahl(count),zuViele:bezug.zuViele,summary:{draft,negotiation,accepted,failed},canWrite:canWrite===true,properties:properties??[],filters},{headers:responseHeaders()});
 }
 
 // Eine Programmliste wie Kontakte und Makleraufträge (P2-8, 17.10.2026):
@@ -42,7 +52,7 @@ export default function PurchaseOffers(){
       <label><span className="sr-only">Status</span><select name="status" defaultValue={d.filters.status}><option value="ACTIVE">Laufende Angebote</option><option value="ALL">Alle</option>{Object.entries(STATUS).map(([v,l])=><option value={v} key={v}>{l}</option>)}<option value="ARCHIVED">Archiviert</option></select></label>
       <label><span className="sr-only">Immobilie</span><select name="property_id" defaultValue={d.filters.propertyId}><option value="">Alle Immobilien</option>{d.properties.map((p:any)=><option key={p.id} value={p.id}>{p.property_number} · {p.internal_title}</option>)}</select></label>
       <button className="secondary-button" type="submit">Filtern</button>
-      <span className="programm-liste-zaehler">{d.rows.length} {d.rows.length===1?"Kaufangebot":"Kaufangebote"}</span>
+      <span className="programm-liste-zaehler">{d.total} {d.total===1?"Kaufangebot":"Kaufangebote"}</span>
       {d.canWrite?<Link className="programm-liste-neu" to={neu}>+ Neues Kaufangebot</Link>:null}
     </Form>
     <p className="programm-kennzahlen">
@@ -65,7 +75,8 @@ export default function PurchaseOffers(){
           <td className="zahl rechts leise">{formatDate(row.updated_at)}</td>
         </tr>;})}</tbody>
       </table>}
-      {d.gekappt?<p className="programm-liste-leer">Durchsucht werden die 500 zuletzt geänderten Kaufangebote.</p>:null}
+      <SucheZuAllgemein an={d.zuViele}/>
     </div>
+      <Seiten page={d.page} pageCount={d.pageCount}/>
   </main>;
 }

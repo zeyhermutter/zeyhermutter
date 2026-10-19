@@ -1,21 +1,18 @@
-import { KontaktAuswahl } from "~/components/kontakt-auswahl";
+import { DatensatzAuswahl, KontaktAuswahl } from "~/components/kontakt-auswahl";
 import { useEffect, useState } from "react";
 import { Form } from "react-router";
 
-type Option = { id: string; label: string };
 type ProfileOption = { user_id: string; display_name: string };
 
 type Props = {
   profiles: ProfileOption[];
   currentUserId: string;
-  leads: Option[];
-  properties: Option[];
-  searchProfiles: Option[];
-  inquiries: Option[];
-  viewings: Option[];
 };
 
-export function TaskCreateModal({ profiles, currentUserId, leads, properties, searchProfiles, inquiries, viewings }: Props) {
+// Lead, Objekt, Suchprofil, Anfrage und Besichtigung werden seit 19.10.2026
+// gesucht statt aus je 500 vorab geladenen Datensaetzen gewaehlt.
+
+export function TaskCreateModal({ profiles, currentUserId }: Props) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -47,11 +44,11 @@ export function TaskCreateModal({ profiles, currentUserId, leads, properties, se
               <label><span>Fällig *</span><input name="due_date" type="date" required /></label>
               <label><span>Verantwortlich</span><select name="responsible_user" defaultValue={currentUserId}>{profiles.map((item) => <option key={item.user_id} value={item.user_id}>{item.display_name}</option>)}</select></label>
               <KontaktAuswahl name="contact_id" beschriftung="Kontakt" hinweis="Leer lassen für eine Aufgabe ohne Kontaktbezug." />
-              <label><span>Lead</span><select name="lead_id"><option value="">Ohne Leadbezug</option>{leads.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
-              <label><span>Immobilie</span><select name="property_id"><option value="">Ohne Objektbezug</option>{properties.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
-              <label><span>Suchprofil</span><select name="search_profile_id"><option value="">Ohne Suchprofilbezug</option>{searchProfiles.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
-              <label><span>Anfrage</span><select name="inquiry_id"><option value="">Ohne Anfragebezug</option>{inquiries.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
-              <label><span>Besichtigung</span><select name="viewing_id"><option value="">Ohne Besichtigungsbezug</option>{viewings.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+              <DatensatzAuswahl art="LEAD" name="lead_id" beschriftung="Lead" />
+              <DatensatzAuswahl art="PROPERTY" name="property_id" beschriftung="Immobilie" />
+              <DatensatzAuswahl art="SEARCH_PROFILE" name="search_profile_id" beschriftung="Suchprofil" />
+              <DatensatzAuswahl art="INQUIRY" name="inquiry_id" beschriftung="Anfrage" />
+              <DatensatzAuswahl art="VIEWING" name="viewing_id" beschriftung="Besichtigung" hinweis="Alle Bezüge sind freiwillig; leer lassen für eine allgemeine Aufgabe." />
               <div className="task-create-modal-actions">
                 <button className="secondary-button" type="button" onClick={() => setOpen(false)}>Abbrechen</button>
                 <button className="primary-button" type="submit">Aufgabe speichern</button>

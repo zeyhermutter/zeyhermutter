@@ -43,18 +43,13 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const ansicht = von === "alle" ? "alle" : kollegen.some((k) => k.id === von) ? von : "meins";
   if (ansicht !== "alle") query = query.eq("responsible_user", ansicht === "meins" ? userId : ansicht);
 
-  const [{ data: tasks, error: taskError, count: gesamt }, { data: profiles, error: profileError }, { data: properties, error: propertyError }, { data: leads, error: leadError }, { data: inquiries, error: inquiryError }, { data: searchProfiles, error: searchProfileError }, { data: viewings, error: viewingError }, { data: canWrite }] = await Promise.all([
+  const [{ data: tasks, error: taskError, count: gesamt }, { data: profiles, error: profileError }, { data: canWrite }] = await Promise.all([
     query,
     supabase.from("profiles").select("user_id,display_name,status").eq("status", "ACTIVE").order("display_name"),
-    supabase.from("properties").select("id,property_number,internal_title,status").neq("status", "ARCHIVED").order("updated_at", { ascending: false }).limit(500),
-    supabase.from("leads").select("id,lead_number,status,contact_id,property_city,contacts!inner(first_name,last_name)").is("archived_at", null).order("updated_at", { ascending: false }).limit(500),
-    supabase.from("inquiries").select("id,inquiry_number,status,contact_id,property_id").is("archived_at", null).order("updated_at", { ascending: false }).limit(500),
-    supabase.from("search_profiles").select("id,search_profile_number,title,status,contact_id").is("archived_at", null).order("updated_at", { ascending: false }).limit(500),
-    supabase.from("viewings").select("id,viewing_number,status,starts_at,contact_id,property_id,inquiry_id,search_profile_id").is("archived_at", null).order("starts_at", { ascending: false }).limit(500),
     supabase.rpc("current_user_has_permission", { p_permission: "task.write" }),
   ]);
 
-  if (taskError || profileError || propertyError || leadError || inquiryError || searchProfileError || viewingError) throw new Response("Aufgaben konnten nicht geladen werden.", { status: 500 });
+  if (taskError || profileError) throw new Response("Aufgaben konnten nicht geladen werden.", { status: 500 });
   const taskIds = (tasks ?? []).map((task: any) => task.id);
   const watcherPromise = taskIds.length ? supabase.from("task_watchers").select("task_id,user_id,created_at").in("task_id", taskIds).order("created_at", { ascending: true }) : Promise.resolve({ data: [], error: null } as any);
   const commentPromise = taskIds.length ? supabase.from("comments").select("id,entity_id,body,author_user_id,created_at").eq("entity_type", "TASK").in("entity_id", taskIds).is("archived_at", null).order("created_at", { ascending: false }).limit(1000) : Promise.resolve({ data: [], error: null } as any);
@@ -64,13 +59,27 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   // die Suche (KontaktAuswahl).
   const kontaktIds = Array.from(new Set((tasks ?? []).map((task: any) => task.contact_id).filter(Boolean)));
   const contactPromise = kontaktIds.length ? supabase.from("contacts").select("id,contact_number,first_name,last_name").in("id", kontaktIds) : Promise.resolve({ data: [], error: null } as any);
-  const [{ data: watchers, error: watcherError }, { data: comments, error: commentError }, { data: contacts, error: contactError }] = await Promise.all([watcherPromise, commentPromise, contactPromise]);
-  if (contactError) throw new Response("Aufgaben konnten nicht geladen werden.", { status: 500 });
+  // Ebenso Objekte, Leads, Anfragen, Suchprofile und Besichtigungen nur fuer
+  // die angezeigten Aufgaben (19.10.2026) -- vorher aus je 500 zuletzt
+  // geaenderten; eine Aufgabe zu einem aelteren Objekt stand ohne Bezug da.
+  const nurFuer = (spalte: string, tabelle: string, spalten: string) => {
+    const ids = Array.from(new Set((tasks ?? []).map((task: any) => task[spalte]).filter(Boolean)));
+    return ids.length ? supabase.from(tabelle).select(spalten).in("id", ids) : Promise.resolve({ data: [], error: null } as any);
+  };
+  const [{ data: watchers, error: watcherError }, { data: comments, error: commentError }, { data: contacts, error: contactError }, { data: properties, error: propertyError }, { data: leads, error: leadError }, { data: inquiries, error: inquiryError }, { data: searchProfiles, error: searchProfileError }, { data: viewings, error: viewingError }] = await Promise.all([
+    watcherPromise, commentPromise, contactPromise,
+    nurFuer("property_id", "properties", "id,property_number,internal_title,status"),
+    nurFuer("lead_id", "leads", "id,lead_number,status"),
+    nurFuer("inquiry_id", "inquiries", "id,inquiry_number,status"),
+    nurFuer("search_profile_id", "search_profiles", "id,search_profile_number,title,status"),
+    nurFuer("viewing_id", "viewings", "id,viewing_number,status,starts_at"),
+  ]);
+  if (contactError || propertyError || leadError || inquiryError || searchProfileError || viewingError) throw new Response("Aufgaben konnten nicht geladen werden.", { status: 500 });
   if (watcherError || commentError) throw new Response("Aufgaben-Zusammenarbeit konnte nicht geladen werden.", { status: 500 });
 
   const map = (arr: any[], key: string) => Object.fromEntries(arr.map((x) => [x[key], x]));
   const group = (arr: any[], key: string) => arr.reduce((acc: Record<string, any[]>, item: any) => { (acc[item[key]] ??= []).push(item); return acc; }, {});
-  return data({ tasks: tasks ?? [], profiles: profiles ?? [], properties: properties ?? [], leads: leads ?? [], inquiries: inquiries ?? [], searchProfiles: searchProfiles ?? [], viewings: viewings ?? [], contactMap: map(contacts ?? [], "id"), profileMap: Object.fromEntries((profiles ?? []).map((x: any) => [x.user_id, x.display_name])), propertyMap: map(properties ?? [], "id"), leadMap: map(leads ?? [], "id"), inquiryMap: map(inquiries ?? [], "id"), searchProfileMap: map(searchProfiles ?? [], "id"), viewingMap: map(viewings ?? [], "id"), watchersByTask: group(watchers ?? [], "task_id"), commentsByTask: group(comments ?? [], "entity_id"), profile, status, ansicht, kollegen, canWrite: canWrite === true, q, seite, gesamt: gesamt ?? 0, seiten: Math.max(1, Math.ceil((gesamt ?? 0) / SEITE)) }, { headers: responseHeaders() });
+  return data({ tasks: tasks ?? [], profiles: profiles ?? [], contactMap: map(contacts ?? [], "id"), profileMap: Object.fromEntries((profiles ?? []).map((x: any) => [x.user_id, x.display_name])), propertyMap: map(properties ?? [], "id"), leadMap: map(leads ?? [], "id"), inquiryMap: map(inquiries ?? [], "id"), searchProfileMap: map(searchProfiles ?? [], "id"), viewingMap: map(viewings ?? [], "id"), watchersByTask: group(watchers ?? [], "task_id"), commentsByTask: group(comments ?? [], "entity_id"), profile, status, ansicht, kollegen, canWrite: canWrite === true, q, seite, gesamt: gesamt ?? 0, seiten: Math.max(1, Math.ceil((gesamt ?? 0) / SEITE)) }, { headers: responseHeaders() });
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
@@ -169,13 +178,8 @@ export async function action({ request, context }: Route.ActionArgs) {
 }
 
 export default function Tasks() {
-  const { tasks, profiles, properties, leads, inquiries, searchProfiles, viewings, contactMap, profileMap, propertyMap, leadMap, inquiryMap, searchProfileMap, viewingMap, watchersByTask, commentsByTask, profile, status, ansicht, kollegen, canWrite, q, seite, gesamt, seiten } = useLoaderData<typeof loader>();
+  const { tasks, profiles, contactMap, profileMap, propertyMap, leadMap, inquiryMap, searchProfileMap, viewingMap, watchersByTask, commentsByTask, profile, status, ansicht, kollegen, canWrite, q, seite, gesamt, seiten } = useLoaderData<typeof loader>();
   const result = useActionData<typeof action>();
-  const leadOptions = leads.map((x: any) => ({ id: x.id, label: x.lead_number }));
-  const propertyOptions = properties.map((x: any) => ({ id: x.id, label: `${x.property_number} · ${x.internal_title}` }));
-  const searchProfileOptions = searchProfiles.map((x: any) => ({ id: x.id, label: `${x.search_profile_number} · ${x.title}` }));
-  const inquiryOptions = inquiries.map((x: any) => ({ id: x.id, label: x.inquiry_number }));
-  const viewingOptions = viewings.map((x: any) => ({ id: x.id, label: `${x.viewing_number} · ${formatDate(x.starts_at)}` }));
 
   const umfang = [
     { schluessel: "meins", name: "Meins" },
@@ -209,7 +213,7 @@ export default function Tasks() {
         <label><span className="sr-only">Status</span><select name="status" defaultValue={status} onChange={(e) => e.currentTarget.form?.requestSubmit()}><option value="OPEN">Offen</option><option value="ALL">Alle</option><option value="DONE">Erledigt</option><option value="CANCELLED">Abgebrochen</option></select></label>
       </Form>
       <span className="programm-liste-zaehler" aria-live="polite">{gesamt} {gesamt === 1 ? "Aufgabe" : "Aufgaben"}{seiten > 1 ? ` · Seite ${seite} von ${seiten}` : ""}</span>
-      {canWrite?<TaskCreateModal profiles={profiles} currentUserId={profile.user_id} leads={leadOptions} properties={propertyOptions} searchProfiles={searchProfileOptions} inquiries={inquiryOptions} viewings={viewingOptions}/>:null}
+      {canWrite?<TaskCreateModal profiles={profiles} currentUserId={profile.user_id}/>:null}
     </div>
     <div className="programm-tabelle-rahmen">
       {tasks.length === 0 ? <p className="programm-liste-leer">{q ? `Keine Aufgabe passt zu „${q}“.` : "Keine Aufgaben in dieser Ansicht."}</p> : <table className="programm-tabelle aufgaben-tabelle">

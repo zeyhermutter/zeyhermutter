@@ -49,6 +49,7 @@ const AUSNAHMEN = {
   "/api/sales-readiness-ai": "Schnittstelle fuer den Assistenten, liefert Daten, keine Seite.",
   "/api/geocode-address": "Schnittstelle fuer die Adresssuche, liefert Daten, keine Seite.",
   "/api/kontakte": "Schnittstelle fuer die Kontaktsuche in Auswahlfeldern, liefert Daten, keine Seite.",
+  "/api/datensaetze": "Schnittstelle fuer die Suche nach Lead, Objekt, Suchprofil, Anfrage und Besichtigung in Auswahlfeldern, liefert Daten, keine Seite.",
   "/api/aufgaben": "Speichert Aufgaben aus dem Aufgaben-Baustein und fuehrt zurueck in die Akte, keine Seite.",
   "/api/objekt-rechte": "Liefert den Reitern der Objektakte die Rechte des Benutzers, keine Seite.",
   "/api/telefonat": "Speichert ein schnell erfasstes Telefonat und fuehrt zurueck in die Akte, keine Seite.",

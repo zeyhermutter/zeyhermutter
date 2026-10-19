@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router";
 import { Ampel, useNaechsteSchritte } from "~/components/ampel";
 import type { AmpelArt } from "~/lib/naechster-schritt";
@@ -101,6 +101,11 @@ export function ArbeitsplatzReiter({ eintraege, beschriftung }: { eintraege: Arb
     </>
   );
 }
+
+// Ob die Unterseiten ihren Seitenkopf zeigen. Blendet der Arbeitsplatz ihn
+// aus, verschwindet mit ihm die Hauptueberschrift (h1) der Seite; dann
+// traegt der Kopf der Akte sie (19.10.2026, Befund aus P1-8).
+const SeitenkopfAusgeblendet = createContext(false);
 
 export function Arbeitsplatz({
   listenName,
@@ -210,7 +215,7 @@ export function Arbeitsplatz({
       </aside>
 
       <section className="arbeitsplatz-akte" aria-label={`Geöffneter Datensatz`}>
-        {kopf}
+        <SeitenkopfAusgeblendet.Provider value={seitenkopf === "ausblenden"}>{kopf}</SeitenkopfAusgeblendet.Provider>
         {reiter}
         <div className={`arbeitsplatz-inhalt${seitenkopf === "ausblenden" ? " ohne-seitenkopf" : ""}`}>{children}</div>
       </section>
@@ -228,11 +233,12 @@ export function ArbeitsplatzKopf({ nummer, status, titel, kontext, aktionen }: {
    * gilt fuer die ganze Akte und ist auf jedem Reiter erreichbar. */
   aktionen?: ReactNode;
 }) {
+  const alsUeberschrift = useContext(SeitenkopfAusgeblendet);
   return (
     <div className="arbeitsplatz-kopf">
       <span className="arbeitsplatz-kopf-nummer">{nummer}</span>
       {status}
-      <strong className="arbeitsplatz-kopf-titel">{titel}</strong>
+      {alsUeberschrift ? <h1 className="arbeitsplatz-kopf-titel">{titel}</h1> : <strong className="arbeitsplatz-kopf-titel">{titel}</strong>}
       {kontext ? <span className="arbeitsplatz-kopf-ort">{kontext}</span> : null}
       {aktionen ? <span className="arbeitsplatz-kopf-aktionen">{aktionen}</span> : null}
     </div>

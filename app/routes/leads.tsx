@@ -6,6 +6,8 @@ import { requirePermission } from "~/lib/auth.server";
 import { zeitpunktKurz as fmt } from "~/lib/format";
 import { Ampel, useNaechsteSchritte } from "~/components/ampel";
 import "~/lead-workflow.css";
+import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege } from "~/lib/blaettern.server";
+import { SucheZuAllgemein } from "~/components/seiten";
 import "~/programm-liste.css";
 
 const STATUS_ORDER=["NEW","CONTACTED","QUALIFIED","APPOINTMENT","VALUATION","OFFER","WON","NURTURE","LOST"] as const;
@@ -47,26 +49,39 @@ export async function loader({request,context}:Route.LoaderArgs){
   const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"lead.read");
   // Einstieg: gleich den zuletzt bearbeiteten Lead im Arbeitsplatz oeffnen (app/lib/einstieg.ts).
   if(istEinstieg(request)){const {data:erster}=await supabase.from("leads").select("id").is("archived_at",null).order("updated_at",{ascending:false}).limit(1).maybeSingle(); if(erster)throw redirect(`/leads/${erster.id}`,{headers:responseHeaders()});}
-  const url=new URL(request.url); const q=(url.searchParams.get("q")??"").trim().toLowerCase(); const status=url.searchParams.get("status")??"ALL"; const source=url.searchParams.get("source")??"ALL"; const responsible=url.searchParams.get("responsible")??"ALL"; const followup=url.searchParams.get("followup")??"ALL"; const archived=url.searchParams.get("archived")==="1"; const page=Math.max(1,Number(url.searchParams.get("page")??"1")||1); const pageSize=50;
-  const [{data:rows,error},{data:sources},{data:profiles},{data:transitions}]=await Promise.all([
-    supabase.from("leads").select("id,lead_number,status,source_id,follow_up_at,primary_responsible_user,property_street,property_house_number,property_postal_code,property_city,property_type,occupancy_status,desired_sale_horizon,living_area_sqm,plot_area_sqm,rooms,price_expectation,estimated_market_value,created_at,updated_at,archived_at,version,converted_property_id,contacts!inner(id,first_name,last_name,email,phone,mobile),lead_sources(id,key,label)").order("updated_at",{ascending:false}).limit(500),
+  const url=new URL(request.url); const q=(url.searchParams.get("q")??"").trim(); const status=url.searchParams.get("status")??"ALL"; const source=url.searchParams.get("source")??"ALL"; const responsible=url.searchParams.get("responsible")??"ALL"; const followup=url.searchParams.get("followup")??"ALL"; const archived=url.searchParams.get("archived")==="1";
+  // Blaettern ueber die Datenbank (19.10.2026, app/lib/blaettern.server.ts):
+  // gefiltert, gezaehlt und geblaettert wird dort. Die Pipeline-Stufen zaehlt
+  // die Datenbank je Status; fuer "ueberfaellig" und "Gewonnen" holt der
+  // Worker nur die wenigen Spalten der betroffenen Leads.
+  const {page,from,to}=seiteAus(url); const text=sicher(q); const jetzt=new Date().toISOString();
+  const bezug=await passendeBezuege(supabase,q,{kontakte:true});
+  const basis=(spalten:string,opt?:{count:"exact"})=>{const a=supabase.from("leads").select(spalten,opt);return archived?a.not("archived_at","is",null):a.is("archived_at",null);};
+  let abfrage=basis("id,lead_number,status,source_id,follow_up_at,primary_responsible_user,property_street,property_house_number,property_postal_code,property_city,property_type,occupancy_status,desired_sale_horizon,living_area_sqm,plot_area_sqm,rooms,price_expectation,estimated_market_value,created_at,updated_at,archived_at,version,converted_property_id,contacts!inner(id,first_name,last_name,email,phone,mobile),lead_sources(id,key,label)",{count:"exact"});
+  if(status!=="ALL")abfrage=abfrage.eq("status",status);
+  if(source!=="ALL")abfrage=abfrage.eq("source_id",source);
+  if(responsible!=="ALL")abfrage=abfrage.eq("primary_responsible_user",responsible);
+  if(followup==="OVERDUE")abfrage=abfrage.lt("follow_up_at",jetzt);
+  if(followup==="OPEN")abfrage=abfrage.not("follow_up_at","is",null);
+  if(text)abfrage=abfrage.or([enthaelt(["lead_number","property_street","property_house_number","property_postal_code","property_city"],text),inListe("contact_id",bezug.kontakte)].join(","));
+  const [{data:rows,error,count},{data:sources},{data:profiles},{data:transitions},ueberfaelligRes,gewonnenRes,...stufenZahlen]=await Promise.all([
+    abfrage.order("updated_at",{ascending:false}).range(from,to),
     supabase.from("lead_sources").select("id,key,label,sort_order").eq("active",true).order("sort_order"),
     supabase.from("profiles").select("user_id,display_name,status").eq("status","ACTIVE").order("display_name"),
-    supabase.from("lead_status_transitions").select("from_status,to_status")
+    supabase.from("lead_status_transitions").select("from_status,to_status"),
+    basis("status").lt("follow_up_at",jetzt).limit(5000),
+    basis("status,converted_property_id,property_street,property_house_number,property_postal_code,property_city,property_type,living_area_sqm,plot_area_sqm,rooms").eq("status","WON").limit(5000),
+    ...STATUS_ORDER.map(st=>basis("id",{count:"exact"}).eq("status",st).limit(1)),
   ]);
   if(error)throw new Response("Leads konnten nicht geladen werden.",{status:500});
-  const now=Date.now(); const activeRows=(rows??[]).filter((r:any)=>archived?Boolean(r.archived_at):!r.archived_at);
-  const pipeline=STATUS_ORDER.map(s=>({status:s,count:activeRows.filter((r:any)=>r.status===s).length,overdue:activeRows.filter((r:any)=>r.status===s&&r.follow_up_at&&new Date(r.follow_up_at).getTime()<now).length}));
-  const wonBreakdown=activeRows.filter((r:any)=>r.status==="WON").reduce((acc:any,row:any)=>{const state=wonObjectState(row);if(state)acc[state.key]=(acc[state.key]??0)+1;return acc;},{prepare:0,ready:0,created:0});
-  let filtered=activeRows.filter((r:any)=>{
-    const c=one(r.contacts); const hay=[r.lead_number,c?.first_name,c?.last_name,c?.email,c?.phone,c?.mobile,r.property_street,r.property_house_number,r.property_postal_code,r.property_city].filter(Boolean).join(" ").toLowerCase();
-    if(q&&!hay.includes(q))return false; if(status!=="ALL"&&r.status!==status)return false; if(source!=="ALL"&&r.source_id!==source)return false; if(responsible!=="ALL"&&r.primary_responsible_user!==responsible)return false; if(followup==="OVERDUE"&&!(r.follow_up_at&&new Date(r.follow_up_at).getTime()<now))return false; if(followup==="OPEN"&&!r.follow_up_at)return false; return true;
-  });
-  const total=filtered.length,totalPages=Math.max(1,Math.ceil(total/pageSize)); filtered=filtered.slice((page-1)*pageSize,page*pageSize);
+  const ueberfaellig=((ueberfaelligRes.data??[]) as any[]);
+  const pipeline=STATUS_ORDER.map((s,i)=>({status:s,count:(stufenZahlen[i] as any).count??0,overdue:ueberfaellig.filter((r:any)=>r.status===s).length}));
+  const wonBreakdown=((gewonnenRes.data??[]) as any[]).reduce((acc:any,row:any)=>{const state=wonObjectState(row);if(state)acc[state.key]=(acc[state.key]??0)+1;return acc;},{prepare:0,ready:0,created:0});
+  const filtered=(rows??[]) as any[]; const total=count??0,totalPages=seitenzahl(count);
   const profileMap=Object.fromEntries((profiles??[]).map((p:any)=>[p.user_id,p.display_name]));
   const transitionMap:Record<string,string[]>={};
   for(const transition of transitions??[]){(transitionMap[transition.from_status]??=[]).push(transition.to_status);}
-  return data({rows:filtered,gekappt:(rows??[]).length>=500,sources:sources??[],profiles:profiles??[],profileMap,pipeline,wonBreakdown,transitionMap,profile,filters:{q,status,source,responsible,followup,archived,page},total,totalPages},{headers:responseHeaders()});
+  return data({rows:filtered,zuViele:bezug.zuViele,sources:sources??[],profiles:profiles??[],profileMap,pipeline,wonBreakdown,transitionMap,profile,filters:{q,status,source,responsible,followup,archived,page},total,totalPages},{headers:responseHeaders()});
 }
 
 export async function action({request,context}:Route.ActionArgs){
@@ -85,7 +100,7 @@ export async function action({request,context}:Route.ActionArgs){
 }
 
 export default function Leads(){const schritte=useNaechsteSchritte("lead");
-  const {rows,sources,profiles,profileMap,pipeline,wonBreakdown,transitionMap,filters,total,totalPages,gekappt}=useLoaderData<typeof loader>();
+  const {rows,sources,profiles,profileMap,pipeline,wonBreakdown,transitionMap,filters,total,totalPages,zuViele}=useLoaderData<typeof loader>();
   const actionData=useActionData<typeof action>();
   const actionError=actionData&&"error" in actionData?actionData.error:null;
   const pipelineByStatus=Object.fromEntries(pipeline.map(stage=>[stage.status,stage]));
@@ -138,6 +153,6 @@ export default function Leads(){const schritte=useNaechsteSchritte("lead");
     </div>
 
     {totalPages>1?<nav className="programm-liste-seiten" aria-label="Seiten">{filters.page>1?<Link to={pageHref(filters.page-1)}>← Zurück</Link>:<span/>}<span>Seite {filters.page} von {totalPages}</span>{filters.page<totalPages?<Link to={pageHref(filters.page+1)}>Weiter →</Link>:<span/>}</nav>:null}
-    {gekappt?<p className="programm-liste-leer">Durchsucht werden die 500 zuletzt geänderten Leads. Ältere findet die Suche über alles (Strg+K).</p>:null}
+    <SucheZuAllgemein an={zuViele}/>
   </main>;
 }

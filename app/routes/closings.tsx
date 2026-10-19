@@ -4,6 +4,8 @@ import type { Route } from "./+types/closings";
 import { requirePermission } from "~/lib/auth.server";
 import { euroGenau as money, tag, zeitpunkt } from "~/lib/format";
 import { IMMOBILIENSTATUS, beschrifte } from "~/lib/labels";
+import { seiteAus, seitenzahl, sicher, enthaelt, inListe, passendeBezuege, BEZUG_GRENZE } from "~/lib/blaettern.server";
+import { Seiten, SucheZuAllgemein } from "~/components/seiten";
 import "~/programm-liste.css";
 
 const STATUS:Record<string,string>={PREPARATION:"Abschlussvorbereitung",NOTARY_INSTRUCTED:"Notariat beauftragt",DRAFT_RECEIVED:"Entwurf eingegangen",APPOINTMENT_SCHEDULED:"Beurkundung terminiert",NOTARIZED:"Beurkundet",PURCHASE_PRICE_DUE:"Kaufpreis fällig",PURCHASE_PRICE_PAID:"Kaufpreis bezahlt",HANDOVER_COMPLETED:"Übergabe erfolgt",COMPLETED:"Abgeschlossen",CANCELLED:"Abgebrochen"};
@@ -11,7 +13,25 @@ function one(v:any){return Array.isArray(v)?v[0]:v;}function formatDate(v:string
 
 export async function loader({request,context}:Route.LoaderArgs){const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"closing.read");
   // Einstieg: gleich den obersten Datensatz im Arbeitsplatz oeffnen (app/lib/einstieg.ts).
-  if(istEinstieg(request)){const {data:erster}=await supabase.from("sale_closings").select("id").is("archived_at",null).order("updated_at",{ascending:false}).limit(1).maybeSingle(); if(erster)throw redirect(`/closings/${erster.id}`,{headers:responseHeaders()});}const url=new URL(request.url),filters={q:(url.searchParams.get("q")??"").trim(),status:url.searchParams.get("status")??"ACTIVE",propertyId:url.searchParams.get("property_id")??""};const [{data:rows,error},{data:properties}]=await Promise.all([supabase.from("sale_closings").select("id,closing_number,property_id,accepted_offer_id,buyer_contact_id,agreed_purchase_price,notarial_purchase_price,status,notary_appointment_at,notarized_date,purchase_price_due_date,purchase_price_paid_date,handover_date,completed_date,archived_at,updated_at,properties!inner(id,property_number,internal_title,status),buyer:contacts!sale_closings_buyer_contact_id_fkey(id,contact_number,first_name,last_name),purchase_offers!inner(id,offer_number,amount,status),organizations(id,name)").order("updated_at",{ascending:false}).limit(500),supabase.from("properties").select("id,property_number,internal_title").eq("transaction_type","SALE").order("updated_at",{ascending:false}).limit(500)]);if(error)throw new Response("Abschlussvorgänge konnten nicht geladen werden.",{status:500,headers:responseHeaders()});const all=(rows??[]) as any[],active=all.filter(r=>!r.archived_at),summary={preparation:active.filter(r=>["PREPARATION","NOTARY_INSTRUCTED","DRAFT_RECEIVED","APPOINTMENT_SCHEDULED"].includes(r.status)).length,notarized:active.filter(r=>r.status==="NOTARIZED").length,payment:active.filter(r=>["PURCHASE_PRICE_DUE","PURCHASE_PRICE_PAID"].includes(r.status)).length,handover:active.filter(r=>r.status==="HANDOVER_COMPLETED").length,completed:active.filter(r=>r.status==="COMPLETED").length};const needle=filters.q.toLocaleLowerCase("de-DE");const filtered=all.filter(row=>{const p=one(row.properties),b=one(row.buyer),offer=one(row.purchase_offers);if(filters.propertyId&&row.property_id!==filters.propertyId)return false;if(filters.status==="ACTIVE"&&(row.archived_at||["COMPLETED","CANCELLED"].includes(row.status)))return false;if(filters.status==="ARCHIVED"&&!row.archived_at)return false;if(!["ACTIVE","ALL","ARCHIVED"].includes(filters.status)&&row.status!==filters.status)return false;if(!needle)return true;return [row.closing_number,p?.property_number,p?.internal_title,b?.contact_number,b?.first_name,b?.last_name,offer?.offer_number].filter(Boolean).join(" ").toLocaleLowerCase("de-DE").includes(needle);});return data({profile,rows:filtered,gekappt:all.length>=500,properties:properties??[],summary,filters},{headers:responseHeaders()});}
+  if(istEinstieg(request)){const {data:erster}=await supabase.from("sale_closings").select("id").is("archived_at",null).order("updated_at",{ascending:false}).limit(1).maybeSingle(); if(erster)throw redirect(`/closings/${erster.id}`,{headers:responseHeaders()});}const url=new URL(request.url),filters={q:(url.searchParams.get("q")??"").trim(),status:url.searchParams.get("status")??"ACTIVE",propertyId:url.searchParams.get("property_id")??""};
+  // Blaettern ueber die Datenbank (19.10.2026, app/lib/blaettern.server.ts).
+  const {page,from,to}=seiteAus(url);const text=sicher(filters.q);
+  const [bezug,angebotTreffer]=await Promise.all([passendeBezuege(supabase,filters.q,{kontakte:true,objekte:true}),text?supabase.from("purchase_offers").select("id").ilike("offer_number",`%${text}%`).limit(BEZUG_GRENZE):Promise.resolve({data:[]})]);
+  let abfrage=supabase.from("sale_closings").select("id,closing_number,property_id,accepted_offer_id,buyer_contact_id,agreed_purchase_price,notarial_purchase_price,status,notary_appointment_at,notarized_date,purchase_price_due_date,purchase_price_paid_date,handover_date,completed_date,archived_at,updated_at,properties!inner(id,property_number,internal_title,status),buyer:contacts!sale_closings_buyer_contact_id_fkey(id,contact_number,first_name,last_name),purchase_offers!inner(id,offer_number,amount,status),organizations(id,name)",{count:"exact"});
+  if(filters.propertyId)abfrage=abfrage.eq("property_id",filters.propertyId);
+  if(filters.status==="ACTIVE")abfrage=abfrage.is("archived_at",null).not("status","in","(COMPLETED,CANCELLED)");
+  else if(filters.status==="ARCHIVED")abfrage=abfrage.not("archived_at","is",null);
+  else if(filters.status!=="ALL")abfrage=abfrage.eq("status",filters.status);
+  if(text)abfrage=abfrage.or([enthaelt(["closing_number"],text),inListe("buyer_contact_id",bezug.kontakte),inListe("property_id",bezug.objekte),inListe("accepted_offer_id",((angebotTreffer.data??[]) as any[]).map(r=>r.id))].join(","));
+  const zaehle=(st:string[])=>supabase.from("sale_closings").select("id",{count:"exact"}).is("archived_at",null).in("status",st).limit(1);
+  const [{data:rows,error,count},{data:properties},...zahlen]=await Promise.all([
+    abfrage.order("updated_at",{ascending:false}).range(from,to),
+    supabase.from("properties").select("id,property_number,internal_title").eq("transaction_type","SALE").order("updated_at",{ascending:false}).limit(500),
+    zaehle(["PREPARATION","NOTARY_INSTRUCTED","DRAFT_RECEIVED","APPOINTMENT_SCHEDULED"]),zaehle(["NOTARIZED"]),zaehle(["PURCHASE_PRICE_DUE","PURCHASE_PRICE_PAID"]),zaehle(["HANDOVER_COMPLETED"]),zaehle(["COMPLETED"]),
+  ]);
+  if(error)throw new Response("Abschlussvorgänge konnten nicht geladen werden.",{status:500,headers:responseHeaders()});
+  const [preparation,notarized,payment,handover,completed]=zahlen.map((z:any)=>z.count??0);
+  return data({profile,rows:(rows??[]) as any[],total:count??0,page,pageCount:seitenzahl(count),zuViele:bezug.zuViele,properties:properties??[],summary:{preparation,notarized,payment,handover,completed},filters},{headers:responseHeaders()});}
 
 // Eine Programmliste wie Kontakte und Makleraufträge (P2-8, 17.10.2026):
 // Werkzeugleiste, eine Zeile Kennzahlen, Tabelle. Vorher Seitenkopf, fünf
@@ -26,7 +46,7 @@ export default function Closings(){
       <label><span className="sr-only">Status</span><select name="status" defaultValue={d.filters.status}><option value="ACTIVE">Laufende Abschlüsse</option><option value="ALL">Alle</option>{Object.entries(STATUS).map(([v,l])=><option value={v} key={v}>{l}</option>)}<option value="ARCHIVED">Archiviert</option></select></label>
       <label><span className="sr-only">Immobilie</span><select name="property_id" defaultValue={d.filters.propertyId}><option value="">Alle Immobilien</option>{d.properties.map((p:any)=><option key={p.id} value={p.id}>{p.property_number} · {p.internal_title}</option>)}</select></label>
       <button className="secondary-button" type="submit">Filtern</button>
-      <span className="programm-liste-zaehler">{d.rows.length} {d.rows.length===1?"Abschluss":"Abschlüsse"}</span>
+      <span className="programm-liste-zaehler">{d.total} {d.total===1?"Abschluss":"Abschlüsse"}</span>
     </Form>
     <p className="programm-kennzahlen">
       <span><strong>{d.summary.preparation}</strong> bis zur Beurkundung</span>
@@ -50,7 +70,8 @@ export default function Closings(){
           <td className="zahl rechts leise">{formatDate(row.updated_at)}</td>
         </tr>;})}</tbody>
       </table>}
-      {d.gekappt?<p className="programm-liste-leer">Durchsucht werden die 500 zuletzt geänderten Abschlüsse.</p>:null}
+      <SucheZuAllgemein an={d.zuViele}/>
     </div>
+      <Seiten page={d.page} pageCount={d.pageCount}/>
   </main>;
 }

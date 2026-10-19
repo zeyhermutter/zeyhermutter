@@ -15,7 +15,7 @@ import "~/kontakt-auswahl.css";
 export type GewaehlterKontakt = { id: string; name: string; nummer: string };
 type Treffer = GewaehlterKontakt & { zusatz: string | null };
 
-export function KontaktAuswahl({ name, beschriftung, vorbelegt, vorbelegtId, pflicht, ausschliessen, onWahl, disabled, hinweis }: {
+type Gemeinsam = {
   name: string;
   beschriftung: string;
   /** Bereits bekannter Kontakt mit Namen -- wird ohne Nachladen angezeigt. */
@@ -31,6 +31,33 @@ export function KontaktAuswahl({ name, beschriftung, vorbelegt, vorbelegtId, pfl
   disabled?: boolean;
   /** Kleiner Text unter dem Feld, z. B. "Fehlt die Person? Kontakt anlegen". */
   hinweis?: ReactNode;
+};
+
+export function KontaktAuswahl(props: Gemeinsam) {
+  return <SuchAuswahl {...props} quelle="/api/kontakte?" platzhalter="Name, Nummer, E-Mail oder Telefon …" wort="Kontakt" />;
+}
+
+// Dasselbe Feld fuer Lead, Objekt, Suchprofil, Anfrage und Besichtigung
+// (19.10.2026, api/datensaetze) -- statt eines <select> mit den 500 zuletzt
+// geaenderten Datensaetzen.
+export type DatensatzArt = "PROPERTY" | "LEAD" | "SEARCH_PROFILE" | "INQUIRY" | "VIEWING";
+const DATENSATZ: Record<DatensatzArt, { wort: string; platzhalter: string }> = {
+  PROPERTY: { wort: "Objekt", platzhalter: "Objektnummer oder Titel …" },
+  LEAD: { wort: "Lead", platzhalter: "Leadnummer, Name oder Ort …" },
+  SEARCH_PROFILE: { wort: "Suchprofil", platzhalter: "Nummer, Titel oder Name …" },
+  INQUIRY: { wort: "Anfrage", platzhalter: "Anfragenummer, Name oder Objektnummer …" },
+  VIEWING: { wort: "Besichtigung", platzhalter: "Nummer, Name oder Objektnummer …" },
+};
+export function DatensatzAuswahl({ art, ...props }: Gemeinsam & { art: DatensatzArt }) {
+  return <SuchAuswahl {...props} quelle={`/api/datensaetze?art=${art}&`} platzhalter={DATENSATZ[art].platzhalter} wort={DATENSATZ[art].wort} />;
+}
+
+function SuchAuswahl({ name, beschriftung, vorbelegt, vorbelegtId, pflicht, ausschliessen, onWahl, disabled, hinweis, quelle, platzhalter, wort }: Gemeinsam & {
+  /** Adresse der Suche, endet auf "?" oder "&". */
+  quelle: string;
+  platzhalter: string;
+  /** "Kontakt", "Objekt" … fuer die Rueckmeldungen. */
+  wort: string;
 }) {
   const feldId = useId();
   const [gewaehlt, setGewaehlt] = useState<GewaehlterKontakt | null>(
@@ -48,16 +75,16 @@ export function KontaktAuswahl({ name, beschriftung, vorbelegt, vorbelegtId, pfl
   useEffect(() => {
     if (!gewaehlt || gewaehlt.name || !gewaehlt.id) return;
     let aktiv = true;
-    fetch(`/api/kontakte?id=${encodeURIComponent(gewaehlt.id)}`, { credentials: "same-origin", headers: { Accept: "application/json" } })
+    fetch(`${quelle}id=${encodeURIComponent(gewaehlt.id)}`, { credentials: "same-origin", headers: { Accept: "application/json" } })
       .then((a) => a.json() as Promise<{ treffer?: Treffer[] }>)
       .then((j) => {
         if (!aktiv) return;
         const k = j.treffer?.[0];
-        setGewaehlt((g) => (g && g.id === gewaehlt.id ? (k ? { id: k.id, name: k.name, nummer: k.nummer } : { ...g, name: "Kontakt nicht gefunden" }) : g));
+        setGewaehlt((g) => (g && g.id === gewaehlt.id ? (k ? { id: k.id, name: k.name, nummer: k.nummer } : { ...g, name: `${wort} nicht gefunden` }) : g));
       })
-      .catch(() => { if (aktiv) setGewaehlt((g) => (g && !g.name ? { ...g, name: "Kontakt (Name gerade nicht ladbar)" } : g)); });
+      .catch(() => { if (aktiv) setGewaehlt((g) => (g && !g.name ? { ...g, name: `${wort} (gerade nicht ladbar)` } : g)); });
     return () => { aktiv = false; };
-  }, [gewaehlt?.id, gewaehlt?.name]);
+  }, [gewaehlt?.id, gewaehlt?.name, quelle, wort]);
 
   useEffect(() => {
     const q = suche.trim();
@@ -66,7 +93,7 @@ export function KontaktAuswahl({ name, beschriftung, vorbelegt, vorbelegtId, pfl
     setStand("sucht");
     const zeitgeber = setTimeout(async () => {
       try {
-        const antwort = await fetch(`/api/kontakte?q=${encodeURIComponent(q)}`, { credentials: "same-origin", headers: { Accept: "application/json" } });
+        const antwort = await fetch(`${quelle}q=${encodeURIComponent(q)}`, { credentials: "same-origin", headers: { Accept: "application/json" } });
         const json = await antwort.json() as { treffer?: Treffer[] };
         if (nummer !== lauf.current) return;
         if (!antwort.ok) { setStand("fehler"); setTreffer([]); return; }
@@ -77,7 +104,7 @@ export function KontaktAuswahl({ name, beschriftung, vorbelegt, vorbelegtId, pfl
       }
     }, 250);
     return () => clearTimeout(zeitgeber);
-  }, [suche, gewaehlt, ausgeschlossen]);
+  }, [suche, gewaehlt, ausgeschlossen, quelle]);
 
   const waehle = (k: GewaehlterKontakt | null) => {
     setGewaehlt(k);
@@ -91,7 +118,7 @@ export function KontaktAuswahl({ name, beschriftung, vorbelegt, vorbelegtId, pfl
       <input type="hidden" name={name} value={gewaehlt?.id ?? ""} disabled={disabled} />
       {gewaehlt ? (
         <div className="kontakt-auswahl-gewaehlt">
-          <strong>{gewaehlt.name || "Kontakt wird geladen …"}</strong> <span className="leise">{gewaehlt.nummer}</span>
+          <strong>{gewaehlt.name || `${wort} wird geladen …`}</strong> <span className="leise">{gewaehlt.nummer}</span>
           {disabled ? null : <button type="button" className="subtle-link" onClick={() => waehle(null)}>ändern</button>}
         </div>
       ) : disabled ? (
@@ -103,7 +130,7 @@ export function KontaktAuswahl({ name, beschriftung, vorbelegt, vorbelegtId, pfl
             type="search"
             value={suche}
             onChange={(e) => setSuche(e.currentTarget.value)}
-            placeholder="Name, Nummer, E-Mail oder Telefon …"
+            placeholder={platzhalter}
             autoComplete="off"
             required={pflicht}
           />
@@ -111,7 +138,7 @@ export function KontaktAuswahl({ name, beschriftung, vorbelegt, vorbelegtId, pfl
             <div className="kontakt-auswahl-treffer" role="listbox" aria-label={`Treffer für ${beschriftung}`}>
               {stand === "sucht" && treffer.length === 0 ? <p className="leise">Sucht …</p> : null}
               {stand === "fehler" ? <p className="leise">Suche gerade nicht möglich.</p> : null}
-              {stand === "ruhe" && treffer.length === 0 ? <p className="leise">Kein Kontakt gefunden.</p> : null}
+              {stand === "ruhe" && treffer.length === 0 ? <p className="leise">Nichts gefunden.</p> : null}
               {treffer.map((t) => (
                 <button type="button" role="option" aria-selected={false} key={t.id} onClick={() => waehle(t)}>
                   <strong>{t.name}</strong> <span className="leise">{t.nummer}{t.zusatz ? ` · ${t.zusatz}` : ""}</span>
