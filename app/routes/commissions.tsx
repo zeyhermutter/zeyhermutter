@@ -1,3 +1,4 @@
+import { offenNetto, provisionNetto } from "~/lib/provision";
 import { data, Form, Link, useLoaderData, redirect } from "react-router";
 import { istEinstieg } from "~/lib/einstieg";
 import type { Route } from "./+types/commissions";
@@ -15,7 +16,7 @@ const STATUS_CLASS: Record<string,string> = {DRAFT:"status-draft",EXPECTED:"stat
 
 function one(value:any){return Array.isArray(value)?value[0]:value;}
 
-function targetAmount(row:any){const value=row.actual_amount??row.expected_amount;const n=Number(value);return Number.isFinite(n)?n:0;}
+function targetAmount(row:any){return provisionNetto(row);}
 
 export async function loader({request,context}:Route.LoaderArgs){
   const {supabase,responseHeaders,profile}=await requirePermission(request,context.cloudflare.env,"commission.read");
@@ -40,12 +41,12 @@ export async function loader({request,context}:Route.LoaderArgs){
     abfrage.order("updated_at",{ascending:false}).range(from,to),
     supabase.rpc("current_user_has_permission",{p_permission:"commission.write"}),
     supabase.from("properties").select("id,property_number,internal_title").eq("transaction_type","SALE").order("updated_at",{ascending:false}).limit(500),
-    supabase.from("commissions").select("status,expected_amount,actual_amount,paid_amount").is("archived_at",null).limit(SUMMEN_GRENZE),
+    supabase.from("commissions").select("status,expected_amount,actual_amount,paid_amount,vat_rate,payment_basis").is("archived_at",null).limit(SUMMEN_GRENZE),
   ]);
   seiteZuWeit(error,url,responseHeaders());if(error||summenRes.error)throw new Response("Provisionen konnten nicht geladen werden.",{status:500,headers:responseHeaders()});
   const active=(summenRes.data??[]) as any[];
   const expectedSum=active.filter((row)=>row.status!=="CANCELLED").reduce((sum,row)=>sum+Number(row.expected_amount??0),0);
-  const openSum=active.filter((row)=>!['PAID','CANCELLED'].includes(row.status)).reduce((sum,row)=>sum+Math.max(0,targetAmount(row)-Number(row.paid_amount??0)),0);
+  const openSum=active.filter((row)=>!['PAID','CANCELLED'].includes(row.status)).reduce((sum,row)=>sum+offenNetto(row),0);
   const summary={
     expected:active.filter((row)=>row.status==="EXPECTED").length,
     due:active.filter((row)=>row.status==="DUE").length,
@@ -81,7 +82,7 @@ export default function Commissions(){
       <span><strong>{summary.invoiced}</strong> abgerechnet/teilbezahlt</span>
       <span><strong>{summary.paid}</strong> bezahlt</span>
       <span title="ohne stornierte Vorgänge"><strong>{money(summary.expectedSum)}</strong> erwartet gesamt</span>
-      <span title="abzüglich dokumentierter Zahlungen"><strong>{money(summary.openSum)}</strong> offen</span>
+      <span title="netto, abzüglich dokumentierter Zahlungen (brutto erfasste Zahlungen ohne USt gerechnet)"><strong>{money(summary.openSum)}</strong> offen</span>
     </p>
     <div className="programm-tabelle-rahmen">
       {rows.length===0?<p className="programm-liste-leer">{gefiltert?"Keine Provision passt zu diesem Filter.":"Keine offene Provision."}{canWrite?<> <Link to={neu}>Provision erfassen</Link></>:null}</p>:<table className="programm-tabelle">

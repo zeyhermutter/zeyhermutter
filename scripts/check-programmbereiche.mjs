@@ -43,8 +43,15 @@ const ALTER_SEITENSTREIFEN = [
   "/crm/notifications",
 ];
 
+// Seiten des alten Seitenstreifens, die bewusst aus dem Menue genommen wurden.
+// Die Seite bleibt bestehen und ueber die Adresse erreichbar.
+const AUSGEBLENDET = {
+  "/crm/training": "Am 19.10.2026 ausgeblendet (Entscheidung Sebastian): die gesetzliche Weiterbildungspflicht fuer Makler ist entfallen; Seite und Nachweise bleiben.",
+};
+
 // Routen ohne Parameter, die bewusst nicht in der Navigation stehen.
 const AUSNAHMEN = {
+  ...AUSGEBLENDET,
   "/__preview/sales-readiness": "Vorschau fuer die Entwicklung, keine Arbeitsseite.",
   "/api/sales-readiness-ai": "Schnittstelle fuer den Assistenten, liefert Daten, keine Seite.",
   "/api/geocode-address": "Schnittstelle fuer die Adresssuche, liefert Daten, keine Seite.",
@@ -80,6 +87,7 @@ for (const b of bereiche) {
 // --- 1. Alter Seitenstreifen vollstaendig ---------------------------------
 
 for (const pfad of ALTER_SEITENSTREIFEN) {
+  if (AUSGEBLENDET[pfad]) { pruefe(!besitzer.has(pfad), `${pfad} ist als ausgeblendet eingetragen, steht aber wieder im Menue.`); continue; }
   const bei = besitzer.get(pfad) ?? [];
   pruefe(bei.length === 1,
     bei.length === 0

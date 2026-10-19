@@ -215,6 +215,8 @@ pruefe(!(await lies("app/routes/closing-detail.tsx")).includes('to={`/closings/$
   pruefe((await lies("supabase/functions/generate-property-expose/index.ts")).includes('from("company_profile")'), "Exposé-Fusszeile liest die Firmenangaben nicht mehr");
   pruefe((await lies("app/lib/email-vorlage.ts")).includes('"firma_pflichtangaben"') && (await lies("app/routes/email-compose.tsx")).includes("firma_pflichtangaben: pflichtangaben("), "E-Mail-Platzhalter {{firma_pflichtangaben}} fehlt oder wird nicht gefüllt");
   pruefe((await lies("app/routes/commission-detail.tsx")).includes("<ProvisionsVergleich"), "Provision: Prüfhinweis Verkäufer-/Käuferprovision fehlt");
+  pruefe((await lies("app/routes/commission-detail.tsx")).includes("function target(row:any){return zahlziel(row);}") && (await lies("app/routes/commissions.tsx")).includes("offenNetto(row)"), "Provision: Zahlung wieder netto gerechnet (Entscheidung 19.10.2026: brutto)");
+  pruefe(!(await lies("app/lib/programmbereiche.ts")).includes('pfad: "/crm/training"'), "Weiterbildung steht wieder im Menü (ausgeblendet am 19.10.2026)");
 }
 
 if (fehler.length) {

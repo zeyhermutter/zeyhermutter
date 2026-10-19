@@ -127,7 +127,9 @@ export const BEREICHE: Bereich[] = [
       { beschriftung: "E-Mail-Vorlagen", pfad: "/crm/email-vorlagen" },
       { beschriftung: "Firma & Fristen", pfad: "/crm/firma" },
       { beschriftung: "Automatik", pfad: "/crm/automatik" },
-      { beschriftung: "Weiterbildung", pfad: "/crm/training" },
+      // "Weiterbildung" (/crm/training) am 19.10.2026 ausgeblendet (Entscheidung
+      // Sebastian): die gesetzliche Nachweispflicht fuer Makler ist entfallen.
+      // Seite und Daten bleiben, erreichbar ueber die Adresse.
       { beschriftung: "Anwaltsprüfung", pfad: "/crm/anwaltspruefung" },
       { beschriftung: "Archiv", pfad: "/crm/archive" },
       { beschriftung: "Systemhistorie", pfad: "/crm/history" },

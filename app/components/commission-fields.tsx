@@ -44,6 +44,8 @@ export type CommissionInitialValues = {
   due_date?: string | null;
   invoice_reference?: string | null;
   paid_amount?: number | string | null;
+  vat_rate?: number | string | null;
+  payment_basis?: string | null;
   paid_at?: string | null;
   primary_responsible_user?: string | null;
   internal_notes?: string | null;
@@ -108,10 +110,11 @@ export function CommissionFields({ properties, partyOptions, offers, mandates = 
         <label className="form-field"><span>Berechnungsgrundlage (€) · optional</span><input name="calculation_basis" type="number" min="0" step="0.01" defaultValue={initial?.calculation_basis ?? property?.purchase_price ?? ""}/></label>
       </>}
       <label className="form-field"><span>Tatsächliche Provision (€)</span><input name="actual_amount" type="number" min="0" step="0.01" defaultValue={initial?.actual_amount ?? ""}/><small className="subtle">Nur eintragen, wenn sie vom errechneten Erwartungswert abweicht.</small></label>
+      <label className="form-field"><span>Umsatzsteuer (%)</span><input name="vat_rate" type="number" min="0" max="100" step="0.01" defaultValue={initial?.vat_rate ?? 19}/><small className="subtle">Provisionsbeträge sind netto; die Zahlung wird brutto erfasst.</small></label>
       <label className="form-field"><span>Fälligkeit</span><input name="due_date" type="date" defaultValue={initial?.due_date ?? ""}/></label>
       <label className="form-field"><span>Rechnungsreferenz</span><input name="invoice_reference" defaultValue={initial?.invoice_reference ?? ""} placeholder="z. B. externe Rechnungsnummer"/><small className="subtle">Das CRM erstellt keine Rechnung.</small></label>
       {showPaymentFields ? <>
-        <label className="form-field"><span>Bezahlter Betrag (€)</span><input name="paid_amount" type="number" min="0" step="0.01" defaultValue={initial?.paid_amount ?? 0}/></label>
+        <label className="form-field"><span>{initial?.payment_basis === "NET" ? "Bezahlter Betrag (€, netto erfasst)" : "Zahlungseingang brutto (€)"}</span><input name="paid_amount" type="number" min="0" step="0.01" defaultValue={initial?.paid_amount ?? 0}/></label>
         <label className="form-field"><span>Vollständig bezahlt am</span><input name="paid_at" type="date" defaultValue={initial?.paid_at ?? ""}/></label>
       </> : null}
       <label className="form-field"><span>Verantwortlich *</span><select name="primary_responsible_user" defaultValue={initial?.primary_responsible_user ?? defaultResponsibleUser} required>{profiles.map((profile) => <option key={profile.user_id} value={profile.user_id}>{profile.display_name}</option>)}</select></label>

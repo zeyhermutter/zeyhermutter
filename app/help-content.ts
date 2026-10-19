@@ -82,7 +82,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         "**Vermarktung** (orange): Anfragen, Besichtigungen, Kampagnen & Gebiete, Website.",
         "**Abschluss** (ocker): Kaufangebote, Reservierungen, Abschlüsse & Notar, Provisionen.",
         "**Auswertung** (violett): Dashboard, Nachbetreuung, Empfehlungen, Case Studies.",
-        "**Verwaltung** (grau): Anleitung, Geldwäsche & Aufbewahrung, Benutzer & Rollen, Weiterbildung, Anwaltsprüfung, Archiv, Systemhistorie.",
+        "**Verwaltung** (grau): Anleitung, Geldwäsche & Aufbewahrung, Benutzer & Rollen, E-Mail-Vorlagen, Firma & Fristen, Automatik, Anwaltsprüfung, Archiv, Systemhistorie.",
       ]},
       { art: "absatz", text:
         "**Der Arbeitsplatz: Liste links, Akte rechts.** Fast jeder Unterpunkt öffnet "
@@ -843,9 +843,11 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         + "getrennt geführt. Jeder Statuswechsel wird protokolliert." },
       { art: "absatz", text:
         "Die Rechnung selbst entsteht im Buchhaltungsprogramm; hier werden "
-        + "Rechnungsnummer, Status und Zahlung nachgeführt. Als Rechenhilfe zeigt die "
-        + "Provision, was bei 19 % Umsatzsteuer auf einen netto vereinbarten Betrag "
-        + "hinzukäme. Bei Wohnung oder Einfamilienhaus weist sie darauf hin, wenn "
+        + "Rechnungsnummer, Status und Zahlung nachgeführt. Provisionsbeträge sind "
+        + "netto; die Provision zeigt die Umsatzsteuer (Standard 19 %) und den "
+        + "Rechnungsbetrag. Der **Zahlungseingang wird brutto** erfasst, so wie er auf "
+        + "dem Konto ankommt, und gegen den Rechnungsbetrag geprüft. Auswertungen "
+        + "rechnen Zahlungen auf netto zurück. Bei Wohnung oder Einfamilienhaus weist sie darauf hin, wenn "
         + "Verkäufer- und Käuferprovision desselben Objekts verschieden sind – zum "
         + "Abgleich mit dem Maklerauftrag; bewertet wird das nicht." },
     ],
@@ -905,14 +907,14 @@ export const HELP_CHAPTERS: HelpChapter[] = [
   {
     id: "verwaltung",
     nummer: "23",
-    titel: "Verwaltung: Benutzer, Weiterbildung, Historie, Archiv",
+    titel: "Verwaltung: Benutzer, Firma & Fristen, Historie, Archiv",
     kurz: "Rechte vergeben, Nachweise führen, Änderungen nachvollziehen.",
     pfade: ["/crm/users", "/crm/training", "/crm/history", "/crm/archive", "/crm/hilfe", "/crm/firma"],
     bloecke: [
       { art: "absatz", text:
         "Der Bereich **Verwaltung** steht in der Modulleiste unten abgesetzt, weil "
         + "er selten gebraucht wird. Er enthält Anleitung, Geldwäsche & "
-        + "Aufbewahrung (Kapitel 14), Benutzer & Rollen, Weiterbildung, Archiv und "
+        + "Aufbewahrung (Kapitel 14), Benutzer & Rollen, Firma & Fristen, Archiv und "
         + "Systemhistorie. Unter **Anwaltsprüfung** stehen gesammelt alle Fragen, "
         + "die vor der produktiven Nutzung anwaltlich zu klären sind — vorher standen "
         + "sie verteilt auf neun Arbeitsseiten." },
@@ -923,11 +925,9 @@ export const HELP_CHAPTERS: HelpChapter[] = [
         + "geben; die Administratorrolle vergibt nur ein Administrator. Jede Änderung "
         + "landet in der Systemhistorie." },
       { art: "absatz", text:
-        "Unter **Weiterbildung** wird je Benutzer erfasst, welche Maßnahme wann mit "
-        + "wie vielen Stunden belegt wurde („Nachweis erfassen“). Der Abschnitt "
-        + "„Stand im laufenden Zeitraum“ zeigt je Benutzer einen Fortschrittsbalken: "
-        + "erreichte Stunden gegen die Vorgabe, und wie viel noch offen ist. Stunden "
-        + "dürfen mit Komma eingegeben werden." },
+        "Die Seite **Weiterbildung** steht seit 19.10.2026 nicht mehr im Menü: die "
+        + "gesetzliche Nachweispflicht für Makler ist entfallen. Seite und erfasste "
+        + "Nachweise bleiben erhalten und sind unter /crm/training erreichbar." },
       { art: "absatz", text:
         "Die **Systemhistorie** protokolliert jede Änderung mit Zeitpunkt, Benutzer, "
         + "Bereich, Vorgangsnummer und den geänderten Feldern. Sie ist eine Tabelle; "
