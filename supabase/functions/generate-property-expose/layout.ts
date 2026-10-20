@@ -337,12 +337,14 @@ export function zeichneExpose(pdf: any, lib: PdfLib, s: Schriften, e: ExposeEing
     let y = A4[1] - 390;
     mitte(page, "Wir freuen uns auf Sie.", y, s.serifKursiv, 30, F.weiss);
     y -= 34;
-    for (const z of ["Gerne zeigen wir Ihnen diese Immobilie persönlich und beantworten Ihre Fragen.", "Rufen Sie uns an oder schreiben Sie uns – wir melden uns zeitnah bei Ihnen."]) { mitte(page, z, y, s.sansLeicht, 9.8, F.weissLeise); y -= 16; }
+    const web = rein(firma?.website).replace(/^https?:\/\//, "").replace(/\/$/, "");
+    const kontakt: [string, string][] = ([["Telefon", rein(firma?.phone)], ["E-Mail", rein(firma?.email)], ["Web", web]] as [string, string][]).filter(([, v]) => v);
+    // "Rufen Sie uns an" nur, wenn Telefon oder E-Mail darunter stehen (20.10.2026).
+    const direkt = Boolean(rein(firma?.phone) || rein(firma?.email));
+    for (const z of ["Gerne zeigen wir Ihnen diese Immobilie persönlich und beantworten Ihre Fragen.", direkt ? "Rufen Sie uns an oder schreiben Sie uns – wir melden uns zeitnah bei Ihnen." : "Sprechen Sie uns an – wir melden uns zeitnah bei Ihnen."]) { mitte(page, z, y, s.sansLeicht, 9.8, F.weissLeise); y -= 16; }
     y -= 26;
     page.drawLine({ start: { x: A4[0] / 2 - 22, y }, end: { x: A4[0] / 2 + 22, y }, thickness: 0.8, color: F.gold });
     y -= 46;
-    const web = rein(firma?.website).replace(/^https?:\/\//, "").replace(/\/$/, "");
-    const kontakt: [string, string][] = ([["Telefon", rein(firma?.phone)], ["E-Mail", rein(firma?.email)], ["Web", web]] as [string, string][]).filter(([, v]) => v);
     if (kontakt.length) {
       const sw = BREITE / kontakt.length;
       kontakt.forEach(([l, v], i) => {

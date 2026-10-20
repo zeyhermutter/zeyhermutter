@@ -28,7 +28,7 @@ const OEFFENTLICH = new Set(["public-website.css", "homepage-v7-realtor.css", "h
 // Grundregeln sind oft spezifischer oder selbst "!important". Deshalb erst die
 // dunkle Grundregel auf den hellen Wert setzen, dann das "!important" der
 // passenden hellen Regel entfernen -- Datei fuer Datei, mit Fingerabdruck.
-const HOECHSTENS = { hex: 1396, important: 372, schriftgroessen: 40 };
+const HOECHSTENS = { hex: 1285, important: 258, schriftgroessen: 40 };
 
 const ROLLEN = ["grund", "flaeche", "text", "text-2", "text-leise", "text-blass", "linie", "linie-leise", "linie-feld", "handlung", "auf-dunkel", "verweis", "fehler", "gut"];
 

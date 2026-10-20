@@ -23,117 +23,6 @@
   border-color: #c7d1cf !important;
   color: #4d5d5e !important;
 }
-
-/* Immobilien-Verzeichnis: der interaktive Workflow hatte noch eigene dunkle Flächen. */
-.persistent-app-frame .workflow-main-step,
-.persistent-app-frame .workflow-callout,
-.persistent-app-frame .workflow-status-card,
-.persistent-app-frame .workflow-transition,
-.persistent-app-frame .workflow-inspector,
-.persistent-app-frame .workflow-action-panel,
-.persistent-app-frame .workflow-transition-panel,
-.persistent-app-frame .workflow-recommended {
-  background: #ffffff !important;
-  border-color: #d4dddb !important;
-  color: #263536 !important;
-}
-.persistent-app-frame .workflow-main-step span,
-.persistent-app-frame .workflow-status-card > p,
-.persistent-app-frame .workflow-callout span,
-.persistent-app-frame .workflow-transition small,
-.persistent-app-frame .workflow-inspector-head p:not(.eyebrow),
-.persistent-app-frame .workflow-footnote,
-.persistent-app-frame .workflow-side-statuses > span,
-.persistent-app-frame .workflow-recommended small {
-  color: #667576 !important;
-}
-.persistent-app-frame .workflow-callout b,
-.persistent-app-frame .workflow-transition span,
-.persistent-app-frame .workflow-action-panel ol,
-.persistent-app-frame .workflow-status-button {
-  color: #263536 !important;
-}
-.persistent-app-frame .workflow-status-card-head > span {
-  background: #edf1f0 !important;
-  color: #59696a !important;
-}
-.persistent-app-frame .workflow-transition.preferred,
-.persistent-app-frame .workflow-recommended {
-  background: #edf5f3 !important;
-  border-color: #a8beb9 !important;
-}
-.persistent-app-frame .workflow-recommended.terminal {
-  background: #f7f9f8 !important;
-  border-color: #cbd4d2 !important;
-}
-.persistent-app-frame .workflow-transition-list.interactive button.workflow-transition:hover {
-  background: #f1f5f4 !important;
-  border-color: #9caeaa !important;
-}
-.persistent-app-frame .workflow-status-button.selected {
-  border-color: #617a76 !important;
-  box-shadow: 0 0 0 2px rgba(82, 116, 110, .14) !important;
-}
-.persistent-app-frame .workflow-arrow { color: #82908f !important; }
-.persistent-app-frame .workflow-rule-badge {
-  background: #f7f9f8 !important;
-  color: #59696a !important;
-  border-color: #c7d1cf !important;
-}
-.persistent-app-frame .workflow-side-button {
-  background: #fbe9e9 !important;
-  color: #873b3e !important;
-  border-color: #d7a3a4 !important;
-}
-.persistent-app-frame .workflow-side-button:hover,
-.persistent-app-frame .workflow-side-button.selected {
-  background: #f5dada !important;
-  color: #702f32 !important;
-  border-color: #c78183 !important;
-}
-
-/* Fachliche Workflowfarben bleiben erhalten, aber als helle Flächen. */
-.persistent-app-frame .workflow-main-step.status-acquisition,
-.persistent-app-frame .workflow-main-step.status-valuation,
-.persistent-app-frame .workflow-main-step.status-contract-pending,
-.persistent-app-frame .workflow-main-step.status-preparation,
-.persistent-app-frame .workflow-status-card.status-acquisition,
-.persistent-app-frame .workflow-status-card.status-valuation,
-.persistent-app-frame .workflow-status-card.status-contract-pending,
-.persistent-app-frame .workflow-status-card.status-preparation {
-  background: #fff3d8 !important;
-  border-color: #d7bc70 !important;
-  color: #6b5518 !important;
-}
-.persistent-app-frame .workflow-main-step.status-marketing,
-.persistent-app-frame .workflow-main-step.status-reserved,
-.persistent-app-frame .workflow-main-step.status-notary,
-.persistent-app-frame .workflow-status-card.status-marketing,
-.persistent-app-frame .workflow-status-card.status-reserved,
-.persistent-app-frame .workflow-status-card.status-notary {
-  background: #e6f1f8 !important;
-  border-color: #a8c5d6 !important;
-  color: #285e78 !important;
-}
-.persistent-app-frame .workflow-main-step.status-sold,
-.persistent-app-frame .workflow-status-card.status-sold {
-  background: #e5f4e9 !important;
-  border-color: #98bea4 !important;
-  color: #275f3d !important;
-}
-.persistent-app-frame .workflow-main-step.status-archived,
-.persistent-app-frame .workflow-status-card.status-archived {
-  background: #edf1f0 !important;
-  border-color: #c7d1cf !important;
-  color: #4d5d5e !important;
-}
-.persistent-app-frame .workflow-status-card.status-lost,
-.persistent-app-frame .workflow-status-card.status-withdrawn {
-  background: #fbe9e9 !important;
-  border-color: #d7a3a4 !important;
-  color: #873b3e !important;
-}
-
 /* Modul 04: Zusammenfassungen, Matches und Status-Pills auf heller Fläche. */
 .persistent-app-frame .inquiry-summary > div,
 .persistent-app-frame .match-row,
@@ -192,11 +81,7 @@
   box-shadow: inset 0 0 0 1px #b5c5c1;
 }
 .record-section-target { scroll-margin-top: 26px; }
-
 /* Aufgaben: Erfassung als Modal oberhalb der Wiedervorlagen. */
-.tasks-page.tasks-page-modal-layout {
-  grid-template-columns: 1fr !important;
-}
 .task-create-toolbar {
   display: flex;
   justify-content: flex-end;
@@ -324,38 +209,8 @@
 .persistent-app-frame .editor-meta {
   overflow-wrap: anywhere;
 }
-
 /* Verkäufer-Leads: Pipeline und Objektstatus-Badges waren noch dunkel und
    dadurch kontrastarm. Nur Farben – Kachelgrößen und Grid bleiben unverändert. */
-.persistent-app-frame .lead-workflow-step {
-  background: #ffffff !important;
-  border-color: #d4dddb !important;
-  color: #263536 !important;
-}
-.persistent-app-frame .lead-workflow-step:hover {
-  background: #f4f7f6 !important;
-  border-color: #aebbb8 !important;
-}
-.persistent-app-frame .lead-workflow-step.active {
-  background: #dfe8e5 !important;
-  border-color: #7f9490 !important;
-}
-.persistent-app-frame .lead-workflow-step.outcome-won {
-  background: #e9f4ec !important;
-  border-color: #98bea4 !important;
-}
-.persistent-app-frame .lead-workflow-step.outcome-lost {
-  background: #fbeeee !important;
-  border-color: #d3aaac !important;
-}
-.persistent-app-frame .lead-workflow-index {
-  border-color: #b3bfbd !important;
-  color: #4d5d5e !important;
-}
-.persistent-app-frame .lead-workflow-copy strong,
-.persistent-app-frame .lead-row-main-link strong {
-  color: #1d2a2b !important;
-}
 .persistent-app-frame .lead-workflow-copy small,
 .persistent-app-frame .lead-workflow-popover-head small,
 .persistent-app-frame .lead-workflow-finished,
@@ -379,48 +234,6 @@
 }
 .persistent-app-frame .lead-workflow-action:hover {
   background: #eef2f1 !important;
-}
-.persistent-app-frame .lead-row-main-link:hover strong,
-.persistent-app-frame .lead-open-link:hover {
-  color: #0f1a1b !important;
-}
-.persistent-app-frame .lead-open-link {
-  color: #4d5d5e !important;
-}
-
-.persistent-app-frame .lead-object-state {
-  background: #edf1f0 !important;
-  border-color: #c7d1cf !important;
-  color: #465758 !important;
-}
-.persistent-app-frame .lead-object-state.state-prepare {
-  background: #fbf1de !important;
-  border-color: #d7bf92 !important;
-  color: #6b5320 !important;
-}
-.persistent-app-frame .lead-object-state.state-ready {
-  background: #e9f4ec !important;
-  border-color: #98bea4 !important;
-  color: #275f3d !important;
-}
-.persistent-app-frame .lead-object-state.state-created {
-  background: #e6f1f8 !important;
-  border-color: #a8c5d6 !important;
-  color: #285e78 !important;
-}
-.persistent-app-frame .lead-object-action.ready { background: #e9f4ec !important; }
-.persistent-app-frame .lead-object-action.created { background: #e6f1f8 !important; }
-
-.persistent-app-frame .lead-workflow-copy .won-breakdown,
-.persistent-app-frame .lead-workflow-overdue {
-  color: #5f6f70 !important;
-}
-.persistent-app-frame .lead-workflow-step.outcome-won .lead-workflow-copy strong,
-.persistent-app-frame .lead-workflow-step.outcome-lost .lead-workflow-copy strong {
-  color: #1d2a2b !important;
-}
-.persistent-app-frame .lead-workflow-count {
-  color: #1d2a2b !important;
 }
 
 /* Dashboard: die Benachrichtigungsglocke im Inhaltsbereich war noch dunkel. */
