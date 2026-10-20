@@ -2,10 +2,8 @@
 .link-button { text-decoration: none; }
 .subtle-link { color: #96a3a5; font-size: 13px; text-decoration: none; }
 .subtle-link:hover, .back-link:hover, .data-title-link:hover { color: #fff; }
-.data-title-link { color: inherit; text-decoration: none; }
 .data-row-link { color: inherit; text-decoration: none; border-radius: 8px; padding-left: 8px; padding-right: 8px; margin-left: -8px; margin-right: -8px; }
 .data-row-link:hover { background: #1a2223; }
-.row-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
 
 .editor-shell { min-height: 100vh; padding: 36px; background: #0e1314; }
 .editor-header { max-width: var(--crm-content-max); margin-left: auto; margin-right: auto; display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
@@ -40,12 +38,8 @@
 .form-warning { border: 1px solid #6b5d31; color: #f0d994; background: #332a13; }
 .inline-action { margin: -10px 0 20px; }
 .inline-actions { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
-.search-bar { display: grid; grid-template-columns: minmax(220px, 1fr) auto auto; gap: 14px; align-items: end; }
-.search-bar > label, .filter-grid > label { display: grid; gap: 7px; color: #aeb9ba; font-size: 13px; }
-.filter-grid { display: grid; grid-template-columns: repeat(4, minmax(140px, 1fr)) auto; gap: 14px; align-items: end; }
 .checkbox-row { display: flex !important; align-items: center; gap: 8px; min-height: 42px; white-space: nowrap; }
 .checkbox-row input { width: auto; }
-.pagination { display: flex; justify-content: space-between; gap: 12px; margin-top: 18px; padding-top: 18px; border-top: 1px solid #283334; }
 
 .history-list { margin-top: 18px; display: grid; gap: 10px; }
 .history-event { padding: var(--crm-card-padding-sm); border: 1px solid #283334; border-radius: var(--crm-card-radius-sm); background: #111718; }
@@ -88,17 +82,9 @@
 .media-card { overflow: hidden; border: 1px solid #293536; border-radius: var(--crm-card-radius-sm); background: #111718; }
 .media-card img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; display: block; background: #0d1213; }
 .media-placeholder { min-height: 180px; display: grid; place-items: center; padding: 20px; color: #9eaaac; text-decoration: none; background: #0d1213; }
-.media-meta { padding: 14px; }
-.media-meta form { margin-top: 8px; }
-
-@media (max-width: 1100px) {
-  .filter-grid { grid-template-columns: 1fr 1fr; }
-}
 @media (max-width: 980px) {
   .contact-layout, .property-summary-grid { grid-template-columns: 1fr; }
   .history-card { position: static; }
-  .search-bar { grid-template-columns: 1fr 1fr; }
-  .search-bar > :first-child { grid-column: 1 / -1; }
   .inline-upload { grid-template-columns: 1fr; }
 }
 @media (max-width: 720px) {
@@ -111,9 +97,7 @@
   .header-actions { align-items: stretch; flex-direction: column; }
   .header-user { flex-direction: column; align-items: flex-end; }
   .search-bar, .filter-grid, .inline-form { grid-template-columns: 1fr; }
-  .search-bar > :first-child { grid-column: auto; }
   .inline-actions { justify-content: flex-start; }
-  .pagination { flex-direction: column; }
   .checklist-row { grid-template-columns: 1fr; }
   .media-grid { grid-template-columns: 1fr; }
   .version-row { align-items: flex-start; flex-direction: column; }
@@ -196,55 +180,6 @@
 .media-editable-card:has(.media-disclosure[open]) {
   grid-column: 1 / -1;
 }
-.media-disclosure.owner-card {
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-}
-.media-disclosure.owner-card[open] {
-  background: #111718;
-}
-.media-summary-main {
-  display: grid;
-  gap: 5px;
-  min-width: 0;
-}
-.media-summary-main small,
-.media-summary-main span {
-  color: #748183;
-  overflow-wrap: anywhere;
-}
-.media-summary-main span { font-size: 12px; line-height: 1.45; }
-.media-detail-body { width: 100%; }
-.media-metadata-form.owner-edit-form {
-  width: 100%;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-  padding: 20px;
-}
-.media-metadata-form label {
-  min-width: 0;
-}
-.media-metadata-form input,
-.media-metadata-form textarea {
-  width: 100%;
-  padding: var(--crm-field-padding);
-  border: 1px solid #3a4748;
-  border-radius: var(--crm-field-radius);
-  background: #0e1415;
-  color: #eef2f3;
-  font: inherit;
-  outline: none;
-}
-.media-metadata-form textarea { resize: vertical; line-height: 1.5; }
-.media-alt-field { grid-column: 1 / -1; }
-.media-public-field { align-self: end; }
-.media-metadata-actions.owner-edit-actions {
-  align-self: end;
-  margin: 0;
-}
-.media-integrity-note { margin: 0; padding: 0 20px 14px; line-height: 1.5; }
-.media-archive-form.owner-remove-form { padding: 0 20px 20px; }
 .media-editable-card:has(.media-disclosure[open]) .media-preview-link img {
   max-height: 300px;
   aspect-ratio: 16 / 6;
@@ -252,12 +187,6 @@
 
 @media (max-width: 720px) {
   .media-editable-card:has(.media-disclosure[open]) { grid-column: auto; }
-  .media-metadata-form.owner-edit-form { grid-template-columns: 1fr; padding: 16px; }
-  .media-alt-field { grid-column: auto; }
-  .media-metadata-actions.owner-edit-actions { justify-content: stretch; }
-  .media-metadata-actions .primary-button { width: 100%; }
-  .media-integrity-note { padding: 0 16px 14px; }
-  .media-archive-form.owner-remove-form { padding: 0 16px 16px; }
 }
 
 /* Kontakt anlegen: aus E-Mail-Signatur uebernehmen (20.10.2026). */

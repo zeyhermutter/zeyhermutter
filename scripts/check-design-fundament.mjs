@@ -28,7 +28,12 @@ const OEFFENTLICH = new Set(["public-website.css", "homepage-v7-realtor.css", "h
 // Grundregeln sind oft spezifischer oder selbst "!important". Deshalb erst die
 // dunkle Grundregel auf den hellen Wert setzen, dann das "!important" der
 // passenden hellen Regel entfernen -- Datei fuer Datei, mit Fingerabdruck.
-const HOECHSTENS = { hex: 1285, important: 258, schriftgroessen: 40 };
+// 20.10.2026 (Schritt 2a/2b): Regeln, deren Klassen in keiner .ts/.tsx-Datei
+// mehr vorkommen (auch nicht als Vorlage "praefix-${...}" oder als
+// Status-Wert), mit einem echten CSS-Parser (postcss) entfernt -- 56 im hellen
+// Thema, 337 in den uebrigen Dateien, dazu properties-workflow.css und
+// lead-object-state.css (nirgends eingebunden). Fingerabdruck vorher/nachher.
+const HOECHSTENS = { hex: 1042, important: 249, schriftgroessen: 36 };
 
 const ROLLEN = ["grund", "flaeche", "text", "text-2", "text-leise", "text-blass", "linie", "linie-leise", "linie-feld", "handlung", "auf-dunkel", "verweis", "fehler", "gut"];
 

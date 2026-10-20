@@ -71,18 +71,6 @@
   max-width: none;
 }
 
-/* Verkaufsfertig-Übersicht: gleiche Flucht wie der CRM-Header, kein 1120px-Sondereinzug. */
-.sales-readiness-overview-width {
-  display: grid;
-  gap: var(--crm-block-gap);
-}
-.sales-readiness-overview-width > .data-card,
-.sales-readiness-overview-width > .metric-grid {
-  width: 100%;
-  max-width: none !important;
-  margin: 0;
-}
-
 /* Alte Sonderbreiten dürfen einzelne Karten nicht wieder schmaler machen. */
 .editor-shell > .data-card.property-section,
 .editor-shell > .data-card.property-section + .data-card.property-section,

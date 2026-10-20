@@ -76,9 +76,6 @@ const AUSNAHMEN = {
     "Karten in einem Raster, das seinen Abstand ueber row-gap regelt. Sie sind keine "
     + "unmittelbaren Kinder eines Seitencontainers; die Rhythmusregel greift bei ihnen "
     + "gar nicht, und margin: 0 haelt sie davon frei.",
-  ".sales-readiness-overview-width > .data-card, .sales-readiness-overview-width > .metric-grid":
-    "Dasselbe: Raster mit eigenem row-gap. Das margin: 0 setzt nichts zurueck, sondern "
-    + "haelt aeltere Sonderabstaende aus der Zeit vor dieser Regel heraus.",
 };
 
 const fehler = [];

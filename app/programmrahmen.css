@@ -296,12 +296,6 @@
 
 .statusleiste-rechts { margin-left: auto; }
 
-/* Die CRM-Uebersicht bringt aus ihrer Anfangszeit eine eigene Seitenleiste
- * mit. Der Rahmen ersetzt sie, sie bleibt verborgen -- uebernommen aus dem
- * alten app/persistent-navigation.css. */
-.persistent-app-frame .app-shell { display: block; min-height: 0; }
-.persistent-app-frame .app-shell > .sidebar { display: none; }
-
 /* Der einmalige Lead->Objekt-Hinweis haengt am body und richtete sich nach
  * dem alten 236 px breiten Seitenstreifen. */
 body > [aria-label="Nächste Schritte nach Lead-Übernahme"] {

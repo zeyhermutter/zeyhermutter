@@ -288,12 +288,6 @@
  * markieren") in Zeilenhoehe. */
 .programm-arbeitsflaeche .programm-seite .data-row :is(.primary-button, .secondary-button) { min-height: 28px; padding: 0 10px; font-size: 12px; }
 
-/* Globale Suche: das Suchfeld war in der Werkzeugleiste auf rund 90 px
- * zusammengeschoben, die Lupe stand ueber dem Platzhalter. */
-.programm-arbeitsflaeche .programm-seite .global-search-form { gap: 10px; }
-.programm-arbeitsflaeche .programm-seite .global-search-field { flex: 1 1 360px; max-width: 560px; }
-.programm-arbeitsflaeche .programm-seite .global-search-field input { min-height: 34px; padding-left: 38px; }
-
 /* Die Liste im Rahmen, mit einer Kopfzeile wie eine Tabelle. */
 .programm-arbeitsflaeche .programm-seite .data-card:has(> .data-list) {
   overflow: hidden;
@@ -420,8 +414,6 @@
 .programm-arbeitsflaeche .reporting-metric strong { font-size: 20px; line-height: 1.2; }
 .programm-arbeitsflaeche .reporting-metric strong.reporting-metric-unavailable { font-size: 14px; }
 .programm-arbeitsflaeche .reporting-metric small { font-size: 11px; }
-.programm-arbeitsflaeche .reporting-toolbar { gap: 10px; }
-.programm-arbeitsflaeche .reporting-toolbar .eyebrow { margin-bottom: 4px; font-size: 10.5px; }
 
 /* Anlegen-Knopf ("+ Empfehlung erfassen"): dunkel wie "+ Neuer Auftrag" in
  * den Programmlisten. Zu steht er auf einer Programmseite rechts oben neben
