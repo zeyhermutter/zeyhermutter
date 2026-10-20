@@ -243,8 +243,25 @@ pruefe(!(await lies("app/routes/closing-detail.tsx")).includes('to={`/closings/$
   for (const lizenz of ["OFL-Cormorant-Garamond.txt", "OFL-Montserrat.txt"]) pruefe((await lies(`${ordner}/schriften/${lizenz}`)).includes("SIL Open Font License"), `Exposé: Schriftlizenz ${lizenz} fehlt`);
 }
 
+// 24. Kleines Paket nach dem onOffice-Abgleich (20.10.2026): Exposé-Öffnungen, Geburtstage,
+//     Herkunft, Kontakt aus Signatur, zuletzt geöffnet, WhatsApp-Knopf, Kalender-Abo.
+{
+  const link = await lies("supabase/functions/expose-link/index.ts");
+  pruefe(link.includes('rpc("expose_link_oeffnung"') && (await lies("app/routes/expose-kurzlink.ts")).includes("zaehlen: zaehltAlsOeffnung(request)"), "Exposé-Link: Öffnungen werden nicht mehr gezählt oder eigene Öffnungen zählen mit");
+  pruefe((await lies("app/components/email-schreiben.tsx")).includes("× geöffnet"), "E-Mail schreiben: Öffnungen der ausgegebenen Links fehlen");
+  pruefe((await lies("app/routes/crm-dashboard.tsx")).includes('rpc("geburtstage_demnaechst"'), "Mein Tag: Geburtstage fehlen");
+  const uebersicht = await lies("app/routes/contact-overview.tsx");
+  pruefe(uebersicht.includes("<WhatsAppKnopf") && uebersicht.includes("Kunde seit") && uebersicht.includes("geburtstagText("), "Kontakt-Übersicht: WhatsApp, Herkunft/Kunde seit oder Geburtstag fehlt");
+  pruefe(!(await lies("app/lib/stillstand.ts")).includes('"WHATSAPP"'), "WhatsApp geöffnet zählt als Kontakt (Öffnen ist nicht Senden)");
+  pruefe((await lies("app/routes/contact-new.tsx")).includes("<SignaturEinlesen") && (await lies("app/routes/contact-detail.tsx")).includes("<HerkunftFelder"), "Kontakt: Signatur-Übernahme oder Herkunft fehlt");
+  pruefe((await lies("app/components/schnellsuche.tsx")).includes("leseZuletzt()") && (await lies("app/components/arbeitsplatz.tsx")).includes("merkeZuletzt("), "Strg+K: zuletzt geöffnet fehlt");
+  pruefe((await lies("app/components/programmrahmen.tsx")).includes("onSubmit={vergissZuletzt}"), "Abmelden löscht „zuletzt geöffnet“ nicht mehr");
+  const abo = await lies("app/routes/kalender-abo.ts");
+  pruefe(abo.includes("rpc/kalender_abo_termine") && abo.includes("sha256(treffer[1])") && (await lies("app/routes/kalender-abo-verwalten.ts")).includes("getRandomValues(zufall)"), "Kalender-Abo: Kennung nicht zufällig oder nicht nur als Hash an die Datenbank");
+}
+
 if (fehler.length) {
   console.error("P2:\n  " + fehler.join("\n  "));
   process.exit(1);
 }
-console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung, Datenauskunft aus allen Kontakt-Tabellen, Rechtsgrundlage und Werbewiderspruch (Hinweis, keine Sperre), Anonymisieren nur mit Recht, Grund, Bestätigung und ohne Einwand der Datenbank, Objektakte lädt je Teil nur, was er zeigt, 16 volle Listen als Programmtabelle, tägliche Automatik nur mit Aufgaben/Benachrichtigungen, dublettensicher und abschaltbar, 8 Listen blättern über die Datenbank, Aufgabe anlegen sucht seine Bezüge, Arbeitsplatz ohne Seitenkopf mit h1, jede Liste mit h1, Dialoge halten den Fokus, Absenden zeigt Warten, Akten lesen zuerst, Exposé als kurzer, zurückziehbarer Link, Hausgeld an einer Stelle, Firma & Fristen, Hinweis ohne Maklerauftrag vor der Vermarktung, Exposé mit Logo, Hausschriften und Firmenangaben.");
+console.log("P2: Ampel in 5 Arbeitsplätzen und 5 Listen (mit Zeichen und Text, eigene Anfrage, kein Falschgelb), Stillstand in Mein Tag (eigene Anfrage, nur echte Aktivität), Datumsgruppen, Strg+K mit Treffern beim Tippen, Suche in der Datenbank ohne stilles Kappen, Aufgaben mit Suche und Seiten, E-Mail mit Vorlage und Exposé samt Objektnachweis (nichts wird automatisch verschickt), Anfragen-Assistent ohne KI mit Dublettenprüfung, Datenauskunft aus allen Kontakt-Tabellen, Rechtsgrundlage und Werbewiderspruch (Hinweis, keine Sperre), Anonymisieren nur mit Recht, Grund, Bestätigung und ohne Einwand der Datenbank, Objektakte lädt je Teil nur, was er zeigt, 16 volle Listen als Programmtabelle, tägliche Automatik nur mit Aufgaben/Benachrichtigungen, dublettensicher und abschaltbar, 8 Listen blättern über die Datenbank, Aufgabe anlegen sucht seine Bezüge, Arbeitsplatz ohne Seitenkopf mit h1, jede Liste mit h1, Dialoge halten den Fokus, Absenden zeigt Warten, Akten lesen zuerst, Exposé als kurzer, zurückziehbarer Link, Hausgeld an einer Stelle, Firma & Fristen, Hinweis ohne Maklerauftrag vor der Vermarktung, Exposé mit Logo, Hausschriften und Firmenangaben, kleines Paket nach dem onOffice-Abgleich.");

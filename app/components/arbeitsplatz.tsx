@@ -1,7 +1,8 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router";
 import { Ampel, useNaechsteSchritte } from "~/components/ampel";
 import type { AmpelArt } from "~/lib/naechster-schritt";
+import { merkeZuletzt } from "~/lib/zuletzt-geoeffnet";
 import "~/arbeitsplatz.css";
 
 // Der Arbeitsplatz -- Liste links, geoeffneter Datensatz rechts.
@@ -241,6 +242,9 @@ export function ArbeitsplatzKopf({ nummer, status, titel, kontext, aktionen }: {
   aktionen?: ReactNode;
 }) {
   const alsUeberschrift = useContext(SeitenkopfAusgeblendet);
+  // "Zuletzt geöffnet" fuer Strg+K (20.10.2026), siehe app/lib/zuletzt-geoeffnet.ts.
+  const { pathname } = useLocation();
+  useEffect(() => { merkeZuletzt(pathname, nummer, titel); }, [pathname, nummer, titel]);
   return (
     <div className="arbeitsplatz-kopf">
       <span className="arbeitsplatz-kopf-nummer">{nummer}</span>

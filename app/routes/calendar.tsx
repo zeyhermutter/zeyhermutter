@@ -1,4 +1,5 @@
-import { data, Link, useLoaderData } from "react-router";
+import { data, Link, useFetcher, useLoaderData } from "react-router";
+import { useState } from "react";
 import type { Route } from "./+types/calendar";
 import { requireActiveUser } from "~/lib/auth.server";
 import { uhrzeit as formatTime } from "~/lib/format";
@@ -171,18 +172,63 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const scope = ansicht === "alle" ? "all" : "mine";
   const person = ansicht === "alle" || ansicht === "meins" ? userId : ansicht;
 
-  const { events: sichtbar, sichtbareArten, quellenfehler } = await ladeTermine(supabase, person, { from, to, vonTag, bisTag }, scope);
+  const [{ events: sichtbar, sichtbareArten, quellenfehler }, aboRes] = await Promise.all([
+    ladeTermine(supabase, person, { from, to, vonTag, bisTag }, scope),
+    // Eigenes Kalender-Abo (20.10.2026); RLS zeigt nur die eigenen.
+    supabase.from("calendar_feeds").select("created_at,last_used_at").is("revoked_at", null).maybeSingle(),
+  ]);
   const grouped = sichtbar.reduce<Record<string, CalendarEvent[]>>((acc, event) => {
     const key = dateKey(event.startsAt);
     (acc[key] ??= []).push(event);
     return acc;
   }, {});
 
-  return data({ month, ansicht, kollegen, events: sichtbar, grouped, sichtbareArten, quellenfehler }, { headers: responseHeaders() });
+  return data({ month, ansicht, kollegen, events: sichtbar, grouped, sichtbareArten, quellenfehler, abo: aboRes.data ?? null }, { headers: responseHeaders() });
+}
+
+/**
+ * Kalender abonnieren (20.10.2026): ein persönlicher Link, den Handy, Outlook
+ * oder Google regelmäßig abrufen. Er zeigt die eigenen Termine (verantwortlich)
+ * und wird nur einmal angezeigt; ein neuer Link beendet den alten.
+ */
+function KalenderAbo({ abo }: { abo: { created_at: string; last_used_at: string | null } | null }) {
+  const f = useFetcher<{ link: string | null; beendet: boolean; error: string | null }>();
+  const [kopiert, setKopiert] = useState(false);
+  const link = f.data?.link ?? null;
+  const aktiv = f.data?.beendet ? false : Boolean(abo || link);
+  const kopieren = async () => { if (!link) return; try { await navigator.clipboard.writeText(link); setKopiert(true); } catch { setKopiert(false); } };
+  return (
+    <details className="kalender-quellen kalender-abo" open={Boolean(link)}>
+      <summary>Kalender abonnieren (Handy, Outlook, Google)</summary>
+      <p className="calendar-note">Ihre eigenen Termine – Besichtigungen, Bewertungs- und Notartermine, Aufgaben mit Uhrzeit und Wiedervorlagen – erscheinen in Ihrem Kalender und werden etwa stündlich aktualisiert. Ändern lassen sie sich weiter nur hier im CRM. Die Termine tragen Kundennamen; der Link ist persönlich und sollte nicht weitergegeben werden.</p>
+      {f.data?.error ? <p className="form-error">{f.data.error}</p> : null}
+      {link ? (
+        <div className="kalender-abo-link">
+          <p className="form-success" role="status">Ihr Abo-Link – er wird nur jetzt angezeigt:</p>
+          <input readOnly value={link} onFocus={(e) => e.currentTarget.select()} aria-label="Abo-Link" />
+          <div className="inline-actions">
+            <button className="primary-button" type="button" onClick={kopieren}>{kopiert ? "Kopiert" : "Link kopieren"}</button>
+            <a className="secondary-button link-button" href={link.replace(/^https?:/, "webcal:")}>In Kalender-App öffnen</a>
+          </div>
+          <p className="form-help">iPhone/Mac: „In Kalender-App öffnen“. Outlook: Kalender hinzufügen → Aus dem Internet → Link einfügen. Google Kalender: Weitere Kalender → Per URL → Link einfügen.</p>
+        </div>
+      ) : aktiv && abo ? (
+        <p className="calendar-note">Abo aktiv seit {formatDay(abo.created_at.slice(0, 10))}{abo.last_used_at ? `, zuletzt abgerufen ${formatDay(abo.last_used_at.slice(0, 10))}` : ", noch nicht abgerufen"}.</p>
+      ) : null}
+      <div className="inline-actions">
+        <f.Form method="post" action="/crm/calendar/abo"><input type="hidden" name="_intent" value="anlegen" />
+          <button className={aktiv ? "secondary-button" : "primary-button"} type="submit" disabled={f.state !== "idle"}>{aktiv ? "Neuen Link erzeugen (alter wird ungültig)" : "Abo-Link erzeugen"}</button>
+        </f.Form>
+        {aktiv ? <f.Form method="post" action="/crm/calendar/abo"><input type="hidden" name="_intent" value="beenden" />
+          <button className="secondary-button" type="submit" disabled={f.state !== "idle"}>Abo beenden</button>
+        </f.Form> : null}
+      </div>
+    </details>
+  );
 }
 
 export default function CalendarPage() {
-  const { month, ansicht, kollegen, events, grouped, sichtbareArten, quellenfehler } = useLoaderData<typeof loader>();
+  const { month, ansicht, kollegen, events, grouped, sichtbareArten, quellenfehler, abo } = useLoaderData<typeof loader>();
   const wege = uebersichtsWege(sichtbareArten);
   // Die Kachel nennt die Anzahl, nicht die Namen: ausgeschrieben waren die
   // neun Kategorien rund 180 Zeichen und zogen die Nachbarkacheln auf die
@@ -248,6 +294,7 @@ export default function CalendarPage() {
         <Monatsraster month={month} grouped={grouped} sichtbareArten={sichtbareArten} />
       </div>
     </section>
+    <KalenderAbo abo={abo} />
     <details className="kalender-quellen">
       <summary>Terminquellen und Export</summary>
       <div className="calendar-provider-status">

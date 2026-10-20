@@ -35,7 +35,15 @@ const NICHT_GUELTIG = () => SEITE(
   410,
 );
 
-export async function loader({ params, context }: Route.LoaderArgs) {
+// Oeffnet ein angemeldeter CRM-Benutzer den Link (Supabase-Sitzungscookie),
+// oder fragt nur ein HEAD an, zaehlt es nicht als Oeffnung (20.10.2026).
+function zaehltAlsOeffnung(request: Request) {
+  if (request.method !== "GET") return false;
+  const cookie = request.headers.get("Cookie") ?? "";
+  return !/(?:^|;\s*)sb-[^=;]*-auth-token(?:\.\d+)?=/.test(cookie);
+}
+
+export async function loader({ params, context, request }: Route.LoaderArgs) {
   const kennung = String(params.token ?? "");
   if (!KENNUNG.test(kennung)) return NICHT_GUELTIG();
 
@@ -49,7 +57,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
         apikey: env.SUPABASE_PUBLISHABLE_KEY,
         Authorization: `Bearer ${env.SUPABASE_PUBLISHABLE_KEY}`,
       },
-      body: JSON.stringify({ token: kennung }),
+      body: JSON.stringify({ token: kennung, zaehlen: zaehltAlsOeffnung(request) }),
     });
   } catch {
     return SEITE("Das Exposé ist gerade nicht erreichbar", "Bitte versuchen Sie es in einigen Minuten erneut.", 503);

@@ -2,6 +2,7 @@ import { Form, Link, useLocation } from "react-router";
 import type { ReactNode } from "react";
 import { NotificationBell, type HeaderNotification } from "~/components/notification-bell";
 import { Schnellsuche } from "~/components/schnellsuche";
+import { vergissZuletzt } from "~/lib/zuletzt-geoeffnet";
 import { BEREICHE, bereichAusPfad, emailZiel, type Bereichsschluessel } from "~/lib/programmbereiche";
 import "~/programmrahmen.css";
 import "~/programmansicht.css";
@@ -92,7 +93,7 @@ export function Programmrahmen({ children, notifications, unreadCount, benutzer,
               </Link>}
           <span className="titelleiste-umgebung">{__APP_ENV_LABEL__}</span>
           {benutzer ? <span className="titelleiste-benutzer">{benutzer}</span> : null}
-          <Form method="post" action="/logout">
+          <Form method="post" action="/logout" onSubmit={vergissZuletzt}>
             <button className="titelleiste-abmelden" type="submit">Abmelden</button>
           </Form>
         </div>

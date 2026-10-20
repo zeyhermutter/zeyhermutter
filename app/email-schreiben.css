@@ -19,3 +19,4 @@
 .email-schreiben-links li { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .email-schreiben-links form { display: flex; align-items: center; gap: 8px; margin: 0; }
 .email-schreiben-link-aktiv { color: var(--crm-farbe-gut); }
+.email-schreiben-link-geoeffnet { color: var(--crm-farbe-text); font-weight: 600; }

@@ -26,6 +26,7 @@ export default [
   route("widerruf", "routes/public-withdrawal.tsx"),
   route("login", "routes/login.tsx"),
   route("e/:token", "routes/expose-kurzlink.ts"),
+  route("kalender/:datei", "routes/kalender-abo.ts"),
   layout("routes/internal-layout.tsx", [
     route("crm", "routes/crm-dashboard.tsx"),
     route("reports", "routes/reports.tsx"),
@@ -34,6 +35,7 @@ export default [
     route("crm/email", "routes/email-compose.tsx"),
     route("crm/calendar", "routes/calendar.tsx"),
     route("crm/calendar/event.ics", "routes/calendar-event.ts"),
+    route("crm/calendar/abo", "routes/kalender-abo-verwalten.ts"),
     route("crm/website", "routes/website-cms.tsx"),
     layout("routes/website-arbeitsplatz.tsx", [
       route("crm/website/:pageKey", "routes/website-cms-detail.tsx"),
@@ -176,6 +178,7 @@ export default [
   route("api/aufgaben", "routes/api-aufgaben.ts"),
   route("api/objekt-rechte", "routes/api-objekt-rechte.ts"),
   route("api/telefonat", "routes/api-telefonat.ts"),
+  route("api/whatsapp", "routes/api-whatsapp.ts"),
   route("api/naechster-schritt", "routes/api-naechster-schritt.ts"),
   route("api/stillstand", "routes/api-stillstand.ts"),
   route("api/suche", "routes/api-suche.ts"),

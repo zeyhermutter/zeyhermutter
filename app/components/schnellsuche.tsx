@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent as TastenEreignis } from "react";
 import { useFetcher, useLocation, useNavigate } from "react-router";
+import { leseZuletzt, type ZuletztEintrag } from "~/lib/zuletzt-geoeffnet";
 import "~/schnellsuche.css";
 
 // Schnellsuche in der Titelleiste, mit Strg+K (Mac: ⌘K) von ueberall
@@ -67,6 +68,10 @@ export function Schnellsuche() {
   // Nach einem Seitenwechsel ist die Suche erledigt.
   useEffect(() => { setOffen(false); setQ(""); setAktiv(-1); }, [pathname]);
 
+  // Zuletzt geoeffnete Akten (20.10.2026): beim Oeffnen der Liste frisch lesen.
+  const [zuletzt, setZuletzt] = useState<ZuletztEintrag[]>([]);
+  useEffect(() => { if (offen) setZuletzt(leseZuletzt()); }, [offen]);
+
   const begriff = q.trim();
   useEffect(() => {
     if (begriff.length < 2) return;
@@ -86,8 +91,11 @@ export function Schnellsuche() {
     const alle = begriff.length >= 2
       ? [{ key: "alle", art: "Suche", titel: antwort?.mehr ? `Alle Treffer für „${begriff}“ — es gibt mehr` : `Alle Treffer für „${begriff}“`, pfad: `/crm/search?q=${encodeURIComponent(begriff)}` }]
       : [];
-    return [...treffer, ...spruenge, ...alle];
-  }, [antwort, begriff]);
+    // Ohne Suchbegriff zuerst die zuletzt geoeffneten Akten, die aktuelle ausgenommen.
+    const kuerzlich = klein ? [] : zuletzt.filter((z) => !pathname.startsWith(z.pfad)).slice(0, 6)
+      .map((z) => ({ key: `zuletzt:${z.pfad}`, art: "Zuletzt", titel: z.titel, nummer: z.nummer, unterzeile: z.art, pfad: z.pfad }));
+    return [...kuerzlich, ...treffer, ...spruenge, ...alle];
+  }, [antwort, begriff, zuletzt, pathname]);
 
   useEffect(() => { setAktiv(-1); }, [begriff]);
 

@@ -1,7 +1,7 @@
 import { data, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/contact-overview";
 import { requireActiveUser } from "~/lib/auth.server";
-import { tag, zeitpunkt } from "~/lib/format";
+import { monatJahr, tag, zeitpunkt } from "~/lib/format";
 import { standKlasse } from "~/lib/stand-ton";
 import {
   ANFRAGESTATUS, BESICHTIGUNGSSTATUS, IMMOBILIENSTATUS, KAUFANGEBOTSTATUS, LEADSTATUS, RECHTSGRUNDLAGE, beschrifte, AKTIVITAETSART,
@@ -9,6 +9,9 @@ import {
 import { AufgabenBaustein } from "~/components/aufgaben-baustein";
 import { TelefonatErfassen, TelefonatMeldung } from "~/components/telefonat-erfassen";
 import { aufgabenRahmen, AUFGABEN_SPALTEN } from "~/lib/aufgaben.server";
+import { WhatsAppKnopf } from "~/components/whatsapp-knopf";
+import { geburtstagText, naechsterGeburtstag } from "~/lib/geburtstag";
+import { berlinParts } from "~/lib/termine";
 import "~/programm-liste.css";
 import "~/akte-blick.css";
 import "~/kontakt-uebersicht.css";
@@ -52,7 +55,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   if (!id) throw new Response("Kontakt fehlt.", { status: 404 });
 
   const [kontaktRes, eigentumRes, suchRes, leadRes, anfrageRes, besichtigungRes, angebotRes, aufgabeRes, verlaufRes, nutzerRes] = await Promise.all([
-    supabase.from("contacts").select("id,contact_number,first_name,last_name,email,phone,mobile,preferred_channel,status,archived_at,legal_basis,marketing_objection_at,anonymized_at").eq("id", id).maybeSingle(),
+    supabase.from("contacts").select("id,contact_number,salutation,first_name,last_name,email,phone,mobile,birth_date,created_at,source_detail,lead_sources(label),preferred_channel,status,archived_at,legal_basis,marketing_objection_at,anonymized_at").eq("id", id).maybeSingle(),
     supabase.from("property_owners").select("id,ownership_percentage,valid_until,properties(id,property_number,internal_title,status,archived_at)").eq("contact_id", id),
     supabase.from("search_profiles").select("id,search_profile_number,title,status,transaction_type,property_types,max_price,search_profile_locations(city,postal_code,radius_km)").eq("contact_id", id).is("archived_at", null).order("created_at", { ascending: false }),
     supabase.from("leads").select("id,lead_number,status,follow_up_at,property_type,property_city").eq("contact_id", id).is("archived_at", null).order("created_at", { ascending: false }).limit(10),
@@ -103,6 +106,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     passendJeProfil,
     fehlt,
     jetzt: new Date().toISOString(),
+    heuteBerlin: (() => { const p = berlinParts(new Date()); return `${p.year}-${p.month}-${p.day}`; })(),
   }, { headers: responseHeaders() });
 }
 
@@ -147,6 +151,14 @@ export default function ContactOverview() {
   const naechsterUeberfaellig = naechster ? naechster.wann.slice(0, 10) < heute : false;
 
   const telefon = k.mobile ?? k.phone ?? null;
+  // Herkunft und "Kunde seit" (20.10.2026); Geburtstag nur, wenn er in den
+  // naechsten 7 Tagen liegt -- sonst steht er in den Stammdaten.
+  const quelle = eins((k as any).lead_sources) as { label: string } | null;
+  const herkunftZeile = [
+    quelle || k.source_detail ? `Herkunft: ${[quelle?.label, k.source_detail].filter(Boolean).join(" · ")}` : null,
+    k.created_at ? `Kunde seit ${monatJahr(k.created_at)}` : null,
+  ].filter(Boolean) as string[];
+  const geburtstag = geburtstagText(naechsterGeburtstag(k.birth_date, d.heuteBerlin));
   const letzter = d.verlauf[0] ?? null;
 
   type Vorgang = { id: string; pfad: string; art: string; titel: string; zusatz: string | null; stand: string };
@@ -197,10 +209,13 @@ export default function ContactOverview() {
               {k.preferred_channel ? <span className="leise">bevorzugt: {KONTAKTWEG[k.preferred_channel] ?? k.preferred_channel}</span> : null}
               {!telefon && !k.email ? <span className="leise">Keine Telefonnummer und keine E-Mail hinterlegt.</span> : null}
             </p>
+            {herkunftZeile.length ? <p className="akte-blick-erreichbar leise">{herkunftZeile.map((z) => <span key={z}>{z}</span>)}</p> : null}
+            {geburtstag ? <p className="kontakt-geburtstag">{k.first_name} {geburtstag}</p> : null}
           </div>
           <div className="akte-blick-aktionen">
             {/* Nach dem Anruf steht das Formular "Telefonat" schon offen da. */}
             {telefon ? <a className="secondary-button link-button compact" href={`tel:${telefon.replace(/[^+\d]/g, "")}`} onClick={() => { window.location.hash = "telefonat-neu"; }}>Anrufen</a> : null}
+            <WhatsAppKnopf kontakt={k} />
             <a className="secondary-button link-button compact" href="#telefonat-neu">+ Telefonat</a>
             {d.darfAufgaben ? <a className="secondary-button link-button compact" href="#aufgabe-neu">+ Aufgabe</a> : null}
             <Link className="secondary-button link-button compact" to={`${basis}/collaboration`}>+ Notiz</Link>

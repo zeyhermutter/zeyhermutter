@@ -47,10 +47,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const scope = ansicht === "alle" ? "all" : "mine";
   const person = ansicht === "alle" || ansicht === "meins" ? userId : ansicht;
 
-  const [tag, propertyPermission, { count: propertyCount }] = await Promise.all([
+  const [tag, propertyPermission, { count: propertyCount }, geburtstageRes] = await Promise.all([
     ladeMeinTag(supabase, person, scope, heute),
     supabase.rpc("current_user_has_permission", { p_permission: "property.read" }),
     supabase.from("properties").select("id", { count: "exact", head: true }).neq("status", "ARCHIVED"),
+    // Geburtstage der naechsten 7 Tage (20.10.2026), mit den Rechten des Benutzers.
+    supabase.rpc("geburtstage_demnaechst", { p_tage: 7 }),
   ]);
 
   let propertyMapPoints: PropertyMapPoint[] = [];
@@ -71,6 +73,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   return data({
     ...tag,
+    geburtstage: ((geburtstageRes.data ?? []) as { contact_id: string; name: string; naechster: string; alter_jahre: number }[]),
     ansicht,
     kollegen,
     vorschauTage: VORSCHAU_TAGE,
@@ -268,6 +271,14 @@ export default function MeinTag() {
             leer="Keine neue Anfrage und kein neuer Lead.">
             {d.neu.map((e) => <Zeile key={e.key} e={e} wann={tagKurz(e.wann)} />)}
           </Feld>
+          {d.geburtstage.length ? (
+            <Feld ton="neu" titel="Geburtstage (7 Tage)" anzahl={d.geburtstage.length} leer="">
+              {d.geburtstage.map((g) => (
+                <Zeile key={g.contact_id} e={{ key: `GEB:${g.contact_id}`, art: "Geburtstag", titel: g.name, kontext: `wird ${g.alter_jahre}`, wann: g.naechster, ganztags: true, pfad: `/crm/contacts/${g.contact_id}` }}
+                  wann={g.naechster === d.heute ? "heute" : tagKurz(g.naechster)} />
+              ))}
+            </Feld>
+          ) : null}
         </div>
       </div>
 

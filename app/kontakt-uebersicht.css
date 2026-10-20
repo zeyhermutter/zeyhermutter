@@ -10,3 +10,6 @@
 @media (max-width: 900px) {
   .kontakt-uebersicht-raster { grid-template-columns: 1fr; }
 }
+
+/* Geburtstag in den naechsten 7 Tagen (20.10.2026) -- ruhig, nur ein Hinweis. */
+.kontakt-geburtstag { margin: 6px 0 0; font-size: var(--crm-schrift-13); color: var(--crm-farbe-text-2); font-weight: 600; }

@@ -25,7 +25,7 @@ export type SchreibDaten = {
   exposeAuswahl: { id: string; nummer: string; datei: string; objektNummer: string | null; objektTitel: string | null; objektOrt: string | null }[];
   linkTage: number;
   /** Ausgegebene Kurzlinks zu dieser Anfrage (A7), neueste zuerst. */
-  links: { id: string; erstellt: string; von: string | null; bis: string; zurueckgezogen: string | null; nummer: string | null }[];
+  links: { id: string; erstellt: string; von: string | null; bis: string; zurueckgezogen: string | null; nummer: string | null; geoeffnet: number; zuletztGeoeffnet: string | null }[];
   anfrage: { status: string; version: number } | null;
   /** Werbewiderspruch des Kontakts (P2-6 Teil 2): Hinweis, keine Sperre. */
   werbewiderspruch: string | null;
@@ -205,7 +205,9 @@ export function EmailSchreiben({ kontext, daten }: { kontext: Kontext; daten: Sc
 /**
  * Ausgegebene Exposé-Links dieser Anfrage (A7). Ein Link lässt sich jederzeit
  * zurückziehen; danach zeigt er dem Empfänger nur noch „nicht mehr gültig“.
- * Ob ein Link geöffnet wurde, wird nicht erfasst.
+ * Seit 20.10.2026 mit Öffnungen: wie oft der Link das Exposé ausgeliefert hat
+ * (eigene Öffnungen aus dem CRM zählen nicht). Sicherheitsfilter mancher
+ * Mailprogramme öffnen Links vorab – deshalb der Hinweis im Titel.
  */
 function AusgegebeneLinks({ links }: { links: SchreibDaten["links"] }) {
   const jetzt = Date.now();
@@ -222,6 +224,7 @@ function AusgegebeneLinks({ links }: { links: SchreibDaten["links"] }) {
             <li key={l.id}>
               <span>{l.nummer ? `Exposé ${l.nummer}` : "Exposé"} · erzeugt {zeitpunkt(l.erstellt)}</span>
               <span className={aktiv ? "email-schreiben-link-aktiv" : "leise"}>{stand}</span>
+              <span className={l.geoeffnet ? "email-schreiben-link-geoeffnet" : "leise"} title="Zählt, wie oft der Link das Exposé ausgeliefert hat. Sicherheitsfilter mancher Mailprogramme öffnen Links vorab.">{l.geoeffnet ? `${l.geoeffnet}× geöffnet, zuletzt ${zeitpunkt(l.zuletztGeoeffnet)}` : "noch nicht geöffnet"}</span>
               {aktiv ? <Zurueckziehen id={l.id} /> : null}
             </li>
           );

@@ -682,3 +682,8 @@ a.monatsraster-tag:focus-visible {
   .kalender-programm .calendar-ansichten .calendar-event { grid-template-columns: 48px minmax(0, 1fr); }
   .kalender-programm .calendar-ansichten .calendar-event-actions { grid-column: 2; justify-content: flex-start; }
 }
+
+/* Kalender abonnieren (20.10.2026) */
+.kalender-abo-link { display: grid; gap: 8px; }
+.kalender-abo-link input { width: 100%; box-sizing: border-box; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: var(--crm-schrift-12); }
+.kalender-abo .inline-actions form { margin: 0; }

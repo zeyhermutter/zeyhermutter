@@ -108,6 +108,13 @@ export function tagKurz(wert: Wert, wennLeer = "—"): string {
   return new Intl.DateTimeFormat("de-DE", { dateStyle: "short", timeZone: "Europe/Berlin" }).format(d);
 }
 
+/** Monat und Jahr, etwa "März 2026" (z. B. "Kunde seit"). */
+export function monatJahr(wert: Wert, wennLeer = "—"): string {
+  const d = alsDatum(wert);
+  if (!d) return wennLeer;
+  return new Intl.DateTimeFormat("de-DE", { month: "long", year: "numeric", timeZone: "Europe/Berlin" }).format(d);
+}
+
 /** Zeitpunkt mit Uhrzeit, etwa "12. Sept. 2026, 09:30". */
 export function zeitpunkt(wert: Wert, wennLeer = "—"): string {
   const d = alsDatum(wert);

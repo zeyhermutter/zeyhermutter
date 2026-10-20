@@ -328,6 +328,7 @@ export const AKTIVITAETSART: Beschriftungen = {
   WEBSITE_INQUIRY: "Anfrage über die Website", WEBSITE_SEARCH_PROFILE: "Suchauftrag über die Website",
   WEBSITE_MEASUREMENT: "Aufmaß-Anfrage über die Website",
   DATA_EXPORT: "Datenauskunft erstellt",
+  EXPOSE_OPENED: "Exposé-Link geöffnet", WHATSAPP: "WhatsApp",
 };
 
 // Rechtsgrundlage der Verarbeitung je Kontakt (contacts.legal_basis, P2-6,

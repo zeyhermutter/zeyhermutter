@@ -1,6 +1,9 @@
-import { data, Form, Link, redirect, useActionData, useSearchParams } from "react-router";
+import { data, Form, Link, redirect, useActionData, useLoaderData, useSearchParams } from "react-router";
 import type { Route } from "./+types/contact-new";
 import { requireActiveUser } from "~/lib/auth.server";
+import { HerkunftFelder, herkunftAusFormular, ladeHerkunftsquellen } from "~/components/herkunft-felder";
+import { leseSignatur } from "~/lib/signatur-parser";
+import { useState } from "react";
 
 type Duplicate = {
   contact_id: string;
@@ -23,8 +26,8 @@ function text(formData: FormData, key: string) {
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const { responseHeaders } = await requireActiveUser(request, context.cloudflare.env);
-  return data({}, { headers: responseHeaders() });
+  const { supabase, responseHeaders } = await requireActiveUser(request, context.cloudflare.env);
+  return data({ herkunftsquellen: await ladeHerkunftsquellen(supabase) }, { headers: responseHeaders() });
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
@@ -44,6 +47,9 @@ export async function action({ request, context }: Route.ActionArgs) {
     house_number: text(formData, "house_number"),
     postal_code: text(formData, "postal_code"),
     city: text(formData, "city"),
+    source_id: text(formData, "source_id"),
+    source_detail: text(formData, "source_detail"),
+    birth_date: text(formData, "birth_date"),
   };
 
   if (!fields.first_name || !fields.last_name) {
@@ -100,6 +106,14 @@ export async function action({ request, context }: Route.ActionArgs) {
     return data<ActionResult>({ error: "Kontakt konnte nicht atomar gespeichert werden. Es wurden keine Teil-Datensätze übernommen.", fields }, { status: 400, headers: responseHeaders() });
   }
 
+  // Herkunft und Geburtsdatum (20.10.2026) setzt die Anlage-Funktion nicht --
+  // sie folgen direkt danach. Scheitert das, bleibt der Kontakt trotzdem.
+  const herkunft = herkunftAusFormular(formData);
+  const geburt = /^\d{4}-\d{2}-\d{2}$/.test(fields.birth_date) ? fields.birth_date : null;
+  if (herkunft.source_id || herkunft.source_detail || geburt) {
+    await supabase.from("contacts").update({ ...herkunft, ...(geburt ? { birth_date: geburt } : {}) }).eq("id", String(contactId));
+  }
+
   const returnTo = new URL(request.url).searchParams.get("returnTo") ?? "";
   if (returnTo.startsWith("/properties/")) {
     const target = new URL(returnTo, "https://zeyhermutter.local");
@@ -125,7 +139,44 @@ const reasonLabel: Record<string, string> = {
   NAME_ADDRESS: "gleicher Name und gleiche Anschrift",
 };
 
+/**
+ * Kontakt aus einer E-Mail-Signatur (20.10.2026): Text einfügen, "Felder
+ * füllen" -- gefüllt werden nur leere Felder, alles bleibt zum Prüfen stehen.
+ */
+function SignaturEinlesen({ formId }: { formId: string }) {
+  const [text, setText] = useState("");
+  const [meldung, setMeldung] = useState<string | null>(null);
+  const fuellen = () => {
+    const form = document.getElementById(formId) as HTMLFormElement | null;
+    if (!form) return;
+    const v = leseSignatur(text);
+    const ziele: [string, string | null, string][] = [
+      ["salutation", v.anrede, "Anrede"], ["first_name", v.vorname, "Vorname"], ["last_name", v.nachname, "Nachname"],
+      ["email", v.email, "E-Mail"], ["mobile", v.mobil, "Mobil"], ["phone", v.telefon, "Telefon"],
+      ["street", v.strasse, "Straße"], ["house_number", v.hausnummer, "Hausnummer"], ["postal_code", v.plz, "PLZ"], ["city", v.ort, "Ort"],
+    ];
+    const gefuellt: string[] = [];
+    for (const [name, wert, beschriftung] of ziele) {
+      const feld = form.elements.namedItem(name) as HTMLInputElement | HTMLSelectElement | null;
+      if (!feld || !wert || feld.value.trim()) continue;
+      feld.value = wert;
+      gefuellt.push(beschriftung);
+    }
+    setMeldung(gefuellt.length ? `Übernommen: ${gefuellt.join(", ")}. Bitte prüfen.` : "Nichts erkannt, oder die Felder waren schon ausgefüllt.");
+  };
+  return (
+    <details className="kontakt-signatur">
+      <summary>Aus E-Mail-Signatur übernehmen</summary>
+      <p className="form-help">Signatur hier einfügen. Erkannt werden Name, E-Mail, Telefon, Mobil und Anschrift; gefüllt werden nur leere Felder.</p>
+      <textarea rows={6} value={text} onChange={(e) => setText(e.target.value)} aria-label="E-Mail-Signatur" />
+      <div className="form-actions"><button className="secondary-button" type="button" onClick={fuellen} disabled={!text.trim()}>Felder füllen</button></div>
+      {meldung ? <p className="form-help" role="status">{meldung}</p> : null}
+    </details>
+  );
+}
+
 export default function NewContact() {
+  const { herkunftsquellen } = useLoaderData<typeof loader>();
   const result = useActionData<typeof action>();
   const [searchParams] = useSearchParams();
   const returnTo = searchParams.get("returnTo") ?? "";
@@ -139,7 +190,8 @@ export default function NewContact() {
         <span className="badge">{__APP_ENV_LABEL__}</span>
       </header>
 
-      <Form method="post" className="editor-card">
+      <Form method="post" className="editor-card" id="kontakt-neu">
+        <SignaturEinlesen formId="kontakt-neu" />
         {result?.error ? <div className={duplicates.length ? "form-warning" : "form-error"}>{result.error}</div> : null}
         {duplicates.length > 0 ? (
           <section className="data-card">
@@ -165,6 +217,9 @@ export default function NewContact() {
           <label className="form-field"><span>Mobil *</span><input name="mobile" type="tel" defaultValue={fields.mobile} /></label>
           <label className="form-field"><span>Telefon *</span><input name="phone" type="tel" defaultValue={fields.phone} /></label>
           <label className="form-field"><span>Bevorzugter Kontaktweg</span><select name="preferred_channel" defaultValue={fields.preferred_channel ?? ""}><option value="">—</option><option value="EMAIL">E-Mail</option><option value="MOBILE">Mobil</option><option value="PHONE">Telefon</option><option value="OTHER">Sonstiges</option></select></label>
+          <label className="form-field"><span>Geburtsdatum</span><input name="birth_date" type="date" defaultValue={fields.birth_date} /></label>
+          <div />
+          <HerkunftFelder quellen={herkunftsquellen} sourceId={fields.source_id} detail={fields.source_detail} />
         </div>
 
         <div className="card-head"><div><p className="eyebrow">Optional</p><h2>Primäradresse</h2></div></div>

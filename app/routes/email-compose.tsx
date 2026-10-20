@@ -252,7 +252,7 @@ async function ladeSchreibDaten(supabase: any, ctx: EmailContext, meinName: stri
     supabase.from("viewings").select("starts_at").eq("contact_id", ctx.contactId).in("status", ["PLANNED", "CONFIRMED"])
       .gte("starts_at", new Date().toISOString()).is("archived_at", null).order("starts_at", { ascending: true }).limit(1).maybeSingle(),
     // Ausgegebene Kurzlinks zu dieser Anfrage (A7). Ohne Leserecht auf Exposés leer (RLS).
-    anfrageId ? supabase.from("expose_links").select("id,created_at,created_by,expires_at,revoked_at,property_exposes(expose_number)")
+    anfrageId ? supabase.from("expose_links").select("id,created_at,created_by,expires_at,revoked_at,open_count,first_opened_at,last_opened_at,property_exposes(expose_number)")
       .eq("inquiry_id", anfrageId).order("created_at", { ascending: false }).limit(20) : Promise.resolve({ data: [] }),
     allgemein ? exposeAuswahl(supabase) : Promise.resolve([]),
   ]);
@@ -278,6 +278,7 @@ async function ladeSchreibDaten(supabase: any, ctx: EmailContext, meinName: stri
     links: ((links.data ?? []) as any[]).map((l) => ({
       id: l.id as string, erstellt: l.created_at as string, von: l.created_by as string | null, bis: l.expires_at as string,
       zurueckgezogen: l.revoked_at as string | null, nummer: (one(l.property_exposes) as any)?.expose_number ?? null,
+      geoeffnet: Number(l.open_count ?? 0), zuletztGeoeffnet: (l.last_opened_at as string | null) ?? null,
     })),
     anfrage: anfrage ? { status: anfrage.status, version: Number(anfrage.version) } : null,
     werbewiderspruch: k.marketing_objection_at ?? null,

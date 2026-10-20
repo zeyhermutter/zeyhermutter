@@ -4,6 +4,7 @@ import { requireActiveUser } from "~/lib/auth.server";
 import { REFERRAL_STATUS } from "./referrals";
 import { zeitpunkt as formatDate } from "~/lib/format";
 import { LeerOderFehler } from "~/components/leer-oder-fehler";
+import { HerkunftFelder, herkunftAusFormular, ladeHerkunftsquellen } from "~/components/herkunft-felder";
 
 type FieldChange = { old?: unknown; new?: unknown };
 type ActionResult = { error?: string; conflict?: boolean };
@@ -17,6 +18,8 @@ const fieldLabels: Record<string, string> = {
   phone: "Telefon",
   mobile: "Mobil",
   birth_date: "Geburtsdatum",
+  source_id: "Herkunft",
+  source_detail: "Herkunft genauer",
   preferred_channel: "Bevorzugter Kontaktweg",
   language: "Sprache",
   internal_notes: "Interne Notiz",
@@ -49,7 +52,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     await Promise.all([
       supabase
         .from("contacts")
-        .select("id, contact_number, salutation, title, first_name, last_name, email, phone, mobile, birth_date, preferred_channel, language, internal_notes, status, created_at, updated_at, version")
+        .select("id, contact_number, salutation, title, first_name, last_name, email, phone, mobile, birth_date, source_id, source_detail, preferred_channel, language, internal_notes, status, created_at, updated_at, version")
         .eq("id", contactId)
         .maybeSingle(),
       supabase
@@ -74,8 +77,9 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   if (!contact) throw new Response("Kontakt nicht gefunden.", { status: 404 });
 
   const url = new URL(request.url);
+  const herkunftsquellen = await ladeHerkunftsquellen(supabase);
   return data(
-    { contact, history: history ?? [], referrals: referrals ?? [], ladefehler: referralsFehler ? ["referrals"] : [], profile, saved: url.searchParams.get("saved") === "1" },
+    { contact, history: history ?? [], referrals: referrals ?? [], ladefehler: referralsFehler ? ["referrals"] : [], profile, saved: url.searchParams.get("saved") === "1", herkunftsquellen },
     { headers: responseHeaders() },
   );
 }
@@ -133,6 +137,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       birth_date: text(formData, "birth_date") || null,
       preferred_channel: text(formData, "preferred_channel") || null,
       internal_notes: text(formData, "internal_notes") || null,
+      ...herkunftAusFormular(formData),
     })
     .eq("id", contactId)
     .eq("version", version)
@@ -156,7 +161,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 }
 
 export default function ContactDetail() {
-  const { contact, history, referrals, ladefehler, profile, saved } = useLoaderData<typeof loader>();
+  const { contact, history, referrals, ladefehler, profile, saved, herkunftsquellen } = useLoaderData<typeof loader>();
   const result = useActionData<typeof action>();
 
   return (
@@ -188,6 +193,7 @@ export default function ContactDetail() {
             <label className="form-field"><span>Telefon</span><input name="phone" type="tel" defaultValue={contact.phone ?? ""} /></label>
             <label className="form-field"><span>Geburtsdatum</span><input name="birth_date" type="date" defaultValue={contact.birth_date ?? ""} /></label>
             <label className="form-field"><span>Bevorzugter Kontaktweg</span><select name="preferred_channel" defaultValue={contact.preferred_channel ?? ""}><option value="">—</option><option value="EMAIL">E-Mail</option><option value="MOBILE">Mobil</option><option value="PHONE">Telefon</option><option value="OTHER">Sonstiges</option></select></label>
+            <HerkunftFelder quellen={herkunftsquellen} sourceId={contact.source_id} detail={contact.source_detail} />
           </div>
 
           <label className="form-field full-width"><span>Interne Notiz</span><textarea name="internal_notes" rows={6} defaultValue={contact.internal_notes ?? ""} /></label>

@@ -60,6 +60,8 @@ const AUSNAHMEN = {
   "/api/aufgaben": "Speichert Aufgaben aus dem Aufgaben-Baustein und fuehrt zurueck in die Akte, keine Seite.",
   "/api/objekt-rechte": "Liefert den Reitern der Objektakte die Rechte des Benutzers, keine Seite.",
   "/api/telefonat": "Speichert ein schnell erfasstes Telefonat und fuehrt zurueck in die Akte, keine Seite.",
+  "/api/whatsapp": "Haelt fest, dass WhatsApp aus der Kontaktakte geoeffnet wurde, keine Seite.",
+  "/crm/calendar/abo": "Legt das Kalender-Abo an oder beendet es, gerufen aus dem Kalender, keine Seite.",
   "/api/naechster-schritt": "Liefert die Ampel einer Liste als Daten, keine Seite.",
   "/api/stillstand": "Liefert den Stillstand fuer Mein Tag als Daten, keine Seite.",
   "/api/suche": "Liefert die Treffer der Schnellsuche (Strg+K) als Daten, keine Seite.",

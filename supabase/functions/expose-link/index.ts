@@ -12,7 +12,11 @@ import { createClient } from "npm:@supabase/supabase-js@2.112.4";
 //   { ok: true, url }            Download-Adresse, 60 Sekunden gueltig
 //   { ok: false, grund }         UNBEKANNT | ABGELAUFEN | ZURUECKGEZOGEN | NICHT_FREIGEGEBEN
 //
-// Es wird nichts geschrieben und nichts gezaehlt.
+// Seit 20.10.2026 wird gezaehlt (Freigabe Sebastian): jede Auslieferung erhoeht
+// open_count und setzt first/last_opened_at; die erste legt einen
+// Verlaufseintrag an (public.expose_link_oeffnung). Der Worker schickt
+// zaehlen: false bei HEAD-Anfragen und wenn ein angemeldeter CRM-Benutzer den
+// Link oeffnet. Ein Fehler beim Zaehlen haelt die Auslieferung nicht auf.
 
 const kopf = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" };
 const antwort = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: kopf });
@@ -30,17 +34,21 @@ Deno.serve(async (request: Request) => {
   if (!url || !dienstrolle) return antwort({ ok: false }, 503);
 
   let kennung = "";
+  let zaehlen = true;
   try {
-    kennung = String((await request.json())?.token ?? "");
+    const koerper = await request.json();
+    kennung = String(koerper?.token ?? "");
+    zaehlen = koerper?.zaehlen !== false;
   } catch {
     return antwort({ ok: false, grund: "UNBEKANNT" }, 400);
   }
   if (!KENNUNG.test(kennung)) return antwort({ ok: false, grund: "UNBEKANNT" }, 404);
 
   const db = createClient(url, dienstrolle, { auth: { persistSession: false, autoRefreshToken: false } });
+  const hash = await sha256(kennung);
   const { data: link, error } = await db.from("expose_links")
     .select("expires_at,revoked_at,property_exposes(status,archived_at,storage_bucket,storage_path,original_filename)")
-    .eq("token_hash", await sha256(kennung)).maybeSingle();
+    .eq("token_hash", hash).maybeSingle();
   if (error) {
     console.error("expose-link lookup failed", { code: error.code ?? "UNKNOWN" });
     return antwort({ ok: false }, 500);
@@ -58,5 +66,9 @@ Deno.serve(async (request: Request) => {
   const { data: signiert } = await db.storage.from(expose.storage_bucket)
     .createSignedUrl(expose.storage_path, 60, { download: expose.original_filename ?? "Expose.pdf" });
   if (!signiert?.signedUrl) return antwort({ ok: false }, 500);
+  if (zaehlen) {
+    const { error: zaehlFehler } = await db.rpc("expose_link_oeffnung", { p_token_hash: hash });
+    if (zaehlFehler) console.error("expose-link count failed", { code: zaehlFehler.code ?? "UNKNOWN" });
+  }
   return antwort({ ok: true, url: signiert.signedUrl });
 });

@@ -259,3 +259,8 @@
   .media-integrity-note { padding: 0 16px 14px; }
   .media-archive-form.owner-remove-form { padding: 0 16px 16px; }
 }
+
+/* Kontakt anlegen: aus E-Mail-Signatur uebernehmen (20.10.2026). */
+.kontakt-signatur { margin: 0 0 12px; padding: var(--crm-card-padding-sm); border: 1px solid var(--crm-farbe-linie-leise); border-radius: var(--crm-card-radius-sm); }
+.kontakt-signatur summary { cursor: pointer; font-weight: 600; }
+.kontakt-signatur textarea { width: 100%; box-sizing: border-box; }
