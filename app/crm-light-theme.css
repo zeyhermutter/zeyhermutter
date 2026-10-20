@@ -10,8 +10,8 @@
 .persistent-app-frame .app-shell,
 .persistent-app-frame .editor-shell,
 .persistent-app-frame .readiness-shell {
-  background: #eef2f1 !important;
-  color: #1d2a2b !important;
+  background: #eef2f1;
+  color: #1d2a2b;
 }
 /* Grundflächen und Karten – Form, Radius, Größe und Anordnung bleiben unverändert. */
 .persistent-app-frame .metric-card,
@@ -78,7 +78,7 @@
 }
 .persistent-app-frame .data-row-link:hover,
 .persistent-app-frame .search-result-list .data-row:hover {
-  background: #f1f5f4 !important;
+  background: #f1f5f4;
 }
 .persistent-app-frame .owner-card[open] summary { background: #f5f8f7 !important; }
 
@@ -97,7 +97,7 @@
 .persistent-app-frame .readiness-edit-card > .readiness-number-grid > div strong,
 .persistent-app-frame .readiness-task-create h3,
 .persistent-app-frame .lead-explainer strong {
-  color: #1c292a !important;
+  color: #1c292a;
 }
 .persistent-app-frame .subtle,
 .persistent-app-frame .empty-state,
@@ -140,14 +140,14 @@
 .persistent-app-frame .readiness-assumption p,
 .persistent-app-frame .readiness-measure-main small,
 .persistent-app-frame .readiness-ai-note {
-  color: #667576 !important;
+  color: #667576;
 }
 .persistent-app-frame .eyebrow,
 .persistent-app-frame .readiness-fact-grid dt,
 .persistent-app-frame .readiness-measure dt,
 .persistent-app-frame .readiness-scenario dt,
 .persistent-app-frame .readiness-measure-heading span {
-  color: #5f7071 !important;
+  color: #5f7071;
 }
 .persistent-app-frame .data-row strong,
 .persistent-app-frame .readiness-fact-grid dd,
@@ -162,7 +162,7 @@
 .persistent-app-frame .subtle-link:hover,
 .persistent-app-frame .data-title-link:hover,
 .persistent-app-frame .lead-task-item:hover {
-  color: #0f4443 !important;
+  color: #0f4443;
 }
 
 /* Formfelder */
@@ -203,9 +203,9 @@
 .persistent-app-frame .global-search-field input:focus,
 .persistent-app-frame .live-search-field .live-search-input:focus,
 .persistent-app-frame .readiness-ai-preview:focus {
-  border-color: #607c78 !important;
-  background: #ffffff !important;
-  box-shadow: 0 0 0 3px rgba(74, 112, 106, .14) !important;
+  border-color: #607c78;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(74, 112, 106, .14);
 }
 .persistent-app-frame input:disabled,
 .persistent-app-frame select:disabled,
@@ -223,36 +223,36 @@
   box-shadow: 0 0 0 1000px #ffffff inset !important;
 }
 .persistent-app-frame .live-search-field::before,
-.persistent-app-frame .global-search-field svg { color: #6c7c7d !important; }
-.persistent-app-frame .app-date-picker { color-scheme: light !important; }
+.persistent-app-frame .global-search-field svg { color: #6c7c7d; }
+.persistent-app-frame .app-date-picker { color-scheme: light; }
 
 /* Buttons – gleiche Formen/Größen, nur hellere Umgebung und klare Kontraste. */
 .persistent-app-frame .primary-button {
-  background: #263b39 !important;
-  color: #ffffff !important;
+  background: #263b39;
+  color: #ffffff;
 }
-.persistent-app-frame .primary-button:hover { background: #1d302f !important; }
+.persistent-app-frame .primary-button:hover { background: #1d302f; }
 .persistent-app-frame .secondary-button {
-  background: #ffffff !important;
-  color: #263536 !important;
-  border-color: #b9c7c4 !important;
+  background: #ffffff;
+  color: #263536;
+  border-color: #b9c7c4;
 }
 .persistent-app-frame .secondary-button:hover {
-  background: #edf3f1 !important;
-  border-color: #91a5a1 !important;
+  background: #edf3f1;
+  border-color: #91a5a1;
 }
-.persistent-app-frame .text-button { color: #536667 !important; }
+.persistent-app-frame .text-button { color: #536667; }
 .persistent-app-frame .feature-chip,
 .persistent-app-frame .mention-chip {
-  background: #f7f9f8 !important;
-  color: #344546 !important;
-  border-color: #c6d1cf !important;
+  background: #f7f9f8;
+  color: #344546;
+  border-color: #c6d1cf;
 }
 .persistent-app-frame .feature-chip:hover,
 .persistent-app-frame .mention-chip:hover {
-  background: #edf3f1 !important;
-  color: #172425 !important;
-  border-color: #98aaa7 !important;
+  background: #edf3f1;
+  color: #172425;
+  border-color: #98aaa7;
 }
 
 /* Neutrale und fachliche Statusflächen bleiben semantisch unterscheidbar. */
@@ -261,9 +261,9 @@
 .persistent-app-frame .task-status-badge,
 .persistent-app-frame .status-badge-readable,
 .persistent-app-frame .offer-replaced-badge {
-  background: #edf1f0 !important;
-  border-color: #c7d1cf !important;
-  color: #4d5d5e !important;
+  background: #edf1f0;
+  border-color: #c7d1cf;
+  color: #4d5d5e;
 }
 .persistent-app-frame .status-acquisition,
 .persistent-app-frame .status-valuation,
@@ -272,9 +272,9 @@
 .persistent-app-frame .readiness-status.status-ready_for_review,
 .persistent-app-frame .task-status-badge.status-in_progress,
 .persistent-app-frame .checklist-in-progress {
-  background: #fff3d8 !important;
-  border-color: #d7bc70 !important;
-  color: #6b5518 !important;
+  background: #fff3d8;
+  border-color: #d7bc70;
+  color: #6b5518;
 }
 .persistent-app-frame .status-marketing,
 .persistent-app-frame .status-reserved,
@@ -306,20 +306,20 @@
 }
 .persistent-app-frame .status-archived,
 .persistent-app-frame .checklist-waived {
-  background: #edf0ef !important;
-  border-color: #cbd3d1 !important;
-  color: #5e6b6c !important;
+  background: #edf0ef;
+  border-color: #cbd3d1;
+  color: #5e6b6c;
 }
 .persistent-app-frame .form-success {
-  background: #e5f4e9 !important;
-  border-color: #98bea4 !important;
-  color: #275f3d !important;
+  background: #e5f4e9;
+  border-color: #98bea4;
+  color: #275f3d;
 }
 .persistent-app-frame .form-warning,
 .persistent-app-frame .concurrency-dialog .module04-modal-description {
-  background: #fff3d8 !important;
-  border-color: #d7bc70 !important;
-  color: #6b5518 !important;
+  background: #fff3d8;
+  border-color: #d7bc70;
+  color: #6b5518;
 }
 
 /* Verkaufsstrategie-Check: Hinweise und Berechnungen auf hellem Grund. */

@@ -33,7 +33,16 @@ const OEFFENTLICH = new Set(["public-website.css", "homepage-v7-realtor.css", "h
 // Status-Wert), mit einem echten CSS-Parser (postcss) entfernt -- 56 im hellen
 // Thema, 337 in den uebrigen Dateien, dazu properties-workflow.css und
 // lead-object-state.css (nirgends eingebunden). Fingerabdruck vorher/nachher.
-const HOECHSTENS = { hex: 1042, important: 249, schriftgroessen: 36 };
+// 20.10.2026 (Schritt 2c): Bei 50 der 89 Regeln des hellen Themas entfiel
+// "!important" (95x). Ausgewaehlt per Kaskaden-Nachrechnung im Browser auf 41
+// Seiten: fuer jedes Element und jede Eigenschaft, die eine helle Regel mit
+// !important setzt, alle konkurrierenden Regeln (Spezifitaet, Reihenfolge,
+// !important, Inline-Stil) -- mit allen Zustaenden gleichzeitig (:hover,
+// :focus, :disabled, [open] ...). Nur Regeln, deren Sieger-Wert sich dabei auf
+// keiner Seite aendert. Danach im Browser umgeschaltet und berechnete Stile
+// verglichen: 0 Abweichungen. Die 13 Regeln mit echten Konflikten und 25 nie
+// getroffene behalten ihr !important (naechster Schritt).
+const HOECHSTENS = { hex: 1042, important: 154, schriftgroessen: 36 };
 
 const ROLLEN = ["grund", "flaeche", "text", "text-2", "text-leise", "text-blass", "linie", "linie-leise", "linie-feld", "handlung", "auf-dunkel", "verweis", "fehler", "gut"];
 

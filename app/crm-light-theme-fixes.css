@@ -3,9 +3,9 @@
 
 /* Verkäufer-Leads + Verkaufsstrategie-Übersicht: Status-Pills vollständig hell. */
 .persistent-app-frame .lead-status-pill {
-  background: #edf1f0 !important;
-  border-color: #c7d1cf !important;
-  color: #465758 !important;
+  background: #edf1f0;
+  border-color: #c7d1cf;
+  color: #465758;
 }
 .persistent-app-frame .lead-status-pill.status-marketing {
   background: #e6f1f8 !important;
@@ -33,14 +33,14 @@
 }
 .persistent-app-frame .inquiry-row { border-color: #dde5e3 !important; }
 .persistent-app-frame .inquiry-status {
-  background: #edf1f0 !important;
-  color: #465758 !important;
+  background: #edf1f0;
+  color: #465758;
 }
-.persistent-app-frame .inquiry-status.new { background: #e6f1f8 !important; color: #285e78 !important; }
+.persistent-app-frame .inquiry-status.new { background: #e6f1f8; color: #285e78; }
 .persistent-app-frame .inquiry-status.contacted,
-.persistent-app-frame .inquiry-status.qualified { background: #e5f4e9 !important; color: #275f3d !important; }
-.persistent-app-frame .inquiry-status.viewing_planned { background: #fff3d8 !important; color: #6b5518 !important; }
-.persistent-app-frame .inquiry-status.closed { background: #edf1f0 !important; color: #4d5d5e !important; }
+.persistent-app-frame .inquiry-status.qualified { background: #e5f4e9; color: #275f3d; }
+.persistent-app-frame .inquiry-status.viewing_planned { background: #fff3d8; color: #6b5518; }
+.persistent-app-frame .inquiry-status.closed { background: #edf1f0; color: #4d5d5e; }
 .persistent-app-frame .inquiry-status.lost { background: #fbe9e9 !important; color: #873b3e !important; }
 
 /* Deutlich sichtbare Abschnittsnavigation für Anfragen, Suchprofile und Besichtigungen. */
@@ -166,7 +166,7 @@
 
 /* Immobilien-Karte: Popup und Attribution waren noch dunkel. */
 .persistent-app-frame .property-map {
-  border-color: #d4dddb !important;
+  border-color: #d4dddb;
 }
 .persistent-app-frame .property-map-popup {
   background: rgba(255, 255, 255, .97) !important;
@@ -179,7 +179,7 @@
 .persistent-app-frame .property-map-popup-head small,
 .persistent-app-frame .property-map-popup-item small,
 .persistent-app-frame .map-coverage-note {
-  color: #5f6f70 !important;
+  color: #5f6f70;
 }
 .persistent-app-frame .property-map-popup-head button {
   background: #eef2f1 !important;
@@ -192,8 +192,8 @@
   background: #eef2f1 !important;
 }
 .persistent-app-frame .property-map-attribution {
-  background: rgba(255, 255, 255, .92) !important;
-  color: #3a4a4b !important;
+  background: rgba(255, 255, 255, .92);
+  color: #3a4a4b;
 }
 
 /* Lange, ungetrennte Zeichenketten (URLs, Freitext ohne Leerzeichen) dürfen
@@ -215,85 +215,85 @@
 .persistent-app-frame .lead-workflow-popover-head small,
 .persistent-app-frame .lead-workflow-finished,
 .persistent-app-frame .lead-workflow-action small {
-  color: #5f6f70 !important;
+  color: #5f6f70;
 }
 .persistent-app-frame .lead-workflow-menu[open] > summary {
   background: #eef2f1 !important;
   border-color: #9eaeab !important;
 }
 .persistent-app-frame .lead-workflow-popover {
-  background: #ffffff !important;
-  border-color: #cbd6d4 !important;
-  color: #263536 !important;
+  background: #ffffff;
+  border-color: #cbd6d4;
+  color: #263536;
 }
 .persistent-app-frame .lead-workflow-popover-head {
-  border-bottom-color: #e0e7e5 !important;
+  border-bottom-color: #e0e7e5;
 }
 .persistent-app-frame .lead-workflow-action {
-  color: #263536 !important;
+  color: #263536;
 }
 .persistent-app-frame .lead-workflow-action:hover {
-  background: #eef2f1 !important;
+  background: #eef2f1;
 }
 
 /* Dashboard: die Benachrichtigungsglocke im Inhaltsbereich war noch dunkel. */
 .persistent-app-frame .notification-bell-trigger {
-  background: #ffffff !important;
-  border-color: #cbd6d4 !important;
-  color: #4d5d5e !important;
+  background: #ffffff;
+  border-color: #cbd6d4;
+  color: #4d5d5e;
 }
 .persistent-app-frame .notification-bell-trigger:hover,
 .persistent-app-frame .notification-bell[open] .notification-bell-trigger {
-  background: #eef2f1 !important;
-  border-color: #9eaeab !important;
+  background: #eef2f1;
+  border-color: #9eaeab;
 }
 .persistent-app-frame .notification-bell-count {
-  background: #2f4b47 !important;
-  border-color: #ffffff !important;
-  color: #ffffff !important;
+  background: #2f4b47;
+  border-color: #ffffff;
+  color: #ffffff;
 }
 .persistent-app-frame .notification-bell-popover {
-  background: #ffffff !important;
-  border-color: #cbd6d4 !important;
-  color: #263536 !important;
+  background: #ffffff;
+  border-color: #cbd6d4;
+  color: #263536;
 }
 .persistent-app-frame .notification-bell-head {
-  border-bottom-color: #e0e7e5 !important;
+  border-bottom-color: #e0e7e5;
 }
 .persistent-app-frame .notification-bell-head small,
 .persistent-app-frame .notification-bell-item-message,
 .persistent-app-frame .notification-bell-item small,
 .persistent-app-frame .notification-bell-empty {
-  color: #5f6f70 !important;
+  color: #5f6f70;
 }
 .persistent-app-frame .notification-bell-head > a,
 .persistent-app-frame .notification-bell-footer {
-  color: #4d5d5e !important;
+  color: #4d5d5e;
 }
 .persistent-app-frame .notification-bell-head > a:hover,
 .persistent-app-frame .notification-bell-footer:hover {
-  color: #0f1a1b !important;
+  color: #0f1a1b;
 }
 .persistent-app-frame .notification-bell-item {
-  border-bottom-color: #e6ebea !important;
-  color: #263536 !important;
+  border-bottom-color: #e6ebea;
+  color: #263536;
 }
-.persistent-app-frame .notification-bell-item:hover { background: #eef2f1 !important; }
-.persistent-app-frame .notification-bell-item.unread { background: #f2f6f5 !important; }
-.persistent-app-frame .notification-bell-item.unread:hover { background: #e7edec !important; }
-.persistent-app-frame .notification-bell-item-title i { background: #2f4b47 !important; }
-.persistent-app-frame .notification-bell-footer { background: #f7f9f8 !important; }
+.persistent-app-frame .notification-bell-item:hover { background: #eef2f1; }
+.persistent-app-frame .notification-bell-item.unread { background: #f2f6f5; }
+.persistent-app-frame .notification-bell-item.unread:hover { background: #e7edec; }
+.persistent-app-frame .notification-bell-item-title i { background: #2f4b47; }
+.persistent-app-frame .notification-bell-footer { background: #f7f9f8; }
 
 /* Der Build-Stempel liegt ausserhalb von .persistent-app-frame und lag daher
    im CRM unverändert dunkel über der Seitenleiste. */
 body:has(.persistent-app-frame) .build-version {
-  left: auto !important;
-  top: auto !important;
-  right: 16px !important;
-  bottom: 12px !important;
-  background: rgba(255, 255, 255, .92) !important;
-  color: #647273 !important;
-  border-color: #cbd5d3 !important;
+  left: auto;
+  top: auto;
+  right: 16px;
+  bottom: 12px;
+  background: rgba(255, 255, 255, .92);
+  color: #647273;
+  border-color: #cbd5d3;
 }
 
 /* Thema 2 · Objektnachweis: archivierte Nachweise erkennbar, Erfassungsformular
