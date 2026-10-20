@@ -213,7 +213,7 @@ function KalenderAbo({ abo }: { abo: { created_at: string; last_used_at: string 
           <p className="form-help">iPhone/Mac: „In Kalender-App öffnen“. Outlook: Kalender hinzufügen → Aus dem Internet → Link einfügen. Google Kalender: Weitere Kalender → Per URL → Link einfügen.</p>
         </div>
       ) : aktiv && abo ? (
-        <p className="calendar-note">Abo aktiv seit {formatDay(abo.created_at.slice(0, 10))}{abo.last_used_at ? `, zuletzt abgerufen ${formatDay(abo.last_used_at.slice(0, 10))}` : ", noch nicht abgerufen"}.</p>
+        <p className="calendar-note">{`Abo aktiv seit ${formatDay(abo.created_at.slice(0, 10))}${abo.last_used_at ? `, zuletzt abgerufen ${formatDay(abo.last_used_at.slice(0, 10))}` : ", noch nicht abgerufen"}`.replace(/\.?$/, ".")}</p>
       ) : null}
       <div className="inline-actions">
         <f.Form method="post" action="/crm/calendar/abo"><input type="hidden" name="_intent" value="anlegen" />
