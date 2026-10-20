@@ -947,3 +947,12 @@ body:has(.public-site) .build-version { top: auto !important; bottom: 8px !impor
 .public-inquiry-form .public-antwortweg input[type="radio"] { width: 18px; height: 18px; margin: 0; padding: 0; accent-color: var(--zm-navy); }
 .public-rueckruf-zeit small, .public-feld-hinweis { color: var(--zm-text-leise); font-size: 12.5px; font-weight: 400; }
 .public-antwortweg:has(input[value="email"]:checked) .public-rueckruf-zeit { display: none; }
+
+/* Fotos der Ansprechpartner (20.10.2026, app/lib/team-fotos.ts). Ein
+   Platzhalter (nur BETA) traegt sichtbar "Platzhalterfoto". */
+.zm-foto { position: relative; margin: 0 0 18px; }
+.zm-foto img { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; background: var(--zm-linie); }
+.zm-foto.klein { margin: 0; flex: 0 0 auto; }
+.zm-foto.klein img { width: 72px; height: 72px; aspect-ratio: 1; border-radius: 50%; box-shadow: 0 0 0 2px var(--zm-gold); }
+.zm-foto figcaption { position: absolute; left: 8px; bottom: 8px; padding: 2px 8px; font-size: 11px; letter-spacing: .04em; background: var(--zm-navy); color: var(--zm-auf-navy); }
+.zm-foto.klein figcaption { left: 50%; bottom: -6px; transform: translateX(-50%); white-space: nowrap; font-size: 9px; padding: 1px 5px; }

@@ -46,7 +46,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
-        <div className="build-version" title="Git-Commit des aktuell ausgelieferten Cloudflare-Builds">Stand {__BUILD_COMMIT__}</div>
+        <div className="build-version" title={`Commit ${__BUILD_COMMIT__}${__BUILD_SUBJECT__ ? `: ${__BUILD_SUBJECT__}` : ""} · gebaut ${__BUILD_TIME__}`}>Stand {__BUILD_COMMIT__} · {__BUILD_TIME__}</div>
         <ScrollRestoration />
         <Scripts />
       </body>

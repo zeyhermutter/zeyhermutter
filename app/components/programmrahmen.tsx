@@ -128,7 +128,7 @@ export function Programmrahmen({ children, notifications, unreadCount, benutzer,
           <span className="statusleiste-rechts">{__APP_ENV_LABEL__}{benutzer ? ` · angemeldet als ${benutzer}` : ""}</span>
           {/* Der Build-Stempel stand schwebend unten rechts und lag ueber
               Knoepfen und Tabellenspalten (BETA, 13.10.2026). */}
-          <span className="statusleiste-stand" title="Git-Commit des ausgelieferten Builds">Stand {__BUILD_COMMIT__}</span>
+          <span className="statusleiste-stand" title={`Commit ${__BUILD_COMMIT__}${__BUILD_SUBJECT__ ? `: ${__BUILD_SUBJECT__}` : ""} · gebaut ${__BUILD_TIME__}`}>Stand {__BUILD_COMMIT__} · {__BUILD_TIME__}</span>
         </footer>
       </div>
     </div>

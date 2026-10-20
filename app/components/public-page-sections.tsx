@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { teamFoto, type TeamFoto } from "~/lib/team-fotos";
 import { Link } from "react-router";
 import { ObjektKarte } from "~/components/objekt-karte";
 import type { WebsiteContent } from "~/lib/website-content";
@@ -50,6 +51,16 @@ const ANLAESSE: [string, string][] = [
 ];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+/** Foto eines Ansprechpartners; ein Platzhalter (nur BETA) traegt den Hinweis sichtbar. */
+function TeamBild({ foto, name, klein }: { foto: TeamFoto; name: string; klein?: boolean }) {
+  return (
+    <figure className={`zm-foto${klein ? " klein" : ""}`}>
+      <img src={foto.src} alt={foto.platzhalter ? `Platzhalterfoto für ${name}` : name} loading="lazy" />
+      {foto.platzhalter ? <figcaption>Platzhalterfoto</figcaption> : null}
+    </figure>
+  );
+}
+
 export function HomePageSections({ content: c, objekte = [] }: { content: WebsiteContent; objekte?: any[] }) {
   return <>
     <section className="zm-hero zm-auf-navy zm-held">
@@ -99,7 +110,9 @@ export function HomePageSections({ content: c, objekte = [] }: { content: Websit
       </div>
     </section>
 
-    <section className="zm-objekte">
+    {/* Ohne veroeffentlichtes Objekt bleibt der Block weg (20.10.2026) --
+        ein leeres Schaufenster auf der Startseite sagt "hier laeuft nichts". */}
+    {objekte.length ? <section className="zm-objekte">
       <div className="zm-abschnitt-kopf zm-kopf-zeile">
         <div><p className="public-eyebrow">{c.objekte_eyebrow}</p><h2>{c.objekte_titel}</h2></div>
         {objekte.length ? <Link className="zm-text-link" to="/immobilien">Alle Immobilien ansehen →</Link> : null}
@@ -107,7 +120,7 @@ export function HomePageSections({ content: c, objekte = [] }: { content: Websit
       {objekte.length
         ? <div className="public-property-grid compact">{objekte.map((row) => <ObjektKarte key={row.public_slug} row={row} />)}</div>
         : <div className="zm-objekte-leer"><p>{c.objekte_leer}</p><Link className="zm-primary" to="/suchauftrag">Suchauftrag anlegen</Link></div>}
-    </section>
+    </section> : null}
 
     <section className="zm-ablauf" id="verkaufen">
       <div className="zm-abschnitt-kopf">
@@ -155,12 +168,19 @@ export function HomePageSections({ content: c, objekte = [] }: { content: Websit
       <div>
         <p className="public-eyebrow">{c.team_eyebrow}</p>
         <h2>{c.team_titel}</h2>
-        {/* Monogramme statt Fotos, solange keine freigegebenen Fotos vorliegen --
-            ein Bild von irgendwem waere bei einem Makler eine Behauptung. */}
+        {/* Fotos aus app/assets/team (app/lib/team-fotos.ts); Platzhalter nur auf
+            BETA. Ohne Foto Monogramme -- ein Bild von irgendwem waere auf der
+            echten Website eine Behauptung. */}
         <div className="zm-team-personen">
-          {[[c.team_person_1, c.team_person_1_rolle], [c.team_person_2, c.team_person_2_rolle]].filter(([n]) => n && n.trim()).map(([name, rolle]) => (
-            <span key={name}><span className="zm-monogramm" aria-hidden="true">{name.trim().charAt(0)}</span><span><strong>{name}</strong>{rolle ? <small>{rolle}</small> : null}</span></span>
-          ))}
+          {[[c.team_person_1, c.team_person_1_rolle], [c.team_person_2, c.team_person_2_rolle]].filter(([n]) => n && n.trim()).map(([name, rolle]) => {
+            const foto = teamFoto(name);
+            return (
+              <span key={name}>
+                {foto ? <TeamBild foto={foto} name={name} klein /> : <span className="zm-monogramm" aria-hidden="true">{name.trim().charAt(0)}</span>}
+                <span><strong>{name}</strong>{rolle ? <small>{rolle}</small> : null}</span>
+              </span>
+            );
+          })}
         </div>
       </div>
       <div className="zm-team-text">
@@ -243,6 +263,7 @@ export function AboutSections({ content: c }: { content: WebsiteContent }) {
         <div className="zm-personen-gitter">
           {personen.map((person) => (
             <article key={person.name}>
+              {(() => { const foto = teamFoto(person.name); return foto ? <TeamBild foto={foto} name={person.name} /> : null; })()}
               <h3>{person.name}</h3>
               {person.rolle ? <p className="zm-personen-rolle">{person.rolle}</p> : null}
               {paragraphs(person.text).map((text, index) => <p key={index}>{text}</p>)}
