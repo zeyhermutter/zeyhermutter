@@ -42,7 +42,7 @@ const OEFFENTLICH = new Set(["public-website.css", "homepage-v7-realtor.css", "h
 // keiner Seite aendert. Danach im Browser umgeschaltet und berechnete Stile
 // verglichen: 0 Abweichungen. Die 13 Regeln mit echten Konflikten und 25 nie
 // getroffene behalten ihr !important (naechster Schritt).
-const HOECHSTENS = { hex: 1042, important: 154, schriftgroessen: 36 };
+const HOECHSTENS = { hex: 1040, important: 139, schriftgroessen: 36 };
 
 const ROLLEN = ["grund", "flaeche", "text", "text-2", "text-leise", "text-blass", "linie", "linie-leise", "linie-feld", "handlung", "auf-dunkel", "verweis", "fehler", "gut"];
 

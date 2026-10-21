@@ -218,8 +218,8 @@
   color: #5f6f70;
 }
 .persistent-app-frame .lead-workflow-menu[open] > summary {
-  background: #eef2f1 !important;
-  border-color: #9eaeab !important;
+  background: #eef2f1;
+  border-color: #9eaeab;
 }
 .persistent-app-frame .lead-workflow-popover {
   background: #ffffff;

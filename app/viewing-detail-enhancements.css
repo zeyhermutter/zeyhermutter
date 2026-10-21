@@ -2,12 +2,12 @@
   margin-bottom:0!important;
   border-bottom-left-radius:0!important;
   border-bottom-right-radius:0!important;
-  border-bottom-color:#2b3739!important;
 }
 
 .viewing-appointment-combined-card{
   margin-top:calc(-1 * var(--crm-block-gap,18px))!important;
-  border-top:0!important;
+  border-top-width:0!important;
+  border-top-style:none!important;
   border-top-left-radius:0!important;
   border-top-right-radius:0!important;
   padding-top:22px!important;

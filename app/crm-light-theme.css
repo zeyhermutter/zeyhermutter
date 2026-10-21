@@ -4,7 +4,7 @@
 .persistent-app-frame {
   color-scheme: light;
   color: #1d2a2b;
-  background: #eef2f1 !important;
+  background: #eef2f1;
 }
 
 .persistent-app-frame .app-shell,
@@ -47,9 +47,9 @@
 .persistent-app-frame .readiness-ai-preview-wrap,
 .persistent-app-frame .readiness-task-options label,
 .persistent-app-frame .panel {
-  background: #ffffff !important;
-  border-color: #d4dddb !important;
-  color: #1d2a2b !important;
+  background: #ffffff;
+  border-color: #d4dddb;
+  color: #1d2a2b;
 }
 
 .persistent-app-frame .readiness-measure-editor.new-measure {
@@ -186,9 +186,9 @@
 .persistent-app-frame .readiness-form-grid textarea::placeholder,
 .persistent-app-frame .readiness-scenario input::placeholder,
 .persistent-app-frame .readiness-scenario textarea::placeholder {
-  color: #687778 !important;
-  opacity: 1 !important;
-  -webkit-text-fill-color: #687778 !important;
+  color: #687778;
+  opacity: 1;
+  -webkit-text-fill-color: #687778;
 }
 .persistent-app-frame input:not([type="checkbox"]):not([type="radio"]):hover,
 .persistent-app-frame select:hover,
@@ -218,9 +218,9 @@
 .persistent-app-frame .live-search-field .live-search-input:-webkit-autofill,
 .persistent-app-frame .live-search-field .live-search-input:-webkit-autofill:hover,
 .persistent-app-frame .live-search-field .live-search-input:-webkit-autofill:focus {
-  -webkit-text-fill-color: #1d2a2b !important;
-  caret-color: #1d2a2b !important;
-  box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: #1d2a2b;
+  caret-color: #1d2a2b;
+  box-shadow: 0 0 0 1000px #ffffff inset;
 }
 .persistent-app-frame .live-search-field::before,
 .persistent-app-frame .global-search-field svg { color: #6c7c7d; }
