@@ -3,7 +3,7 @@
  * Haken und die Anordnung des Formulars. */
 
 .aufgaben-zeile { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 10px; }
-.aufgaben-zeile.erledigt strong { color: #5b6772; text-decoration: line-through; }
+.aufgaben-zeile.erledigt strong { color: var(--crm-farbe-text-leise); text-decoration: line-through; }
 .aufgaben-zeile .row-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px 10px; }
 
 .aufgaben-haken { margin: 0; }

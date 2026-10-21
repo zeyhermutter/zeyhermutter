@@ -58,9 +58,10 @@
   flex-wrap: wrap;
 }
 
-/* Die Station, die dran ist, trägt links eine Kante statt einer Farbfläche. */
+/* Die Station, die dran ist, trägt links eine Kante statt einer Farbfläche.
+   21.10.2026: Kante in der Handlungsfarbe; vorher überdeckte das helle Thema sie. */
 .fahrplan-halt.fahrplan-dran {
-  border-left: 3px solid currentColor;
+  border-left: 3px solid var(--crm-farbe-handlung);
   padding-left: 11px;
 }
 

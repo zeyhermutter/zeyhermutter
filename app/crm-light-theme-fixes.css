@@ -27,9 +27,9 @@
 .persistent-app-frame .inquiry-summary > div,
 .persistent-app-frame .match-row,
 .persistent-app-frame .match-reasons span {
-  background: #f7f9f8 !important;
-  border-color: #d8e0de !important;
-  color: #263536 !important;
+  background: #f7f9f8;
+  border-color: #d8e0de;
+  color: #263536;
 }
 .persistent-app-frame .inquiry-row { border-color: #dde5e3 !important; }
 .persistent-app-frame .inquiry-status {

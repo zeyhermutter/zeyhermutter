@@ -27,7 +27,8 @@
   max-width: none;
   user-select: none;
 }
-.property-map-marker {
+.property-map-marker,
+.persistent-app-frame .property-map-marker[class*="status-"] {
   position: absolute;
   z-index: 5;
   width: 34px;
@@ -44,20 +45,26 @@
   rotate: -45deg;
 }
 .property-map-marker span { rotate: 45deg; font-size: 11px; font-weight: 800; }
+/* Die zweite Zeile je Gruppe (21.10.2026): im hellen Programm behalten die
+   Marker ihre Statusfarben gegen die hellen Pill-Farben (.status-*). */
 .property-map-marker.status-marketing,
 .property-map-marker.status-reserved,
 .property-map-marker.status-notary,
 .property-map-popup-marker.status-marketing,
 .property-map-popup-marker.status-reserved,
-.property-map-popup-marker.status-notary { background: #245e80; }
+.property-map-popup-marker.status-notary,
+.persistent-app-frame :is(.property-map-marker, .property-map-popup-marker):is(.status-marketing, .status-reserved, .status-notary) { background: #245e80; }
 .property-map-marker.status-sold,
-.property-map-popup-marker.status-sold { background: #2f7448; }
+.property-map-popup-marker.status-sold,
+.persistent-app-frame :is(.property-map-marker, .property-map-popup-marker).status-sold { background: #2f7448; }
 .property-map-marker.status-lost,
 .property-map-marker.status-withdrawn,
 .property-map-popup-marker.status-lost,
-.property-map-popup-marker.status-withdrawn { background: #7c3434; }
+.property-map-popup-marker.status-withdrawn,
+.persistent-app-frame :is(.property-map-marker, .property-map-popup-marker):is(.status-lost, .status-withdrawn) { background: #7c3434; }
 .property-map-marker.status-draft,
-.property-map-popup-marker.status-draft { background: #5b6364; }
+.property-map-popup-marker.status-draft,
+.persistent-app-frame :is(.property-map-marker, .property-map-popup-marker).status-draft { background: #5b6364; }
 .property-map-cluster {
   position: absolute;
   z-index: 7;
@@ -123,7 +130,8 @@
 .property-map-popup-item:hover { background: #1b2425; }
 .property-map-popup-item > span:last-child { display: grid; gap: 3px; min-width: 0; }
 .property-map-popup-item small { color: #829092; overflow-wrap: anywhere; }
-.property-map-popup-marker {
+.property-map-popup-marker,
+.persistent-app-frame .property-map-popup-marker[class*="status-"] {
   width: 28px;
   height: 28px;
   display: grid;

@@ -74,7 +74,7 @@
 .persistent-app-frame .readiness-scenario dl > div,
 .persistent-app-frame .readiness-fact-grid > div,
 .persistent-app-frame .property-match-decision {
-  border-color: #dde5e3 !important;
+  border-color: #dde5e3;
 }
 .persistent-app-frame .data-row-link:hover,
 .persistent-app-frame .search-result-list .data-row:hover {
@@ -156,7 +156,7 @@
 .persistent-app-frame .readiness-measure-main p,
 .persistent-app-frame .lead-task-description p:last-child,
 .persistent-app-frame .module04-modal-description {
-  color: #263536 !important;
+  color: #263536;
 }
 .persistent-app-frame .back-link:hover,
 .persistent-app-frame .subtle-link:hover,
@@ -280,9 +280,9 @@
 .persistent-app-frame .status-reserved,
 .persistent-app-frame .status-notary,
 .persistent-app-frame .task-status-badge.status-open {
-  background: #e6f1f8 !important;
-  border-color: #a8c5d6 !important;
-  color: #285e78 !important;
+  background: #e6f1f8;
+  border-color: #a8c5d6;
+  color: #285e78;
 }
 .persistent-app-frame .status-sold,
 .persistent-app-frame .readiness-status.status-finalized,
@@ -290,19 +290,20 @@
 .persistent-app-frame .checklist-done,
 .persistent-app-frame .offer-current-badge,
 .persistent-app-frame .lead-conversion-success {
-  background: #e5f4e9 !important;
-  border-color: #98bea4 !important;
-  color: #275f3d !important;
+  background: #e5f4e9;
+  border-color: #98bea4;
+  color: #275f3d;
 }
 .persistent-app-frame .status-lost,
 .persistent-app-frame .status-withdrawn,
 .persistent-app-frame .task-status-badge.status-cancelled,
 .persistent-app-frame .checklist-todo,
 .persistent-app-frame .form-error,
-.persistent-app-frame .lead-release-blocker {
-  background: #fbe9e9 !important;
-  border-color: #d7a3a4 !important;
-  color: #873b3e !important;
+.persistent-app-frame .lead-release-blocker,
+.persistent-app-frame .programm-arbeitsflaeche .lead-release-blocker {
+  background: #fbe9e9;
+  border-color: #d7a3a4;
+  color: #873b3e;
 }
 .persistent-app-frame .status-archived,
 .persistent-app-frame .checklist-waived {
