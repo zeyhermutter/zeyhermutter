@@ -1,7 +1,7 @@
 import { data, Form, Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/website-statistik";
 import { requirePermission } from "~/lib/auth.server";
-import { zeitpunkt } from "~/lib/format";
+import { tagKurz, uhrzeit, zeitpunkt } from "~/lib/format";
 import "~/programm-liste.css";
 import "~/website-statistik.css";
 
@@ -13,20 +13,18 @@ type Zugriff = {
 };
 
 const ERLAUBTE_TAGE = new Set([7, 30, 90]);
-const BERLIN_DATUM = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin", year: "numeric", month: "2-digit", day: "2-digit" });
-const BERLIN_STUNDE = new Intl.DateTimeFormat("de-DE", { timeZone: "Europe/Berlin", hour: "2-digit", hour12: false });
-
-function tag(value: Date | string) {
-  return BERLIN_DATUM.format(typeof value === "string" ? new Date(value) : value);
+function tagSchluessel(value: string) {
+  const angezeigt = tagKurz(value, "");
+  const [day, month, year] = angezeigt.split(".");
+  return day && month && year ? `${year}-${month}-${day}` : "";
 }
 function stunde(value: string) {
-  const raw = BERLIN_STUNDE.format(new Date(value)).replace(/\D/g, "");
-  const hour = Number(raw.slice(0, 2));
+  const hour = Number(uhrzeit(value, "").split(":")[0]);
   return Number.isInteger(hour) && hour >= 0 && hour <= 23 ? hour : 0;
 }
 function verschiebeTag(key: string, delta: number) {
   const [year, month, day] = key.split("-").map(Number);
-  return tag(new Date(Date.UTC(year, month - 1, day + delta, 12)));
+  return tagSchluessel(new Date(Date.UTC(year, month - 1, day + delta, 12)).toISOString());
 }
 function seitenname(path: string) {
   if (path === "/") return "Startseite";
@@ -74,7 +72,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   ]);
   if (countError) throw new Response("Website-Statistik konnte nicht geladen werden.", { status: 500, headers: responseHeaders() });
 
-  const heute = tag(new Date());
+  const heute = tagSchluessel(new Date().toISOString());
   const tageMap = new Map<string, { views: number; sessions: Set<string> }>();
   for (let offset = tage - 1; offset >= 0; offset--) tageMap.set(verschiebeTag(heute, -offset), { views: 0, sessions: new Set() });
   const seitenMap = new Map<string, { views: number; sessions: Set<string> }>();
@@ -84,7 +82,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   for (const row of zugriffe) {
     const session = row.request_id ?? "ohne-kennung";
     sessions.add(session);
-    const day = tag(row.occurred_at);
+    const day = tagSchluessel(row.occurred_at);
     const daily = tageMap.get(day);
     if (daily) { daily.views += 1; daily.sessions.add(session); }
     const path = row.entity_reference ?? "/";
@@ -134,7 +132,7 @@ export default function WebsiteStatistik() {
 
     <div className="website-statistik-grid">
       <section className="data-card"><div className="card-head"><div><p className="eyebrow">Wann</p><h2>Aufrufe nach Tag</h2></div></div>
-        <div className="website-statistik-balkenliste">{tageDaten.map((item)=><div className="website-statistik-balkenzeile" key={item.date}><span>{item.date.split("-").reverse().join(".")}</span><div className="website-statistik-balken"><i style={{width:`${Math.max(2, item.views / maxTag * 100)}%`}}/></div><strong>{item.views}</strong><small>{item.sessions} Besuche</small></div>)}</div>
+        <div className="website-statistik-balkenliste">{tageDaten.map((item)=><div className="website-statistik-balkenzeile" key={item.date}><span>{tagKurz(item.date)}</span><div className="website-statistik-balken"><i style={{width:`${Math.max(2, item.views / maxTag * 100)}%`}}/></div><strong>{item.views}</strong><small>{item.sessions} Besuche</small></div>)}</div>
       </section>
       <section className="data-card"><div className="card-head"><div><p className="eyebrow">Tageszeit</p><h2>Aufrufe nach Uhrzeit</h2></div></div>
         <div className="website-statistik-stunden">{stunden.map((item)=><div key={item.hour} title={`${String(item.hour).padStart(2,"0")}:00 · ${item.views} Aufrufe`}><i style={{height:`${Math.max(2, item.views / maxStunde * 100)}%`}}/><span>{item.hour % 3 === 0 ? String(item.hour).padStart(2,"0") : ""}</span></div>)}</div>
