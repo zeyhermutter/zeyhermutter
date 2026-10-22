@@ -78,6 +78,20 @@ for (const [action, nachSha] of pins) {
     + "  faellt genau dann auf, wenn PRODUKTION dran ist.");
 }
 
+
+// 4. PRODUKTION muss Wrangler ausdruecklich auf die production-Umgebung setzen.
+// Ohne --env production nimmt Wrangler die Top-Level-Konfiguration (BETA).
+// Cloudflare dokumentiert genau dieses Verhalten fuer Named Environments.
+const paket = JSON.parse(await readFile(path.join(WURZEL, "package.json"), "utf8"));
+const prodCheck = paket.scripts?.["check:production"] ?? "";
+const prodDeploy = paket.scripts?.["deploy:production"] ?? "";
+pruefe(/wrangler\s+deploy\s+--env\s+production\s+--dry-run/.test(prodCheck),
+  "package.json: check:production prueft Wrangler nicht mit --env production.\n"
+  + "  Ohne die Umgebung wird die BETA-Top-Level-Konfiguration trocken getestet.");
+pruefe(/wrangler\s+deploy\s+--env\s+production(?:\s|$)/.test(prodDeploy),
+  "package.json: deploy:production setzt beim echten Worker-Deploy nicht --env production.\n"
+  + "  Ohne die Umgebung wuerde Wrangler den BETA-Worker statt PRODUKTION ansprechen.");
+
 if (fehler.length > 0) {
   console.error(`\nWorkflows: ${fehler.length} Befund${fehler.length === 1 ? "" : "e"}.\n`);
   for (const f of fehler) console.error(`- ${f}\n`);
