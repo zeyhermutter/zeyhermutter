@@ -79,6 +79,7 @@ export const NICHT_IN_DIE_SITEMAP: Record<string, string> = {
   "/api/naechster-schritt": "Schnittstelle, keine Seite",
   "/api/stillstand": "Schnittstelle, keine Seite",
   "/api/suche": "Schnittstelle, keine Seite",
+  "/api/website-zugriff": "Datensparsame Zugriffsmeldung fuer die interne Statistik, keine Seite",
 };
 
 /**
