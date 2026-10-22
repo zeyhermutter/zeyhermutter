@@ -117,7 +117,7 @@ export default function WebsiteStatistik() {
 
   return <main className="editor-shell website-statistik">
     <header className="editor-header"><div>
-      <Link className="back-link" to="/crm/website">← Website-CMS</Link>
+      <Link className="back-link" to="/crm/website">← Website-Seiten</Link>
       <p className="eyebrow">Interne Auswertung · nicht in der Navigation verlinkt</p>
       <h1 className="editor-title">Website-Zugriffe</h1>
       <p className="editor-meta">Anonyme Browsersitzungen, ohne IP-Adresse, Browser-Fingerprinting, Referrer oder Suchparameter.</p>
