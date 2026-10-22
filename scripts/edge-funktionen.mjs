@@ -30,6 +30,16 @@ export const EDGE_FUNKTIONEN = [
       + "Formular mit 401, und zwar alle gleichzeitig.",
   },
   {
+    name: "website-analytics",
+    umgebungen: ["beta", "production"],
+    verifyJwt: false,
+    imRepo: true,
+    zweck:
+      "Nimmt datensparsame Seitenaufrufe der oeffentlichen Website entgegen und schreibt nur Pfad, Zeitpunkt "
+      + "und eine gehashte, tabgebundene Sitzungskennung in die interne Historie. Keine IP-Adresse, "
+      + "kein Browser-Fingerprinting, kein Referrer und keine Suchparameter werden gespeichert.",
+  },
+  {
     name: "generate-property-expose",
     umgebungen: ["beta", "production"],
     verifyJwt: true,

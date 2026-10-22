@@ -11,6 +11,7 @@ import {
 } from "react-router";
 import type { Route } from "./+types/root";
 import { PropertyLeadOnboarding } from "~/components/property-lead-onboarding";
+import { WebsiteAccessTracker } from "~/components/website-access-tracker";
 import "./styles.css";
 import "./crm.css";
 // Die Fehlerseite unten in dieser Datei liegt ausserhalb des internen Rahmens
@@ -464,6 +465,7 @@ export default function App() {
       <OwnerAddDisclosureEnhancer />
       <AddressGeocodingEnhancer />
       <PropertyLeadOnboarding />
+      <WebsiteAccessTracker />
       <Outlet />
     </>
   );

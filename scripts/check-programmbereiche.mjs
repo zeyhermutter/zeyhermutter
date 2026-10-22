@@ -65,6 +65,8 @@ const AUSNAHMEN = {
   "/api/naechster-schritt": "Liefert die Ampel einer Liste als Daten, keine Seite.",
   "/api/stillstand": "Liefert den Stillstand fuer Mein Tag als Daten, keine Seite.",
   "/api/suche": "Liefert die Treffer der Schnellsuche (Strg+K) als Daten, keine Seite.",
+  "/api/website-zugriff": "Nimmt die datensparsame Zugriffsmeldung der oeffentlichen Website entgegen, liefert keine Arbeitsseite.",
+  "/crm/website/statistik": "Absichtlich versteckte interne Website-Auswertung; nur mit Audit-Recht und nur ueber die direkte Adresse erreichbar.",
   "/inquiries/assistent": "Formular zum Anlegen einer Anfrage aus eingefuegtem Text, wie /inquiries/new; erreichbar aus der Anfrageliste und mit Strg+K.",
   "/logout": "Abmelden steht als Knopf in der Titelleiste.",
 };

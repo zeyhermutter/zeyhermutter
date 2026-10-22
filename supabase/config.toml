@@ -12,6 +12,9 @@ verify_jwt = true
 [functions.website-inquiry]
 verify_jwt = false
 
+[functions.website-analytics]
+verify_jwt = false
+
 [functions.generate-property-expose]
 verify_jwt = true
 

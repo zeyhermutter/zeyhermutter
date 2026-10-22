@@ -37,6 +37,8 @@ export default [
     route("crm/calendar/event.ics", "routes/calendar-event.ts"),
     route("crm/calendar/abo", "routes/kalender-abo-verwalten.ts"),
     route("crm/website", "routes/website-cms.tsx"),
+    // Absichtlich nicht in der Navigation: interne Zugriffsauswertung.
+    route("crm/website/statistik", "routes/website-statistik.tsx"),
     layout("routes/website-arbeitsplatz.tsx", [
       route("crm/website/:pageKey", "routes/website-cms-detail.tsx"),
     ]),
@@ -183,5 +185,6 @@ export default [
   route("api/stillstand", "routes/api-stillstand.ts"),
   route("api/suche", "routes/api-suche.ts"),
   route("api/datensaetze", "routes/api-datensaetze.ts"),
+  route("api/website-zugriff", "routes/api-website-zugriff.ts"),
   route("logout", "routes/logout.tsx"),
 ] satisfies RouteConfig;
