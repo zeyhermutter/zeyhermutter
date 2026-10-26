@@ -92,13 +92,11 @@ h1 { max-width: 850px; margin: 0; font-size: clamp(42px, 7vw, 82px); line-height
 .secondary-button {
   min-height: 42px;
   padding: 0 16px;
-  border: 1px solid #435052;
+  border: 1px solid;
   border-radius: 11px;
-  background: #151c1d;
-  color: #e7eded;
 }
 .secondary-button.compact { min-height: 36px; font-size: var(--crm-schrift-13); padding: 0 13px; }
-.text-button { padding: 0; background: transparent; color: #aeb9ba; font-size: var(--crm-schrift-13); }
+.text-button { padding: 0; background: transparent; font-size: var(--crm-schrift-13); }
 
 .auth-shell { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
 .auth-card {
@@ -113,7 +111,7 @@ h1 { max-width: 850px; margin: 0; font-size: clamp(42px, 7vw, 82px); line-height
 .auth-title { font-size: 44px; line-height: 1; letter-spacing: -.04em; }
 .auth-copy { color: #93a0a2; line-height: 1.6; margin: 18px 0 28px; }
 .auth-form { display: grid; gap: 17px; }
-.auth-form label { display: grid; gap: 8px; color: #b7c1c2; font-size: var(--crm-schrift-13); }
+.auth-form label { display: grid; gap: 8px; font-size: var(--crm-schrift-13); }
 .auth-form input {
   width: 100%;
   padding: var(--crm-field-padding);
@@ -127,7 +125,7 @@ h1 { max-width: 850px; margin: 0; font-size: clamp(42px, 7vw, 82px); line-height
 .form-error { margin: 0; padding: var(--crm-card-padding-sm); border: 1px solid #6d3f42; border-radius: var(--crm-card-radius-sm); color: #f2b8bc; background: #341b1d; font-size: var(--crm-schrift-13); }
 .app-content { min-width: 0; padding: 36px; }
 .metric-grid { margin-left: auto; margin-right: auto; display: grid; gap: var(--crm-card-gap); }
-.metric-card, .data-card { border: 1px solid #293536; border-radius: var(--crm-card-radius); background: #141a1b; }
+.metric-card, .data-card { border: 1px solid; border-radius: var(--crm-card-radius); }
 .metric-card { padding: var(--crm-card-padding); }
 .metric-card span, .metric-card small { display: block; color: #7e8b8d; }
 .metric-card strong { display: block; margin: 12px 0 5px; font-size: var(--crm-schrift-24); }
@@ -137,14 +135,14 @@ h1 { max-width: 850px; margin: 0; font-size: clamp(42px, 7vw, 82px); line-height
 .card-head h2 { margin: 0; font-size: var(--crm-schrift-24); }
 .subtle { color: #687476; font-size: var(--crm-schrift-12); }
 .empty-state { color: #718082; padding: 24px 0 8px; margin: 0; }
-.data-list { margin-top: 20px; border-top: 1px solid #253031; }
-.data-row { display: flex; justify-content: space-between; gap: 18px; padding: 14px 0; border-bottom: 1px solid #253031; }
+.data-list { margin-top: 20px; border-top: 1px solid; }
+.data-row { display: flex; justify-content: space-between; gap: 18px; padding: 14px 0; border-bottom: 1px solid; }
 .data-row strong, .data-row small { display: block; }
 .data-row small, .row-meta { color: #718082; }
 .row-meta { text-align: right; font-size: var(--crm-schrift-13); }
 .row-meta span, .row-meta small { display: block; }
 .error-shell { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
-.panel { max-width: 600px; padding: var(--crm-card-padding-sm); border: 1px solid #303c3d; border-radius: var(--crm-card-radius-sm); }
+.panel { max-width: 600px; padding: var(--crm-card-padding-sm); border: 1px solid; border-radius: var(--crm-card-radius-sm); }
 
 .app-date-picker {
   cursor: pointer;

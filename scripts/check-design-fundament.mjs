@@ -74,7 +74,14 @@ const OEFFENTLICH = new Set(["public-website.css", "homepage-v7-realtor.css", "h
 // .74-.78rem -> 12, .88rem -> 14, .92-.94rem -> 15; <small> ohne eigene
 // Groesse -> 13. Ausgenommen: die Farben der Terminkategorien (calendar.css,
 // eigene Kontrastpruefung in check-terminfarben.mjs).
-const HOECHSTENS = { hex: 718, important: 72, schriftgroessen: 11 };
+// 26.10.2026 (Schritt 4c, Freigabe Sebastian): Reste des dunklen Themas
+// entfernt -- 158 Farbangaben in 11 Dateien (dunkle Flaechen und Rahmen,
+// helle Schrift auf dunkel), die nachweislich nirgends gewinnen: im Browser
+// auf 115 Seiten und Zustaenden (Programm, Dialoge, nachgebauter Inhalt,
+// oeffentliche Website, Anmeldung, Fehlerseite) fuer jedes Element und jede
+// Farbeigenschaft gegen alle Regeln ohne Zustand und ohne @media
+// nachgerechnet. Rahmen-Kurzformen behalten Breite und Stil.
+const HOECHSTENS = { hex: 568, important: 71, schriftgroessen: 11 };
 
 const ROLLEN = ["grund", "flaeche", "flaeche-2", "text", "text-2", "text-leise", "text-blass", "linie", "linie-leise", "linie-feld", "handlung", "auf-dunkel", "verweis", "fehler", "gut"];
 

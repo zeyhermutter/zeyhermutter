@@ -15,7 +15,7 @@
   position: relative;
   height: 340px;
   overflow: hidden;
-  border: 1px solid #2c3738;
+  border: 1px solid;
   border-radius: 14px;
   background: #d9ded9;
 }
@@ -73,7 +73,6 @@
   transform: translate(-50%, -50%);
   border: 3px solid rgba(255,255,255,.92);
   border-radius: 999px;
-  background: #173f57;
   color: var(--crm-farbe-auf-dunkel);
   font: 800 14px/1 inherit;
   cursor: pointer;
@@ -89,10 +88,8 @@
   width: min(390px, calc(100% - 32px));
   max-height: calc(100% - 32px);
   overflow: auto;
-  border: 1px solid #334344;
+  border: 1px solid;
   border-radius: 14px;
-  background: rgba(15,20,21,.96);
-  color: #eef2f3;
   box-shadow: 0 14px 42px rgba(0,0,0,.48);
   backdrop-filter: blur(8px);
 }
@@ -102,7 +99,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 14px 14px 12px;
-  border-bottom: 1px solid #293536;
+  border-bottom: 1px solid;
 }
 .property-map-popup-head > div { display: grid; gap: 3px; }
 .property-map-popup-head small { color: #829092; }
@@ -111,8 +108,6 @@
   height: 28px;
   border: 0;
   border-radius: 8px;
-  background: #20292a;
-  color: #dce3e4;
   cursor: pointer;
   font-size: var(--crm-schrift-20);
 }

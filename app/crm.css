@@ -1,23 +1,23 @@
 .header-actions, .header-user { display: flex; align-items: center; gap: 12px; }
 .link-button { text-decoration: none; }
-.subtle-link { color: #96a3a5; font-size: var(--crm-schrift-13); text-decoration: none; }
+.subtle-link { font-size: var(--crm-schrift-13); text-decoration: none; }
 .subtle-link:hover, .back-link:hover, .data-title-link:hover { color: var(--crm-farbe-auf-dunkel); }
 .data-row-link { color: inherit; text-decoration: none; border-radius: 8px; padding-left: 8px; padding-right: 8px; margin-left: -8px; margin-right: -8px; }
 .data-row-link:hover { background: #1a2223; }
 
-.editor-shell { min-height: 100vh; padding: 36px; background: #0e1314; }
+.editor-shell { min-height: 100vh; padding: 36px; }
 .editor-header { max-width: var(--crm-content-max); margin-left: auto; margin-right: auto; display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
 .editor-title { font-size: clamp(34px, 5vw, 58px); line-height: 1; letter-spacing: -.045em; }
 .editor-meta { margin: 14px 0 0; color: #758284; font-size: var(--crm-schrift-13); }
 .back-link { display: inline-block; margin-bottom: 28px; color: #8b989a; text-decoration: none; font-size: var(--crm-schrift-13); }
-.editor-card, .history-card { border: 1px solid #293536; border-radius: var(--crm-card-radius); background: #141a1b; }
+.editor-card, .history-card { border: 1px solid; border-radius: var(--crm-card-radius); }
 .editor-card { padding: var(--crm-card-padding); }
 .contact-layout { max-width: var(--crm-content-max); margin-left: auto; margin-right: auto; display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(320px, .75fr); gap: 14px; align-items: start; }
 .contact-layout > * { max-width: none; }
 .history-card { padding: var(--crm-card-padding); position: sticky; top: 24px; }
 
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-.form-field { display: grid; gap: 8px; color: #aeb9ba; font-size: var(--crm-schrift-13); }
+.form-field { display: grid; gap: 8px; font-size: var(--crm-schrift-13); }
 .form-field input, .form-field select, .form-field textarea,
 .search-bar input, .search-bar select, .filter-grid input, .filter-grid select, .data-card select {
   width: 100%;
@@ -32,38 +32,38 @@
 .form-field textarea { resize: vertical; line-height: 1.5; }
 .form-field input:focus, .form-field select:focus, .form-field textarea:focus, .search-bar input:focus, .search-bar select:focus, .filter-grid input:focus, .filter-grid select:focus { border-color: #879496; box-shadow: 0 0 0 3px #8796981c; }
 .full-width { margin-top: 18px; }
-.form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 26px; padding-top: 22px; border-top: 1px solid #283334; }
+.form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 26px; padding-top: 22px; border-top: 1px solid; }
 .form-success, .form-warning, .form-error { margin: 0 0 20px; padding: 12px 13px; border-radius: 10px; font-size: var(--crm-schrift-13); }
 .form-success { border: 1px solid #315e49; color: #b7e6cb; background: #163225; }
-.form-warning { border: 1px solid #6b5d31; color: #f0d994; background: #332a13; }
+.form-warning { border: 1px solid; }
 .inline-action { margin: -10px 0 20px; }
 .inline-actions { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .checkbox-row { display: flex !important; align-items: center; gap: 8px; min-height: 42px; white-space: nowrap; }
 .checkbox-row input { width: auto; }
 
 .history-list { margin-top: 18px; display: grid; gap: 10px; }
-.history-event { padding: var(--crm-card-padding-sm); border: 1px solid #283334; border-radius: var(--crm-card-radius-sm); background: #111718; }
+.history-event { padding: var(--crm-card-padding-sm); border: 1px solid; border-radius: var(--crm-card-radius-sm); }
 .history-head { display: flex; justify-content: space-between; gap: 12px; }
 .history-head small, .history-event > p { color: #738082; }
 .history-event > p { margin: 6px 0 0; font-size: var(--crm-schrift-12); }
-.history-change { display: grid; gap: 3px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #263031; }
+.history-change { display: grid; gap: 3px; margin-top: 10px; padding-top: 10px; border-top: 1px solid; }
 .history-change span { color: #aab5b6; font-size: var(--crm-schrift-12); }
 .history-change small { color: #748183; overflow-wrap: anywhere; }
 
 .property-summary-grid { max-width: var(--crm-content-max); margin-left: auto; margin-right: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; }
 .property-section { max-width: var(--crm-content-max); margin-left: auto; margin-right: auto; }
-.section-separator { margin: 28px 0 18px; padding-top: 20px; border-top: 1px solid #283334; }
-.checklist-row { display: grid; grid-template-columns: minmax(0, 1fr) 150px; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid #263031; }
+.section-separator { margin: 28px 0 18px; padding-top: 20px; border-top: 1px solid; }
+.checklist-row { display: grid; grid-template-columns: minmax(0, 1fr) 150px; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid; }
 .checklist-row:last-child { border-bottom: 0; }
 .checklist-row div { display: grid; gap: 3px; }
 .checklist-row small { color: #738082; }
 .chip-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
-.feature-chip { border: 1px solid #3a4748; border-radius: var(--crm-pill-radius); padding: var(--crm-pill-padding); background: #111718; color: #dce3e4; cursor: pointer; }
+.feature-chip { border: 1px solid; border-radius: var(--crm-pill-radius); padding: var(--crm-pill-padding); cursor: pointer; }
 .feature-chip:hover { border-color: #677576; }
 .inline-form { display: grid; grid-template-columns: minmax(180px, 1fr) auto; gap: 10px; align-items: end; }
 .unterlage-hochladen { margin: 4px 0 12px; }
 .unterlage-hochladen > small { grid-column: 1 / -1; }
-.compact-form { margin-top: 20px; padding-top: 18px; border-top: 1px solid #283334; }
+.compact-form { margin-top: 20px; padding-top: 18px; border-top: 1px solid; }
 
 .document-list { display: grid; gap: 14px; }
 .document-card { padding: var(--crm-card-padding-sm); border: 1px solid #293536; border-radius: var(--crm-card-radius-sm); background: #111718; }
@@ -107,23 +107,19 @@
 /* Immobilien – Statusampel und Abschnittsnavigation */
 #status, #checkliste, #stammdaten, #adresse, #eigentuemer, #ausstattung, #energie { scroll-margin-top: 24px; }
 .checklist-row { margin: 4px 0; padding: var(--crm-card-padding-sm); border: 1px solid transparent; border-radius: var(--crm-card-radius-sm); }
-.checklist-todo { background: #351919; border-color: #6a3030; }
-.checklist-in-progress { background: #3a3117; border-color: #74642d; }
-.checklist-done { background: #173524; border-color: #326b49; }
-.checklist-waived { background: #252b2c; border-color: #465153; opacity: .78; }
+.checklist-in-progress { border-color: #74642d; }
+.checklist-waived { opacity: .78; }
 .owner-actions { justify-content: space-between; margin-top: 12px; }
 .owner-create-link { padding: 9px 0; }
 
 
 /* Immobilien – prominenter Workflowstatus */
 .property-title-row { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
-.status-pill { display:inline-flex; align-items:center; justify-content:center; min-height:36px; padding: var(--crm-pill-padding); border-radius: var(--crm-pill-radius); border:1px solid #4b5b5d; background:#1d2728; color:#f4f7f7; font-size: var(--crm-pill-font); font-weight:700; letter-spacing:.02em; white-space:nowrap; }
-.status-draft { background:#2b3031; border-color:#626f71; }
-.status-acquisition, .status-valuation, .status-contract-pending, .status-preparation { background:#3a3117; border-color:#806f32; color:#f3dda1; }
-.status-marketing, .status-reserved, .status-notary { background:#17354a; border-color:#376f93; color:#b9def3; }
-.status-sold { background:#173524; border-color:#3d7a55; color:#c3ebd0; }
-.status-lost, .status-withdrawn { background:#351919; border-color:#743535; color:#f0bcbc; }
-.status-archived { background:#252b2c; border-color:#505c5e; color:#b9c2c3; }
+.status-pill { display:inline-flex; align-items:center; justify-content:center; min-height:36px; padding: var(--crm-pill-padding); border-radius: var(--crm-pill-radius); border:1px solid; font-size: var(--crm-pill-font); font-weight:700; letter-spacing:.02em; white-space:nowrap; }
+.status-draft { border-color:#626f71; }
+.status-acquisition, .status-valuation, .status-contract-pending, .status-preparation { border-color:#806f32; }
+.status-marketing, .status-reserved, .status-notary { border-color:#376f93; }
+.status-sold { border-color:#3d7a55; }
 .creation-status-note { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px; color:#8d999b; }
 .creation-status-note small { max-width:680px; line-height:1.45; }
 .form-field span small { color:var(--crm-farbe-text-blass); font-weight:400; }
@@ -157,7 +153,7 @@
 
 /* Immobilien – bearbeitbare immobilienspezifische Eigentümerrelation */
 .owner-list { display:grid; gap:10px; }
-.owner-card { border:1px solid #2c3738; border-radius: var(--crm-card-radius-sm); background:#111718; overflow:hidden; scroll-margin-top:24px; }
+.owner-card { border:1px solid; border-radius: var(--crm-card-radius-sm); overflow:hidden; scroll-margin-top:24px; }
 .owner-card summary { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px; cursor:pointer; list-style:none; }
 .owner-card summary::-webkit-details-marker { display:none; }
 .owner-card summary > div { display:grid; gap:4px; }

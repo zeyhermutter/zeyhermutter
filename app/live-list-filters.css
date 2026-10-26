@@ -146,7 +146,6 @@
   display: grid;
   place-items: center;
   padding: 20px;
-  background: rgba(2, 7, 8, .74);
   backdrop-filter: blur(4px);
 }
 
@@ -154,9 +153,8 @@
   width: min(620px, 100%);
   max-height: calc(100vh - 40px);
   overflow: auto;
-  border: 1px solid #394749;
+  border: 1px solid;
   border-radius: var(--crm-modal-radius);
-  background: #131a1b;
   box-shadow: 0 26px 90px rgba(0, 0, 0, .55);
   padding: var(--crm-modal-padding);
 }
@@ -178,7 +176,6 @@
   appearance: none;
   border: 0;
   background: transparent;
-  color: #aeb9ba;
   font-size: var(--crm-schrift-24);
   line-height: 1;
   cursor: pointer;
