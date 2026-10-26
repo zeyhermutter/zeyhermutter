@@ -378,5 +378,8 @@
    :where() haelt die Spezifitaet bei 0, jede Regel mit eigener Groesse geht
    vor. In den zwei Koepfen mit 13 px Umgebung war es 10,83 px -> Stufe 11. */
 :where(.persistent-app-frame) small { font-size: var(--crm-schrift-13); }
+/* In Feldbeschriftungen (12 px) war es 10 px -> Stufe 11, nicht 13
+   (gemessen nach dem Deploy von 7051d2f: Lead-Adresse, Anfrage-Formular). */
+:where(.persistent-app-frame .form-field) small { font-size: var(--crm-schrift-11); }
 .persistent-app-frame .lead-workflow-popover-head small,
 .persistent-app-frame .task-collaboration-head small { font-size: var(--crm-schrift-11); }
