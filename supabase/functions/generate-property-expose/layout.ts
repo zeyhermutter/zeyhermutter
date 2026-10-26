@@ -100,7 +100,8 @@ export function zeichneExpose(pdf: any, lib: PdfLib, s: Schriften, e: ExposeEing
     const anschrift = [firma.street, [firma.postal_code, firma.city].filter((x) => !leer(x)).join(" ")].filter((x) => !leer(x)).map(rein).join(", ");
     return [rein(firma.legal_name) || null, anschrift || null, leer(firma.registered_seat) ? null : `Sitz: ${rein(firma.registered_seat)}`,
       leer(firma.register_court) && leer(firma.register_number) ? null : `Registergericht: ${[firma.register_court, firma.register_number].filter((x) => !leer(x)).map(rein).join(", ")}`,
-      leer(firma.managing_directors) ? null : `Geschäftsführer: ${rein(firma.managing_directors)}`,
+      // GbR/OHG/PartG: Gesellschafter statt Geschäftsführer (26.10.2026, wie app/lib/firma.ts).
+      leer(firma.managing_directors) ? null : `${/\b(e?GbR|OHG|PartG)\b/.test(firma.legal_name ?? "") ? "Gesellschafter" : "Geschäftsführer"}: ${rein(firma.managing_directors)}`,
       leer(firma.vat_id) ? null : `USt-IdNr.: ${rein(firma.vat_id)}`].filter(Boolean).join(" · ");
   })();
 

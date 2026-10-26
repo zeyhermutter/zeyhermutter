@@ -947,7 +947,7 @@ export const HELP_CHAPTERS: HelpChapter[] = [
       { art: "absatz", text:
         "Unter **Firma & Fristen** stehen die Firmenangaben an einer Stelle: "
         + "vollständige Firma, Anschrift, Sitz, Registergericht und -nummer, "
-        + "Geschäftsführer, Steuernummer und USt-IdNr. Sie erscheinen in der Fußzeile "
+        + "Geschäftsführer bzw. Gesellschafter, Steuernummer und USt-IdNr. Sie erscheinen in der Fußzeile "
         + "neu erzeugter Exposés und im E-Mail-Platzhalter "
         + "`{{firma_pflichtangaben}}`; leere Felder zeigt die Seite an. Darunter "
         + "stehen wiederkehrende **Fristen des Unternehmens** (z. B. Vorauszahlungen, "

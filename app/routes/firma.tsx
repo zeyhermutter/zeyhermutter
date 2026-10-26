@@ -115,15 +115,15 @@ export async function action({ request, context }: Route.ActionArgs) {
 }
 
 const FELDER: { name: keyof Firma; label: string; hilfe?: string; breit?: boolean }[] = [
-  { name: "legal_name", label: "Vollständige Firma", hilfe: "So, wie sie im Handelsregister steht.", breit: true },
+  { name: "legal_name", label: "Vollständige Firma", hilfe: "So, wie sie im Handelsregister steht – bei einer GbR der Name mit „GbR“.", breit: true },
   { name: "brand_name", label: "Auftrittsname (optional)", hilfe: "Wie ihr nach außen auftretet, z. B. im Logo." },
   { name: "street", label: "Straße und Hausnummer" },
   { name: "postal_code", label: "Postleitzahl" },
   { name: "city", label: "Ort" },
   { name: "registered_seat", label: "Sitz der Gesellschaft" },
-  { name: "register_court", label: "Registergericht" },
+  { name: "register_court", label: "Registergericht", hilfe: "Entfällt bei einer nicht eingetragenen GbR." },
   { name: "register_number", label: "Registernummer", hilfe: "z. B. HRB 123456" },
-  { name: "managing_directors", label: "Geschäftsführer", hilfe: "Vor- und Nachnamen, durch Komma getrennt.", breit: true },
+  { name: "managing_directors", label: "Geschäftsführer bzw. Gesellschafter", hilfe: "Vor- und Nachnamen, durch Komma getrennt. Bei einer GbR die Gesellschafter.", breit: true },
   { name: "tax_number", label: "Steuernummer" },
   { name: "vat_id", label: "USt-IdNr." },
   { name: "phone", label: "Telefon" },

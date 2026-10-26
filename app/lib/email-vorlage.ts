@@ -31,7 +31,7 @@ export const PLATZHALTER: { schluessel: string; bedeutung: string }[] = [
   { schluessel: "expose_link", bedeutung: "Kurzer Link zum Exposé (nur wenn „Link einfügen“ gewählt ist)" },
   { schluessel: "mein_name", bedeutung: "Ihr Name (angemeldeter Benutzer)" },
   { schluessel: "firma", bedeutung: "Vollständige Firma laut Verwaltung › Firma & Fristen" },
-  { schluessel: "firma_pflichtangaben", bedeutung: "Firma, Anschrift, Sitz, Registergericht, Geschäftsführer, USt-IdNr. in einer Zeile (Verwaltung › Firma & Fristen)" },
+  { schluessel: "firma_pflichtangaben", bedeutung: "Firma, Anschrift, Sitz, Registergericht, Geschäftsführer bzw. Gesellschafter, USt-IdNr. in einer Zeile (Verwaltung › Firma & Fristen)" },
 ];
 
 export type Werte = Partial<Record<string, string | null>>;
