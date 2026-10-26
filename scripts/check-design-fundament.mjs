@@ -42,7 +42,18 @@ const OEFFENTLICH = new Set(["public-website.css", "homepage-v7-realtor.css", "h
 // keiner Seite aendert. Danach im Browser umgeschaltet und berechnete Stile
 // verglichen: 0 Abweichungen. Die 13 Regeln mit echten Konflikten und 25 nie
 // getroffene behalten ihr !important (naechster Schritt).
-const HOECHSTENS = { hex: 1039, important: 125, schriftgroessen: 36 };
+// 26.10.2026 (Schritt 3a): Dialoge, Popups, Kartenuebersicht, Status-Pillen und
+// Verkaufsstrategie-Check -- 42x "!important" weniger, dazu die tote Regel
+// .persistent-app-frame .build-version (der Stempel liegt ausserhalb des
+// Rahmens) und die toten Zweige .lead-modal/.lead-modal-backdrop. Geprueft mit
+// scripts/kaskade.browser.js auf 41 Seiten, mit geoeffneten Dialogen und
+// nachgebautem Inhalt fuer Zustaende ohne Testdaten (Kartenpopup, Check mit
+// Szenarien, Unterlagen-Karte, Status-Pillen), danach im Browser umgeschaltet.
+// Bewusst NICHT angefasst: die drei Regeln der Eingabefelder (dunkle
+// Grundregeln in crm.css, lead.css, property-documents.css und
+// sales-readiness-editor.css wuerden sonst gewinnen) und die Schriftfarbe von
+// .readiness-recommend (gegen ein dunkles "!important").
+const HOECHSTENS = { hex: 1037, important: 83, schriftgroessen: 36 };
 
 const ROLLEN = ["grund", "flaeche", "text", "text-2", "text-leise", "text-blass", "linie", "linie-leise", "linie-feld", "handlung", "auf-dunkel", "verweis", "fehler", "gut"];
 

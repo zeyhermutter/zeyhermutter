@@ -8,20 +8,20 @@
   color: #465758;
 }
 .persistent-app-frame .lead-status-pill.status-marketing {
-  background: #e6f1f8 !important;
-  border-color: #a8c5d6 !important;
-  color: #285e78 !important;
+  background: #e6f1f8;
+  border-color: #a8c5d6;
+  color: #285e78;
 }
 .persistent-app-frame .lead-status-pill.status-sold {
-  background: #e5f4e9 !important;
-  border-color: #98bea4 !important;
-  color: #275f3d !important;
+  background: #e5f4e9;
+  border-color: #98bea4;
+  color: #275f3d;
 }
 .persistent-app-frame .lead-status-pill.status-archived,
 .persistent-app-frame .lead-status-pill.status-draft {
-  background: #edf1f0 !important;
-  border-color: #c7d1cf !important;
-  color: #4d5d5e !important;
+  background: #edf1f0;
+  border-color: #c7d1cf;
+  color: #4d5d5e;
 }
 /* Modul 04: Zusammenfassungen, Matches und Status-Pills auf heller Fläche. */
 .persistent-app-frame .inquiry-summary > div,
@@ -31,7 +31,7 @@
   border-color: #d8e0de;
   color: #263536;
 }
-.persistent-app-frame .inquiry-row { border-color: #dde5e3 !important; }
+.persistent-app-frame .inquiry-row { border-color: #dde5e3; }
 .persistent-app-frame .inquiry-status {
   background: #edf1f0;
   color: #465758;
@@ -41,7 +41,7 @@
 .persistent-app-frame .inquiry-status.qualified { background: #e5f4e9; color: #275f3d; }
 .persistent-app-frame .inquiry-status.viewing_planned { background: #fff3d8; color: #6b5518; }
 .persistent-app-frame .inquiry-status.closed { background: #edf1f0; color: #4d5d5e; }
-.persistent-app-frame .inquiry-status.lost { background: #fbe9e9 !important; color: #873b3e !important; }
+.persistent-app-frame .inquiry-status.lost { background: #fbe9e9; color: #873b3e; }
 
 /* Deutlich sichtbare Abschnittsnavigation für Anfragen, Suchprofile und Besichtigungen. */
 .record-section-nav {
@@ -169,12 +169,12 @@
   border-color: #d4dddb;
 }
 .persistent-app-frame .property-map-popup {
-  background: rgba(255, 255, 255, .97) !important;
-  border-color: #cbd6d4 !important;
-  color: #263536 !important;
+  background: rgba(255, 255, 255, .97);
+  border-color: #cbd6d4;
+  color: #263536;
 }
 .persistent-app-frame .property-map-popup-head {
-  border-bottom-color: #e0e7e5 !important;
+  border-bottom-color: #e0e7e5;
 }
 .persistent-app-frame .property-map-popup-head small,
 .persistent-app-frame .property-map-popup-item small,
@@ -182,14 +182,14 @@
   color: #5f6f70;
 }
 .persistent-app-frame .property-map-popup-head button {
-  background: #eef2f1 !important;
-  color: #3a4a4b !important;
+  background: #eef2f1;
+  color: #3a4a4b;
 }
 .persistent-app-frame .property-map-popup-head button:hover {
-  background: #dfe8e5 !important;
+  background: #dfe8e5;
 }
 .persistent-app-frame .property-map-popup-item:hover {
-  background: #eef2f1 !important;
+  background: #eef2f1;
 }
 .persistent-app-frame .property-map-attribution {
   background: rgba(255, 255, 255, .92);
@@ -316,9 +316,9 @@ body:has(.persistent-app-frame) .build-version {
    Ergebnis war dunkler Text auf dunklem Grund, praktisch unlesbar.
    Aufgefallen beim Fotografieren der Masken fuer die Anleitung. */
 .persistent-app-frame .readiness-edit-card > .readiness-number-grid > div {
-  background: #ffffff !important;
-  border-color: #d6dfdd !important;
+  background: #ffffff;
+  border-color: #d6dfdd;
 }
 .persistent-app-frame .readiness-edit-card > .readiness-number-grid > div small {
-  color: #697778 !important;
+  color: #697778;
 }
