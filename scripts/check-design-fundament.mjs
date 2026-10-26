@@ -53,7 +53,14 @@ const OEFFENTLICH = new Set(["public-website.css", "homepage-v7-realtor.css", "h
 // Grundregeln in crm.css, lead.css, property-documents.css und
 // sales-readiness-editor.css wuerden sonst gewinnen) und die Schriftfarbe von
 // .readiness-recommend (gegen ein dunkles "!important").
-const HOECHSTENS = { hex: 1037, important: 83, schriftgroessen: 36 };
+// 26.10.2026 (Schritt 3b, Freigabe Sebastian): Eingabefelder ohne
+// "!important" (83 -> 72). Grundregel ueber :is() auf (0,3,1), Hover, Fokus
+// und gesperrt darueber (0,4,1). Bewusst sichtbar: Fokusrahmen, roter Rahmen
+// bei ungueltigen und blockierten Feldern, Statusfarbe der Checklisten-Auswahl
+// und gesperrte Textfelder sehen gesperrt aus -- das alte "!important" hatte
+// sie verschluckt. Gemessen mit nachgebildeten Zustaenden (:hover/:focus als
+// Klasse) auf 19 Seiten vorher/nachher.
+const HOECHSTENS = { hex: 1037, important: 72, schriftgroessen: 36 };
 
 const ROLLEN = ["grund", "flaeche", "text", "text-2", "text-leise", "text-blass", "linie", "linie-leise", "linie-feld", "handlung", "auf-dunkel", "verweis", "fehler", "gut"];
 

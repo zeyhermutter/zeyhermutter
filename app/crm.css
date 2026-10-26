@@ -111,10 +111,6 @@
 .checklist-in-progress { background: #3a3117; border-color: #74642d; }
 .checklist-done { background: #173524; border-color: #326b49; }
 .checklist-waived { background: #252b2c; border-color: #465153; opacity: .78; }
-.checklist-todo select { border-color: #7a3a3a; }
-.checklist-in-progress select { border-color: #8a7430; }
-.checklist-done select { border-color: #3f8059; }
-.checklist-waived select { border-color: #566264; }
 .owner-actions { justify-content: space-between; margin-top: 12px; }
 .owner-create-link { padding: 9px 0; }
 

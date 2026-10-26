@@ -164,18 +164,25 @@
   color: #0f4443;
 }
 
-/* Formfelder */
-.persistent-app-frame input:not([type="checkbox"]):not([type="radio"]),
-.persistent-app-frame select,
-.persistent-app-frame textarea,
+/* Formfelder
+   26.10.2026 (Paket C, 3b): ohne "!important". Die Grundregel steht ueber
+   :is() fuer alle drei Feldarten auf derselben Spezifitaet (0,3,1) -- hoeher
+   als jede dunkle Grundregel (.form-field select, .readiness-form-grid input
+   ...). Hover, Fokus und gesperrt liegen darueber (0,4,1), in dieser
+   Reihenfolge; Warnungen (.crm-range-invalid, .publication-blocked,
+   .lead-release-blocker) behalten ihr "!important" und gewinnen dadurch jetzt
+   auch gegen die Grundregel. Vorher verschluckte das "!important" der
+   Grundregel den Fokusrahmen, den roten Rahmen bei ungueltigen und
+   blockierten Feldern und die Statusfarbe der Checklisten-Auswahl. */
+.persistent-app-frame :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea),
 .persistent-app-frame .global-search-field input,
 .persistent-app-frame .live-search-field .live-search-input,
 .persistent-app-frame .readiness-ai-preview {
-  background: #ffffff !important;
-  color: #1d2a2b !important;
-  border-color: #bcc9c7 !important;
-  caret-color: #1d2a2b !important;
-  -webkit-text-fill-color: #1d2a2b !important;
+  background: #ffffff;
+  color: #1d2a2b;
+  border-color: #bcc9c7;
+  caret-color: #1d2a2b;
+  -webkit-text-fill-color: #1d2a2b;
 }
 .persistent-app-frame input::placeholder,
 .persistent-app-frame textarea::placeholder,
@@ -189,16 +196,19 @@
   opacity: 1;
   -webkit-text-fill-color: #687778;
 }
-.persistent-app-frame input:not([type="checkbox"]):not([type="radio"]):hover,
-.persistent-app-frame select:hover,
-.persistent-app-frame textarea:hover,
+.persistent-app-frame :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea):hover,
 .persistent-app-frame .live-search-field .live-search-input:hover {
-  border-color: #96a8a5 !important;
-  background: #fbfcfc !important;
+  border-color: #96a8a5;
+  background: #fbfcfc;
 }
+/* Statusfarbe der Auswahl in der Checkliste (Objektakte). Gleiche Spezifitaet
+   wie die Grundregel, steht danach; Hover und Fokus gehen vor. */
+.persistent-app-frame .checklist-row.checklist-todo select { border-color: #d7a3a4; }
+.persistent-app-frame .checklist-row.checklist-in-progress select { border-color: #d7bc70; }
+.persistent-app-frame .checklist-row.checklist-done select { border-color: #98bea4; }
+.persistent-app-frame .checklist-row.checklist-waived select { border-color: #cbd3d1; }
+.persistent-app-frame :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea):focus,
 .persistent-app-frame input:focus,
-.persistent-app-frame select:focus,
-.persistent-app-frame textarea:focus,
 .persistent-app-frame .global-search-field input:focus,
 .persistent-app-frame .live-search-field .live-search-input:focus,
 .persistent-app-frame .readiness-ai-preview:focus {
@@ -206,13 +216,12 @@
   background: #ffffff;
   box-shadow: 0 0 0 3px rgba(74, 112, 106, .14);
 }
-.persistent-app-frame input:disabled,
-.persistent-app-frame select:disabled,
-.persistent-app-frame textarea:disabled {
-  background: #edf1f0 !important;
-  color: #778485 !important;
-  border-color: #d0d8d6 !important;
-  -webkit-text-fill-color: #778485 !important;
+.persistent-app-frame :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea):disabled,
+.persistent-app-frame input:disabled {
+  background: #edf1f0;
+  color: #778485;
+  border-color: #d0d8d6;
+  -webkit-text-fill-color: #778485;
 }
 .persistent-app-frame .live-search-field .live-search-input:-webkit-autofill,
 .persistent-app-frame .live-search-field .live-search-input:-webkit-autofill:hover,
