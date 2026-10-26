@@ -61,7 +61,7 @@
 
 .readiness-measure-summary-main small{
   color:#9ca9ab;
-  font-size:10px;
+  font-size:var(--crm-schrift-11);
   font-weight:800;
   letter-spacing:.08em;
   text-transform:uppercase;
@@ -135,7 +135,7 @@
 .readiness-measure-editor.new-measure::before{
   content:"Neue Maßnahme";
   color:#aebabc;
-  font-size:10px;
+  font-size:var(--crm-schrift-11);
   font-weight:800;
   letter-spacing:.08em;
   text-transform:uppercase;

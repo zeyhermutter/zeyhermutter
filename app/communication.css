@@ -15,12 +15,12 @@
 .communication-header h1 {
   margin: 4px 0 8px;
   font-size: clamp(1.8rem, 2.8vw, 2.55rem);
-  color: #1d2a2b;
+  color: var(--crm-farbe-text);
 }
 
 .communication-header p {
   margin: 0;
-  color: #647273;
+  color: var(--crm-farbe-text-blass);
   max-width: 760px;
 }
 
@@ -45,24 +45,24 @@
 
 .communication-status > div,
 .communication-context-summary > div {
-  border: 1px solid #d8e0de;
+  border: 1px solid var(--crm-farbe-linie-leise);
   border-radius: var(--crm-card-radius-sm);
-  background: #f8faf9;
+  background: var(--crm-farbe-flaeche-2);
   padding: var(--crm-card-padding-sm);
 }
 
 .communication-status span,
 .communication-context-summary span {
   display: block;
-  color: #738080;
-  font-size: .78rem;
+  color: var(--crm-farbe-text-blass);
+  font-size: var(--crm-schrift-12);
   margin-bottom: 4px;
 }
 
 .communication-status strong,
 .communication-context-summary strong {
-  color: #263536;
-  font-size: .93rem;
+  color: var(--crm-farbe-text);
+  font-size: var(--crm-schrift-15);
 }
 
 .communication-context-summary {
@@ -81,8 +81,8 @@
 
 .communication-note {
   margin: 12px 0 0;
-  color: #687778;
-  font-size: .88rem;
+  color: var(--crm-farbe-text-blass);
+  font-size: var(--crm-schrift-14);
   line-height: 1.45;
 }
 
@@ -93,7 +93,7 @@
 }
 
 .communication-history article {
-  border: 1px solid #d8e0de;
+  border: 1px solid var(--crm-farbe-linie-leise);
   border-radius: var(--crm-card-radius-sm);
   background: var(--crm-farbe-flaeche);
   padding: var(--crm-card-padding-sm);
@@ -107,12 +107,12 @@
 }
 
 .communication-history-head strong {
-  color: #263536;
+  color: var(--crm-farbe-text);
 }
 
 .communication-history-head small,
 .communication-history article p {
-  color: #6c797a;
+  color: var(--crm-farbe-text-blass);
 }
 
 .communication-history article p {
@@ -125,12 +125,12 @@
   align-items: center;
   width: fit-content;
   margin-top: 8px;
-  border: 1px solid #cfd9d7;
+  border: 1px solid var(--crm-farbe-linie);
   border-radius: var(--crm-pill-radius);
   padding: var(--crm-pill-padding-sm);
-  font-size: .76rem;
-  color: #536364;
-  background: #f6f9f8;
+  font-size: var(--crm-schrift-12);
+  color: var(--crm-farbe-text-leise);
+  background: var(--crm-farbe-flaeche-2);
 }
 
 @media (max-width: 900px) {

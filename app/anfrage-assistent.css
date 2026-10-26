@@ -10,5 +10,5 @@
 .assistent-marke { margin-left: 6px; font-size: var(--crm-schrift-11); font-weight: 600; }
 .assistent-marke.sicher { color: #1d5f25; }
 .assistent-marke.pruefen { color: #7a4d00; }
-.assistent-marke.leer { color: #5b6773; font-weight: 400; }
+.assistent-marke.leer { color: var(--crm-farbe-text-blass); font-weight: 400; }
 .assistent-aktionen { justify-content: flex-start; }

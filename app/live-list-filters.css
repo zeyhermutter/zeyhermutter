@@ -32,26 +32,26 @@
 .live-search-field .live-search-input {
   min-height: 46px;
   padding-left: 40px !important;
-  border-color: #bcc9c7;
+  border-color: var(--crm-farbe-linie-feld);
   border-radius: 12px;
   background: var(--crm-farbe-flaeche);
-  color: #1d2a2b;
-  caret-color: #1d2a2b;
-  -webkit-text-fill-color: #1d2a2b;
+  color: var(--crm-farbe-text);
+  caret-color: var(--crm-farbe-text);
+  -webkit-text-fill-color: var(--crm-farbe-text);
   transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
 }
 
 .live-search-field .live-search-input::placeholder {
-  color: #687778;
+  color: var(--crm-farbe-text-blass);
   opacity: 1;
-  -webkit-text-fill-color: #687778;
+  -webkit-text-fill-color: var(--crm-farbe-text-blass);
 }
 
 .live-search-field .live-search-input:-webkit-autofill,
 .live-search-field .live-search-input:-webkit-autofill:hover,
 .live-search-field .live-search-input:-webkit-autofill:focus {
-  -webkit-text-fill-color: #1d2a2b;
-  caret-color: #1d2a2b;
+  -webkit-text-fill-color: var(--crm-farbe-text);
+  caret-color: var(--crm-farbe-text);
   box-shadow: 0 0 0 1000px var(--crm-farbe-flaeche) inset;
 }
 
@@ -171,7 +171,7 @@
 
 .organization-create-head h2 {
   margin: 0;
-  font-size: 25px;
+  font-size: var(--crm-schrift-24);
 }
 
 .organization-create-close {
@@ -179,7 +179,7 @@
   border: 0;
   background: transparent;
   color: #aeb9ba;
-  font-size: 26px;
+  font-size: var(--crm-schrift-24);
   line-height: 1;
   cursor: pointer;
   padding: 2px 4px;

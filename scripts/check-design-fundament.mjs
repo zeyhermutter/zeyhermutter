@@ -65,9 +65,18 @@ const OEFFENTLICH = new Set(["public-website.css", "homepage-v7-realtor.css", "h
 // nach Eigenschaft als flaeche bzw. auf-dunkel) und 246 Schriftgroessen
 // (11/12/13/14/15/16/20/24px) in 44 Dateien. Gleicher Wert, keine sichtbare
 // Aenderung.
-const HOECHSTENS = { hex: 919, important: 72, schriftgroessen: 28 };
+// 26.10.2026 (Schritt 4b, Freigabe Sebastian anhand der Vorher/Nachher-
+// Liste): die gruenliche Grau-Familie auf die Rollen gelegt -- Schrift auf
+// text/text-2/text-leise/text-blass, Rahmen auf linie/linie-leise/linie-feld,
+// Flaechen auf grund/flaeche und die neue Rolle flaeche-2 (#f4f6f8). Nur
+// in color/border/background, Status- und Akzentfarben bleiben. Schrift:
+// 10/10,5 -> 11, 12,5/13,5 -> 13, 17 -> 16, 18 -> 20, 25-28 -> 24,
+// .74-.78rem -> 12, .88rem -> 14, .92-.94rem -> 15; <small> ohne eigene
+// Groesse -> 13. Ausgenommen: die Farben der Terminkategorien (calendar.css,
+// eigene Kontrastpruefung in check-terminfarben.mjs).
+const HOECHSTENS = { hex: 718, important: 72, schriftgroessen: 11 };
 
-const ROLLEN = ["grund", "flaeche", "text", "text-2", "text-leise", "text-blass", "linie", "linie-leise", "linie-feld", "handlung", "auf-dunkel", "verweis", "fehler", "gut"];
+const ROLLEN = ["grund", "flaeche", "flaeche-2", "text", "text-2", "text-leise", "text-blass", "linie", "linie-leise", "linie-feld", "handlung", "auf-dunkel", "verweis", "fehler", "gut"];
 
 const ohneKommentare = (t) => t.replace(/\/\*[\s\S]*?\*\//g, "");
 let hex = 0, important = 0;

@@ -47,4 +47,4 @@
 .schnellsuche-was small { color: var(--crm-farbe-text-leise); font-size: var(--crm-schrift-12); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .schnellsuche-hinweis { margin: 0; padding: 6px 8px; color: var(--crm-farbe-text-leise); font-size: var(--crm-schrift-13); }
-.schnellsuche-fuss { margin: 6px 0 0; padding: 6px 8px 0; border-top: 1px solid #eef1f4; color: #5b6773; font-size: var(--crm-schrift-11); }
+.schnellsuche-fuss { margin: 6px 0 0; padding: 6px 8px 0; border-top: 1px solid #eef1f4; color: var(--crm-farbe-text-blass); font-size: var(--crm-schrift-11); }

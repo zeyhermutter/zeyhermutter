@@ -126,7 +126,7 @@
 .status-archived { background:#252b2c; border-color:#505c5e; color:#b9c2c3; }
 .creation-status-note { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px; color:#8d999b; }
 .creation-status-note small { max-width:680px; line-height:1.45; }
-.form-field span small { color:#7f8b8d; font-weight:400; }
+.form-field span small { color:var(--crm-farbe-text-blass); font-weight:400; }
 
 @media (max-width:720px) {
   .property-title-row { align-items:flex-start; flex-direction:column; gap:10px; }
@@ -144,7 +144,7 @@
   border: 1px solid #334041;
   border-radius: var(--crm-card-radius-sm);
   background: rgba(13,18,19,.88);
-  color: #7f8b8d;
+  color: var(--crm-farbe-text-blass);
   font: 600 10px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   letter-spacing: .02em;
   pointer-events: none;

@@ -114,7 +114,7 @@
   background: #20292a;
   color: #dce3e4;
   cursor: pointer;
-  font-size: 18px;
+  font-size: var(--crm-schrift-20);
 }
 .property-map-popup-list { display: grid; padding: 6px; }
 .property-map-popup-item {
@@ -140,7 +140,7 @@
   border-radius: 999px;
   background: #22363c;
   color: var(--crm-farbe-auf-dunkel);
-  font-size: 10px;
+  font-size: var(--crm-schrift-11);
   font-weight: 800;
 }
 .property-map-attribution {
@@ -152,7 +152,7 @@
   border-radius: var(--crm-card-radius-sm);
   background: rgba(255,255,255,.88);
   color: #283233;
-  font-size: 10px;
+  font-size: var(--crm-schrift-11);
 }
 .property-map-attribution a { color: inherit; }
 .map-coverage-note { color: #768385; font-size: var(--crm-schrift-12); }

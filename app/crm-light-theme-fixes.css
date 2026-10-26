@@ -4,8 +4,8 @@
 /* Verkäufer-Leads + Verkaufsstrategie-Übersicht: Status-Pills vollständig hell. */
 .persistent-app-frame .lead-status-pill {
   background: #edf1f0;
-  border-color: #c7d1cf;
-  color: #465758;
+  border-color: var(--crm-farbe-linie);
+  color: var(--crm-farbe-text-leise);
 }
 .persistent-app-frame .lead-status-pill.status-marketing {
   background: #e6f1f8;
@@ -20,27 +20,27 @@
 .persistent-app-frame .lead-status-pill.status-archived,
 .persistent-app-frame .lead-status-pill.status-draft {
   background: #edf1f0;
-  border-color: #c7d1cf;
-  color: #4d5d5e;
+  border-color: var(--crm-farbe-linie);
+  color: var(--crm-farbe-text-leise);
 }
 /* Modul 04: Zusammenfassungen, Matches und Status-Pills auf heller Fläche. */
 .persistent-app-frame .inquiry-summary > div,
 .persistent-app-frame .match-row,
 .persistent-app-frame .match-reasons span {
-  background: #f7f9f8;
-  border-color: #d8e0de;
-  color: #263536;
+  background: var(--crm-farbe-flaeche-2);
+  border-color: var(--crm-farbe-linie-leise);
+  color: var(--crm-farbe-text);
 }
-.persistent-app-frame .inquiry-row { border-color: #dde5e3; }
+.persistent-app-frame .inquiry-row { border-color: var(--crm-farbe-linie-leise); }
 .persistent-app-frame .inquiry-status {
   background: #edf1f0;
-  color: #465758;
+  color: var(--crm-farbe-text-leise);
 }
 .persistent-app-frame .inquiry-status.new { background: #e6f1f8; color: #285e78; }
 .persistent-app-frame .inquiry-status.contacted,
 .persistent-app-frame .inquiry-status.qualified { background: #e5f4e9; color: var(--crm-farbe-gut); }
 .persistent-app-frame .inquiry-status.viewing_planned { background: #fff3d8; color: #6b5518; }
-.persistent-app-frame .inquiry-status.closed { background: #edf1f0; color: #4d5d5e; }
+.persistent-app-frame .inquiry-status.closed { background: #edf1f0; color: var(--crm-farbe-text-leise); }
 .persistent-app-frame .inquiry-status.lost { background: #fbe9e9; color: #873b3e; }
 
 /* Deutlich sichtbare Abschnittsnavigation für Anfragen, Suchprofile und Besichtigungen. */
@@ -52,7 +52,7 @@
   gap: 6px;
   padding: 6px;
   overflow-x: auto;
-  border: 1px solid #cbd6d4;
+  border: 1px solid var(--crm-farbe-linie);
   border-radius: 13px;
   background: var(--crm-farbe-flaeche);
   box-shadow: 0 5px 18px rgba(44, 64, 62, .05);
@@ -102,10 +102,10 @@
   max-height: calc(100vh - 40px);
   overflow: auto;
   padding: var(--crm-modal-padding);
-  border: 1px solid #cbd6d4;
+  border: 1px solid var(--crm-farbe-linie);
   border-radius: var(--crm-modal-radius);
   background: var(--crm-farbe-flaeche);
-  color: #1d2a2b;
+  color: var(--crm-farbe-text);
   box-shadow: 0 28px 90px rgba(38, 58, 55, .22);
 }
 .task-create-modal-head {
@@ -121,7 +121,7 @@
   border: 0;
   background: transparent;
   color: #59696a;
-  font-size: 26px;
+  font-size: var(--crm-schrift-24);
   line-height: 1;
   cursor: pointer;
 }
@@ -166,24 +166,24 @@
 
 /* Immobilien-Karte: Popup und Attribution waren noch dunkel. */
 .persistent-app-frame .property-map {
-  border-color: #d4dddb;
+  border-color: var(--crm-farbe-linie-leise);
 }
 .persistent-app-frame .property-map-popup {
   background: rgba(255, 255, 255, .97);
-  border-color: #cbd6d4;
-  color: #263536;
+  border-color: var(--crm-farbe-linie);
+  color: var(--crm-farbe-text);
 }
 .persistent-app-frame .property-map-popup-head {
-  border-bottom-color: #e0e7e5;
+  border-bottom-color: var(--crm-farbe-linie-leise);
 }
 .persistent-app-frame .property-map-popup-head small,
 .persistent-app-frame .property-map-popup-item small,
 .persistent-app-frame .map-coverage-note {
-  color: #5f6f70;
+  color: var(--crm-farbe-text-blass);
 }
 .persistent-app-frame .property-map-popup-head button {
   background: var(--crm-farbe-grund);
-  color: #3a4a4b;
+  color: var(--crm-farbe-text-2);
 }
 .persistent-app-frame .property-map-popup-head button:hover {
   background: #dfe8e5;
@@ -193,7 +193,7 @@
 }
 .persistent-app-frame .property-map-attribution {
   background: rgba(255, 255, 255, .92);
-  color: #3a4a4b;
+  color: var(--crm-farbe-text-2);
 }
 
 /* Lange, ungetrennte Zeichenketten (URLs, Freitext ohne Leerzeichen) dürfen
@@ -215,7 +215,7 @@
 .persistent-app-frame .lead-workflow-popover-head small,
 .persistent-app-frame .lead-workflow-finished,
 .persistent-app-frame .lead-workflow-action small {
-  color: #5f6f70;
+  color: var(--crm-farbe-text-blass);
 }
 .persistent-app-frame .lead-workflow-menu[open] > summary {
   background: var(--crm-farbe-grund);
@@ -223,14 +223,14 @@
 }
 .persistent-app-frame .lead-workflow-popover {
   background: var(--crm-farbe-flaeche);
-  border-color: #cbd6d4;
-  color: #263536;
+  border-color: var(--crm-farbe-linie);
+  color: var(--crm-farbe-text);
 }
 .persistent-app-frame .lead-workflow-popover-head {
-  border-bottom-color: #e0e7e5;
+  border-bottom-color: var(--crm-farbe-linie-leise);
 }
 .persistent-app-frame .lead-workflow-action {
-  color: #263536;
+  color: var(--crm-farbe-text);
 }
 .persistent-app-frame .lead-workflow-action:hover {
   background: var(--crm-farbe-grund);
@@ -239,8 +239,8 @@
 /* Dashboard: die Benachrichtigungsglocke im Inhaltsbereich war noch dunkel. */
 .persistent-app-frame .notification-bell-trigger {
   background: var(--crm-farbe-flaeche);
-  border-color: #cbd6d4;
-  color: #4d5d5e;
+  border-color: var(--crm-farbe-linie);
+  color: var(--crm-farbe-text-leise);
 }
 .persistent-app-frame .notification-bell-trigger:hover,
 .persistent-app-frame .notification-bell[open] .notification-bell-trigger {
@@ -254,21 +254,21 @@
 }
 .persistent-app-frame .notification-bell-popover {
   background: var(--crm-farbe-flaeche);
-  border-color: #cbd6d4;
-  color: #263536;
+  border-color: var(--crm-farbe-linie);
+  color: var(--crm-farbe-text);
 }
 .persistent-app-frame .notification-bell-head {
-  border-bottom-color: #e0e7e5;
+  border-bottom-color: var(--crm-farbe-linie-leise);
 }
 .persistent-app-frame .notification-bell-head small,
 .persistent-app-frame .notification-bell-item-message,
 .persistent-app-frame .notification-bell-item small,
 .persistent-app-frame .notification-bell-empty {
-  color: #5f6f70;
+  color: var(--crm-farbe-text-blass);
 }
 .persistent-app-frame .notification-bell-head > a,
 .persistent-app-frame .notification-bell-footer {
-  color: #4d5d5e;
+  color: var(--crm-farbe-text-leise);
 }
 .persistent-app-frame .notification-bell-head > a:hover,
 .persistent-app-frame .notification-bell-footer:hover {
@@ -276,13 +276,13 @@
 }
 .persistent-app-frame .notification-bell-item {
   border-bottom-color: #e6ebea;
-  color: #263536;
+  color: var(--crm-farbe-text);
 }
 .persistent-app-frame .notification-bell-item:hover { background: var(--crm-farbe-grund); }
-.persistent-app-frame .notification-bell-item.unread { background: #f2f6f5; }
+.persistent-app-frame .notification-bell-item.unread { background: var(--crm-farbe-grund); }
 .persistent-app-frame .notification-bell-item.unread:hover { background: #e7edec; }
 .persistent-app-frame .notification-bell-item-title i { background: #2f4b47; }
-.persistent-app-frame .notification-bell-footer { background: #f7f9f8; }
+.persistent-app-frame .notification-bell-footer { background: var(--crm-farbe-flaeche-2); }
 
 /* Der Build-Stempel liegt ausserhalb von .persistent-app-frame und lag daher
    im CRM unverändert dunkel über der Seitenleiste. */
@@ -292,7 +292,7 @@ body:has(.persistent-app-frame) .build-version {
   right: 16px;
   bottom: 12px;
   background: rgba(255, 255, 255, .92);
-  color: #647273;
+  color: var(--crm-farbe-text-blass);
   border-color: #cbd5d3;
 }
 
@@ -306,7 +306,7 @@ body:has(.persistent-app-frame) .build-version {
   gap: 14px;
   margin-top: 18px;
   padding-top: 18px;
-  border-top: 1px solid #e0e7e5;
+  border-top: 1px solid var(--crm-farbe-linie-leise);
 }
 
 /* Die vier Kennzahlen im Verkaufsstrategie-Check waren dunkle Kacheln auf
@@ -317,8 +317,8 @@ body:has(.persistent-app-frame) .build-version {
    Aufgefallen beim Fotografieren der Masken fuer die Anleitung. */
 .persistent-app-frame .readiness-edit-card > .readiness-number-grid > div {
   background: var(--crm-farbe-flaeche);
-  border-color: #d6dfdd;
+  border-color: var(--crm-farbe-linie-leise);
 }
 .persistent-app-frame .readiness-edit-card > .readiness-number-grid > div small {
-  color: #697778;
+  color: var(--crm-farbe-text-blass);
 }

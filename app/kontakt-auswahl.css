@@ -2,7 +2,7 @@
 
 .kontakt-auswahl { display: grid; gap: 6px; min-width: 0; align-self: start; }
 .kontakt-auswahl-suche { position: relative; display: grid; }
-.kontakt-auswahl > label span { font-size: var(--crm-schrift-13); font-weight: 600; color: #26323c; }
+.kontakt-auswahl > label span { font-size: var(--crm-schrift-13); font-weight: 600; color: var(--crm-farbe-text); }
 
 .kontakt-auswahl-gewaehlt {
   display: flex;
@@ -10,9 +10,9 @@
   align-items: baseline;
   gap: 4px 8px;
   padding: var(--crm-card-padding-sm);
-  border: 1px solid #c9d2da;
+  border: 1px solid var(--crm-farbe-linie);
   border-radius: var(--crm-card-radius-sm);
-  background: #f6f8f9;
+  background: var(--crm-farbe-flaeche-2);
 }
 .kontakt-auswahl-gewaehlt .subtle-link { margin-left: auto; border: 0; background: none; cursor: pointer; }
 
@@ -28,7 +28,7 @@
   display: grid;
   max-height: 240px;
   overflow-y: auto;
-  border: 1px solid #c9d2da;
+  border: 1px solid var(--crm-farbe-linie);
   border-radius: var(--crm-field-radius);
   background: var(--crm-farbe-flaeche);
 }

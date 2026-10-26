@@ -82,7 +82,7 @@
   top: 0;
   padding: 8px 12px;
   border-bottom: 1px solid var(--crm-farbe-linie);
-  background: #eef1f4;
+  background: var(--crm-farbe-flaeche-2);
   color: var(--crm-farbe-text-2);
   font-size: var(--crm-schrift-12);
   font-weight: 600;

@@ -89,11 +89,11 @@
 .programm-arbeitsflaeche .editor-card { border-radius: var(--crm-card-radius-sm); }
 
 .programm-arbeitsflaeche .card-head { margin-bottom: 6px; }
-.programm-arbeitsflaeche .card-head .eyebrow { margin-bottom: 2px; font-size: 10.5px; }
+.programm-arbeitsflaeche .card-head .eyebrow { margin-bottom: 2px; font-size: var(--crm-schrift-11); }
 .programm-arbeitsflaeche .card-head h2 { font-size: var(--crm-schrift-15); line-height: 1.3; }
 
 .programm-arbeitsflaeche .data-row { gap: 14px; padding: 9px 0; }
-.programm-arbeitsflaeche .data-row strong { font-size: 13.5px; }
+.programm-arbeitsflaeche .data-row strong { font-size: var(--crm-schrift-13); }
 .programm-arbeitsflaeche .data-row small,
 .programm-arbeitsflaeche .row-meta { font-size: var(--crm-schrift-12); }
 

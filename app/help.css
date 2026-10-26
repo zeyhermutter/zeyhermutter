@@ -34,7 +34,7 @@
   flex: 0 0 auto;
   min-width: 22px;
   font: 700 12px/1.5 ui-monospace, monospace;
-  color: #697778;
+  color: var(--crm-farbe-text-blass);
 }
 .help-inhalt-liste strong { display: block; font-size: var(--crm-schrift-14); }
 .help-inhalt-liste small { display: block; margin-top: 3px; color: var(--help-gedaempft); font-size: var(--crm-schrift-12); line-height: 1.5; }
@@ -57,7 +57,7 @@
   color: var(--help-text);
 }
 .help-liste li, .help-schritte li { margin-bottom: 7px; }
-.help-schritte li::marker { font-weight: 700; color: #697778; }
+.help-schritte li::marker { font-weight: 700; color: var(--crm-farbe-text-blass); }
 
 .help-hinweis, .help-warnung {
   max-width: 74ch;
@@ -67,7 +67,7 @@
   line-height: 1.65;
   font-size: var(--crm-schrift-14);
 }
-.help-hinweis { border: 1px solid #cddbd7; background: #f2f7f5; color: #2f4442; }
+.help-hinweis { border: 1px solid var(--crm-farbe-linie); background: var(--crm-farbe-grund); color: var(--crm-farbe-text-2); }
 .help-warnung { border: 1px solid #e2d3ab; background: #fdf8ea; color: #6b5620; }
 
 /* Bilder ------------------------------------------------------------------- */
@@ -83,7 +83,7 @@
 .help-bild figcaption {
   margin-top: 8px;
   color: var(--help-gedaempft);
-  font-size: 12.5px;
+  font-size: var(--crm-schrift-13);
   line-height: 1.55;
   max-width: 74ch;
 }
@@ -106,12 +106,12 @@
   border: 1px solid #c3cfcd;
   border-radius: 999px;
   background: var(--crm-farbe-flaeche);
-  color: #536263;
-  font-size: 12.5px;
+  color: var(--crm-farbe-text-leise);
+  font-size: var(--crm-schrift-13);
   text-decoration: none;
   white-space: nowrap;
 }
-.help-entry:hover { border-color: #97a8a5; color: #172425; background: #f7f9f8; }
+.help-entry:hover { border-color: #97a8a5; color: #172425; background: var(--crm-farbe-flaeche-2); }
 .help-entry svg { width: 15px; height: 15px; flex: 0 0 auto; }
 
 @media (max-width: 900px) {
@@ -138,10 +138,10 @@
   max-height: min(860px, calc(100vh - 40px));
   overflow: auto;
   padding: var(--crm-modal-padding);
-  border: 1px solid #d6dfdd;
+  border: 1px solid var(--crm-farbe-linie-leise);
   border-radius: var(--crm-modal-radius);
   background: var(--crm-farbe-flaeche);
-  color: #1d2a2b;
+  color: var(--crm-farbe-text);
   box-shadow: 0 26px 90px #1d2a2b45;
   outline: none;
 }
@@ -159,8 +159,8 @@
 .help-modal-schliessen {
   border: 0;
   background: transparent;
-  color: #697778;
-  font-size: 26px;
+  color: var(--crm-farbe-text-blass);
+  font-size: var(--crm-schrift-24);
   line-height: 1;
   padding: 0 4px;
   cursor: pointer;
@@ -179,12 +179,12 @@
   align-items: center;
   gap: 7px;
   padding: var(--crm-modal-padding);
-  border: 1px solid #d6dfdd;
+  border: 1px solid var(--crm-farbe-linie-leise);
   border-radius: var(--crm-modal-radius);
-  background: #f7f9f8;
-  color: #536263;
+  background: var(--crm-farbe-flaeche-2);
+  color: var(--crm-farbe-text-leise);
   font: inherit;
-  font-size: 12.5px;
+  font-size: var(--crm-schrift-13);
   cursor: pointer;
 }
 .help-modal-kapitelknopf:hover { border-color: #97a8a5; color: #172425; background: var(--crm-farbe-grund); }
@@ -194,8 +194,8 @@
   color: #172425;
   font-weight: 700;
 }
-.help-modal-kapitelnummer { font: 700 11px/1 ui-monospace, monospace; color: #697778; }
-.help-modal-kapitelknopf.aktiv .help-modal-kapitelnummer { color: #2f4442; }
+.help-modal-kapitelnummer { font: 700 11px/1 ui-monospace, monospace; color: var(--crm-farbe-text-blass); }
+.help-modal-kapitelknopf.aktiv .help-modal-kapitelnummer { color: var(--crm-farbe-text-2); }
 
 @media (max-width: 700px) {
   .help-modal { padding: 18px; border-radius: 14px; }

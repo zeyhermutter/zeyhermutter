@@ -3,7 +3,7 @@
 
 .persistent-app-frame {
   color-scheme: light;
-  color: #1d2a2b;
+  color: var(--crm-farbe-text);
   background: var(--crm-farbe-grund);
 }
 
@@ -11,7 +11,7 @@
 .persistent-app-frame .editor-shell,
 .persistent-app-frame .readiness-shell {
   background: var(--crm-farbe-grund);
-  color: #1d2a2b;
+  color: var(--crm-farbe-text);
 }
 /* Grundflächen und Karten – Form, Radius, Größe und Anordnung bleiben unverändert. */
 .persistent-app-frame .metric-card,
@@ -47,12 +47,12 @@
 .persistent-app-frame .readiness-task-options label,
 .persistent-app-frame .panel {
   background: var(--crm-farbe-flaeche);
-  border-color: #d4dddb;
-  color: #1d2a2b;
+  border-color: var(--crm-farbe-linie-leise);
+  color: var(--crm-farbe-text);
 }
 
 .persistent-app-frame .readiness-measure-editor.new-measure {
-  background: #f8faf9;
+  background: var(--crm-farbe-flaeche-2);
 }
 
 /* Trennlinien und Listen */
@@ -73,13 +73,13 @@
 .persistent-app-frame .readiness-scenario dl > div,
 .persistent-app-frame .readiness-fact-grid > div,
 .persistent-app-frame .property-match-decision {
-  border-color: #dde5e3;
+  border-color: var(--crm-farbe-linie-leise);
 }
 .persistent-app-frame .data-row-link:hover,
 .persistent-app-frame .search-result-list .data-row:hover {
   background: #f1f5f4;
 }
-.persistent-app-frame .owner-card[open] summary { background: #f5f8f7; }
+.persistent-app-frame .owner-card[open] summary { background: var(--crm-farbe-flaeche-2); }
 
 /* Typografie und Lesbarkeit */
 .persistent-app-frame .editor-title,
@@ -96,7 +96,7 @@
 .persistent-app-frame .readiness-edit-card > .readiness-number-grid > div strong,
 .persistent-app-frame .readiness-task-create h3,
 .persistent-app-frame .lead-explainer strong {
-  color: #1c292a;
+  color: var(--crm-farbe-text);
 }
 .persistent-app-frame .subtle,
 .persistent-app-frame .empty-state,
@@ -139,14 +139,14 @@
 .persistent-app-frame .readiness-assumption p,
 .persistent-app-frame .readiness-measure-main small,
 .persistent-app-frame .readiness-ai-note {
-  color: #667576;
+  color: var(--crm-farbe-text-blass);
 }
 .persistent-app-frame .eyebrow,
 .persistent-app-frame .readiness-fact-grid dt,
 .persistent-app-frame .readiness-measure dt,
 .persistent-app-frame .readiness-scenario dt,
 .persistent-app-frame .readiness-measure-heading span {
-  color: #5f7071;
+  color: var(--crm-farbe-text-blass);
 }
 .persistent-app-frame .data-row strong,
 .persistent-app-frame .readiness-fact-grid dd,
@@ -155,7 +155,7 @@
 .persistent-app-frame .readiness-measure-main p,
 .persistent-app-frame .lead-task-description p:last-child,
 .persistent-app-frame .module04-modal-description {
-  color: #263536;
+  color: var(--crm-farbe-text);
 }
 .persistent-app-frame .back-link:hover,
 .persistent-app-frame .subtle-link:hover,
@@ -179,10 +179,10 @@
 .persistent-app-frame .live-search-field .live-search-input,
 .persistent-app-frame .readiness-ai-preview {
   background: var(--crm-farbe-flaeche);
-  color: #1d2a2b;
-  border-color: #bcc9c7;
-  caret-color: #1d2a2b;
-  -webkit-text-fill-color: #1d2a2b;
+  color: var(--crm-farbe-text);
+  border-color: var(--crm-farbe-linie-feld);
+  caret-color: var(--crm-farbe-text);
+  -webkit-text-fill-color: var(--crm-farbe-text);
 }
 .persistent-app-frame input::placeholder,
 .persistent-app-frame textarea::placeholder,
@@ -192,9 +192,9 @@
 .persistent-app-frame .readiness-form-grid textarea::placeholder,
 .persistent-app-frame .readiness-scenario input::placeholder,
 .persistent-app-frame .readiness-scenario textarea::placeholder {
-  color: #687778;
+  color: var(--crm-farbe-text-blass);
   opacity: 1;
-  -webkit-text-fill-color: #687778;
+  -webkit-text-fill-color: var(--crm-farbe-text-blass);
 }
 .persistent-app-frame :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea):hover,
 .persistent-app-frame .live-search-field .live-search-input:hover {
@@ -206,7 +206,7 @@
 .persistent-app-frame .checklist-row.checklist-todo select { border-color: #d7a3a4; }
 .persistent-app-frame .checklist-row.checklist-in-progress select { border-color: #d7bc70; }
 .persistent-app-frame .checklist-row.checklist-done select { border-color: #98bea4; }
-.persistent-app-frame .checklist-row.checklist-waived select { border-color: #cbd3d1; }
+.persistent-app-frame .checklist-row.checklist-waived select { border-color: var(--crm-farbe-linie); }
 .persistent-app-frame :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea):focus,
 .persistent-app-frame input:focus,
 .persistent-app-frame .global-search-field input:focus,
@@ -219,15 +219,15 @@
 .persistent-app-frame :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea):disabled,
 .persistent-app-frame input:disabled {
   background: #edf1f0;
-  color: #778485;
-  border-color: #d0d8d6;
-  -webkit-text-fill-color: #778485;
+  color: var(--crm-farbe-text-blass);
+  border-color: var(--crm-farbe-linie);
+  -webkit-text-fill-color: var(--crm-farbe-text-blass);
 }
 .persistent-app-frame .live-search-field .live-search-input:-webkit-autofill,
 .persistent-app-frame .live-search-field .live-search-input:-webkit-autofill:hover,
 .persistent-app-frame .live-search-field .live-search-input:-webkit-autofill:focus {
-  -webkit-text-fill-color: #1d2a2b;
-  caret-color: #1d2a2b;
+  -webkit-text-fill-color: var(--crm-farbe-text);
+  caret-color: var(--crm-farbe-text);
   box-shadow: 0 0 0 1000px var(--crm-farbe-flaeche) inset;
 }
 .persistent-app-frame .live-search-field::before,
@@ -242,19 +242,19 @@
 .persistent-app-frame .primary-button:hover { background: #1d302f; }
 .persistent-app-frame .secondary-button {
   background: var(--crm-farbe-flaeche);
-  color: #263536;
-  border-color: #b9c7c4;
+  color: var(--crm-farbe-text);
+  border-color: var(--crm-farbe-linie-feld);
 }
 .persistent-app-frame .secondary-button:hover {
   background: #edf3f1;
   border-color: #91a5a1;
 }
-.persistent-app-frame .text-button { color: #536667; }
+.persistent-app-frame .text-button { color: var(--crm-farbe-text-leise); }
 .persistent-app-frame .feature-chip,
 .persistent-app-frame .mention-chip {
-  background: #f7f9f8;
-  color: #344546;
-  border-color: #c6d1cf;
+  background: var(--crm-farbe-flaeche-2);
+  color: var(--crm-farbe-text-2);
+  border-color: var(--crm-farbe-linie);
 }
 .persistent-app-frame .feature-chip:hover,
 .persistent-app-frame .mention-chip:hover {
@@ -270,8 +270,8 @@
 .persistent-app-frame .status-badge-readable,
 .persistent-app-frame .offer-replaced-badge {
   background: #edf1f0;
-  border-color: #c7d1cf;
-  color: #4d5d5e;
+  border-color: var(--crm-farbe-linie);
+  color: var(--crm-farbe-text-leise);
 }
 .persistent-app-frame .status-acquisition,
 .persistent-app-frame .status-valuation,
@@ -315,9 +315,9 @@
 }
 .persistent-app-frame .status-archived,
 .persistent-app-frame .checklist-waived {
-  background: #edf0ef;
-  border-color: #cbd3d1;
-  color: #5e6b6c;
+  background: var(--crm-farbe-grund);
+  border-color: var(--crm-farbe-linie);
+  color: var(--crm-farbe-text-blass);
 }
 .persistent-app-frame .form-success {
   background: #e5f4e9;
@@ -334,11 +334,11 @@
 /* Verkaufsstrategie-Check: Hinweise und Berechnungen auf hellem Grund. */
 .persistent-app-frame .readiness-mode-banner,
 .persistent-app-frame .readiness-mode-banner.locked {
-  background: #f3f6f5;
-  border-color: #cbd6d4;
-  color: #5f6f70;
+  background: var(--crm-farbe-grund);
+  border-color: var(--crm-farbe-linie);
+  color: var(--crm-farbe-text-blass);
 }
-.persistent-app-frame .readiness-mode-banner strong { color: #273738; }
+.persistent-app-frame .readiness-mode-banner strong { color: var(--crm-farbe-text); }
 .persistent-app-frame .readiness-mode-banner.preview,
 .persistent-app-frame .readiness-recommend,
 .persistent-app-frame .readiness-calculation,
@@ -371,4 +371,12 @@
   box-shadow: 0 28px 80px rgba(38, 54, 54, .20);
 }
 .persistent-app-frame .module04-modal-close,
-.persistent-app-frame .organization-create-close { color: #596a6b; }
+.persistent-app-frame .organization-create-close { color: var(--crm-farbe-text-blass); }
+
+/* Paket C 4b (26.10.2026): <small> ohne eigene Groesse stand auf dem
+   Browser-Standard "smaller" (13,33 px bei 16 px Umgebung). Jetzt Stufe 13;
+   :where() haelt die Spezifitaet bei 0, jede Regel mit eigener Groesse geht
+   vor. In den zwei Koepfen mit 13 px Umgebung war es 10,83 px -> Stufe 11. */
+:where(.persistent-app-frame) small { font-size: var(--crm-schrift-13); }
+.persistent-app-frame .lead-workflow-popover-head small,
+.persistent-app-frame .task-collaboration-head small { font-size: var(--crm-schrift-11); }

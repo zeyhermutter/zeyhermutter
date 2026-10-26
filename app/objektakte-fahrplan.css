@@ -100,7 +100,7 @@
 }
 
 .fahrplan-naechster strong {
-  font-size: 17px;
+  font-size: var(--crm-schrift-16);
 }
 
 .fahrplan-naechster small {

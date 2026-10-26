@@ -7,7 +7,7 @@
 .calendar-month-title {
   min-width: 185px;
   text-align: center;
-  color: #263536;
+  color: var(--crm-farbe-text);
   font-weight: 700;
 }
 
@@ -31,22 +31,22 @@
 }
 
 .calendar-provider-status > div {
-  border: 1px solid #d8e0de;
+  border: 1px solid var(--crm-farbe-linie-leise);
   border-radius: var(--crm-card-radius-sm);
-  background: #f8faf9;
+  background: var(--crm-farbe-flaeche-2);
   padding: var(--crm-card-padding-sm);
 }
 
 .calendar-provider-status span {
   display: block;
-  color: #738080;
-  font-size: .78rem;
+  color: var(--crm-farbe-text-blass);
+  font-size: var(--crm-schrift-12);
   margin-bottom: 4px;
 }
 
 .calendar-provider-status strong {
-  color: #263536;
-  font-size: .92rem;
+  color: var(--crm-farbe-text);
+  font-size: var(--crm-schrift-15);
 }
 
 /* --- Zwei Ansichten desselben Monats, nebeneinander ---------------------
@@ -108,19 +108,19 @@
 .calendar-day-label {
   position: sticky;
   top: 16px;
-  border: 1px solid #d8e0de;
-  background: #f8faf9;
+  border: 1px solid var(--crm-farbe-linie-leise);
+  background: var(--crm-farbe-flaeche-2);
   border-radius: var(--crm-card-radius-sm);
   padding: var(--crm-card-padding-sm);
 }
 
 .calendar-day-label strong {
   display: block;
-  color: #263536;
+  color: var(--crm-farbe-text);
 }
 
 .calendar-day-label small {
-  color: #758283;
+  color: var(--crm-farbe-text-blass);
 }
 
 .calendar-day-events {
@@ -133,7 +133,7 @@
   grid-template-columns: 92px minmax(0, 1fr) auto;
   gap: 14px;
   align-items: center;
-  border: 1px solid #d8e0de;
+  border: 1px solid var(--crm-farbe-linie-leise);
   border-radius: var(--crm-card-radius-sm);
   background: var(--crm-farbe-flaeche);
   padding: var(--crm-card-padding-sm);
@@ -141,12 +141,12 @@
 
 .calendar-event-time strong {
   display: block;
-  color: #253435;
-  font-size: .92rem;
+  color: var(--crm-farbe-text);
+  font-size: var(--crm-schrift-15);
 }
 
 .calendar-event-time small {
-  color: #7b8788;
+  color: var(--crm-farbe-text-blass);
 }
 
 /*
@@ -155,21 +155,21 @@
  * Spalte nicht breiter wird als die Uhrzeiten darüber und darunter.
  */
 .calendar-event-time strong.calendar-event-ganztags {
-  font-size: .78rem;
+  font-size: var(--crm-schrift-12);
   letter-spacing: .01em;
   color: #51605f;
 }
 
 .calendar-event-main strong {
   display: block;
-  color: #263536;
+  color: var(--crm-farbe-text);
   margin-bottom: 4px;
 }
 
 .calendar-event-main p {
   margin: 0;
-  color: #6c797a;
-  font-size: .88rem;
+  color: var(--crm-farbe-text-blass);
+  font-size: var(--crm-schrift-14);
   line-height: 1.4;
 }
 
@@ -186,11 +186,11 @@
   width: fit-content;
   margin-top: 7px;
   border-radius: var(--crm-pill-radius);
-  border: 1px solid #cfd9d7;
-  background: #f6f9f8;
-  color: #536364;
+  border: 1px solid var(--crm-farbe-linie);
+  background: var(--crm-farbe-flaeche-2);
+  color: var(--crm-farbe-text-leise);
   padding: var(--crm-pill-padding-sm);
-  font-size: .74rem;
+  font-size: var(--crm-schrift-12);
 }
 
 .calendar-source-links {
@@ -202,8 +202,8 @@
 
 .calendar-note {
   margin: 12px 0 0;
-  color: #687778;
-  font-size: .88rem;
+  color: var(--crm-farbe-text-blass);
+  font-size: var(--crm-schrift-14);
   line-height: 1.45;
 }
 
@@ -248,15 +248,15 @@
 }
 
 .calendar-monat-kopf strong {
-  color: #263536;
+  color: var(--crm-farbe-text);
 }
 
 .calendar-monat-kopf small {
-  color: #758283;
+  color: var(--crm-farbe-text-blass);
 }
 
 .monatsraster-rahmen {
-  border: 1px solid #d8e0de;
+  border: 1px solid var(--crm-farbe-linie-leise);
   border-radius: var(--crm-card-radius-sm);
   background: var(--crm-farbe-flaeche);
   overflow: hidden;
@@ -271,9 +271,9 @@
 .monatsraster th {
   padding: 7px 0;
   border-bottom: 1px solid #e3eae8;
-  background: #f8faf9;
-  color: #6b7a7b;
-  font-size: 10px;
+  background: var(--crm-farbe-flaeche-2);
+  color: var(--crm-farbe-text-blass);
+  font-size: var(--crm-schrift-11);
   font-weight: 700;
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -281,8 +281,8 @@
 
 .monatsraster td {
   height: 62px;
-  border-top: 1px solid #e9efed;
-  border-left: 1px solid #e9efed;
+  border-top: 1px solid var(--crm-farbe-linie-leise);
+  border-left: 1px solid var(--crm-farbe-linie-leise);
   vertical-align: top;
 }
 
@@ -306,7 +306,7 @@
 }
 
 .monatsraster-wochenende {
-  background: #fafcfb;
+  background: var(--crm-farbe-flaeche);
 }
 
 a.monatsraster-tag:hover {
@@ -326,7 +326,7 @@ a.monatsraster-tag:focus-visible {
   height: 19px;
   flex: 0 0 auto;
   border-radius: var(--crm-pill-radius);
-  color: #43524f;
+  color: var(--crm-farbe-text-leise);
   font-size: var(--crm-schrift-11);
   font-weight: 700;
 }
@@ -361,7 +361,7 @@ a.monatsraster-tag:focus-visible {
   height: 15px;
   flex: 0 0 auto;
   border-radius: var(--crm-pill-radius);
-  font-size: 10px;
+  font-size: var(--crm-schrift-11);
   font-weight: 800;
   line-height: 1;
 }
@@ -370,8 +370,8 @@ a.monatsraster-tag:focus-visible {
   display: inline-flex;
   align-items: center;
   height: 15px;
-  color: #6b7a7b;
-  font-size: 10px;
+  color: var(--crm-farbe-text-blass);
+  font-size: var(--crm-schrift-11);
   font-weight: 700;
 }
 
@@ -394,13 +394,13 @@ a.monatsraster-tag:focus-visible {
 .monatsraster-legende-text {
   flex: 1 1 auto;
   min-width: 0;
-  color: #53625f;
+  color: var(--crm-farbe-text-leise);
   font-size: var(--crm-schrift-12);
 }
 
 .monatsraster-legende-zahl {
   flex: 0 0 auto;
-  color: #43524f;
+  color: var(--crm-farbe-text-leise);
   font-size: var(--crm-schrift-12);
   font-weight: 700;
   font-variant-numeric: tabular-nums;

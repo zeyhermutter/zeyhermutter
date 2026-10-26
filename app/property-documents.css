@@ -17,7 +17,7 @@
 .document-detail-body { display: grid; gap: 18px; padding: 16px; }
 .document-metadata-section, .document-version-section { padding: var(--crm-card-padding-sm); border: 1px solid #293536; border-radius: var(--crm-card-radius-sm); background: #111718; }
 .document-subhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
-.document-subhead h3 { margin: 0; font-size: 18px; }
+.document-subhead h3 { margin: 0; font-size: var(--crm-schrift-20); }
 .document-metadata-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .document-metadata-form label:nth-of-type(4) { grid-column: 1 / -1; }
 .document-metadata-form textarea,

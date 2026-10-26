@@ -1,16 +1,16 @@
 /* Datenauskunft (P2-6): lesbar am Bildschirm und auf Papier. */
 .auskunft-bereich { max-width: var(--crm-content-max); margin: 0 auto var(--crm-section-gap, 12px); }
 .auskunft-bereich h2 { display: flex; align-items: baseline; gap: 8px; margin: 18px 0 8px; font-size: var(--crm-schrift-16); }
-.auskunft-bereich h2 span { color: #5b6773; font-size: var(--crm-schrift-13); font-weight: 400; }
-.auskunft-felder { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 4px 16px; margin: 0 0 10px; padding: 10px 0; border-bottom: 1px solid #e3e8ee; }
+.auskunft-bereich h2 span { color: var(--crm-farbe-text-blass); font-size: var(--crm-schrift-13); font-weight: 400; }
+.auskunft-felder { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 4px 16px; margin: 0 0 10px; padding: 10px 0; border-bottom: 1px solid var(--crm-farbe-linie-leise); }
 .auskunft-felder div { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 8px; }
 .auskunft-felder dt { color: var(--crm-farbe-text-leise); font-size: var(--crm-schrift-12); }
 .auskunft-felder dd { margin: 0; font-size: var(--crm-schrift-13); overflow-wrap: anywhere; }
 .auskunft-tabelle { width: 100%; border-collapse: collapse; font-size: var(--crm-schrift-13); }
-.auskunft-tabelle th, .auskunft-tabelle td { text-align: left; padding: 4px 8px; border-bottom: 1px solid #e3e8ee; }
+.auskunft-tabelle th, .auskunft-tabelle td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--crm-farbe-linie-leise); }
 /* Datenschutz-Angaben (P2-6 Teil 2): Rechtsgrundlage, Werbewiderspruch, Anonymisieren. */
 .datenschutz-raster { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
-.datenschutz-karte { display: grid; gap: 8px; align-content: start; padding: var(--crm-card-padding-sm); border: 1px solid #e3e8ee; border-radius: var(--crm-card-radius-sm); background: var(--crm-farbe-flaeche); }
+.datenschutz-karte { display: grid; gap: 8px; align-content: start; padding: var(--crm-card-padding-sm); border: 1px solid var(--crm-farbe-linie-leise); border-radius: var(--crm-card-radius-sm); background: var(--crm-farbe-flaeche); }
 .datenschutz-karte h3 { margin: 0; font-size: var(--crm-schrift-14); }
 .datenschutz-karte p { margin: 0; font-size: var(--crm-schrift-13); }
 .datenschutz-karte button { justify-self: start; }

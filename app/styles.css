@@ -63,7 +63,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
   font-weight: 700;
 }
 h1 { max-width: 850px; margin: 0; font-size: clamp(42px, 7vw, 82px); line-height: .98; letter-spacing: -.055em; }
-.lead { max-width: 720px; margin: 28px 0 0; color: #aeb9ba; font-size: 18px; line-height: 1.65; }
+.lead { max-width: 720px; margin: 28px 0 0; color: #aeb9ba; font-size: var(--crm-schrift-20); line-height: 1.65; }
 .status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 52px; }
 .status { border: 1px solid #344143; border-radius: var(--crm-card-radius-sm); padding: var(--crm-card-padding-sm); background: #151c1d99; }
 .status strong, .status span { display: block; }
@@ -130,7 +130,7 @@ h1 { max-width: 850px; margin: 0; font-size: clamp(42px, 7vw, 82px); line-height
 .metric-card, .data-card { border: 1px solid #293536; border-radius: var(--crm-card-radius); background: #141a1b; }
 .metric-card { padding: var(--crm-card-padding); }
 .metric-card span, .metric-card small { display: block; color: #7e8b8d; }
-.metric-card strong { display: block; margin: 12px 0 5px; font-size: 28px; }
+.metric-card strong { display: block; margin: 12px 0 5px; font-size: var(--crm-schrift-24); }
 .dashboard-grid { max-width: var(--crm-content-max); margin-left: auto; margin-right: auto; display: grid; grid-template-columns: 1.35fr 1fr; gap: 12px; }
 .data-card { min-width: 0; padding: var(--crm-card-padding); }
 .card-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
@@ -225,6 +225,7 @@ h1 { max-width: 850px; margin: 0; font-size: clamp(42px, 7vw, 82px); line-height
    * Hex-Werte und der !important nicht wieder steigt. */
   --crm-farbe-grund: #eef2f1;        /* Seitengrund hinter Karten */
   --crm-farbe-flaeche: #ffffff;      /* Karte, Tabelle, Feld */
+  --crm-farbe-flaeche-2: #f4f6f8;    /* abgesetzte Flaeche: Tabellen- und Listenkopf, Kennzahl, Chip */
   --crm-farbe-text: #1b2733;         /* Haupttext, 15,2:1 auf Weiss */
   --crm-farbe-text-2: #3d4a56;       /* Beschriftung, Spaltenkopf */
   --crm-farbe-text-leise: #4a5763;   /* Zusatz, 7,4:1 auf Weiss */

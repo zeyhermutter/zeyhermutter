@@ -8,7 +8,7 @@
 .email-schreiben-link { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .email-schreiben-link small { color: var(--crm-farbe-text-leise); }
 .email-schreiben-aktionen { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
-.email-schreiben-festhalten { display: grid; gap: 8px; margin-top: 16px; padding-top: 14px; border-top: 1px solid #e3e8ee; }
+.email-schreiben-festhalten { display: grid; gap: 8px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--crm-farbe-linie-leise); }
 .email-schreiben-festhalten.bereit { border-top-color: var(--crm-farbe-verweis); }
 .email-schreiben-festhalten button { justify-self: start; }
 .email-rueckmeldung { display: grid; gap: 6px; }
