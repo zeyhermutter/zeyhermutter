@@ -81,9 +81,16 @@ const OEFFENTLICH = new Set(["public-website.css", "homepage-v7-realtor.css", "h
 // oeffentliche Website, Anmeldung, Fehlerseite) fuer jedes Element und jede
 // Farbeigenschaft gegen alle Regeln ohne Zustand und ohne @media
 // nachgerechnet. Rahmen-Kurzformen behalten Breite und Stil.
-const HOECHSTENS = { hex: 568, important: 71, schriftgroessen: 11 };
+// 26.10.2026 (Statusfarben): je Zustand (info, gut, warnung, fehler)
+// Flaeche, Rahmen und Schrift als Rolle --crm-farbe-status-* in styles.css;
+// 35 Stellen mit genau diesen Werten umgestellt, keine sichtbare Aenderung.
+// Dazu das letzte "!important" des hellen Themas (Schrift der Check-Hinweise):
+// sein dunkler Gegenspieler ist mit 4c entfallen.
+const HOECHSTENS = { hex: 533, important: 70, schriftgroessen: 11 };
 
-const ROLLEN = ["grund", "flaeche", "flaeche-2", "text", "text-2", "text-leise", "text-blass", "linie", "linie-leise", "linie-feld", "handlung", "auf-dunkel", "verweis", "fehler", "gut"];
+const ROLLEN = ["grund", "flaeche", "flaeche-2", "text", "text-2", "text-leise", "text-blass", "linie", "linie-leise", "linie-feld", "handlung", "auf-dunkel", "verweis", "fehler", "gut",
+  "status-info-grund", "status-info-rand", "status-info-text", "status-gut-grund", "status-gut-rand", "status-gut-text",
+  "status-warnung-grund", "status-warnung-rand", "status-warnung-text", "status-fehler-grund", "status-fehler-rand", "status-fehler-text"];
 
 const ohneKommentare = (t) => t.replace(/\/\*[\s\S]*?\*\//g, "");
 let hex = 0, important = 0;

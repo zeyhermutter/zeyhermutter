@@ -8,13 +8,13 @@
   color: var(--crm-farbe-text-leise);
 }
 .persistent-app-frame .lead-status-pill.status-marketing {
-  background: #e6f1f8;
-  border-color: #a8c5d6;
-  color: #285e78;
+  background: var(--crm-farbe-status-info-grund);
+  border-color: var(--crm-farbe-status-info-rand);
+  color: var(--crm-farbe-status-info-text);
 }
 .persistent-app-frame .lead-status-pill.status-sold {
-  background: #e5f4e9;
-  border-color: #98bea4;
+  background: var(--crm-farbe-status-gut-grund);
+  border-color: var(--crm-farbe-status-gut-rand);
   color: var(--crm-farbe-gut);
 }
 .persistent-app-frame .lead-status-pill.status-archived,
@@ -36,12 +36,12 @@
   background: #edf1f0;
   color: var(--crm-farbe-text-leise);
 }
-.persistent-app-frame .inquiry-status.new { background: #e6f1f8; color: #285e78; }
+.persistent-app-frame .inquiry-status.new { background: var(--crm-farbe-status-info-grund); color: var(--crm-farbe-status-info-text); }
 .persistent-app-frame .inquiry-status.contacted,
-.persistent-app-frame .inquiry-status.qualified { background: #e5f4e9; color: var(--crm-farbe-gut); }
-.persistent-app-frame .inquiry-status.viewing_planned { background: #fff3d8; color: #6b5518; }
+.persistent-app-frame .inquiry-status.qualified { background: var(--crm-farbe-status-gut-grund); color: var(--crm-farbe-gut); }
+.persistent-app-frame .inquiry-status.viewing_planned { background: var(--crm-farbe-status-warnung-grund); color: var(--crm-farbe-status-warnung-text); }
 .persistent-app-frame .inquiry-status.closed { background: #edf1f0; color: var(--crm-farbe-text-leise); }
-.persistent-app-frame .inquiry-status.lost { background: #fbe9e9; color: #873b3e; }
+.persistent-app-frame .inquiry-status.lost { background: var(--crm-farbe-status-fehler-grund); color: var(--crm-farbe-status-fehler-text); }
 
 /* Deutlich sichtbare Abschnittsnavigation für Anfragen, Suchprofile und Besichtigungen. */
 .record-section-nav {

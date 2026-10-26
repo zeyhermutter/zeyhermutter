@@ -203,9 +203,9 @@
 }
 /* Statusfarbe der Auswahl in der Checkliste (Objektakte). Gleiche Spezifitaet
    wie die Grundregel, steht danach; Hover und Fokus gehen vor. */
-.persistent-app-frame .checklist-row.checklist-todo select { border-color: #d7a3a4; }
-.persistent-app-frame .checklist-row.checklist-in-progress select { border-color: #d7bc70; }
-.persistent-app-frame .checklist-row.checklist-done select { border-color: #98bea4; }
+.persistent-app-frame .checklist-row.checklist-todo select { border-color: var(--crm-farbe-status-fehler-rand); }
+.persistent-app-frame .checklist-row.checklist-in-progress select { border-color: var(--crm-farbe-status-warnung-rand); }
+.persistent-app-frame .checklist-row.checklist-done select { border-color: var(--crm-farbe-status-gut-rand); }
 .persistent-app-frame .checklist-row.checklist-waived select { border-color: var(--crm-farbe-linie); }
 .persistent-app-frame :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea):focus,
 .persistent-app-frame input:focus,
@@ -280,17 +280,17 @@
 .persistent-app-frame .readiness-status.status-ready_for_review,
 .persistent-app-frame .task-status-badge.status-in_progress,
 .persistent-app-frame .checklist-in-progress {
-  background: #fff3d8;
-  border-color: #d7bc70;
-  color: #6b5518;
+  background: var(--crm-farbe-status-warnung-grund);
+  border-color: var(--crm-farbe-status-warnung-rand);
+  color: var(--crm-farbe-status-warnung-text);
 }
 .persistent-app-frame .status-marketing,
 .persistent-app-frame .status-reserved,
 .persistent-app-frame .status-notary,
 .persistent-app-frame .task-status-badge.status-open {
-  background: #e6f1f8;
-  border-color: #a8c5d6;
-  color: #285e78;
+  background: var(--crm-farbe-status-info-grund);
+  border-color: var(--crm-farbe-status-info-rand);
+  color: var(--crm-farbe-status-info-text);
 }
 .persistent-app-frame .status-sold,
 .persistent-app-frame .readiness-status.status-finalized,
@@ -298,8 +298,8 @@
 .persistent-app-frame .checklist-done,
 .persistent-app-frame .offer-current-badge,
 .persistent-app-frame .lead-conversion-success {
-  background: #e5f4e9;
-  border-color: #98bea4;
+  background: var(--crm-farbe-status-gut-grund);
+  border-color: var(--crm-farbe-status-gut-rand);
   color: var(--crm-farbe-gut);
 }
 .persistent-app-frame .status-lost,
@@ -309,9 +309,9 @@
 .persistent-app-frame .form-error,
 .persistent-app-frame .lead-release-blocker,
 .persistent-app-frame .programm-arbeitsflaeche .lead-release-blocker {
-  background: #fbe9e9;
-  border-color: #d7a3a4;
-  color: #873b3e;
+  background: var(--crm-farbe-status-fehler-grund);
+  border-color: var(--crm-farbe-status-fehler-rand);
+  color: var(--crm-farbe-status-fehler-text);
 }
 .persistent-app-frame .status-archived,
 .persistent-app-frame .checklist-waived {
@@ -320,15 +320,15 @@
   color: var(--crm-farbe-text-blass);
 }
 .persistent-app-frame .form-success {
-  background: #e5f4e9;
-  border-color: #98bea4;
+  background: var(--crm-farbe-status-gut-grund);
+  border-color: var(--crm-farbe-status-gut-rand);
   color: var(--crm-farbe-gut);
 }
 .persistent-app-frame .form-warning,
 .persistent-app-frame .concurrency-dialog .module04-modal-description {
-  background: #fff3d8;
-  border-color: #d7bc70;
-  color: #6b5518;
+  background: var(--crm-farbe-status-warnung-grund);
+  border-color: var(--crm-farbe-status-warnung-rand);
+  color: var(--crm-farbe-status-warnung-text);
 }
 
 /* Verkaufsstrategie-Check: Hinweise und Berechnungen auf hellem Grund. */
@@ -346,7 +346,7 @@
 .persistent-app-frame .readiness-disclaimer {
   background: #eaf3f0;
   border-color: #a9c6be;
-  color: #355a53 !important;
+  color: #355a53;
 }
 .persistent-app-frame .readiness-mode-banner.preview strong,
 .persistent-app-frame .readiness-calculation strong,

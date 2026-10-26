@@ -237,6 +237,23 @@ h1 { max-width: 850px; margin: 0; font-size: clamp(42px, 7vw, 82px); line-height
   --crm-farbe-fehler: #a12a1f;
   --crm-farbe-gut: #275f3d;
 
+  /* Statusfarben (Paket C, 26.10.2026): je Zustand Flaeche, Rahmen, Schrift.
+   * Gilt fuer Status-Pillen, Hinweise, Checklisten und Freigabe-Sperren.
+   * Kontrast der Schrift auf der eigenen Flaeche: info 6,2:1, gut 6,6:1,
+   * warnung 6,5:1, fehler 6,6:1 (WCAG AA, auch fuer kleine Schrift). */
+  --crm-farbe-status-info-grund: #e6f1f8;
+  --crm-farbe-status-info-rand: #a8c5d6;
+  --crm-farbe-status-info-text: #285e78;
+  --crm-farbe-status-gut-grund: #e5f4e9;
+  --crm-farbe-status-gut-rand: #98bea4;
+  --crm-farbe-status-gut-text: var(--crm-farbe-gut);
+  --crm-farbe-status-warnung-grund: #fff3d8;
+  --crm-farbe-status-warnung-rand: #d7bc70;
+  --crm-farbe-status-warnung-text: #6b5518;
+  --crm-farbe-status-fehler-grund: #fbe9e9;
+  --crm-farbe-status-fehler-rand: #d7a3a4;
+  --crm-farbe-status-fehler-text: #873b3e;
+
   /* Schriftstufen (Paket C). Vorher 44 verschiedene Groessen. Neue Regeln
    * nehmen eine dieser Stufen; der Bestand wird schrittweise umgestellt. */
   --crm-schrift-11: 11px;

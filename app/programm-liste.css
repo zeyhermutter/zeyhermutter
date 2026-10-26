@@ -386,8 +386,8 @@
   cursor: pointer;
 }
 .rolle-schalter:hover { border-color: var(--crm-farbe-verweis); color: var(--crm-farbe-verweis); }
-.rolle-schalter.an { border-color: #98bea4; background: #e5f4e9; color: var(--crm-farbe-gut); font-weight: 600; }
-.rolle-schalter.an:hover { border-color: #b42318; background: #fbe9e9; color: #873b3e; }
+.rolle-schalter.an { border-color: var(--crm-farbe-status-gut-rand); background: var(--crm-farbe-status-gut-grund); color: var(--crm-farbe-gut); font-weight: 600; }
+.rolle-schalter.an:hover { border-color: #b42318; background: var(--crm-farbe-status-fehler-grund); color: var(--crm-farbe-status-fehler-text); }
 .rolle-zelle { color: var(--crm-farbe-text-blass); }
 .rolle-zelle.an { color: var(--crm-farbe-gut); font-weight: 600; }
 .rolle-status { display: inline; margin-left: 6px; }
