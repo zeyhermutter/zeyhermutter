@@ -9,10 +9,10 @@
 .lead-workflow-action{width:100%;display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;align-items:center;padding: var(--crm-card-padding-sm);border:0;border-radius: var(--crm-card-radius-sm);background:transparent;color:#eef2f3;text-align:left;cursor:pointer}
 .lead-workflow-action:hover{background:#20292a}
 .lead-workflow-action>span:last-child{display:grid;gap:2px}
-.lead-workflow-action strong{font-size:12px}
+.lead-workflow-action strong{font-size:var(--crm-schrift-12)}
 .lead-workflow-action small{color:#829092;font-size:10px}
-.lead-workflow-finished{display:block;padding:10px 8px;font-size:11px}
+.lead-workflow-finished{display:block;padding:10px 8px;font-size:var(--crm-schrift-11)}
 .lead-lost-inline{display:grid!important;grid-template-columns:minmax(0,1fr) auto;gap:7px;align-items:end;padding:9px 8px;border-top:1px solid #293536}
-.lead-lost-inline label{display:grid;gap:5px;color:#c7d0d1;font-size:11px}
+.lead-lost-inline label{display:grid;gap:5px;color:#c7d0d1;font-size:var(--crm-schrift-11)}
 .lead-lost-inline input{width:100%;padding: var(--crm-field-padding);border:1px solid #5a4547;border-radius: var(--crm-field-radius);background:#111718;color:#eef2f3;font:inherit}
 @media(max-width:560px){.lead-workflow-menu>summary,.lead-row-workflow>.secondary-button{width:100%}.lead-workflow-popover{position:fixed;left:12px;right:12px;top:auto;bottom:12px;width:auto}}

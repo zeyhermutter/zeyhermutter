@@ -2,7 +2,7 @@
 
 .telefonat-erfassen { display: grid; gap: 10px; margin: 4px 0 12px; }
 .telefonat-ergebnis { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; border: 0; }
-.telefonat-ergebnis legend { width: 100%; margin-bottom: 6px; font-size: 13px; font-weight: 600; }
+.telefonat-ergebnis legend { width: 100%; margin-bottom: 6px; font-size: var(--crm-schrift-13); font-weight: 600; }
 .telefonat-ergebnis label {
   display: inline-flex;
   align-items: center;
@@ -11,9 +11,9 @@
   border: 1px solid #c5ccd2;
   border-radius: var(--crm-pill-radius);
   cursor: pointer;
-  font-size: 13px;
+  font-size: var(--crm-schrift-13);
 }
-.telefonat-ergebnis label.gewaehlt { border-color: #0b5cad; background: #e8f1fb; color: #0b5cad; font-weight: 600; }
+.telefonat-ergebnis label.gewaehlt { border-color: var(--crm-farbe-verweis); background: #e8f1fb; color: var(--crm-farbe-verweis); font-weight: 600; }
 .telefonat-ergebnis input { margin: 0; }
-.telefonat-ergebnis label:focus-within { outline: 2px solid #0b5cad; outline-offset: 2px; }
+.telefonat-ergebnis label:focus-within { outline: 2px solid var(--crm-farbe-verweis); outline-offset: 2px; }
 .telefonat-erfassen .form-actions { justify-content: flex-end; }

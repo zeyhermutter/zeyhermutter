@@ -15,7 +15,7 @@
 .persistent-app-frame .lead-status-pill.status-sold {
   background: #e5f4e9;
   border-color: #98bea4;
-  color: #275f3d;
+  color: var(--crm-farbe-gut);
 }
 .persistent-app-frame .lead-status-pill.status-archived,
 .persistent-app-frame .lead-status-pill.status-draft {
@@ -38,7 +38,7 @@
 }
 .persistent-app-frame .inquiry-status.new { background: #e6f1f8; color: #285e78; }
 .persistent-app-frame .inquiry-status.contacted,
-.persistent-app-frame .inquiry-status.qualified { background: #e5f4e9; color: #275f3d; }
+.persistent-app-frame .inquiry-status.qualified { background: #e5f4e9; color: var(--crm-farbe-gut); }
 .persistent-app-frame .inquiry-status.viewing_planned { background: #fff3d8; color: #6b5518; }
 .persistent-app-frame .inquiry-status.closed { background: #edf1f0; color: #4d5d5e; }
 .persistent-app-frame .inquiry-status.lost { background: #fbe9e9; color: #873b3e; }
@@ -54,7 +54,7 @@
   overflow-x: auto;
   border: 1px solid #cbd6d4;
   border-radius: 13px;
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
   box-shadow: 0 5px 18px rgba(44, 64, 62, .05);
 }
 .record-section-nav a {
@@ -66,7 +66,7 @@
   padding: 0 14px;
   border-radius: 9px;
   color: #5b6b6c;
-  font-size: 13px;
+  font-size: var(--crm-schrift-13);
   font-weight: 650;
   text-decoration: none;
   white-space: nowrap;
@@ -104,7 +104,7 @@
   padding: var(--crm-modal-padding);
   border: 1px solid #cbd6d4;
   border-radius: var(--crm-modal-radius);
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
   color: #1d2a2b;
   box-shadow: 0 28px 90px rgba(38, 58, 55, .22);
 }
@@ -134,7 +134,7 @@
   display: grid;
   gap: 7px;
   color: #4f6061;
-  font-size: 13px;
+  font-size: var(--crm-schrift-13);
 }
 .task-create-form .wide { grid-column: 1 / -1; }
 .task-create-form textarea { resize: vertical; min-height: 100px; }
@@ -182,14 +182,14 @@
   color: #5f6f70;
 }
 .persistent-app-frame .property-map-popup-head button {
-  background: #eef2f1;
+  background: var(--crm-farbe-grund);
   color: #3a4a4b;
 }
 .persistent-app-frame .property-map-popup-head button:hover {
   background: #dfe8e5;
 }
 .persistent-app-frame .property-map-popup-item:hover {
-  background: #eef2f1;
+  background: var(--crm-farbe-grund);
 }
 .persistent-app-frame .property-map-attribution {
   background: rgba(255, 255, 255, .92);
@@ -218,11 +218,11 @@
   color: #5f6f70;
 }
 .persistent-app-frame .lead-workflow-menu[open] > summary {
-  background: #eef2f1;
+  background: var(--crm-farbe-grund);
   border-color: #9eaeab;
 }
 .persistent-app-frame .lead-workflow-popover {
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
   border-color: #cbd6d4;
   color: #263536;
 }
@@ -233,27 +233,27 @@
   color: #263536;
 }
 .persistent-app-frame .lead-workflow-action:hover {
-  background: #eef2f1;
+  background: var(--crm-farbe-grund);
 }
 
 /* Dashboard: die Benachrichtigungsglocke im Inhaltsbereich war noch dunkel. */
 .persistent-app-frame .notification-bell-trigger {
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
   border-color: #cbd6d4;
   color: #4d5d5e;
 }
 .persistent-app-frame .notification-bell-trigger:hover,
 .persistent-app-frame .notification-bell[open] .notification-bell-trigger {
-  background: #eef2f1;
+  background: var(--crm-farbe-grund);
   border-color: #9eaeab;
 }
 .persistent-app-frame .notification-bell-count {
   background: #2f4b47;
-  border-color: #ffffff;
-  color: #ffffff;
+  border-color: var(--crm-farbe-flaeche);
+  color: var(--crm-farbe-auf-dunkel);
 }
 .persistent-app-frame .notification-bell-popover {
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
   border-color: #cbd6d4;
   color: #263536;
 }
@@ -278,7 +278,7 @@
   border-bottom-color: #e6ebea;
   color: #263536;
 }
-.persistent-app-frame .notification-bell-item:hover { background: #eef2f1; }
+.persistent-app-frame .notification-bell-item:hover { background: var(--crm-farbe-grund); }
 .persistent-app-frame .notification-bell-item.unread { background: #f2f6f5; }
 .persistent-app-frame .notification-bell-item.unread:hover { background: #e7edec; }
 .persistent-app-frame .notification-bell-item-title i { background: #2f4b47; }
@@ -316,7 +316,7 @@ body:has(.persistent-app-frame) .build-version {
    Ergebnis war dunkler Text auf dunklem Grund, praktisch unlesbar.
    Aufgefallen beim Fotografieren der Masken fuer die Anleitung. */
 .persistent-app-frame .readiness-edit-card > .readiness-number-grid > div {
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
   border-color: #d6dfdd;
 }
 .persistent-app-frame .readiness-edit-card > .readiness-number-grid > div small {

@@ -9,9 +9,9 @@
 
 .akte-blick { display: grid; gap: 12px; }
 .akte-blick-kopf { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 10px 16px; }
-.akte-blick-satz { margin: 0; color: var(--crm-farbe-text); font-size: 15px; font-weight: 600; line-height: 1.4; }
+.akte-blick-satz { margin: 0; color: var(--crm-farbe-text); font-size: var(--crm-schrift-15); font-weight: 600; line-height: 1.4; }
 .akte-blick-satz + .akte-blick-satz { margin-top: 2px; }
-.akte-blick-erreichbar { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 6px 0 0; font-size: 13px; }
+.akte-blick-erreichbar { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 6px 0 0; font-size: var(--crm-schrift-13); }
 .akte-blick-erreichbar a { color: var(--crm-farbe-verweis); }
 .akte-blick-aktionen { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px; }
 
@@ -35,19 +35,19 @@
 .akte-naechster.ueberfaellig { border-color: #e2b4ae; background: #fdf4f3; color: var(--crm-farbe-fehler); }
 .akte-naechster > span { font-size: var(--crm-pill-font-sm); font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
 .akte-naechster a { color: inherit; }
-.akte-naechster strong { font-size: 15px; }
+.akte-naechster strong { font-size: var(--crm-schrift-15); }
 .akte-naechster small { flex: 1 1 220px; color: var(--crm-farbe-text-2); }
 
 /* Status aendern: zugeklappt, damit "Verloren" oder "Archiviert" nicht als
  * erster Knopf der Akte im Weg stehen. */
-.akte-blick-status > summary { cursor: pointer; color: var(--crm-farbe-verweis); font-size: 13px; list-style: none; }
+.akte-blick-status > summary { cursor: pointer; color: var(--crm-farbe-verweis); font-size: var(--crm-schrift-13); list-style: none; }
 .akte-blick-status > summary::-webkit-details-marker { display: none; }
 .akte-blick-status > summary::after { content: " ▾"; }
 .akte-blick-status[open] > summary::after { content: " ▴"; }
 .akte-blick-status .inline-actions { margin-top: 8px; }
 
 /* Art einer Zeile in einer gemischten Liste ("Anfrage", "Besichtigung"). */
-.data-row .akte-art { display: block; color: #5b6772; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.data-row .akte-art { display: block; color: #5b6772; font-size: var(--crm-schrift-11); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 
 /* In der Objektakte steht die Karte ueber beiden Spalten. */
 .property-summary-grid > .akte-blick { grid-column: 1 / -1; }

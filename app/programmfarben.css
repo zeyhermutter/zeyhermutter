@@ -24,7 +24,7 @@
  *   verwaltung   #475569  7,6 / 6,6 / 7,6
  */
 
-[data-bereich="tag"]         { --bereich: #0b5cad; --bereich-hell: #e7f0fa; }
+[data-bereich="tag"]         { --bereich: var(--crm-farbe-verweis); --bereich-hell: #e7f0fa; }
 [data-bereich="adressen"]    { --bereich: #0f766e; --bereich-hell: #e2f3f1; }
 [data-bereich="immobilien"]  { --bereich: #2a7130; --bereich-hell: #e6f3e7; }
 [data-bereich="vermarktung"] { --bereich: #b23c0a; --bereich-hell: #fdeee4; }
@@ -39,10 +39,10 @@
 /* --- Modulleiste: jedes Symbol in seiner Farbe --------------------------- */
 
 .programmrahmen .modulleiste-eintrag svg { color: var(--bereich); }
-.programmrahmen .modulleiste-eintrag:hover { background: var(--bereich-hell); color: #1b2733; }
+.programmrahmen .modulleiste-eintrag:hover { background: var(--bereich-hell); color: var(--crm-farbe-text); }
 .programmrahmen .modulleiste-eintrag.aktiv,
-.programmrahmen .modulleiste-eintrag.aktiv:hover { background: var(--bereich); color: #ffffff; }
-.programmrahmen .modulleiste-eintrag.aktiv svg { color: #ffffff; }
+.programmrahmen .modulleiste-eintrag.aktiv:hover { background: var(--bereich); color: var(--crm-farbe-auf-dunkel); }
+.programmrahmen .modulleiste-eintrag.aktiv svg { color: var(--crm-farbe-auf-dunkel); }
 
 /* --- Bereichsleiste: Titel als Marke, nicht als Reiter ------------------- */
 
@@ -55,7 +55,7 @@
   color: var(--bereich);
 }
 .programmrahmen .bereichsleiste-titel svg { width: 15px; height: 15px; flex: 0 0 auto; }
-.programmrahmen .bereichsleiste-eintrag.aktiv { border-bottom-color: var(--bereich); color: #1b2733; }
+.programmrahmen .bereichsleiste-eintrag.aktiv { border-bottom-color: var(--bereich); color: var(--crm-farbe-text); }
 
 /* --- Arbeitsplatz ---------------------------------------------------------- */
 
@@ -68,12 +68,12 @@
 
 .programmrahmen .programm-tabelle-rahmen { box-shadow: inset 0 2px 0 var(--bereich); }
 .programmrahmen .programm-kennzahlen strong { color: var(--bereich); }
-.programmrahmen .programm-kennzahlen .warnung strong { color: #a12a1f; }
+.programmrahmen .programm-kennzahlen .warnung strong { color: var(--crm-farbe-fehler); }
 .programmrahmen .programm-umfang a.aktiv { background: var(--bereich); }
 
 /* --- Statusleiste: Build-Stempel ------------------------------------------- */
 
-.programmrahmen .statusleiste-stand { color: #4a5763; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; }
+.programmrahmen .statusleiste-stand { color: var(--crm-farbe-text-leise); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: var(--crm-schrift-11); }
 body:has(.programmrahmen) .build-version { display: none !important; }
 
 /* --- Hilfe in der Titelleiste ------------------------------------------------
@@ -88,13 +88,13 @@ body:has(.programmrahmen) .build-version { display: none !important; }
   box-shadow: none;
   color: #dce3ea;
 }
-.programmrahmen .titelleiste .help-entry:hover { border-color: #9fb2c6; background: #102d47; color: #ffffff; }
+.programmrahmen .titelleiste .help-entry:hover { border-color: #9fb2c6; background: #102d47; color: var(--crm-farbe-auf-dunkel); }
 
 /* --- Eine Farbe fuer die Handlung --------------------------------------------
  * Der Hauptknopf war im alten Design dunkelgruen (#263b39), "+ Neu" in den
  * Listen und im Arbeitsplatz Navy -- zwei Farben fuer dasselbe. Jetzt ueberall
  * Navy, die Farbe der Marke. Weiss auf #062037: 17,1:1. */
-.persistent-app-frame.programmrahmen .primary-button { background: #062037 !important; border-color: #062037 !important; color: #ffffff !important; }
+.persistent-app-frame.programmrahmen .primary-button { background: var(--crm-farbe-handlung) !important; border-color: var(--crm-farbe-handlung) !important; color: var(--crm-farbe-auf-dunkel) !important; }
 .persistent-app-frame.programmrahmen .primary-button:hover { background: #102d47 !important; border-color: #102d47 !important; }
 
 /* Tastaturfokus in der Bereichsfarbe -- sichtbar, aber nicht schwarz. */

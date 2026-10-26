@@ -13,12 +13,12 @@
   height: 24px;
   border: 2px solid #8a96a1;
   border-radius: 999px;
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
   cursor: pointer;
 }
 .aufgaben-haken button:hover { border-color: #1f7a4d; background: #e8f4ee; }
-.aufgaben-haken button:hover::after { content: "✓"; color: #1f7a4d; font-size: 13px; font-weight: 700; }
-.aufgaben-haken button:focus-visible { outline: 2px solid #0b5cad; outline-offset: 2px; }
+.aufgaben-haken button:hover::after { content: "✓"; color: #1f7a4d; font-size: var(--crm-schrift-13); font-weight: 700; }
+.aufgaben-haken button:focus-visible { outline: 2px solid var(--crm-farbe-verweis); outline-offset: 2px; }
 .aufgaben-haken-platz { width: 24px; text-align: center; color: #1f7a4d; font-weight: 700; }
 
 .aufgaben-neu {
@@ -31,7 +31,7 @@
 .aufgaben-neu .form-actions { justify-content: flex-end; }
 
 .aufgaben-erledigte { margin-top: 10px; }
-.aufgaben-erledigte > summary { cursor: pointer; color: #0b5cad; font-size: 13px; }
+.aufgaben-erledigte > summary { cursor: pointer; color: var(--crm-farbe-verweis); font-size: var(--crm-schrift-13); }
 .aufgaben-erledigte .data-list { margin-top: 8px; }
 
 @media (max-width: 760px) {

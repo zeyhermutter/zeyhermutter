@@ -14,13 +14,13 @@
 .error-shell {
   color-scheme: light;
   color: #1d2a2b;
-  background: #eef2f1;
+  background: var(--crm-farbe-grund);
 }
 
 .auth-shell .auth-card,
 .error-shell .panel {
   border-color: #d6dfdd;
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
   color: #1d2a2b;
   box-shadow: 0 18px 48px #1d2a2b14;
 }
@@ -45,7 +45,7 @@
 
 .auth-shell .auth-form input {
   border-color: #c3cfcd;
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
   color: #172425;
 }
 

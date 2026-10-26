@@ -135,7 +135,7 @@
   align-items: center;
   border: 1px solid #d8e0de;
   border-radius: var(--crm-card-radius-sm);
-  background: #fff;
+  background: var(--crm-farbe-flaeche);
   padding: var(--crm-card-padding-sm);
 }
 
@@ -258,7 +258,7 @@
 .monatsraster-rahmen {
   border: 1px solid #d8e0de;
   border-radius: var(--crm-card-radius-sm);
-  background: #fff;
+  background: var(--crm-farbe-flaeche);
   overflow: hidden;
 }
 
@@ -327,7 +327,7 @@ a.monatsraster-tag:focus-visible {
   flex: 0 0 auto;
   border-radius: var(--crm-pill-radius);
   color: #43524f;
-  font-size: 11px;
+  font-size: var(--crm-schrift-11);
   font-weight: 700;
 }
 
@@ -341,7 +341,7 @@ a.monatsraster-tag:focus-visible {
 
 .monatsraster-heute .monatsraster-zahl {
   background: #172425;
-  color: #fff;
+  color: var(--crm-farbe-auf-dunkel);
 }
 
 .monatsraster-marken {
@@ -395,13 +395,13 @@ a.monatsraster-tag:focus-visible {
   flex: 1 1 auto;
   min-width: 0;
   color: #53625f;
-  font-size: 12px;
+  font-size: var(--crm-schrift-12);
 }
 
 .monatsraster-legende-zahl {
   flex: 0 0 auto;
   color: #43524f;
-  font-size: 12px;
+  font-size: var(--crm-schrift-12);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -564,8 +564,8 @@ a.monatsraster-tag:focus-visible {
 
 .kalender-werkzeuge .calendar-month-title {
   min-width: 132px;
-  color: #1b2733;
-  font-size: 15px;
+  color: var(--crm-farbe-text);
+  font-size: var(--crm-schrift-15);
   font-weight: 600;
   text-align: center;
 }
@@ -577,12 +577,12 @@ a.monatsraster-tag:focus-visible {
   margin-left: auto;
   margin-right: auto;
   padding: var(--crm-card-padding-sm);
-  border: 1px solid #cdd3d9;
+  border: 1px solid var(--crm-farbe-linie);
   border-radius: var(--crm-card-radius-sm);
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
 }
 
-.kalender-quellen summary { color: #3d4a56; font-size: 13px; font-weight: 600; cursor: pointer; }
+.kalender-quellen summary { color: var(--crm-farbe-text-2); font-size: var(--crm-schrift-13); font-weight: 600; cursor: pointer; }
 .kalender-quellen[open] summary { margin-bottom: 10px; }
 
 /* Die Agenda als Liste statt als Kartenstapel: je Tag eine Kopfzeile, darunter
@@ -596,9 +596,9 @@ a.monatsraster-tag:focus-visible {
   grid-template-columns: minmax(0, 1fr);
   gap: 0;
   overflow: hidden;
-  border: 1px solid #cdd3d9;
+  border: 1px solid var(--crm-farbe-linie);
   border-radius: var(--crm-card-radius-sm);
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
 }
 
 .kalender-programm .calendar-day-label {
@@ -608,13 +608,13 @@ a.monatsraster-tag:focus-visible {
   gap: 8px;
   padding: 7px 12px;
   border: 0;
-  border-bottom: 1px solid #dde2e7;
+  border-bottom: 1px solid var(--crm-farbe-linie-leise);
   border-radius: 0;
   background: #f4f6f8;
 }
 
-.kalender-programm .calendar-day-label strong { display: inline; font-size: 13px; }
-.kalender-programm .calendar-day-label small { font-size: 12px; }
+.kalender-programm .calendar-day-label strong { display: inline; font-size: var(--crm-schrift-13); }
+.kalender-programm .calendar-day-label small { font-size: var(--crm-schrift-12); }
 
 .kalender-programm .calendar-day-events { gap: 0; }
 
@@ -629,11 +629,11 @@ a.monatsraster-tag:focus-visible {
 
 .kalender-programm .calendar-ansichten .calendar-event:last-child { border-bottom: 0; }
 .kalender-programm .calendar-ansichten .calendar-event-actions { grid-column: auto; justify-content: flex-end; }
-.kalender-programm .calendar-event-time strong { font-size: 13px; }
-.kalender-programm .calendar-event-main strong { margin-bottom: 1px; font-size: 13px; }
-.kalender-programm .calendar-event-main p { font-size: 12px; }
+.kalender-programm .calendar-event-time strong { font-size: var(--crm-schrift-13); }
+.kalender-programm .calendar-event-main strong { margin-bottom: 1px; font-size: var(--crm-schrift-13); }
+.kalender-programm .calendar-event-main p { font-size: var(--crm-schrift-12); }
 .kalender-programm .calendar-event-main .calendar-kind { margin-top: 4px; }
-.kalender-programm .calendar-event-actions .secondary-button.compact { min-height: 28px; padding: 0 9px; font-size: 12px; }
+.kalender-programm .calendar-event-actions .secondary-button.compact { min-height: 28px; padding: 0 9px; font-size: var(--crm-schrift-12); }
 
 @media (max-width: 760px) {
   .kalender-programm .calendar-ansichten .calendar-event { grid-template-columns: 48px minmax(0, 1fr); }

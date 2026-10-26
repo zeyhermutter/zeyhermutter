@@ -36,15 +36,15 @@
   display: grid;
   place-items: center;
   transform: translate(-50%, -100%);
-  border: 2px solid #fff;
+  border: 2px solid var(--crm-farbe-flaeche);
   border-radius: 50% 50% 50% 4px;
   background: #22363c;
-  color: #fff;
+  color: var(--crm-farbe-auf-dunkel);
   text-decoration: none;
   box-shadow: 0 3px 12px rgba(0,0,0,.35);
   rotate: -45deg;
 }
-.property-map-marker span { rotate: 45deg; font-size: 11px; font-weight: 800; }
+.property-map-marker span { rotate: 45deg; font-size: var(--crm-schrift-11); font-weight: 800; }
 /* Die zweite Zeile je Gruppe (21.10.2026): im hellen Programm behalten die
    Marker ihre Statusfarben gegen die hellen Pill-Farben (.status-*). */
 .property-map-marker.status-marketing,
@@ -74,7 +74,7 @@
   border: 3px solid rgba(255,255,255,.92);
   border-radius: 999px;
   background: #173f57;
-  color: #fff;
+  color: var(--crm-farbe-auf-dunkel);
   font: 800 14px/1 inherit;
   cursor: pointer;
   box-shadow: 0 4px 18px rgba(0,0,0,.42), 0 0 0 7px rgba(36,94,128,.18);
@@ -139,7 +139,7 @@
   border: 1px solid rgba(255,255,255,.72);
   border-radius: 999px;
   background: #22363c;
-  color: #fff;
+  color: var(--crm-farbe-auf-dunkel);
   font-size: 10px;
   font-weight: 800;
 }
@@ -155,7 +155,7 @@
   font-size: 10px;
 }
 .property-map-attribution a { color: inherit; }
-.map-coverage-note { color: #768385; font-size: 12px; }
+.map-coverage-note { color: #768385; font-size: var(--crm-schrift-12); }
 @media (max-width: 720px) {
   .property-map-card { margin-top: 12px; }
   .property-map { height: 300px; }

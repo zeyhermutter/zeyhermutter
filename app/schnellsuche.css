@@ -6,7 +6,7 @@
   flex: 0 0 auto;
   color: #9fb2c6;
   font: inherit;
-  font-size: 11px;
+  font-size: var(--crm-schrift-11);
   white-space: nowrap;
 }
 
@@ -22,9 +22,9 @@
   padding: var(--crm-card-padding-sm);
   border: 1px solid #d5dde5;
   border-radius: var(--crm-card-radius-sm);
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
   box-shadow: 0 8px 24px rgba(6, 32, 55, 0.18);
-  color: #1b2733;
+  color: var(--crm-farbe-text);
 }
 
 .schnellsuche-eintrag {
@@ -33,18 +33,18 @@
   align-items: center;
   gap: 8px;
   padding: 6px 8px;
-  color: #1b2733;
+  color: var(--crm-farbe-text);
   text-decoration: none;
 }
 
 .schnellsuche-eintrag.aktiv,
 .schnellsuche-eintrag:hover { background: #dce8f5; }
 
-.schnellsuche-art { color: #4a5763; font-size: 12px; }
+.schnellsuche-art { color: var(--crm-farbe-text-leise); font-size: var(--crm-schrift-12); }
 
 .schnellsuche-was { display: grid; min-width: 0; }
-.schnellsuche-was strong { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.schnellsuche-was small { color: #4a5763; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.schnellsuche-was strong { font-size: var(--crm-schrift-13); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.schnellsuche-was small { color: var(--crm-farbe-text-leise); font-size: var(--crm-schrift-12); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.schnellsuche-hinweis { margin: 0; padding: 6px 8px; color: #4a5763; font-size: 13px; }
-.schnellsuche-fuss { margin: 6px 0 0; padding: 6px 8px 0; border-top: 1px solid #eef1f4; color: #5b6773; font-size: 11px; }
+.schnellsuche-hinweis { margin: 0; padding: 6px 8px; color: var(--crm-farbe-text-leise); font-size: var(--crm-schrift-13); }
+.schnellsuche-fuss { margin: 6px 0 0; padding: 6px 8px 0; border-top: 1px solid #eef1f4; color: #5b6773; font-size: var(--crm-schrift-11); }

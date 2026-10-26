@@ -44,7 +44,7 @@
   color: var(--crm-farbe-auf-dunkel);
   text-decoration: none;
   font-weight: 600;
-  font-size: 14px;
+  font-size: var(--crm-schrift-14);
   letter-spacing: .01em;
   white-space: nowrap;
 }
@@ -59,7 +59,7 @@
   border-radius: 4px;
   color: #c09a5b;
   font-weight: 700;
-  font-size: 11px;
+  font-size: var(--crm-schrift-11);
 }
 
 .titelleiste-suche {
@@ -87,7 +87,7 @@
   background: transparent;
   color: var(--crm-farbe-auf-dunkel);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--crm-schrift-13);
   outline: none;
 }
 
@@ -108,7 +108,7 @@
   border-radius: var(--crm-pill-radius);
   line-height: 1;
   color: #c09a5b;
-  font-size: 11px;
+  font-size: var(--crm-schrift-11);
   font-weight: 600;
   letter-spacing: .06em;
   text-transform: uppercase;
@@ -116,7 +116,7 @@
 
 .titelleiste-benutzer {
   color: #dce3ea;
-  font-size: 13px;
+  font-size: var(--crm-schrift-13);
   white-space: nowrap;
 }
 
@@ -128,7 +128,7 @@
   background: transparent;
   color: #dce3ea;
   font: inherit;
-  font-size: 13px;
+  font-size: var(--crm-schrift-13);
   cursor: pointer;
   padding: 4px 2px;
 }
@@ -160,8 +160,8 @@
   background: transparent !important;
   box-shadow: none !important;
   color: var(--crm-farbe-auf-dunkel) !important;
-  caret-color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  caret-color: var(--crm-farbe-auf-dunkel) !important;
+  -webkit-text-fill-color: var(--crm-farbe-auf-dunkel) !important;
 }
 .persistent-app-frame .titelleiste-suche input::placeholder {
   color: #9fb2c6 !important;
@@ -194,13 +194,13 @@
   padding: 9px 2px 8px;
   border-radius: 5px;
   color: #2e3b47;
-  font-size: 11px;
+  font-size: var(--crm-schrift-11);
   line-height: 1.2;
   text-align: center;
   text-decoration: none;
 }
 
-.modulleiste-eintrag:hover { background: #dde2e7; color: var(--crm-farbe-text); }
+.modulleiste-eintrag:hover { background: var(--crm-farbe-linie-leise); color: var(--crm-farbe-text); }
 
 .modulleiste-eintrag.aktiv {
   background: var(--crm-farbe-handlung);
@@ -237,7 +237,7 @@
 .bereichsleiste-titel {
   display: flex;
   align-items: center;
-  font-size: 13px;
+  font-size: var(--crm-schrift-13);
   font-weight: 600;
   color: var(--crm-farbe-text);
   white-space: nowrap;
@@ -255,7 +255,7 @@
   padding: 2px 13px 0;
   border-bottom: 2px solid transparent;
   color: var(--crm-farbe-text-2);
-  font-size: 13px;
+  font-size: var(--crm-schrift-13);
   font-weight: 500;
   white-space: nowrap;
   text-decoration: none;
@@ -289,9 +289,9 @@
   min-height: 26px;
   padding: 0 14px;
   border-top: 1px solid var(--crm-farbe-linie);
-  background: #dde2e7;
+  background: var(--crm-farbe-linie-leise);
   color: #2e3b47;
-  font-size: 12px;
+  font-size: var(--crm-schrift-12);
 }
 
 .statusleiste-rechts { margin-left: auto; }

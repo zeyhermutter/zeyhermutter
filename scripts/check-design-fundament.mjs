@@ -60,7 +60,12 @@ const OEFFENTLICH = new Set(["public-website.css", "homepage-v7-realtor.css", "h
 // und gesperrte Textfelder sehen gesperrt aus -- das alte "!important" hatte
 // sie verschluckt. Gemessen mit nachgebildeten Zustaenden (:hover/:focus als
 // Klasse) auf 19 Seiten vorher/nachher.
-const HOECHSTENS = { hex: 1037, important: 72, schriftgroessen: 36 };
+// 26.10.2026 (Schritt 4a, Freigabe Sebastian): Werte, die genau einer Rolle
+// oder Stufe entsprechen, als Variable geschrieben -- 118 Farben (#ffffff je
+// nach Eigenschaft als flaeche bzw. auf-dunkel) und 246 Schriftgroessen
+// (11/12/13/14/15/16/20/24px) in 44 Dateien. Gleicher Wert, keine sichtbare
+// Aenderung.
+const HOECHSTENS = { hex: 919, important: 72, schriftgroessen: 28 };
 
 const ROLLEN = ["grund", "flaeche", "text", "text-2", "text-leise", "text-blass", "linie", "linie-leise", "linie-feld", "handlung", "auf-dunkel", "verweis", "fehler", "gut"];
 

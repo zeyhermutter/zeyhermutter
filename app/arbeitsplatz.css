@@ -56,7 +56,7 @@
   background: var(--crm-farbe-flaeche);
   color: var(--crm-farbe-text);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--crm-schrift-13);
 }
 
 .arbeitsplatz-neu {
@@ -68,7 +68,7 @@
   border-radius: var(--crm-field-radius);
   background: var(--crm-farbe-handlung);
   color: var(--crm-farbe-auf-dunkel);
-  font-size: 13px;
+  font-size: var(--crm-schrift-13);
   font-weight: 500;
   text-decoration: none;
   white-space: nowrap;
@@ -95,7 +95,7 @@
 
 .arbeitsplatz-zeile.aktiv {
   background: #dce8f5;
-  box-shadow: inset 3px 0 0 #062037;
+  box-shadow: inset 3px 0 0 var(--crm-farbe-handlung);
 }
 
 .arbeitsplatz-zeile-oben {
@@ -108,12 +108,12 @@
 
 .arbeitsplatz-zeile-nummer {
   color: var(--crm-farbe-text-2);
-  font-size: 12px;
+  font-size: var(--crm-schrift-12);
   font-variant-numeric: tabular-nums;
 }
 
 .arbeitsplatz-zeile strong {
-  font-size: 13px;
+  font-size: var(--crm-schrift-13);
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -126,7 +126,7 @@
   gap: 8px;
   min-width: 0;
   color: var(--crm-farbe-text-leise);
-  font-size: 12px;
+  font-size: var(--crm-schrift-12);
   white-space: nowrap;
 }
 
@@ -146,14 +146,14 @@
 .arbeitsplatz-kopf .status-pill {
   min-height: 0;
   padding: 1px 7px;
-  font-size: 11px;
+  font-size: var(--crm-schrift-11);
 }
 
 .arbeitsplatz-hinweis {
   margin: 0;
   padding: 12px;
   color: var(--crm-farbe-text-leise);
-  font-size: 13px;
+  font-size: var(--crm-schrift-13);
   line-height: 1.5;
 }
 
@@ -163,7 +163,7 @@
   border-top: 1px solid var(--crm-farbe-linie-leise);
   background: #f8f9fa;
   color: var(--crm-farbe-text-2);
-  font-size: 12px;
+  font-size: var(--crm-schrift-12);
 }
 
 /* --- Akte ------------------------------------------------------------------ */
@@ -182,7 +182,7 @@
 
 .arbeitsplatz-kopf-nummer {
   color: var(--crm-farbe-text-2);
-  font-size: 12px;
+  font-size: var(--crm-schrift-12);
   font-variant-numeric: tabular-nums;
 }
 
@@ -196,11 +196,11 @@
   color: var(--crm-farbe-text);
 }
 
-.arbeitsplatz-kopf-ort { color: var(--crm-farbe-text-leise); font-size: 13px; }
+.arbeitsplatz-kopf-ort { color: var(--crm-farbe-text-leise); font-size: var(--crm-schrift-13); }
 
 /* Knoepfe im Kopf einer Akte (14.10.2026): rechts, klein, immer sichtbar. */
 .arbeitsplatz-kopf-aktionen { display: inline-flex; gap: 6px; margin-left: auto; }
-.arbeitsplatz-kopf .arbeitsplatz-kopf-knopf { min-height: 28px; padding: 0 12px; font-size: 13px; }
+.arbeitsplatz-kopf .arbeitsplatz-kopf-knopf { min-height: 28px; padding: 0 12px; font-size: var(--crm-schrift-13); }
 
 /* --- Reiter eines Datensatzes ---------------------------------------------- */
 
@@ -217,7 +217,7 @@
   padding: 10px 12px 8px;
   border-bottom: 2px solid transparent;
   color: var(--crm-farbe-text-2);
-  font-size: 13px;
+  font-size: var(--crm-schrift-13);
   font-weight: 500;
   white-space: nowrap;
   text-decoration: none;
@@ -252,7 +252,7 @@
   padding: var(--crm-pill-padding-sm);
   border-radius: var(--crm-pill-radius);
   color: var(--crm-farbe-text-2);
-  font-size: 12px;
+  font-size: var(--crm-schrift-12);
   font-weight: 500;
   white-space: nowrap;
   text-decoration: none;
@@ -281,7 +281,7 @@
 .arbeitsplatz-inhalt .editor-header .header-user > .badge:first-child,
 .arbeitsplatz-inhalt .editor-header .header-user > .badge:first-child + small { display: none; }
 .arbeitsplatz-inhalt .editor-header .editor-title,
-.arbeitsplatz-inhalt .editor-header h1 { font-size: 20px; line-height: 1.25; }
+.arbeitsplatz-inhalt .editor-header h1 { font-size: var(--crm-schrift-20); line-height: 1.25; }
 
 /*
  * Die Seiten sind fuer eine ganze Bildschirmbreite gebaut: 36 px Rand oben,
@@ -302,7 +302,7 @@
   border-radius: var(--crm-card-radius-sm);
 }
 
-.arbeitsplatz-inhalt .card-head h2 { font-size: 16px; line-height: 1.3; }
+.arbeitsplatz-inhalt .card-head h2 { font-size: var(--crm-schrift-16); line-height: 1.3; }
 
 /*
  * Bereiche, deren Seitenkoepfe nur wiederholen, was der Arbeitsplatz-Kopf
@@ -342,15 +342,15 @@
 }
 .akte-felder > div { min-width: 0; }
 .akte-felder > div.breit { grid-column: 1 / -1; }
-.akte-felder dt { color: var(--crm-farbe-text-leise); font-size: 12px; }
-.akte-felder dd { margin: 2px 0 0; color: var(--crm-farbe-text); font-size: 13px; overflow-wrap: anywhere; white-space: pre-line; }
+.akte-felder dt { color: var(--crm-farbe-text-leise); font-size: var(--crm-schrift-12); }
+.akte-felder dd { margin: 2px 0 0; color: var(--crm-farbe-text); font-size: var(--crm-schrift-13); overflow-wrap: anywhere; white-space: pre-line; }
 .akte-felder dd a { color: var(--crm-farbe-verweis); text-decoration: none; }
 .akte-felder dd a:hover { text-decoration: underline; }
-.akte-felder .leise { color: var(--crm-farbe-text-blass); font-size: 12px; }
+.akte-felder .leise { color: var(--crm-farbe-text-blass); font-size: var(--crm-schrift-12); }
 
 /* Zwischenueberschrift in einem langen Formular der Akte (Objektdaten,
  * 19.10.2026): gliedert die 23 Stammdatenfelder in Gruppen. */
-.akte-feldgruppe { margin: 22px 0 10px; color: var(--crm-farbe-text-2); font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.akte-feldgruppe { margin: 22px 0 10px; color: var(--crm-farbe-text-2); font-size: var(--crm-schrift-12); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
 .akte-feldgruppe:first-of-type { margin-top: 4px; }
 /* "Bearbeiten" unter den Feldern einer Lesekarte (Geldwaescheakte,
  * 19.10.2026): etwas Luft, damit der Knopf nicht an der letzten Zeile klebt. */
@@ -361,7 +361,7 @@
 .akte-werkzeuge { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .akte-werkzeuge:empty { display: none; }
 .akte-werkzeuge form { margin: 0; }
-.akte-werkzeuge :is(.primary-button, .secondary-button) { min-height: 30px; padding: 0 12px; font-size: 13px; }
+.akte-werkzeuge :is(.primary-button, .secondary-button) { min-height: 30px; padding: 0 12px; font-size: var(--crm-schrift-13); }
 
 @media (max-width: 760px) {
   .akte-felder { grid-template-columns: minmax(0, 1fr); }
@@ -369,4 +369,4 @@
 
 /* Die rechte Seite, solange es noch keinen Datensatz gibt
  * (app/components/leerer-arbeitsplatz.tsx). */
-.leere-akte .programm-erklaerung { margin: 0 0 12px; color: var(--crm-farbe-text-2); font-size: 13px; line-height: 1.5; }
+.leere-akte .programm-erklaerung { margin: 0 0 12px; color: var(--crm-farbe-text-2); font-size: var(--crm-schrift-13); line-height: 1.5; }

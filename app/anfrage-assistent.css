@@ -3,11 +3,11 @@
 .assistent-raster { display: grid; gap: var(--crm-section-gap, 12px); }
 .assistent-felder { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 12px; }
 .assistent-wahl { display: grid; gap: 8px; margin: 0 0 12px; padding: 0; border: 0; }
-.assistent-wahl legend { margin-bottom: 4px; font-weight: 600; font-size: 13px; }
-.assistent-wahl label { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; }
+.assistent-wahl legend { margin-bottom: 4px; font-weight: 600; font-size: var(--crm-schrift-13); }
+.assistent-wahl label { display: flex; align-items: flex-start; gap: 8px; font-size: var(--crm-schrift-13); }
 .assistent-wahl label span { display: grid; }
 .assistent-wahl label small { color: var(--crm-farbe-text-leise); }
-.assistent-marke { margin-left: 6px; font-size: 11px; font-weight: 600; }
+.assistent-marke { margin-left: 6px; font-size: var(--crm-schrift-11); font-weight: 600; }
 .assistent-marke.sicher { color: #1d5f25; }
 .assistent-marke.pruefen { color: #7a4d00; }
 .assistent-marke.leer { color: #5b6773; font-weight: 400; }

@@ -34,7 +34,7 @@
   padding-left: 40px !important;
   border-color: #bcc9c7;
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
   color: #1d2a2b;
   caret-color: #1d2a2b;
   -webkit-text-fill-color: #1d2a2b;
@@ -52,7 +52,7 @@
 .live-search-field .live-search-input:-webkit-autofill:focus {
   -webkit-text-fill-color: #1d2a2b;
   caret-color: #1d2a2b;
-  box-shadow: 0 0 0 1000px #ffffff inset;
+  box-shadow: 0 0 0 1000px var(--crm-farbe-flaeche) inset;
 }
 
 .live-search-field .live-search-input:hover {
@@ -62,7 +62,7 @@
 
 .live-search-field .live-search-input:focus {
   border-color: #607c78;
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
   box-shadow: 0 0 0 3px rgba(74, 112, 106, .14);
 }
 

@@ -15,7 +15,7 @@
 .ampel-zeichen { font-weight: 700; }
 .ampel-ueberfaellig { background: #fde7e5; color: #9b1c12; }
 .ampel-heute        { background: #e2f3e4; color: #1d5f25; }
-.ampel-geplant      { background: #eef1f4; color: #3d4a56; }
+.ampel-geplant      { background: #eef1f4; color: var(--crm-farbe-text-2); }
 .ampel-ohne         { background: #fdf1d6; color: #7a4d00; }
 
 /* Ampel neben dem Status, in Tabellenzellen. */

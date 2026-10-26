@@ -28,7 +28,7 @@
   text-decoration: none;
   color: var(--help-text);
 }
-.help-inhalt-liste a:hover { background: #eef2f1; }
+.help-inhalt-liste a:hover { background: var(--crm-farbe-grund); }
 .help-inhalt-liste li.aktiv a { background: #dfe8e5; box-shadow: inset 2px 0 0 #637a77; }
 .help-inhalt-nummer {
   flex: 0 0 auto;
@@ -36,8 +36,8 @@
   font: 700 12px/1.5 ui-monospace, monospace;
   color: #697778;
 }
-.help-inhalt-liste strong { display: block; font-size: 14px; }
-.help-inhalt-liste small { display: block; margin-top: 3px; color: var(--help-gedaempft); font-size: 12px; line-height: 1.5; }
+.help-inhalt-liste strong { display: block; font-size: var(--crm-schrift-14); }
+.help-inhalt-liste small { display: block; margin-top: 3px; color: var(--help-gedaempft); font-size: var(--crm-schrift-12); line-height: 1.5; }
 
 /* Kapitel ------------------------------------------------------------------ */
 .help-kapitel { scroll-margin-top: 18px; }
@@ -65,7 +65,7 @@
   padding: 13px 15px;
   border-radius: 10px;
   line-height: 1.65;
-  font-size: 14px;
+  font-size: var(--crm-schrift-14);
 }
 .help-hinweis { border: 1px solid #cddbd7; background: #f2f7f5; color: #2f4442; }
 .help-warnung { border: 1px solid #e2d3ab; background: #fdf8ea; color: #6b5620; }
@@ -78,7 +78,7 @@
   height: auto;
   border: 1px solid var(--help-linie);
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
 }
 .help-bild figcaption {
   margin-top: 8px;
@@ -105,7 +105,7 @@
   padding: 0 12px;
   border: 1px solid #c3cfcd;
   border-radius: 999px;
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
   color: #536263;
   font-size: 12.5px;
   text-decoration: none;
@@ -140,7 +140,7 @@
   padding: var(--crm-modal-padding);
   border: 1px solid #d6dfdd;
   border-radius: var(--crm-modal-radius);
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
   color: #1d2a2b;
   box-shadow: 0 26px 90px #1d2a2b45;
   outline: none;
@@ -154,7 +154,7 @@
   margin-bottom: 18px;
   border-bottom: 1px solid #e6ecea;
 }
-.help-modal-kopf h2 { margin: 4px 0 0; font-size: 24px; letter-spacing: -.02em; }
+.help-modal-kopf h2 { margin: 4px 0 0; font-size: var(--crm-schrift-24); letter-spacing: -.02em; }
 .help-modal-aktionen { display: flex; gap: 8px; align-items: center; flex: 0 0 auto; }
 .help-modal-schliessen {
   border: 0;
@@ -187,7 +187,7 @@
   font-size: 12.5px;
   cursor: pointer;
 }
-.help-modal-kapitelknopf:hover { border-color: #97a8a5; color: #172425; background: #eef2f1; }
+.help-modal-kapitelknopf:hover { border-color: #97a8a5; color: #172425; background: var(--crm-farbe-grund); }
 .help-modal-kapitelknopf.aktiv {
   border-color: #637a77;
   background: #dfe8e5;

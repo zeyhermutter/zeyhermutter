@@ -45,17 +45,17 @@
 /* "← CRM" auf einer Liste fuehrt nur zur Startseite -- die steht links in
  * der Modulleiste. Ein Zurueck auf eine bestimmte Akte bleibt. */
 .programm-arbeitsflaeche .editor-header a.back-link[href="/crm"] { display: none; }
-.programm-arbeitsflaeche .editor-header .back-link { margin-bottom: 4px; font-size: 12px; }
+.programm-arbeitsflaeche .editor-header .back-link { margin-bottom: 4px; font-size: var(--crm-schrift-12); }
 
 .programm-arbeitsflaeche .editor-header > div > .eyebrow { display: none; }
 
 .programm-arbeitsflaeche .editor-title {
-  font-size: 20px;
+  font-size: var(--crm-schrift-20);
   line-height: 1.25;
   letter-spacing: -.01em;
 }
 
-.programm-arbeitsflaeche .editor-meta { margin-top: 3px; font-size: 13px; }
+.programm-arbeitsflaeche .editor-meta { margin-top: 3px; font-size: var(--crm-schrift-13); }
 
 /* Umgebung und Benutzer stehen in der Titelleiste. */
 .programm-arbeitsflaeche .editor-header .header-actions > .badge,
@@ -67,7 +67,7 @@
 .programm-arbeitsflaeche .editor-header .secondary-button {
   min-height: 32px;
   padding: 0 12px;
-  font-size: 13px;
+  font-size: var(--crm-schrift-13);
 }
 
 /* --- Kennzahlen ------------------------------------------------------------ */
@@ -79,9 +79,9 @@
   border-radius: var(--crm-card-radius-sm);
 }
 
-.programm-arbeitsflaeche .metric-card span { font-size: 12px; }
-.programm-arbeitsflaeche .metric-card strong { margin: 2px 0 1px; font-size: 20px; line-height: 1.2; }
-.programm-arbeitsflaeche .metric-card small { font-size: 11px; line-height: 1.3; }
+.programm-arbeitsflaeche .metric-card span { font-size: var(--crm-schrift-12); }
+.programm-arbeitsflaeche .metric-card strong { margin: 2px 0 1px; font-size: var(--crm-schrift-20); line-height: 1.2; }
+.programm-arbeitsflaeche .metric-card small { font-size: var(--crm-schrift-11); line-height: 1.3; }
 
 /* --- Karten und Listen ----------------------------------------------------- */
 
@@ -90,12 +90,12 @@
 
 .programm-arbeitsflaeche .card-head { margin-bottom: 6px; }
 .programm-arbeitsflaeche .card-head .eyebrow { margin-bottom: 2px; font-size: 10.5px; }
-.programm-arbeitsflaeche .card-head h2 { font-size: 15px; line-height: 1.3; }
+.programm-arbeitsflaeche .card-head h2 { font-size: var(--crm-schrift-15); line-height: 1.3; }
 
 .programm-arbeitsflaeche .data-row { gap: 14px; padding: 9px 0; }
 .programm-arbeitsflaeche .data-row strong { font-size: 13.5px; }
 .programm-arbeitsflaeche .data-row small,
-.programm-arbeitsflaeche .row-meta { font-size: 12px; }
+.programm-arbeitsflaeche .row-meta { font-size: var(--crm-schrift-12); }
 
 /* Die Statuspille ist mit 36 px Mindesthoehe fuer Kopfzeilen gebaut; in einer
  * Listenzeile stand sie doppelt so hoch wie der Text daneben. */
@@ -126,20 +126,20 @@
 
 .programm-arbeitsflaeche :is(.filter-grid, [class$="-filter-grid"], [class*="-filter-grid "], .live-filter-form) label > span:first-child {
   margin-bottom: 3px;
-  font-size: 11px;
+  font-size: var(--crm-schrift-11);
 }
 
 .programm-arbeitsflaeche :is(.filter-grid, [class$="-filter-grid"], [class*="-filter-grid "], .live-filter-form) :is(input, select) {
   min-height: 32px;
   height: 32px;
   padding-block: 0;
-  font-size: 13px;
+  font-size: var(--crm-schrift-13);
 }
 
 .programm-arbeitsflaeche :is(.filter-grid, [class$="-filter-grid"], [class*="-filter-grid "], .live-filter-form) :is(.primary-button, .secondary-button) {
   min-height: 32px;
   padding: 0 12px;
-  font-size: 13px;
+  font-size: var(--crm-schrift-13);
 }
 
 /* Das Live-Suchfeld (LiveListFilters) ist fuer die alten grossen
@@ -232,7 +232,7 @@
 .programm-arbeitsflaeche .programm-seite .data-card > form[method="get"] > label > span:first-child {
   margin: 0;
   color: var(--crm-farbe-text-leise);
-  font-size: 12px;
+  font-size: var(--crm-schrift-12);
   white-space: nowrap;
 }
 
@@ -276,17 +276,17 @@
   box-shadow: none;
 }
 
-.programm-arbeitsflaeche .programm-seite .metric-grid > * > strong { order: -1; margin: 0; font-size: 13px; line-height: 1.3; }
-.programm-arbeitsflaeche .programm-seite .metric-grid > * > span { font-size: 12px; color: var(--crm-farbe-text-leise); }
+.programm-arbeitsflaeche .programm-seite .metric-grid > * > strong { order: -1; margin: 0; font-size: var(--crm-schrift-13); line-height: 1.3; }
+.programm-arbeitsflaeche .programm-seite .metric-grid > * > span { font-size: var(--crm-schrift-12); color: var(--crm-farbe-text-leise); }
 .programm-arbeitsflaeche .programm-seite .metric-grid > * > small { display: none; }
 
 /* Kartenkoepfe ohne Versalienzeile ("WER EMPFIEHLT WEN"), Titel 15 px. */
 .programm-arbeitsflaeche .programm-seite .card-head .eyebrow { display: none; }
-.programm-arbeitsflaeche .programm-seite .card-head h2 { font-size: 15px; }
+.programm-arbeitsflaeche .programm-seite .card-head h2 { font-size: var(--crm-schrift-15); }
 
 /* Knoepfe in Listenzeilen (Benachrichtigungen: "Öffnen", "Als gelesen
  * markieren") in Zeilenhoehe. */
-.programm-arbeitsflaeche .programm-seite .data-row :is(.primary-button, .secondary-button) { min-height: 28px; padding: 0 10px; font-size: 12px; }
+.programm-arbeitsflaeche .programm-seite .data-row :is(.primary-button, .secondary-button) { min-height: 28px; padding: 0 10px; font-size: var(--crm-schrift-12); }
 
 /* Die Liste im Rahmen, mit einer Kopfzeile wie eine Tabelle. */
 .programm-arbeitsflaeche .programm-seite .data-card:has(> .data-list) {
@@ -303,13 +303,13 @@
 }
 
 .programm-arbeitsflaeche .programm-seite .data-card:has(> .data-list) > .card-head .eyebrow { display: none; }
-.programm-arbeitsflaeche .programm-seite .data-card:has(> .data-list) > .card-head h2 { font-size: 13px; font-weight: 600; }
+.programm-arbeitsflaeche .programm-seite .data-card:has(> .data-list) > .card-head h2 { font-size: var(--crm-schrift-13); font-weight: 600; }
 
 .programm-arbeitsflaeche .programm-seite .data-card > .data-list { margin-top: 0; border-top: 0; }
 .programm-arbeitsflaeche .programm-seite .data-card > .data-list > .data-row { margin: 0; padding: 8px 12px; border-radius: 0; }
 .programm-arbeitsflaeche .programm-seite .data-card > .data-list > .data-row:last-child { border-bottom: 0; }
 .programm-arbeitsflaeche .programm-seite .data-card > .data-list > .empty-state,
-.programm-arbeitsflaeche .programm-seite .data-card:has(> .data-list) > .empty-state { margin: 0; padding: 14px 12px; font-size: 13px; }
+.programm-arbeitsflaeche .programm-seite .data-card:has(> .data-list) > .empty-state { margin: 0; padding: 14px 12px; font-size: var(--crm-schrift-13); }
 
 @media (max-width: 900px) {
   .programm-arbeitsflaeche .programm-seite { grid-template-columns: minmax(0, 1fr); }
@@ -326,11 +326,11 @@
 .programm-arbeitsflaeche :is(.communication-header, .reporting-header) > div > .eyebrow { display: none; }
 .programm-arbeitsflaeche :is(.communication-header, .reporting-header) h1 {
   margin: 0;
-  font-size: 20px;
+  font-size: var(--crm-schrift-20);
   line-height: 1.25;
   letter-spacing: -.01em;
 }
-.programm-arbeitsflaeche :is(.communication-header, .reporting-header) h1 + p { margin: 3px 0 0; font-size: 13px; }
+.programm-arbeitsflaeche :is(.communication-header, .reporting-header) h1 + p { margin: 3px 0 0; font-size: var(--crm-schrift-13); }
 .programm-arbeitsflaeche :is(.communication-header, .reporting-header) > .badge,
 .programm-arbeitsflaeche :is(.communication-header, .reporting-header) > .header-user { display: none; }
 
@@ -347,11 +347,11 @@
 .programm-arbeitsflaeche :is(.form-field, .auth-form label, .search-bar > label, .filter-grid > label, .inline-upload label) {
   gap: 4px;
   color: var(--crm-farbe-text-2);
-  font-size: 12px;
+  font-size: var(--crm-schrift-12);
   font-weight: 500;
 }
 
-.programm-arbeitsflaeche :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) { font-size: 14px; }
+.programm-arbeitsflaeche :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) { font-size: var(--crm-schrift-14); }
 
 .programm-arbeitsflaeche .form-grid { gap: 12px 16px; }
 .programm-arbeitsflaeche .auth-form { gap: 12px; }
@@ -364,14 +364,14 @@
   min-height: 34px;
   padding: 0 14px;
   border-radius: var(--crm-field-radius);
-  font-size: 13px;
+  font-size: var(--crm-schrift-13);
 }
 
-.programm-arbeitsflaeche .secondary-button.compact { min-height: 30px; padding: 0 11px; font-size: 12px; }
+.programm-arbeitsflaeche .secondary-button.compact { min-height: 30px; padding: 0 11px; font-size: var(--crm-schrift-12); }
 
 /* Leere Zustaende ("Noch keine ... erfasst.") standen in 16 px -- groesser
  * als der Inhalt, den sie vertreten. */
-.programm-arbeitsflaeche .empty-state { font-size: 13px; line-height: 1.5; }
+.programm-arbeitsflaeche .empty-state { font-size: var(--crm-schrift-13); line-height: 1.5; }
 
 /* --- Aufklapper (app/components/aufklapper.tsx) ----------------------------
  * Anlege- und Bearbeitungsformulare auf Listenseiten: zu, bis man sie
@@ -387,7 +387,7 @@
   border-radius: var(--crm-field-radius);
   background: var(--crm-farbe-flaeche);
   color: var(--crm-farbe-text);
-  font-size: 13px;
+  font-size: var(--crm-schrift-13);
   font-weight: 600;
   cursor: pointer;
   list-style: none;
@@ -408,12 +408,12 @@
  * 132 px, Abschnittskoepfe ohne Versalienzeile. Live auf BETA geprueft. */
 .programm-arbeitsflaeche .reporting-section-head { margin-bottom: 10px; }
 .programm-arbeitsflaeche .reporting-section-head .eyebrow { display: none; }
-.programm-arbeitsflaeche .reporting-section-head h2 { margin: 0; font-size: 15px; }
+.programm-arbeitsflaeche .reporting-section-head h2 { margin: 0; font-size: var(--crm-schrift-15); }
 .programm-arbeitsflaeche .reporting-metric-grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
 .programm-arbeitsflaeche .reporting-metric { min-height: 0; gap: 2px; justify-content: flex-start; }
-.programm-arbeitsflaeche .reporting-metric strong { font-size: 20px; line-height: 1.2; }
-.programm-arbeitsflaeche .reporting-metric strong.reporting-metric-unavailable { font-size: 14px; }
-.programm-arbeitsflaeche .reporting-metric small { font-size: 11px; }
+.programm-arbeitsflaeche .reporting-metric strong { font-size: var(--crm-schrift-20); line-height: 1.2; }
+.programm-arbeitsflaeche .reporting-metric strong.reporting-metric-unavailable { font-size: var(--crm-schrift-14); }
+.programm-arbeitsflaeche .reporting-metric small { font-size: var(--crm-schrift-11); }
 
 /* Anlegen-Knopf ("+ Empfehlung erfassen"): dunkel wie "+ Neuer Auftrag" in
  * den Programmlisten. Zu steht er auf einer Programmseite rechts oben neben
@@ -426,5 +426,5 @@
 
 /* Ein Hinweis direkt auf der Programmseite (Reservierungen: "Erfassung,
  * keine rechtliche Bewertung") in der Groesse der Kennzahlenzeile. */
-.programm-arbeitsflaeche .programm-seite > .form-warning { padding: 7px 12px; font-size: 12px; line-height: 1.45; }
-.programm-arbeitsflaeche .reporting-pipeline-head h3 { margin: 0; font-size: 14px; font-weight: 600; }
+.programm-arbeitsflaeche .programm-seite > .form-warning { padding: 7px 12px; font-size: var(--crm-schrift-12); line-height: 1.45; }
+.programm-arbeitsflaeche .reporting-pipeline-head h3 { margin: 0; font-size: var(--crm-schrift-14); font-weight: 600; }

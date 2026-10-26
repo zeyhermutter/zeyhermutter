@@ -95,7 +95,7 @@
 .communication-history article {
   border: 1px solid #d8e0de;
   border-radius: var(--crm-card-radius-sm);
-  background: #fff;
+  background: var(--crm-farbe-flaeche);
   padding: var(--crm-card-padding-sm);
 }
 

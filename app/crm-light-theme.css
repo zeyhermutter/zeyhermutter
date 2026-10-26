@@ -4,13 +4,13 @@
 .persistent-app-frame {
   color-scheme: light;
   color: #1d2a2b;
-  background: #eef2f1;
+  background: var(--crm-farbe-grund);
 }
 
 .persistent-app-frame .app-shell,
 .persistent-app-frame .editor-shell,
 .persistent-app-frame .readiness-shell {
-  background: #eef2f1;
+  background: var(--crm-farbe-grund);
   color: #1d2a2b;
 }
 /* Grundflächen und Karten – Form, Radius, Größe und Anordnung bleiben unverändert. */
@@ -46,7 +46,7 @@
 .persistent-app-frame .readiness-ai-preview-wrap,
 .persistent-app-frame .readiness-task-options label,
 .persistent-app-frame .panel {
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
   border-color: #d4dddb;
   color: #1d2a2b;
 }
@@ -178,7 +178,7 @@
 .persistent-app-frame .global-search-field input,
 .persistent-app-frame .live-search-field .live-search-input,
 .persistent-app-frame .readiness-ai-preview {
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
   color: #1d2a2b;
   border-color: #bcc9c7;
   caret-color: #1d2a2b;
@@ -213,7 +213,7 @@
 .persistent-app-frame .live-search-field .live-search-input:focus,
 .persistent-app-frame .readiness-ai-preview:focus {
   border-color: #607c78;
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
   box-shadow: 0 0 0 3px rgba(74, 112, 106, .14);
 }
 .persistent-app-frame :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea):disabled,
@@ -228,7 +228,7 @@
 .persistent-app-frame .live-search-field .live-search-input:-webkit-autofill:focus {
   -webkit-text-fill-color: #1d2a2b;
   caret-color: #1d2a2b;
-  box-shadow: 0 0 0 1000px #ffffff inset;
+  box-shadow: 0 0 0 1000px var(--crm-farbe-flaeche) inset;
 }
 .persistent-app-frame .live-search-field::before,
 .persistent-app-frame .global-search-field svg { color: #6c7c7d; }
@@ -237,11 +237,11 @@
 /* Buttons – gleiche Formen/Größen, nur hellere Umgebung und klare Kontraste. */
 .persistent-app-frame .primary-button {
   background: #263b39;
-  color: #ffffff;
+  color: var(--crm-farbe-auf-dunkel);
 }
 .persistent-app-frame .primary-button:hover { background: #1d302f; }
 .persistent-app-frame .secondary-button {
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
   color: #263536;
   border-color: #b9c7c4;
 }
@@ -300,7 +300,7 @@
 .persistent-app-frame .lead-conversion-success {
   background: #e5f4e9;
   border-color: #98bea4;
-  color: #275f3d;
+  color: var(--crm-farbe-gut);
 }
 .persistent-app-frame .status-lost,
 .persistent-app-frame .status-withdrawn,
@@ -322,7 +322,7 @@
 .persistent-app-frame .form-success {
   background: #e5f4e9;
   border-color: #98bea4;
-  color: #275f3d;
+  color: var(--crm-farbe-gut);
 }
 .persistent-app-frame .form-warning,
 .persistent-app-frame .concurrency-dialog .module04-modal-description {

@@ -2,7 +2,7 @@
 
 .kontakt-auswahl { display: grid; gap: 6px; min-width: 0; align-self: start; }
 .kontakt-auswahl-suche { position: relative; display: grid; }
-.kontakt-auswahl > label span { font-size: 13px; font-weight: 600; color: #26323c; }
+.kontakt-auswahl > label span { font-size: var(--crm-schrift-13); font-weight: 600; color: #26323c; }
 
 .kontakt-auswahl-gewaehlt {
   display: flex;

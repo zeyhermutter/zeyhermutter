@@ -20,15 +20,15 @@
 
 .mein-tag-kopf h1 {
   margin: 0;
-  font-size: 20px;
+  font-size: var(--crm-schrift-20);
   line-height: 1.25;
   font-weight: 600;
-  color: #1b2733;
+  color: var(--crm-farbe-text);
 }
 
-.mein-tag-wessen { color: #4a5763; font-weight: 500; }
+.mein-tag-wessen { color: var(--crm-farbe-text-leise); font-weight: 500; }
 
-.mein-tag-kopf p { margin: 4px 0 0; color: #3d4a56; font-size: 13px; }
+.mein-tag-kopf p { margin: 4px 0 0; color: var(--crm-farbe-text-2); font-size: var(--crm-schrift-13); }
 
 .mein-tag-hinweis { max-width: var(--crm-content-max); margin: 0 auto 12px; }
 
@@ -44,9 +44,9 @@
 .mein-tag-spalte { display: grid; gap: 14px; min-width: 0; }
 
 .mein-tag-feld {
-  border: 1px solid #cdd3d9;
+  border: 1px solid var(--crm-farbe-linie);
   border-radius: var(--crm-card-radius-sm);
-  background: #ffffff;
+  background: var(--crm-farbe-flaeche);
   overflow: hidden;
 }
 
@@ -55,29 +55,29 @@
   align-items: center;
   gap: 8px;
   padding: 9px 12px;
-  border-bottom: 1px solid #dde2e7;
+  border-bottom: 1px solid var(--crm-farbe-linie-leise);
   background: #f4f6f8;
 }
 
-.mein-tag-feld-kopf h2 { margin: 0; font-size: 13px; font-weight: 600; color: #1b2733; }
+.mein-tag-feld-kopf h2 { margin: 0; font-size: var(--crm-schrift-13); font-weight: 600; color: var(--crm-farbe-text); }
 
 .mein-tag-zahl {
   min-width: 20px;
   padding: var(--crm-pill-padding-sm);
   line-height: 1;
   border-radius: var(--crm-pill-radius);
-  background: #dde2e7;
-  color: #1b2733;
-  font-size: 12px;
+  background: var(--crm-farbe-linie-leise);
+  color: var(--crm-farbe-text);
+  font-size: var(--crm-schrift-12);
   font-weight: 600;
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
 
-.mein-tag-mehr { margin-left: auto; color: #0b5cad; font-size: 12px; text-decoration: none; }
+.mein-tag-mehr { margin-left: auto; color: var(--crm-farbe-verweis); font-size: var(--crm-schrift-12); text-decoration: none; }
 .mein-tag-mehr:hover { text-decoration: underline; }
 
-.mein-tag-leer { margin: 0; padding: 14px 12px; color: #4a5763; font-size: 13px; }
+.mein-tag-leer { margin: 0; padding: 14px 12px; color: var(--crm-farbe-text-leise); font-size: var(--crm-schrift-13); }
 
 /* Lange Listen scrollen im Feld, nicht die ganze Seite. */
 .mein-tag-liste { max-height: 420px; overflow-y: auto; }
@@ -89,7 +89,7 @@
   gap: 8px;
   padding: 7px 12px;
   border-bottom: 1px solid #eef1f4;
-  color: #1b2733;
+  color: var(--crm-farbe-text);
   text-decoration: none;
 }
 
@@ -102,13 +102,13 @@
 .mein-tag-wann {
   display: flex;
   flex-direction: column;
-  color: #3d4a56;
-  font-size: 12px;
+  color: var(--crm-farbe-text-2);
+  font-size: var(--crm-schrift-12);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-.mein-tag-wann small { color: #6b7782; font-size: 11px; }
+.mein-tag-wann small { color: var(--crm-farbe-text-blass); font-size: var(--crm-schrift-11); }
 
 .mein-tag-was { display: flex; flex-direction: column; min-width: 0; }
 
@@ -121,7 +121,7 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
-  font-size: 13px;
+  font-size: var(--crm-schrift-13);
   font-weight: 600;
   overflow-wrap: anywhere;
 }
@@ -131,13 +131,13 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.mein-tag-was small { color: #4a5763; font-size: 12px; }
+.mein-tag-was small { color: var(--crm-farbe-text-leise); font-size: var(--crm-schrift-12); }
 
-.mein-tag-art { color: #4a5763; font-size: 11px; white-space: nowrap; }
+.mein-tag-art { color: var(--crm-farbe-text-leise); font-size: var(--crm-schrift-11); white-space: nowrap; }
 
 /* Ueberfaellig: das Datum in Rot, sonst bleibt die Zeile ruhig. #a12a1f auf
  * Weiss 6,9:1. */
-.mein-tag-zeile.warnung .mein-tag-wann { color: #a12a1f; font-weight: 600; }
+.mein-tag-zeile.warnung .mein-tag-wann { color: var(--crm-farbe-fehler); font-weight: 600; }
 
 .mein-tag-karte { max-width: var(--crm-content-max); margin: 18px auto 0; }
 
@@ -158,12 +158,12 @@
  * Feld steht. Leere Felder bleiben grau -- Farbe heisst "hier ist etwas".
  * Kontrast der Zahl (Weiss auf Farbe): blau 6,7, rot 7,2, bernstein 5,0,
  * gruen 5,9. */
-.mein-tag-feld.ton-termin { --ton: #0b5cad; }
+.mein-tag-feld.ton-termin { --ton: var(--crm-farbe-verweis); }
 .mein-tag-feld.ton-druck  { --ton: #b42318; }
 .mein-tag-feld.ton-frist  { --ton: #8a5a00; }
 .mein-tag-feld.ton-neu    { --ton: #2a7130; }
-.mein-tag-feld-kopf { box-shadow: inset 3px 0 0 var(--ton, #cdd3d9); }
-.mein-tag-feld.hat-eintraege .mein-tag-zahl { background: var(--ton); color: #ffffff; }
+.mein-tag-feld-kopf { box-shadow: inset 3px 0 0 var(--ton, var(--crm-farbe-linie)); }
+.mein-tag-feld.hat-eintraege .mein-tag-zahl { background: var(--ton); color: var(--crm-farbe-auf-dunkel); }
 
 /* Datumsgruppen (P2-1): Zwischentitel in einem Feld. */
 .mein-tag-gruppe {
@@ -174,11 +174,11 @@
   padding: 8px 12px 4px;
   border-bottom: 1px solid #eef1f4;
   background: #f7f9fb;
-  color: #3d4a56;
-  font-size: 12px;
+  color: var(--crm-farbe-text-2);
+  font-size: var(--crm-schrift-12);
   font-weight: 600;
   position: sticky;
   top: 0;
 }
 .mein-tag-gruppe span { color: #5b6773; font-weight: 400; font-variant-numeric: tabular-nums; }
-.mein-tag-erklaerung { margin: 0; padding: 0 12px 8px; color: #4a5763; font-size: 12px; }
+.mein-tag-erklaerung { margin: 0; padding: 0 12px 8px; color: var(--crm-farbe-text-leise); font-size: var(--crm-schrift-12); }

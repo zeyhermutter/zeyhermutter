@@ -70,7 +70,7 @@
 .readiness-measure-summary-main strong{
   min-width:0;
   color:#eef2f3;
-  font-size:14px;
+  font-size:var(--crm-schrift-14);
   line-height:1.35;
   overflow-wrap:anywhere;
 }
@@ -99,14 +99,14 @@
 
 .readiness-measure-summary-cost{
   color:#aebabc;
-  font-size:11px;
+  font-size:var(--crm-schrift-11);
   font-weight:700;
   white-space:nowrap;
 }
 
 .readiness-measure-summary-toggle{
   color:#9fb0b2;
-  font-size:11px;
+  font-size:var(--crm-schrift-11);
   font-weight:800;
   white-space:nowrap;
 }
