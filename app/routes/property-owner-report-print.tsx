@@ -96,7 +96,7 @@ export default function OwnerReportPrint() {
             </div>
             {c.zitate.length ? (
               <div className="eb-zitate">
-                {c.zitate.map((q) => <blockquote key={q.schluessel}><p>„{q.text}“</p><cite>{q.wer} · {q.art === "gefallen" ? "gefallen" : q.art === "bedenken" ? "Bedenken" : "Anmerkung"}</cite></blockquote>)}
+                {c.zitate.map((q) => <blockquote key={q.schluessel}><p>„{q.text}“</p><cite>{q.wer} · {q.art === "gefallen" ? "Gefallen" : q.art === "bedenken" ? "Bedenken" : "Anmerkung"}</cite></blockquote>)}
               </div>
             ) : null}
           </section>

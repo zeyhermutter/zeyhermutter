@@ -83,7 +83,11 @@ export async function berichtsdaten(supabase: any, propertyId: string, von: stri
 
 export type Berichtsdaten = Awaited<ReturnType<typeof berichtsdaten>>;
 
-/** "Interessent 1, 2 ..." in der Reihenfolge des ersten Kontakts zum Objekt. */
+/** "Interessent 1, 2 ..." in der Reihenfolge des ersten Kontakts zum Objekt.
+ *  Gezählt wird nur, wer im Bericht mit Namen-Ersatz auftauchen kann
+ *  (durchgeführte Besichtigung, Angebot, beantworteter Link) -- sonst stünde
+ *  dort "Interessent 2", ohne dass der Eigentümer je von "Interessent 1" liest
+ *  (etwa nach abgesagten Terminen). */
 function pseudonyme(d: Berichtsdaten) {
   const erste = new Map<string, string>();
   const merke = (id: string | null, wann: string | null) => {
@@ -91,8 +95,7 @@ function pseudonyme(d: Berichtsdaten) {
     const alt = erste.get(id);
     if (!alt || wann < alt) erste.set(id, wann);
   };
-  d.anfragen.forEach((a) => merke(a.contact_id, a.received_at ?? a.created_at));
-  d.termine.forEach((t) => merke(t.contact_id, t.starts_at));
+  d.termine.filter((t) => t.status === "COMPLETED").forEach((t) => merke(t.contact_id, t.starts_at));
   d.angebote.forEach((o) => merke(o.contact_id, o.created_at));
   d.links.forEach((l) => merke(l.contact_id, l.created_at));
   const reihe = [...erste.entries()].sort((a, b) => a[1].localeCompare(b[1])).map(([id]) => id);
