@@ -34,23 +34,16 @@ jobs:
           npx --yes supabase@latest link --help >/dev/null
           npx --yes supabase@latest db push --help >/dev/null
 
-      - name: Require production database password
-        env:
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-        run: |
-          if [ -z "$SUPABASE_DB_PASSWORD" ]; then
-            echo "::error::SUPABASE_DB_PASSWORD fehlt in der GitHub-Umgebung production."
-            exit 1
-          fi
+      # Kein Datenbank-Passwort (27.10.2026): Die Supabase-CLI meldet sich mit
+      # SUPABASE_ACCESS_TOKEN ueber eine kurzlebige Anmelderolle an -- so wie
+      # lokal beim db push. Das postgres-Passwort bleibt aus GitHub heraus.
 
       - name: Link production project
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: npx --yes supabase@latest link --project-ref vtmtxaaojbqqzwxkodye
 
       - name: Preview pending production migrations only
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: npx --yes supabase@latest db push --dry-run
