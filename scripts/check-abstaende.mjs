@@ -95,6 +95,7 @@ const AUSNAHMEN = {
   ".programm-arbeitsflaeche .programm-seite .metric-grid>*": "Kennzahlen als eine Textzeile statt Kacheln (13.10.2026) -- bewusst ohne Flaeche, Rand und Innenabstand.",
   ".kalender-programm .calendar-day-label": "Kopfzeile eines Tages in der Agendaliste (seit 12.10.2026) -- buendig wie ein Tabellenkopf, keine Karte.",
   ".kalender-programm .calendar-ansichten .calendar-event": "Ein Termin als Zeile der Agendaliste (seit 12.10.2026), nicht mehr als Karte -- buendig, ohne Rundung.",
+  ".eb-blatt": "Druckblatt des Eigentuemerberichts (27.10.2026): Seitenraender wie ein A4-Brief, im Druck randlos -- kein Karteninhalt.",
 };
 
 const fehler = [];

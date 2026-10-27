@@ -41,8 +41,9 @@ const lies = (p) => readFile(path.join(WURZEL, p), "utf8").then((t) => t.replace
  */
 // +8 durch die taegliche Automatik (P2-4): Lead-Wiedervorlage, Geldwaesche-Pruefung,
 // Aufbewahrung, passende Suchprofile -- je einmal im ersten Lauf und im Nachtrag.
-const SQL_EINFUEGESTELLEN = 16;
-const SQL_TYPEN = ["CONTACT", "TASK", "LEAD", "PROPERTY_COMPLIANCE", "AUFBEWAHRUNG", "PROPERTY_INTERESTS"];
+// +1 (27.10.2026): Rueckmeldung zur Besichtigung per Feedback-Link (VIEWING).
+const SQL_EINFUEGESTELLEN = 17;
+const SQL_TYPEN = ["CONTACT", "TASK", "LEAD", "PROPERTY_COMPLIANCE", "AUFBEWAHRUNG", "PROPERTY_INTERESTS", "VIEWING"];
 
 const fehler = [];
 const pruefe = (bedingung, text) => { if (!bedingung) fehler.push(text); };

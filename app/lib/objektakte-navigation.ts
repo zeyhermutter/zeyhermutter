@@ -68,6 +68,7 @@ export const REITER: Reiter[] = [
     { schluessel: "exposes", beschriftung: "Exposés" },
     { schluessel: "marketing", beschriftung: "Portale" },
     { schluessel: "publication", beschriftung: "Website" },
+    { schluessel: "eigentuemerbericht", beschriftung: "Eigentümerbericht" },
   ] },
   { schluessel: "interessenten", beschriftung: "Interessenten", seiten: [
     { schluessel: "interests", beschriftung: "Interessenten & Besichtigungen" },

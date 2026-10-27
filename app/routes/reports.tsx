@@ -4,6 +4,7 @@ import { Aufklapper } from "~/components/aufklapper";
 import { requireActiveUser } from "~/lib/auth.server";
 import { euroRund as formatCurrency, prozent, zahl, zahl as formatNumber, zeitpunkt as formatGenerated } from "~/lib/format";
 import { crmToday as berlinToday } from "~/lib/local-time";
+import { ABSAGEGRUND, INTERESSE, PREISEINSCHAETZUNG } from "~/lib/besichtigung-feedback";
 import "~/reporting.css";
 import "~/programm-liste.css";
 
@@ -198,18 +199,27 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   });
   if (error || !summary) throw new Response("Dashboard-Kennzahlen konnten nicht geladen werden.", { status: 500, headers: responseHeaders() });
 
-  const [campaignRes, partnerRes, commissionRes, referralRes, referralGapRes] = await Promise.all([
+  // Rueckmeldungen nach Besichtigungen im Zeitraum (27.10.2026): Interesse,
+  // Preiseinschaetzung, Absagegruende. "Mein Bereich" = meine Besichtigungen.
+  let feedbackAbfrage = supabase.from("viewing_feedback").select("interest_level,price_perception,decline_reason,viewings!inner(starts_at,primary_responsible_user)")
+    .gte("viewings.starts_at", `${period.from}T00:00:00+00:00`).lte("viewings.starts_at", `${period.to}T23:59:59+00:00`);
+  if (requestedScope === "mine") feedbackAbfrage = feedbackAbfrage.eq("viewings.primary_responsible_user", (profile as any).user_id);
+  const [campaignRes, partnerRes, commissionRes, referralRes, referralGapRes, feedbackRes] = await Promise.all([
     supabase.rpc("acquisition_campaign_performance", { p_from: period.from, p_to: period.to }),
     supabase.rpc("partner_referral_performance", { p_from: period.from, p_to: period.to }),
     supabase.rpc("current_user_has_permission", { p_permission: "commission.read" }),
     supabase.rpc("referral_performance", { p_from: period.from, p_to: period.to }),
     supabase.rpc("referral_attribution_gaps"),
+    feedbackAbfrage,
   ]);
   // Lesefehler nicht verschlucken: eine leere Kampagnenliste darf nicht wie
   // „keine Kampagnen" aussehen, wenn die Abfrage fehlgeschlagen ist.
   if (campaignRes.error || partnerRes.error) throw new Response("Akquise-Kennzahlen konnten nicht geladen werden.", { status: 500, headers: responseHeaders() });
 
+  const rueck = (feedbackRes.data ?? []) as any[];
+  const zaehle = (feld: string) => rueck.reduce<Record<string, number>>((m, r) => { if (r[feld]) m[r[feld]] = (m[r[feld]] ?? 0) + 1; return m; }, {});
   return data({
+    rueckmeldungen: { anzahl: rueck.length, fehler: Boolean(feedbackRes.error), interesse: zaehle("interest_level"), preis: zaehle("price_perception"), gruende: zaehle("decline_reason") },
     referrals: (referralRes.data ?? []) as any[],
     referralGaps: (referralGapRes.data ?? []) as any[],
     campaigns: (campaignRes.data ?? []) as any[],
@@ -267,8 +277,22 @@ function LeadSources({ rows }: { rows: LeadSourceRow[] }) {
   </div>;
 }
 
+function Rueckmeldeverteilung({ titel, werte, liste }: { titel: string; werte: Record<string, number>; liste: [string, string][] }) {
+  const eintraege = liste.filter(([k]) => werte[k]);
+  const summe = eintraege.reduce((n, [k]) => n + werte[k], 0);
+  return <div className="reporting-source-list">
+    <h3>{titel}</h3>
+    {eintraege.length === 0 ? <p className="empty-state">Keine Angaben.</p> : eintraege.map(([k, text]) => (
+      <article className="reporting-source-row" key={k}>
+        <div className="reporting-source-head"><strong>{text}</strong><span>{formatNumber(werte[k])}</span></div>
+        <div className="reporting-source-track" aria-hidden="true"><span style={{ width: `${Math.max(4, (werte[k] / Math.max(1, summe)) * 100)}%` }} /></div>
+      </article>
+    ))}
+  </div>;
+}
+
 export default function Reports() {
-  const { profile, canReadCompany, scope, periodPreset, from, to, rangeError, summary, campaigns, partners, referrals, referralGaps, canReadCommission } = useLoaderData<typeof loader>();
+  const { profile, canReadCompany, scope, periodPreset, from, to, rangeError, summary, campaigns, partners, referrals, referralGaps, canReadCommission, rueckmeldungen } = useLoaderData<typeof loader>();
   const snapshot = summary.snapshot;
   const period = summary.period;
   const leadSources = summary.breakdowns?.lead_sources ?? [];
@@ -333,6 +357,20 @@ export default function Reports() {
         <Metric label="Erwartete Provision" value={formatCurrency(period.commission_expected)} note="im Zeitraum erfasste, nicht stornierte Provision" to="/commissions"/>
         <Metric label="Realisierte Provision" value={formatCurrency(period.commission_paid)} note="nach dokumentiertem Zahlungseingang" to="/commissions"/>
       </div>
+    </section>
+
+    <section className="reporting-section data-card">
+      <div className="reporting-section-head">
+        <div><p className="eyebrow">{formatDate(from)} bis {formatDate(to)}</p><h2>Rückmeldungen nach Besichtigungen</h2></div>
+        <small>{rueckmeldungen.fehler ? "Rückmeldungen konnten nicht geladen werden." : `${formatNumber(rueckmeldungen.anzahl)} erfasste Rückmeldungen · nach Besichtigungsdatum`}</small>
+      </div>
+      {rueckmeldungen.anzahl === 0 && !rueckmeldungen.fehler ? <p className="empty-state">Im Zeitraum ist kein Besichtigungsfeedback erfasst.</p> : (
+        <div className="reporting-pipeline-grid reporting-rueckmeldungen">
+          <Rueckmeldeverteilung titel="Interesse" werte={rueckmeldungen.interesse} liste={INTERESSE}/>
+          <Rueckmeldeverteilung titel="Preiseinschätzung" werte={rueckmeldungen.preis} liste={PREISEINSCHAETZUNG}/>
+          <Rueckmeldeverteilung titel="Hauptgrund bei Absage" werte={rueckmeldungen.gruende} liste={ABSAGEGRUND}/>
+        </div>
+      )}
     </section>
 
     <section className="reporting-section data-card">

@@ -64,6 +64,7 @@ export const NICHT_IN_DIE_SITEMAP: Record<string, string> = {
   "/ratgeber/:thema": "die vier Anlassseiten stehen einzeln in WEBSITE_PAGE_DEFINITIONS",
   "/e/:token": "kurzer Exposé-Link aus einer E-Mail, persoenlich und zeitlich begrenzt",
   "/kalender/:datei": "persoenliches Kalender-Abo (iCalendar), nur mit geheimer Kennung",
+  "/f/:token": "Rueckmeldung nach einer Besichtigung, nur mit geheimer Kennung",
   "/login": "interner Zugang",
   "/logout": "interner Zugang",
   "/__preview/sales-readiness": "interne Vorschau",
@@ -94,7 +95,7 @@ export const INTERNE_PRAEFIXE = [
 ];
 
 /** Weitere Pfade, die robots.txt sperrt, ohne zum internen Bereich zu gehoeren. */
-export const WEITERE_GESPERRTE_PFADE = ["/api/", "/e/", "/kalender/", "/login", "/logout", "/homepage-varianten", "/__preview"];
+export const WEITERE_GESPERRTE_PFADE = ["/api/", "/e/", "/f/", "/kalender/", "/login", "/logout", "/homepage-varianten", "/__preview"];
 
 /**
  * Alle Pfade, die in die Sitemap gehoeren -- ohne die Objektseiten, die aus der
