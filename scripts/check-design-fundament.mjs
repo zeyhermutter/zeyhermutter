@@ -86,7 +86,10 @@ const OEFFENTLICH = new Set(["public-website.css", "homepage-v7-realtor.css", "h
 // 35 Stellen mit genau diesen Werten umgestellt, keine sichtbare Aenderung.
 // Dazu das letzte "!important" des hellen Themas (Schrift der Check-Hinweise):
 // sein dunkler Gegenspieler ist mit 4c entfallen.
-const HOECHSTENS = { hex: 533, important: 70, schriftgroessen: 11 };
+// 28.10.2026 (Schritt 5, Beginn): die 7 Stellen mit genau dem Wert der Rolle
+// flaeche-2 (#f4f6f8, erst in 4b entstanden) als Variable -- gleicher Wert.
+// Werkzeug fuer die naechsten Schritte: scripts/farbsieger.browser.js.
+const HOECHSTENS = { hex: 526, important: 70, schriftgroessen: 11 };
 
 const ROLLEN = ["grund", "flaeche", "flaeche-2", "text", "text-2", "text-leise", "text-blass", "linie", "linie-leise", "linie-feld", "handlung", "auf-dunkel", "verweis", "fehler", "gut",
   "status-info-grund", "status-info-rand", "status-info-text", "status-gut-grund", "status-gut-rand", "status-gut-text",

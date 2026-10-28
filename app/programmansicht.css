@@ -299,7 +299,7 @@
   margin: 0;
   padding: 9px 12px;
   border-bottom: 1px solid var(--crm-farbe-linie-leise);
-  background: #f4f6f8;
+  background:var(--crm-farbe-flaeche-2);
 }
 
 .programm-arbeitsflaeche .programm-seite .data-card:has(> .data-list) > .card-head .eyebrow { display: none; }

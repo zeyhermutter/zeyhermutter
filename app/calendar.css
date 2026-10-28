@@ -610,7 +610,7 @@ a.monatsraster-tag:focus-visible {
   border: 0;
   border-bottom: 1px solid var(--crm-farbe-linie-leise);
   border-radius: 0;
-  background: #f4f6f8;
+  background:var(--crm-farbe-flaeche-2);
 }
 
 .kalender-programm .calendar-day-label strong { display: inline; font-size: var(--crm-schrift-13); }
