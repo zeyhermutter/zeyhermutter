@@ -245,7 +245,6 @@
 .persistent-app-frame .notification-bell-trigger:hover,
 .persistent-app-frame .notification-bell[open] .notification-bell-trigger {
   background: var(--crm-farbe-grund);
-  border-color: #9eaeab;
 }
 .persistent-app-frame .notification-bell-count {
   background: #2f4b47;

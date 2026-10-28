@@ -94,7 +94,6 @@
 .arbeitsplatz-zeile:hover { background: #f3f6fa; }
 
 .arbeitsplatz-zeile.aktiv {
-  background: #dce8f5;
   box-shadow: inset 3px 0 0 var(--crm-farbe-handlung);
 }
 

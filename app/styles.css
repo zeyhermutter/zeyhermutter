@@ -58,7 +58,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
   margin: 0 0 14px;
   text-transform: uppercase;
   letter-spacing: .16em;
-  color: #91a0a2;
   font-size: var(--crm-schrift-11);
   font-weight: 700;
 }
@@ -85,8 +84,6 @@ h1 { max-width: 850px; margin: 0; font-size: clamp(42px, 7vw, 82px); line-height
   min-height: 46px;
   padding: 0 18px;
   border-radius: 11px;
-  background: #eef2f3;
-  color: #101516;
   font-weight: 700;
 }
 .secondary-button {
@@ -127,18 +124,17 @@ h1 { max-width: 850px; margin: 0; font-size: clamp(42px, 7vw, 82px); line-height
 .metric-grid { margin-left: auto; margin-right: auto; display: grid; gap: var(--crm-card-gap); }
 .metric-card, .data-card { border: 1px solid; border-radius: var(--crm-card-radius); }
 .metric-card { padding: var(--crm-card-padding); }
-.metric-card span, .metric-card small { display: block; color: #7e8b8d; }
+.metric-card span, .metric-card small { display: block; }
 .metric-card strong { display: block; margin: 12px 0 5px; font-size: var(--crm-schrift-24); }
 .dashboard-grid { max-width: var(--crm-content-max); margin-left: auto; margin-right: auto; display: grid; grid-template-columns: 1.35fr 1fr; gap: 12px; }
 .data-card { min-width: 0; padding: var(--crm-card-padding); }
 .card-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
 .card-head h2 { margin: 0; font-size: var(--crm-schrift-24); }
-.subtle { color: #687476; font-size: var(--crm-schrift-12); }
-.empty-state { color: #718082; padding: 24px 0 8px; margin: 0; }
+.subtle { font-size: var(--crm-schrift-12); }
+.empty-state { padding: 24px 0 8px; margin: 0; }
 .data-list { margin-top: 20px; border-top: 1px solid; }
 .data-row { display: flex; justify-content: space-between; gap: 18px; padding: 14px 0; border-bottom: 1px solid; }
 .data-row strong, .data-row small { display: block; }
-.data-row small, .row-meta { color: #718082; }
 .row-meta { text-align: right; font-size: var(--crm-schrift-13); }
 .row-meta span, .row-meta small { display: block; }
 .error-shell { min-height: 100vh; display: grid; place-items: center; padding: 24px; }

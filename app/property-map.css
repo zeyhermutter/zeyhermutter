@@ -38,7 +38,6 @@
   transform: translate(-50%, -100%);
   border: 2px solid var(--crm-farbe-flaeche);
   border-radius: 50% 50% 50% 4px;
-  background: #22363c;
   color: var(--crm-farbe-auf-dunkel);
   text-decoration: none;
   box-shadow: 0 3px 12px rgba(0,0,0,.35);
@@ -146,11 +145,10 @@
   padding: var(--crm-card-padding-sm);
   border-radius: var(--crm-card-radius-sm);
   background: rgba(255,255,255,.88);
-  color: #283233;
   font-size: var(--crm-schrift-11);
 }
 .property-map-attribution a { color: inherit; }
-.map-coverage-note { color: #768385; font-size: var(--crm-schrift-12); }
+.map-coverage-note { font-size: var(--crm-schrift-12); }
 @media (max-width: 720px) {
   .property-map-card { margin-top: 12px; }
   .property-map { height: 300px; }

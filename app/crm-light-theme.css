@@ -236,10 +236,8 @@
 
 /* Buttons – gleiche Formen/Größen, nur hellere Umgebung und klare Kontraste. */
 .persistent-app-frame .primary-button {
-  background: #263b39;
   color: var(--crm-farbe-auf-dunkel);
 }
-.persistent-app-frame .primary-button:hover { background: #1d302f; }
 .persistent-app-frame .secondary-button {
   background: var(--crm-farbe-flaeche);
   color: var(--crm-farbe-text);

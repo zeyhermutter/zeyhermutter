@@ -47,7 +47,7 @@
 .akte-blick-status .inline-actions { margin-top: 8px; }
 
 /* Art einer Zeile in einer gemischten Liste ("Anfrage", "Besichtigung"). */
-.data-row .akte-art { display: block; color: #5b6772; font-size: var(--crm-schrift-11); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.data-row .akte-art { display: block; font-size: var(--crm-schrift-11); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 
 /* In der Objektakte steht die Karte ueber beiden Spalten. */
 .property-summary-grid > .akte-blick { grid-column: 1 / -1; }

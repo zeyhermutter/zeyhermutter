@@ -89,7 +89,13 @@ const OEFFENTLICH = new Set(["public-website.css", "homepage-v7-realtor.css", "h
 // 28.10.2026 (Schritt 5, Beginn): die 7 Stellen mit genau dem Wert der Rolle
 // flaeche-2 (#f4f6f8, erst in 4b entstanden) als Variable -- gleicher Wert.
 // Werkzeug fuer die naechsten Schritte: scripts/farbsieger.browser.js.
-const HOECHSTENS = { hex: 526, important: 70, schriftgroessen: 11 };
+// 28.10.2026 (Schritt 5b): 64 Farbangaben entfernt, die an keinem Element
+// gewinnen (scripts/farbsieger.browser.js auf 110 Programmseiten, dazu
+// oeffentliche Seiten, Anmeldung und Fehlerseite). Wegen des Gratistarifs
+// langsam gemessen (eine Seite je 15 s, ohne Skripte als srcdoc). Danach im
+// Browser simuliert: die Angaben per CSSOM entfernt und die berechneten
+// Farben aller Elemente verglichen -- 123 Seiten, 0 Abweichungen.
+const HOECHSTENS = { hex: 461, important: 70, schriftgroessen: 11 };
 
 const ROLLEN = ["grund", "flaeche", "flaeche-2", "text", "text-2", "text-leise", "text-blass", "linie", "linie-leise", "linie-feld", "handlung", "auf-dunkel", "verweis", "fehler", "gut",
   "status-info-grund", "status-info-rand", "status-info-text", "status-gut-grund", "status-gut-rand", "status-gut-text",
